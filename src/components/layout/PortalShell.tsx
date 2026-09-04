@@ -24,7 +24,7 @@ function NavLinkItem({ to, label, onClick }: { to: string; label: string; onClic
       className={({ isActive }) =>
         cn(
           'flex min-h-11 items-center rounded-[8px] px-3 text-[13px] font-semibold transition-colors',
-          isActive ? 'bg-accent-soft text-accent' : 'text-fg-2 hover:bg-accent-soft hover:text-accent',
+          isActive ? 'bg-accent-soft text-accent-deep' : 'text-fg-2 hover:bg-accent-soft hover:text-accent-deep',
         )
       }
     >
