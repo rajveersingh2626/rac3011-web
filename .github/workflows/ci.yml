@@ -7,7 +7,11 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Only a newer push supersedes an in-flight build. Content-publish rebuilds
+  # (workflow_dispatch) must never cancel a running build: with a 5-minute
+  # debounce and a ~10-minute prerender build, cancelling would mean frequent
+  # edits leave the site never rebuilt at all.
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   deploy:
