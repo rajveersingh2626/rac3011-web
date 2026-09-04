@@ -88,6 +88,7 @@ export const TagInput = forwardRef<HTMLInputElement, TagInputProps>(function Tag
         <input
           ref={ref}
           type="text"
+          role="combobox"
           aria-label={label}
           aria-expanded={showList}
           aria-controls={listId}

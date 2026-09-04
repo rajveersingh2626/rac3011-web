@@ -16,7 +16,7 @@ describe('TagInput', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<TagInput values={['youth']} onChange={onChange} label="Tags" />);
-    const input = screen.getByRole('textbox', { name: 'Tags' });
+    const input = screen.getByRole('combobox', { name: 'Tags' });
     await user.type(input, '  env  {Enter}');
     expect(onChange).toHaveBeenLastCalledWith(['youth', 'env']);
     expect(input).toHaveValue('');
@@ -32,7 +32,7 @@ describe('TagInput', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<TagInput values={['a', 'b']} onChange={onChange} label="Tags" maxTags={2} />);
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     await user.type(input, 'c{Enter}');
     expect(onChange).not.toHaveBeenCalled();
     await user.clear(input);
@@ -44,7 +44,7 @@ describe('TagInput', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<TagInput values={[]} onChange={onChange} label="Tags" suggestions={['Delhi', 'Dehradun', 'Mumbai']} />);
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox');
     await user.type(input, 'de');
     expect(screen.getAllByRole('option')).toHaveLength(2);
     expect(input).toHaveAttribute('aria-expanded', 'true');
@@ -64,7 +64,7 @@ describe('TagInput', () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<TagInput values={[]} onChange={onChange} label="Tags" suggestions={['Delhi']} />);
-    await user.type(screen.getByRole('textbox'), 'd');
+    await user.type(screen.getByRole('combobox'), 'd');
     await user.click(screen.getByRole('option', { name: 'Delhi' }));
     expect(onChange).toHaveBeenCalledWith(['Delhi']);
   });
