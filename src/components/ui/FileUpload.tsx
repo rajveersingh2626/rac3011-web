@@ -201,7 +201,7 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
 
       {state.error && mode === 'file' ? (
         <div id={errorId} role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-danger bg-accent-soft px-4 py-3">
-          <p className="m-0 text-[12.5px] font-semibold text-danger">{state.error}</p>
+          <p className="m-0 text-[12.5px] font-semibold text-danger-fg">{state.error}</p>
           <Button type="button" variant="secondary" size="sm" onClick={retry}>
             <RotateCcw aria-hidden className="size-3.5" />
             Retry

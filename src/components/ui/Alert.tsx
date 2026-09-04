@@ -21,7 +21,7 @@ const titleClass: Record<AlertTone, string> = {
   info: 'text-fg',
   action: 'text-accent-deep',
   warning: 'text-accent-deep',
-  error: 'text-danger',
+  error: 'text-danger-fg',
 };
 
 export function Alert({ tone = 'info', title, children, action }: AlertProps) {

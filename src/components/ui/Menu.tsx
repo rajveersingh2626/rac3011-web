@@ -162,7 +162,7 @@ export function Menu({ label, items, align = 'start' }: MenuProps) {
                 onClick={() => select(row)}
                 className={cn(
                   'flex min-h-11 w-full items-center justify-between gap-[14px] rounded-[8px] px-[14px] text-left text-[13.5px] transition-colors',
-                  row.destructive ? 'text-danger' : 'text-fg-2',
+                  row.destructive ? 'text-danger-fg' : 'text-fg-2',
                   'hover:bg-accent-soft disabled:cursor-not-allowed disabled:opacity-50',
                 )}
               >

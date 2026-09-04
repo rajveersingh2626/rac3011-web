@@ -76,7 +76,7 @@ export function RadioGroup({ legend, name, value, onChange, options, error, hint
         />
       ))}
       {error && (
-        <p id={errorId} role="alert" className="text-[11px] font-semibold leading-snug text-danger">
+        <p id={errorId} role="alert" className="text-[11px] font-semibold leading-snug text-danger-fg">
           {error}
         </p>
       )}

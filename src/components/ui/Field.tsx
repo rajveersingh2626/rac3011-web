@@ -58,7 +58,7 @@ export function Field({ label, id, required, hint, error, className, children }:
       )}
       <FieldContext.Provider value={{ id: controlId, describedBy, invalid }}>{children}</FieldContext.Provider>
       {error && (
-        <p id={errorId} role="alert" className="text-[11px] font-semibold leading-snug text-danger">
+        <p id={errorId} role="alert" className="text-[11px] font-semibold leading-snug text-danger-fg">
           {error}
         </p>
       )}

@@ -20,7 +20,7 @@ const defaultLabel: Record<InlineStatusState, string> = {
 const toneClass: Record<InlineStatusState, string> = {
   checking: 'text-fg-3',
   ok: 'text-[#0F7B6C] [[data-theme=dark]_&]:text-[#5FD3BC]',
-  broken: 'text-danger',
+  broken: 'text-danger-fg',
   private: 'text-fg-3',
 };
 
