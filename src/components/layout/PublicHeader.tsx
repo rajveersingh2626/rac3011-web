@@ -3,6 +3,7 @@ import { Menu as MenuIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { cn } from '@/lib/cn';
 import { Drawer } from '@/components/ui/Drawer';
+import { useNavPrefetch } from '@/lib/prefetch';
 
 const NAV_LINKS = [
   { label: 'Clubs & Map', to: '/map' },
@@ -15,6 +16,7 @@ const NAV_LINKS = [
 
 export function PublicHeader() {
   const [open, setOpen] = useState(false);
+  const prefetchRoute = useNavPrefetch();
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line-accent bg-surface px-5 md:h-[60px] md:px-8 lg:h-[68px] lg:px-10">
@@ -24,7 +26,13 @@ export function PublicHeader() {
         </Link>
         <nav aria-label="Primary" className="hidden items-center gap-6 text-[13.5px] font-semibold text-fg-2 lg:flex">
           {NAV_LINKS.map((link) => (
-            <Link key={link.to} to={link.to} className="text-fg-2 transition-colors hover:text-accent">
+            <Link
+              key={link.to}
+              to={link.to}
+              onMouseEnter={() => prefetchRoute(link.to)}
+              onFocus={() => prefetchRoute(link.to)}
+              className="text-fg-2 transition-colors hover:text-accent"
+            >
               {link.label}
             </Link>
           ))}

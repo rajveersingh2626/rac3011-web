@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
 import { z } from 'zod';
-import { useQueryClient, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 import { projectSummarySchema } from './showcase';
 
@@ -18,11 +17,10 @@ const homeSchema = z.object({
   stats: z.object({ zones: z.number(), focusAreas: z.number(), foundedYear: z.number(), ageRange: z.string() }),
   flagship: z.array(flagshipItemSchema).catch([]),
   latestProjects: z.array(projectSummarySchema),
-  visits: z.object({ year: z.number(), count: z.number() }),
+  // optional: §14.2 splits the live visitor counter out into GET /public/live; see lib/publicApi/live.ts
+  visits: z.object({ year: z.number(), count: z.number() }).optional(),
 });
 export type Home = z.infer<typeof homeSchema>;
-
-const visitSchema = z.object({ year: z.number(), count: z.number() });
 
 export const HOME_QUERY_KEY = ['public', 'home'] as const;
 
@@ -32,21 +30,4 @@ export function fetchHome(): Promise<Home> {
 
 export function useHomeQuery(): UseQueryResult<Home> {
   return useQuery({ queryKey: HOME_QUERY_KEY, queryFn: fetchHome });
-}
-
-const VISIT_SESSION_KEY = 'rac3011.visitCounted';
-
-export function useVisitOnce(): void {
-  const qc = useQueryClient();
-  useEffect(() => {
-    if (window.sessionStorage.getItem(VISIT_SESSION_KEY)) return;
-    window.sessionStorage.setItem(VISIT_SESSION_KEY, '1');
-    void apiFetch('/public/visits', { method: 'POST', schema: visitSchema })
-      .then((visits) => {
-        qc.setQueryData<Home>(HOME_QUERY_KEY, (old) => (old ? { ...old, visits } : old));
-      })
-      .catch(() => {
-        window.sessionStorage.removeItem(VISIT_SESSION_KEY);
-      });
-  }, [qc]);
 }

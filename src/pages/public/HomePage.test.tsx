@@ -13,8 +13,9 @@ const HOME_BODY = {
   stats: { zones: 4, focusAreas: 7, foundedYear: 1968, ageRange: '18–30' },
   flagship: [{ title: 'Mahadan 9.0', summary: 'Blood donation drive.' }],
   latestProjects: [],
-  visits: { year: 2026, count: 500 },
 };
+
+const liveHandler = () => http.get('/public/live', () => HttpResponse.json({ year: 2026, count: 501 }));
 
 function renderHome() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -31,7 +32,7 @@ beforeEach(() => window.sessionStorage.clear());
 
 describe('HomePage', () => {
   it('renders hero, stats and flagship content once loaded', async () => {
-    server.use(http.get('/public/home', () => HttpResponse.json(HOME_BODY)), http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })));
+    server.use(http.get('/public/home', () => HttpResponse.json(HOME_BODY)), http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })), liveHandler());
     renderHome();
     expect(await screen.findByText('Service above self')).toBeInTheDocument();
     expect(await screen.findByText('501')).toBeInTheDocument();
@@ -39,7 +40,7 @@ describe('HomePage', () => {
   });
 
   it('shows a real empty state for the showcase teaser when there are no published projects', async () => {
-    server.use(http.get('/public/home', () => HttpResponse.json(HOME_BODY)), http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })));
+    server.use(http.get('/public/home', () => HttpResponse.json(HOME_BODY)), http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })), liveHandler());
     renderHome();
     expect(await screen.findByText('No published projects yet')).toBeInTheDocument();
   });
@@ -52,6 +53,7 @@ describe('HomePage', () => {
         return calls === 1 ? HttpResponse.json({ message: 'boom' }, { status: 500 }) : HttpResponse.json(HOME_BODY);
       }),
       http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })),
+      liveHandler(),
     );
     renderHome();
     await waitFor(() => expect(screen.getByText("Couldn't load the home page")).toBeInTheDocument());

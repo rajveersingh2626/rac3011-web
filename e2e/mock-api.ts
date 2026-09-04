@@ -72,6 +72,7 @@ app.post('/auth/sign-out', (_req, res) => {
 });
 
 app.get('/public/home', (_req, res) => void res.json(fixture('home.json')));
+app.get('/public/live', (_req, res) => void res.json({ year: 2026, count: 12480 }));
 app.post('/public/visits', (_req, res) => void res.json({ year: 2026, count: 12481 }));
 
 app.get('/public/clubs', (_req, res) => void res.json(fixture('clubs.json')));

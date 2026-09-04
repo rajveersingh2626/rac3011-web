@@ -1,17 +1,19 @@
+import { Suspense } from 'react';
 import { Outlet } from 'react-router';
 import { PublicHeader } from '@/components/layout/PublicHeader';
 import { PublicFooter } from '@/components/layout/PublicFooter';
 import { PortalShell } from '@/components/layout/PortalShell';
 import { AdminShell } from '@/components/layout/AdminShell';
-import { useHomeQuery } from '@/lib/publicApi/home';
+import { useLiveVisits } from '@/lib/publicApi/live';
+import { SurfaceLoading } from './SurfaceLoading';
 
 export function PublicLayout() {
-  const { data } = useHomeQuery();
+  const { data } = useLiveVisits();
   return (
     <>
       <PublicHeader />
       <Outlet />
-      <PublicFooter visits={data?.visits.count} />
+      <PublicFooter visits={data?.count} />
     </>
   );
 }
@@ -19,7 +21,9 @@ export function PublicLayout() {
 export function PortalLayout() {
   return (
     <PortalShell>
-      <Outlet />
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </PortalShell>
   );
 }
@@ -27,7 +31,9 @@ export function PortalLayout() {
 export function AdminLayout() {
   return (
     <AdminShell>
-      <Outlet />
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </AdminShell>
   );
 }

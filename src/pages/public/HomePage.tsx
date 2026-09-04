@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router';
 import { useDocumentMeta } from '@/lib/meta';
-import { useHomeQuery, useVisitOnce } from '@/lib/publicApi/home';
+import { useHomeQuery } from '@/lib/publicApi/home';
+import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
+import { useIdlePrefetch } from '@/lib/prefetch';
 import { HeroCarousel } from '@/components/public/HeroCarousel';
 import { FlagshipCarousel } from '@/components/public/FlagshipCarousel';
 import { Container } from '@/components/ui/Container';
@@ -22,7 +24,9 @@ const CTA_CARDS = [
 export function HomePage() {
   useDocumentMeta({ title: 'Rotaract District 3011', description: 'Young leaders in clubs across Delhi NCR — community, vocational and international service.' });
   const { data, isPending, isError, refetch } = useHomeQuery();
+  const { data: liveVisits } = useLiveVisits();
   useVisitOnce();
+  useIdlePrefetch(!isPending);
   const navigate = useNavigate();
 
   if (isPending) {
@@ -60,7 +64,11 @@ export function HomePage() {
         <Section eyebrow="This Rotary year" className="pt-0">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <Card>
-              <Stat label="Visits this year" value={data.visits.count.toLocaleString('en-IN')} hint={String(data.visits.year)} />
+              <Stat
+                label="Visits this year"
+                value={liveVisits ? liveVisits.count.toLocaleString('en-IN') : '—'}
+                hint={liveVisits ? String(liveVisits.year) : undefined}
+              />
             </Card>
             <Card>
               <Stat label="Zones" value={data.stats.zones} />
