@@ -1,12 +1,17 @@
 import type { RouteObject } from 'react-router';
 import { ComingSoon } from '@/pages/ComingSoon';
+import { DashboardPage } from '@/pages/portal/DashboardPage';
+import { NewReportPage } from '@/pages/portal/reports/NewReportPage';
+import { ReviewSubmitPage } from '@/pages/portal/reports/ReviewSubmitPage';
+import { ReportHistoryPage } from '@/pages/portal/reports/ReportHistoryPage';
+import { ReportDetailPage } from '@/pages/portal/reports/ReportDetailPage';
 
 export const portalMemberRouteObjects: RouteObject[] = [
-  { path: '/portal/dashboard', element: <ComingSoon title="Dashboard" /> },
-  { path: '/portal/reports/new', element: <ComingSoon title="New report" /> },
-  { path: '/portal/reports/:id/review', element: <ComingSoon title="Review report" /> },
-  { path: '/portal/reports/history', element: <ComingSoon title="Report history" /> },
-  { path: '/portal/reports/:id', element: <ComingSoon title="Report" /> },
+  { path: '/portal/dashboard', element: <DashboardPage /> },
+  { path: '/portal/reports/new', element: <NewReportPage /> },
+  { path: '/portal/reports/:id/review', element: <ReviewSubmitPage /> },
+  { path: '/portal/reports/history', element: <ReportHistoryPage /> },
+  { path: '/portal/reports/:id', element: <ReportDetailPage /> },
   { path: '/portal/announcements', element: <ComingSoon title="Announcements" /> },
   { path: '/portal/resources', element: <ComingSoon title="Resources" /> },
   { path: '/portal/my-club', element: <ComingSoon title="My club" /> },
