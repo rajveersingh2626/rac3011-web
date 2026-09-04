@@ -17,7 +17,7 @@ export default defineConfig({
   webServer: [
     { command: 'npx tsx e2e/mock-api.ts', url: 'http://localhost:3001/health', reuseExistingServer: !process.env.CI, stdout: 'ignore' },
     {
-      command: `npx vite build --mode e2e && npx vite preview --port ${PORT} --strictPort`,
+      command: `npx vite build --mode e2e && VITE_MODE=e2e npx tsx scripts/prerender.ts && npx vite preview --port ${PORT} --strictPort`,
       url: `http://localhost:${PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
