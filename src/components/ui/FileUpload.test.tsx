@@ -18,6 +18,22 @@ function unlockXhrGlobal(): void {
   });
 }
 
+// jsdom's AbortSignal fails undici's webidl check; strip it and emulate abort ourselves instead.
+let mswFetch: typeof fetch;
+beforeAll(() => {
+  mswFetch = globalThis.fetch;
+  globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+    if (!init?.signal) return mswFetch(input, init);
+    const { signal, ...rest } = init;
+    if (signal.aborted) return Promise.reject(new DOMException('The operation was aborted.', 'AbortError'));
+    return new Promise<Response>((resolve, reject) => {
+      const onAbort = () => reject(new DOMException('The operation was aborted.', 'AbortError'));
+      signal.addEventListener('abort', onAbort, { once: true });
+      mswFetch(input, rest).then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+    });
+  }) as typeof fetch;
+});
+
 function Harness(props: Omit<FileUploadProps, 'value' | 'onChange'> & { onChangeSpy?: (v: FileUploadValue | null) => void }) {
   const [value, setValue] = useState<FileUploadValue | null>(null);
   return (
@@ -176,7 +192,7 @@ describe('FileUpload', () => {
     await waitFor(() => expect(stub.requests).toHaveLength(1));
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
 
-    await act(async () => userEvent.click(screen.getByRole('button', { name: 'Cancel' })));
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Choose file' })).toBeInTheDocument());
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
