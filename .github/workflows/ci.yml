@@ -41,6 +41,7 @@ jobs:
             VITE_API_ORIGIN=${{ vars.VITE_API_ORIGIN }}
             VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN }}
             VITE_VAPID_PUBLIC_KEY=${{ vars.VITE_VAPID_PUBLIC_KEY }}
+            VITE_BUILD_SHA=${{ github.sha }}
 
       - name: Point Dokploy to the new image and redeploy
         if: ${{ vars.DOKPLOY_BASE_URL != '' }}
