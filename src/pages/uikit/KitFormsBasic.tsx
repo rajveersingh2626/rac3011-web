@@ -38,6 +38,7 @@ export function KitFormsBasic() {
         </KitEntry>
         <KitEntry name="Select">
           <Select
+            aria-label="Role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             options={[
@@ -70,7 +71,7 @@ export function KitFormsBasic() {
           <DateInput value={joinDate} onChange={setJoinDate} aria-label="Join date" />
         </KitEntry>
         <KitEntry name="RangeInput">
-          <RangeInput value={budget} onChange={setBudget} min={0} max={100} formatValue={(v) => `₹${v}k`} />
+          <RangeInput aria-label="Sponsorship budget" value={budget} onChange={setBudget} min={0} max={100} formatValue={(v) => `₹${v}k`} />
         </KitEntry>
       </KitGrid>
     </KitSection>
