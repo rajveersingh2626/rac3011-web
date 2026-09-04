@@ -1,10 +1,12 @@
+import { lazy } from 'react';
 import type { RouteObject } from 'react-router';
 import { ComingSoon } from '@/pages/ComingSoon';
-import { DashboardPage } from '@/pages/portal/DashboardPage';
-import { NewReportPage } from '@/pages/portal/reports/NewReportPage';
-import { ReviewSubmitPage } from '@/pages/portal/reports/ReviewSubmitPage';
-import { ReportHistoryPage } from '@/pages/portal/reports/ReportHistoryPage';
-import { ReportDetailPage } from '@/pages/portal/reports/ReportDetailPage';
+
+const DashboardPage = lazy(() => import('@/pages/portal/DashboardPage').then((m) => ({ default: m.DashboardPage })));
+const NewReportPage = lazy(() => import('@/pages/portal/reports/NewReportPage').then((m) => ({ default: m.NewReportPage })));
+const ReviewSubmitPage = lazy(() => import('@/pages/portal/reports/ReviewSubmitPage').then((m) => ({ default: m.ReviewSubmitPage })));
+const ReportHistoryPage = lazy(() => import('@/pages/portal/reports/ReportHistoryPage').then((m) => ({ default: m.ReportHistoryPage })));
+const ReportDetailPage = lazy(() => import('@/pages/portal/reports/ReportDetailPage').then((m) => ({ default: m.ReportDetailPage })));
 
 export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/dashboard', element: <DashboardPage /> },

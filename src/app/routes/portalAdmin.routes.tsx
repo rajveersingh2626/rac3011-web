@@ -1,11 +1,14 @@
-import type { ReactElement } from 'react';
+import { lazy, type ReactElement } from 'react';
 import type { RouteObject } from 'react-router';
 import { ComingSoon } from '@/pages/ComingSoon';
 import { RequirePermission } from './guards';
-import { AdminClubsPage } from '@/pages/portal/admin/AdminClubsPage';
-import { ReportFormBuilderPage } from '@/pages/portal/admin/ReportFormBuilderPage';
-import { AdminRequestsPage } from '@/pages/portal/admin/AdminRequestsPage';
-import { NewRequestPage } from '@/pages/portal/admin/NewRequestPage';
+
+const AdminClubsPage = lazy(() => import('@/pages/portal/admin/AdminClubsPage').then((m) => ({ default: m.AdminClubsPage })));
+const ReportFormBuilderPage = lazy(() =>
+  import('@/pages/portal/admin/ReportFormBuilderPage').then((m) => ({ default: m.ReportFormBuilderPage })),
+);
+const AdminRequestsPage = lazy(() => import('@/pages/portal/admin/AdminRequestsPage').then((m) => ({ default: m.AdminRequestsPage })));
+const NewRequestPage = lazy(() => import('@/pages/portal/admin/NewRequestPage').then((m) => ({ default: m.NewRequestPage })));
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
