@@ -13,3 +13,4 @@ Recorded where the spec left a choice open. Each entry: date, decision, reason.
 - 2026-09-04: Second-factor step defaults to `email` method (mockup: "email OTP as the primary second factor"); `totp` is an opt-in toggle. Resend countdown is 30s.
 - 2026-09-04: `ThemeProvider` reads `profile.themePreference` when present, else `localStorage['rac3011.theme']`, else `prefers-color-scheme`. `PATCH /me` persistence on toggle is called only when `me` is present.
 - 2026-09-04: Sidebar groups Overview/Reporting/Club/Me are shown to every authenticated user except items that name a permission (Reporting requires `reports:submit`; Club → Events requires `club_events:log`, Showcase requires `showcase:submit`). Admin items each require exactly one permission key.
+- 2026-09-04: `TagInput` at `maxTags` keeps its text input enabled (adds are refused in `add()`) rather than disabling it, so Backspace can still remove a tag. Disabling it trapped keyboard users at the cap.
