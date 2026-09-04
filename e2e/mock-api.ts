@@ -72,7 +72,35 @@ app.post('/auth/sign-out', (_req, res) => {
 });
 
 app.get('/public/home', (_req, res) => void res.json(fixture('home.json')));
-app.post('/public/visits', (_req, res) => void res.status(201).json({ counted: true }));
+app.post('/public/visits', (_req, res) => void res.json({ year: 2026, count: 12481 }));
+
+app.get('/public/clubs', (_req, res) => void res.json(fixture('clubs.json')));
+app.get('/public/clubs/:slug', (_req, res) => void res.json(fixture('club-detail.json')));
+
+app.get('/public/projects', (_req, res) => void res.json(fixture('projects.json')));
+app.get('/public/projects/:slug', (_req, res) => void res.json(fixture('project-detail.json')));
+
+app.get('/public/past-drrs', (_req, res) => void res.json(fixture('past-drrs.json')));
+app.get('/public/past-drrs/:slug', (_req, res) => void res.json(fixture('past-drr-detail.json')));
+
+app.get('/public/district-team', (_req, res) => void res.json(fixture('district-team.json')));
+app.get('/public/achievements', (_req, res) => void res.json(fixture('achievements.json')));
+app.get('/public/partners', (_req, res) => void res.json(fixture('partners.json')));
+app.get('/public/publications', (_req, res) => void res.json(fixture('publications.json')));
+app.get('/public/resources', (_req, res) => void res.json(fixture('resources.json')));
+
+app.get('/public/content/:pageKey', (req, res) => {
+  const blocks = (fixture('public-content.json') as Record<string, unknown>)[req.params.pageKey] ?? {};
+  res.json(blocks);
+});
+
+app.get('/public/initiatives', (_req, res) => void res.json(fixture('initiatives.json')));
+
+app.get('/public/events', (_req, res) => void res.json(fixture('events.json')));
+app.get('/public/events/:slug', (_req, res) => void res.json(fixture('event-detail.json')));
+app.get('/public/calendar.ics', (_req, res) => void res.type('text/calendar').send('BEGIN:VCALENDAR\nEND:VCALENDAR'));
+
+app.post('/public/enquiries', (_req, res) => void res.json({ received: true, routedTo: 'District Secretariat' }));
 
 app.post('/files/grants', (_req, res) => void res.status(201).json({ grantId: 'grant_e2e', uploadUrl: `http://localhost:${PORT}/mock-provider` }));
 app.patch('/files/grants/:grantId', (req, res) =>
