@@ -16,6 +16,8 @@
   ],
   "grants": {
     "reports:submit": [{ "type": "club", "id": "club_dse" }],
+    "reports:review": [{ "type": "zone", "id": "zone_agni" }],
+    "requests:manage": [{ "type": "none" }],
     "members:approve": [{ "type": "club", "id": "club_dse" }],
     "clubs:edit": [{ "type": "club", "id": "club_dse" }],
     "showcase:submit": [{ "type": "club", "id": "club_dse" }],
