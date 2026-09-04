@@ -31,6 +31,20 @@ describe('Chip', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
     expect(onClick).not.toHaveBeenCalled();
   });
+  it('supports the label prop and removes via keyboard', async () => {
+    const onRemove = vi.fn();
+    render(<Chip label="Zone 4" onRemove={onRemove} />);
+    const rm = screen.getByRole('button', { name: 'Remove Zone 4' });
+    rm.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(onRemove).toHaveBeenCalledTimes(1);
+  });
+  it('does not remove when disabled', async () => {
+    const onRemove = vi.fn();
+    render(<Chip label="Tag" disabled onRemove={onRemove} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Tag' }));
+    expect(onRemove).not.toHaveBeenCalled();
+  });
   it('renders in dark theme container', () => {
     const { container } = render(
       <div data-theme="dark">

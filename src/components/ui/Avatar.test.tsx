@@ -21,6 +21,10 @@ describe('Avatar', () => {
     render(<Avatar name="A" size={size} />);
     expect(screen.getByRole('img')).toHaveAttribute('data-size', size);
   });
+  it('uses one letter for a single-word name', () => {
+    render(<Avatar name="Prashant" />);
+    expect(screen.getByRole('img')).toHaveTextContent('P');
+  });
   it('renders in dark theme container', () => {
     const { container } = render(
       <div data-theme="dark">
