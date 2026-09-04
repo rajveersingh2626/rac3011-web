@@ -63,27 +63,33 @@ async function main(): Promise<void> {
   }
 
   const { server, baseUrl } = await startPreviewServer();
-  const browser = await chromium.launch();
-  let rendered = 0;
   try {
-    for (const route of PRERENDER_ROUTES) {
-      const result = await prerenderRoute(browser, baseUrl, route);
-      if (!result.ok) {
-        console.warn(`[prerender] ${route}: API data unavailable at build time, shipping the plain SPA shell for this route.`);
-        continue;
+    const browser = await chromium.launch();
+    try {
+      let rendered = 0;
+      for (const route of PRERENDER_ROUTES) {
+        const result = await prerenderRoute(browser, baseUrl, route);
+        if (!result.ok) {
+          console.warn(`[prerender] ${route}: API data unavailable at build time, shipping the plain SPA shell for this route.`);
+          continue;
+        }
+        const outFile = join(DIST_DIR, outputFileFor(route));
+        mkdirSync(dirname(outFile), { recursive: true });
+        writeFileSync(outFile, result.html);
+        rendered += 1;
       }
-      const outFile = join(DIST_DIR, outputFileFor(route));
-      mkdirSync(dirname(outFile), { recursive: true });
-      writeFileSync(outFile, result.html);
-      rendered += 1;
+      console.log(`[prerender] ${rendered}/${PRERENDER_ROUTES.length} public routes prerendered.`);
+    } finally {
+      await browser.close();
     }
   } finally {
-    await browser.close();
     await server.close();
   }
-  console.log(`[prerender] ${rendered}/${PRERENDER_ROUTES.length} public routes prerendered.`);
 }
 
-main().catch((err: unknown) => {
-  console.warn('[prerender] unexpected failure, shipping the plain SPA shell for every public route:', err);
-});
+// .finally(exit) is a safety net: a leaked open handle must never hang the whole `npm run build` chain.
+main()
+  .catch((err: unknown) => {
+    console.warn('[prerender] unexpected failure, shipping the plain SPA shell for every public route:', err);
+  })
+  .finally(() => process.exit(0));

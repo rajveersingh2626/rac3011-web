@@ -1,7 +1,8 @@
-FROM node:22-alpine AS build
+FROM node:22-bookworm-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
+RUN npx playwright install --with-deps chromium
 COPY . .
 ARG VITE_API_ORIGIN
 ARG VITE_SENTRY_DSN
