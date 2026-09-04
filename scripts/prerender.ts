@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { loadEnv, preview, type PreviewServer } from 'vite';
-import { chromium, type Browser } from '@playwright/test';
+import { chromium, type Browser, type Route } from '@playwright/test';
 import { PRERENDER_ROUTES, outputFileFor } from './prerenderRoutes';
 import { isDegraded, type ApiResponseEvent } from '../src/lib/prerenderDegradation';
 
@@ -24,6 +24,42 @@ function injectPrerenderedState(html: string, stateJson: string | null): string 
   return html.replace('</head>', `${script}</head>`);
 }
 
+// The real API's CORS allowlist (WEB_ORIGINS) only trusts the real web hostnames, not vite preview's ephemeral localhost origin, so the crawling browser's own fetch would be CORS-blocked. Proxying through Node's fetch (no CORS enforcement server-side) and adding a permissive ACAO header on the way back is the same trusted-build-tool bypass a real SSR server would have.
+async function proxyPastCors(route: Route): Promise<void> {
+  const req = route.request();
+  // The client sends `credentials: 'include'`; a wildcard ACAO is rejected outright for credentialed
+  // requests, so the response must name the page's own origin and allow credentials explicitly.
+  const origin = req.headers()['origin'] ?? '*';
+  const corsHeaders: Record<string, string> = {
+    'access-control-allow-origin': origin,
+    'access-control-allow-credentials': 'true',
+  };
+  if (req.method() === 'OPTIONS') {
+    return route.fulfill({
+      status: 204,
+      headers: {
+        ...corsHeaders,
+        'access-control-allow-methods': 'GET,HEAD,POST,PATCH,PUT,DELETE,OPTIONS',
+        'access-control-allow-headers': req.headers()['access-control-request-headers'] ?? 'content-type',
+      },
+      body: '',
+    });
+  }
+  try {
+    const res = await fetch(req.url(), {
+      method: req.method(),
+      headers: req.headers(),
+      body: ['GET', 'HEAD'].includes(req.method()) ? undefined : (req.postData() ?? undefined),
+    });
+    const headers = Object.fromEntries(res.headers.entries());
+    Object.assign(headers, corsHeaders);
+    delete headers['content-encoding'];
+    await route.fulfill({ status: res.status, headers, body: Buffer.from(await res.arrayBuffer()) });
+  } catch {
+    await route.abort();
+  }
+}
+
 async function prerenderRoute(browser: Browser, baseUrl: string, route: string): Promise<{ ok: true; html: string } | { ok: false }> {
   const context = await browser.newContext();
   try {
@@ -31,6 +67,7 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
     const events: ApiResponseEvent[] = [];
     page.on('response', (res) => events.push({ url: res.url(), ok: res.ok() }));
     page.on('requestfailed', (req) => events.push({ url: req.url(), ok: false }));
+    if (API_ORIGIN) await page.route(`${API_ORIGIN}/**`, proxyPastCors);
     await page.route('**/public/live', (r) => r.abort());
     await page.route('**/public/visits', (r) => r.abort());
 
