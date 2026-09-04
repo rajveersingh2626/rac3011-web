@@ -9,8 +9,8 @@
   --radius-card: 16px; --radius-control: 8px; --radius-pill: 999px;
   --shadow-card: 0 4px 15px rgba(216,27,96,0.04); --shadow-pop: 0 20px 50px rgba(216,27,96,0.14);
 }
-:root { --bg: var(--color-cream); --surface: #FFFFFF; --fg: var(--color-ink); --fg-2: var(--color-ink-2); --fg-3: var(--color-ink-3); --border: var(--color-line); --border-accent: rgba(216,27,96,0.15); --accent: var(--color-pink); --accent-hover: var(--color-pink-hover); --accent-fg: #FFFFFF; --accent-soft: var(--color-pink-light); --accent-deep: var(--color-cranberry); --track: var(--color-pink-subtle); --danger: var(--color-maroon); --input-bg: var(--color-cream); --shadow-raised: 0 4px 15px rgba(216,27,96,0.06); --shadow-overlay: 0 18px 44px rgba(216,27,96,0.16); --shadow-button: 0 6px 18px rgba(216,27,96,0.25); --portal-bar: var(--color-dark-2); }
-[data-theme="dark"] { --bg: var(--color-dark-0); --surface: var(--color-dark-3); --fg: #F5F2F3; --fg-2: var(--color-line-2); --fg-3: var(--color-ink-4); --border: var(--color-dark-4); --border-accent: rgba(240,64,127,0.22); --accent: var(--color-pink-bright); --accent-hover: var(--color-pink-soft); --accent-fg: var(--color-dark-plum); --accent-soft: var(--color-dark-plum-2); --accent-deep: var(--color-pink-soft); --track: var(--color-dark-plum-3); --danger: var(--color-maroon-dark); --input-bg: var(--color-dark-1); --shadow-raised: 0 4px 15px rgba(0,0,0,0.35); --shadow-overlay: 0 18px 44px rgba(0,0,0,0.55); --shadow-button: 0 6px 18px rgba(0,0,0,0.45); }
+:root { --bg: var(--color-cream); --surface: #FFFFFF; --fg: var(--color-ink); --fg-2: var(--color-ink-2); --fg-3: var(--color-ink-3); --border: var(--color-line); --border-accent: rgba(216,27,96,0.15); --accent: var(--color-pink); --accent-hover: var(--color-pink-hover); --accent-fg: #FFFFFF; --accent-soft: var(--color-pink-light); --accent-deep: var(--color-cranberry); --track: var(--color-pink-subtle); --danger: var(--color-maroon); --danger-fg: var(--color-maroon); --input-bg: var(--color-cream); --shadow-raised: 0 4px 15px rgba(216,27,96,0.06); --shadow-overlay: 0 18px 44px rgba(216,27,96,0.16); --shadow-button: 0 6px 18px rgba(216,27,96,0.25); --portal-bar: var(--color-dark-2); }
+[data-theme="dark"] { --bg: var(--color-dark-0); --surface: var(--color-dark-3); --fg: #F5F2F3; --fg-2: var(--color-line-2); --fg-3: var(--color-ink-4); --border: var(--color-dark-4); --border-accent: rgba(240,64,127,0.22); --accent: var(--color-pink-bright); --accent-hover: var(--color-pink-soft); --accent-fg: var(--color-dark-plum); --accent-soft: var(--color-dark-plum-2); --accent-deep: var(--color-pink-soft); --track: var(--color-dark-plum-3); --danger: var(--color-maroon-dark); --danger-fg: #E58B98; --input-bg: var(--color-dark-1); --shadow-raised: 0 4px 15px rgba(0,0,0,0.35); --shadow-overlay: 0 18px 44px rgba(0,0,0,0.55); --shadow-button: 0 6px 18px rgba(0,0,0,0.45); }
 [data-surface="drishti"] { --accent: #123499; --accent-hover: #0C2470; --accent-soft: #EEF1FA; --accent-deep: #0C2470; --accent-fg: #FFFFFF; }
 [data-surface="rcl"] { --accent: #0F7B6C; --accent-hover: #0A5347; --accent-soft: #E9F5F2; --accent-deep: #0A5347; --accent-fg: #FFFFFF; }
 [data-surface="careerbridge"] { --accent: #6B3FA0; --accent-hover: #4A2570; --accent-soft: #F3EEF9; --accent-deep: #4A2570; --accent-fg: #FFFFFF; }
@@ -35,6 +35,7 @@
 @utility bg-track { background-color: var(--track); }
 @utility bg-danger { background-color: var(--danger); }
 @utility text-danger { color: var(--danger); }
+@utility text-danger-fg { color: var(--danger-fg); }
 @utility border-danger { border-color: var(--danger); }
 @utility shadow-raised { box-shadow: var(--shadow-raised); }
 @utility shadow-overlay { box-shadow: var(--shadow-overlay); }
@@ -42,10 +43,13 @@
 @utility bg-portal-bar { background-color: var(--portal-bar); }
 @utility control { min-height: 44px; }
 
-html { font-family: var(--font-sans); background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; }
-body { margin: 0; font-size: 13.5px; line-height: 1.65; }
-a { color: var(--accent); text-decoration: none; }
-::selection { background: var(--color-pink-subtle); }
-[data-theme="dark"] ::selection { background: var(--color-dark-plum-3); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+/* Layered (not bare) so Tailwind utility classes — e.g. text-white/72 on an <a> — can override these resets; unlayered CSS beats every @layer regardless of specificity. */
+@layer base {
+  html { font-family: var(--font-sans); background: var(--bg); color: var(--fg); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; font-size: 13.5px; line-height: 1.65; }
+  a { color: var(--accent); text-decoration: none; }
+  ::selection { background: var(--color-pink-subtle); }
+  [data-theme="dark"] ::selection { background: var(--color-dark-plum-3); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+}

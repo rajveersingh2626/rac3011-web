@@ -53,7 +53,7 @@ export function PublicFooter({ visits }: PublicFooterProps) {
         </div>
         {COLUMNS.map((col) => (
           <div key={col.heading}>
-            <p className="m-0 mb-3.5 text-[10.5px] font-bold tracking-[1.2px] text-accent">{col.heading.toUpperCase()}</p>
+            <p className="m-0 mb-3.5 text-[10.5px] font-bold tracking-[1.2px] text-pink-bright">{col.heading.toUpperCase()}</p>
             <div className="flex flex-col gap-2.5 text-[12.5px] text-white/72">
               {col.links.map((link) => (
                 <Link key={link.to} to={link.to} className="text-white/72 transition-colors hover:text-white">
@@ -64,7 +64,7 @@ export function PublicFooter({ visits }: PublicFooterProps) {
           </div>
         ))}
       </div>
-      <div className="flex flex-col gap-2 pt-5 text-[11.5px] text-white/40 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 pt-5 text-[11.5px] text-white/62 sm:flex-row sm:items-center sm:justify-between">
         <span>© {year} Rotaract District Organization 3011</span>
         <span>{typeof visits === 'number' ? `${visits.toLocaleString('en-IN')} visits this year · counted server-side` : null}</span>
       </div>
