@@ -1,0 +1,22 @@
+{
+  "visits": 12480,
+  "stats": [
+    { "label": "Clubs", "value": 75 },
+    { "label": "Members", "value": 2140 },
+    { "label": "Projects this year", "value": 34 },
+    { "label": "Blood units", "value": 1847 }
+  ],
+  "flagships": [
+    { "key": "mission3011", "name": "Mission 3011", "tagline": "3,011 units of blood, one district total", "value": 1847, "target": 3011, "unit": "units" },
+    { "key": "drishti", "name": "Project Drishti", "tagline": "One hundred sight-restoring surgeries", "value": 38, "target": 100, "unit": "surgeries" },
+    { "key": "rcl", "name": "Rotaract Champions League", "tagline": "Cricket across the district", "value": 12, "unit": "teams" },
+    { "key": "careerbridge", "name": "Career Bridge", "tagline": "Opportunities, verified", "value": 26, "unit": "listings" },
+    { "key": "ride", "name": "RIDE", "tagline": "Hosting Rotaractors from abroad", "value": 4, "unit": "delegations" }
+  ],
+  "showcase": [
+    { "slug": "blood-donation-camp", "title": "Blood donation camp", "clubName": "Delhi South East", "reached": 180, "coverUrl": null },
+    { "slug": "tree-plantation", "title": "Tree plantation drive", "clubName": "Saksham", "reached": 60, "coverUrl": null },
+    { "slug": "interact-orientation", "title": "Interact orientation", "clubName": "Delhi South", "reached": 45, "coverUrl": null },
+    { "slug": "wash-workshop", "title": "WASH workshop", "clubName": "IGDTUW", "reached": 90, "coverUrl": null }
+  ]
+}
