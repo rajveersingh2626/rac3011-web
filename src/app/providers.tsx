@@ -7,6 +7,7 @@ import { ToastProvider } from '@/components/ui/Toast';
 import { apiFetch } from '@/lib/api';
 import { createLocalStoragePersister } from '@/lib/queryPersister';
 import { LIVE_QUERY_KEY } from '@/lib/publicApi/live';
+import { exposeQueryClientForPrerender, hydratePrerenderedState } from './prerender';
 
 export { useAuth, useMe } from './auth';
 export { useTheme } from './theme';
@@ -16,7 +17,7 @@ export const BUILD_SHA: string = (import.meta.env.VITE_BUILD_SHA as string | und
 const PERSIST_MAX_AGE_MS = 24 * 60 * 60_000;
 
 export function createQueryClient(): QueryClient {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: {
       queries: {
         staleTime: 5 * 60_000,
@@ -26,6 +27,9 @@ export function createQueryClient(): QueryClient {
       },
     },
   });
+  hydratePrerenderedState(client);
+  exposeQueryClientForPrerender(client, shouldPersistQuery);
+  return client;
 }
 
 function isLiveQueryKey(queryKey: readonly unknown[]): boolean {
