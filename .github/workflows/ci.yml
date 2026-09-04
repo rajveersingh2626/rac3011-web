@@ -35,9 +35,34 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Trigger Dokploy redeploy
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/rbansal42/rac3011-web:main
+          build-args: |
+            VITE_API_ORIGIN=${{ vars.VITE_API_ORIGIN }}
+            VITE_SENTRY_DSN=${{ vars.VITE_SENTRY_DSN }}
+            VITE_VAPID_PUBLIC_KEY=${{ vars.VITE_VAPID_PUBLIC_KEY }}
+      - name: Trigger Dokploy redeploy (Oracle)
+        # dokploy2.rbansal.xyz's public dashboard routing is currently broken (host
+        # nginx that used to front it was disabled 2026-09-04, Traefik has no route
+        # for the dashboard's own hostname) - this step is expected to fail until
+        # that's fixed. Fall back to a manual "Deploy" click in the dashboard, or an
+        # API call from inside the Oracle box (127.0.0.1:3000) via SSH.
+        continue-on-error: true
         run: |
-          curl -fsS -X POST "${{ secrets.DOKPLOY_WEB_REDEPLOY_URL }}" \
+          curl -fsS -X POST "https://dokploy2.rbansal.xyz/api/application.deploy" \
             -H "Content-Type: application/json" \
-            -H "x-api-key: ${{ secrets.DOKPLOY_API_KEY }}"
+            -H "x-api-key: ${{ secrets.DOKPLOY_API_KEY }}" \
+            -d '{"applicationId":"${{ vars.DOKPLOY_WEB_APPLICATION_ID }}"}'
