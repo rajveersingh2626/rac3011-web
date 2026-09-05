@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet, type RouteObject } from 'react-router';
+import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireSubdomainAuth } from './subdomainGuards';
@@ -48,5 +48,15 @@ const routes: RouteObject[] = [
 ];
 
 export function createDrishtiRouter() {
-  return createBrowserRouter(routes);
+  return createBrowserRouter([
+    {
+      element: (
+        <>
+          <ScrollRestoration />
+          <Outlet />
+        </>
+      ),
+      children: routes,
+    },
+  ]);
 }

@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { PublicLayout, PortalLayout, AdminLayout } from './layouts';
 import { RequireAuth } from './guards';
 import { LoginPage } from '@/pages/portal/LoginPage';
@@ -27,5 +27,15 @@ const routes: RouteObject[] = [
 ];
 
 export function createMainRouter() {
-  return createBrowserRouter(routes);
+  return createBrowserRouter([
+    {
+      element: (
+        <>
+          <ScrollRestoration />
+          <Outlet />
+        </>
+      ),
+      children: routes,
+    },
+  ]);
 }

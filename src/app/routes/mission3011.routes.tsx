@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Outlet, type RouteObject } from 'react-router';
+import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useAuth } from '@/app/auth';
@@ -55,5 +55,15 @@ const routes: RouteObject[] = [
 ];
 
 export function createMission3011Router() {
-  return createBrowserRouter(routes);
+  return createBrowserRouter([
+    {
+      element: (
+        <>
+          <ScrollRestoration />
+          <Outlet />
+        </>
+      ),
+      children: routes,
+    },
+  ]);
 }

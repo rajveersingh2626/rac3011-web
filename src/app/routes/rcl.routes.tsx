@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
@@ -27,5 +27,15 @@ const routes: RouteObject[] = [
 ];
 
 export function createRclRouter() {
-  return createBrowserRouter(routes);
+  return createBrowserRouter([
+    {
+      element: (
+        <>
+          <ScrollRestoration />
+          <Outlet />
+        </>
+      ),
+      children: routes,
+    },
+  ]);
 }
