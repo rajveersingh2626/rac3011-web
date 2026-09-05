@@ -61,7 +61,7 @@ describe('AchievementsAdmin', () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /New achievement/i }));
-    await user.type(screen.getByLabelText('Title'), 'New milestone');
+    await user.type(screen.getByRole('textbox', { name: /^Title/ }), 'New milestone');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(lastPostBody).toBeDefined());
