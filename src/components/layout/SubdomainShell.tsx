@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useAuth } from '@/app/auth';
-import type { Surface } from '@/app/host';
+import { mainSiteHref, type Surface } from '@/app/host';
 
 export interface SubdomainNavLink {
   label: string;
@@ -13,19 +13,6 @@ export interface SubdomainShellProps {
   title: string;
   nav: SubdomainNavLink[];
   children: ReactNode;
-}
-
-export function mainSiteHref(): string {
-  const url = new URL(window.location.href);
-  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.localhost')) {
-    url.searchParams.delete('surface');
-    url.pathname = '/';
-    return url.toString();
-  }
-  const parts = url.hostname.split('.');
-  url.hostname = parts.length > 2 ? parts.slice(1).join('.') : url.hostname;
-  url.pathname = '/';
-  return url.toString();
 }
 
 export function SubdomainShell({ surface, title, nav, children }: SubdomainShellProps) {

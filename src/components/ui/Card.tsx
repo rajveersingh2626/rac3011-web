@@ -11,6 +11,9 @@ export interface CardProps {
   footer?: ReactNode;
   children?: ReactNode;
   className?: string;
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
 const toneClass: Record<CardTone, string> = {
@@ -19,10 +22,16 @@ const toneClass: Record<CardTone, string> = {
   dashed: 'bg-transparent border border-dashed border-line',
 };
 
-export function Card({ as = 'div', tone = 'plain', eyebrow, title, footer, children, className }: CardProps) {
+export function Card({ as = 'div', tone = 'plain', eyebrow, title, footer, children, className, href, target, rel }: CardProps) {
   const Tag = as;
   return (
-    <Tag data-tone={tone} className={cn('rounded-[16px] p-5', toneClass[tone], className)}>
+    <Tag
+      data-tone={tone}
+      href={href}
+      target={target}
+      rel={rel}
+      className={cn('rounded-[16px] p-5', toneClass[tone], href && 'transition-colors hover:border-accent', className)}
+    >
       {eyebrow && <p className="m-0 mb-1.5 text-[9px] font-bold uppercase tracking-[1px] text-accent">{eyebrow}</p>}
       {title && <h3 className="m-0 text-[15.5px] font-extrabold leading-[1.35] text-fg">{title}</h3>}
       {children && <div className={cn('text-[13.5px] text-fg-2', Boolean(title || eyebrow) && 'mt-2')}>{children}</div>}

@@ -1,6 +1,8 @@
 export const SURFACES = ['main', 'mission3011', 'drishti', 'rcl', 'careerbridge', 'ride'] as const;
 export type Surface = (typeof SURFACES)[number];
 
+const APEX = 'rotaract3011.org';
+
 const PROJECT_SURFACES = SURFACES.filter((s): s is Exclude<Surface, 'main'> => s !== 'main');
 
 function isSurface(value: string | null): value is Surface {
@@ -9,6 +11,11 @@ function isSurface(value: string | null): value is Surface {
 
 function isLocalHost(hostname: string): boolean {
   return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.localhost');
+}
+
+// Every deployment is <surface>.rotaract3011.org or testing.<surface>.rotaract3011.org.
+function currentEnvPrefix(hostname: string): '' | 'testing.' {
+  return hostname === `testing.${APEX}` || hostname.startsWith('testing.') ? 'testing.' : '';
 }
 
 export function resolveSurface(hostname: string, search = ''): Surface {
@@ -28,4 +35,31 @@ export function resolveSurface(hostname: string, search = ''): Surface {
     if (isSurface(q)) return q;
   }
   return 'main';
+}
+
+export function mainSiteHref(): string {
+  const url = new URL(window.location.href);
+  if (isLocalHost(url.hostname)) {
+    url.searchParams.delete('surface');
+    url.pathname = '/';
+    return url.toString();
+  }
+  const prefix = currentEnvPrefix(url.hostname);
+  url.hostname = prefix ? `${prefix}${APEX}` : APEX;
+  url.pathname = '/';
+  return url.toString();
+}
+
+export function surfaceHref(key: Exclude<Surface, 'main'>): string {
+  const url = new URL(window.location.href);
+  if (isLocalHost(url.hostname)) {
+    url.searchParams.set('surface', key);
+    url.pathname = '/';
+    return url.toString();
+  }
+  const prefix = currentEnvPrefix(url.hostname);
+  url.hostname = `${prefix}${key}.${APEX}`;
+  url.pathname = '/';
+  url.search = '';
+  return url.toString();
 }

@@ -32,5 +32,9 @@ describe('InitiativesPage', () => {
     expect(await screen.findByText('Units collected')).toBeInTheDocument();
     expect(screen.getByText('Live data temporarily unavailable')).toBeInTheDocument();
     expect(screen.getByText('Open for bidding')).toBeInTheDocument();
+
+    expect(screen.getByText('Mission 3011').closest('a')).toHaveAttribute('href', expect.stringContaining('surface=mission3011'));
+    expect(screen.getByText('Project Drishti').closest('a')).toHaveAttribute('href', expect.stringContaining('surface=drishti'));
+    expect(screen.getByText('RCL').closest('a')).toHaveAttribute('href', expect.stringContaining('surface=rcl'));
   });
 });

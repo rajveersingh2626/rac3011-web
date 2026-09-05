@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { CircleOff } from 'lucide-react';
+import { surfaceHref } from '@/app/host';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchInitiatives, type InitiativeCard } from '@/lib/publicApi/initiatives';
 import { Container } from '@/components/ui/Container';
@@ -12,9 +13,11 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 function InitiativeTile({ card }: { card: InitiativeCard }) {
+  const href = surfaceHref(card.key);
+
   if (card.status === 'unassigned') {
     return (
-      <Card tone="dashed" eyebrow={card.label}>
+      <Card as="a" href={href} tone="dashed" eyebrow={card.label}>
         <p className="m-0">{card.description}</p>
         <Badge tone="neutral" className="mt-3">
           Open for bidding
@@ -25,7 +28,7 @@ function InitiativeTile({ card }: { card: InitiativeCard }) {
 
   if (card.status === 'unreachable') {
     return (
-      <Card eyebrow={card.label}>
+      <Card as="a" href={href} eyebrow={card.label}>
         <p className="m-0">{card.description}</p>
         <p className="mt-3 flex items-center gap-1.5 text-[12px] font-bold text-fg-3">
           <CircleOff aria-hidden className="size-3.5" /> Live data temporarily unavailable
@@ -36,7 +39,7 @@ function InitiativeTile({ card }: { card: InitiativeCard }) {
 
   const { summary } = card;
   return (
-    <Card eyebrow={card.label} title={summary.headline}>
+    <Card as="a" href={href} eyebrow={card.label} title={summary.headline}>
       <div className="flex items-center gap-4">
         {summary.target ? (
           <RadialGauge value={summary.value} max={summary.target} sublabel={summary.unit} />

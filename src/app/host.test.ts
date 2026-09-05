@@ -1,4 +1,14 @@
-import { resolveSurface } from './host';
+import { mainSiteHref, resolveSurface, surfaceHref } from './host';
+
+function withLocation(href: string, run: () => void) {
+  const original = window.location.href;
+  Object.defineProperty(window, 'location', { value: new URL(href), writable: true });
+  try {
+    run();
+  } finally {
+    Object.defineProperty(window, 'location', { value: new URL(original), writable: true });
+  }
+}
 
 describe('resolveSurface', () => {
   it.each([
@@ -35,5 +45,32 @@ describe('resolveSurface', () => {
 
   it('prefers hostname prefix over query', () => {
     expect(resolveSurface('drishti.localhost', '?surface=rcl')).toBe('drishti');
+  });
+});
+
+describe('surfaceHref / mainSiteHref', () => {
+  it('surfaceHref adds the testing. prefix only when already on a testing host', () => {
+    withLocation('https://rotaract3011.org/', () => {
+      expect(surfaceHref('drishti')).toBe('https://drishti.rotaract3011.org/');
+    });
+    withLocation('https://testing.rotaract3011.org/some/page', () => {
+      expect(surfaceHref('drishti')).toBe('https://testing.drishti.rotaract3011.org/');
+    });
+  });
+
+  it('mainSiteHref strips exactly the surface label, keeping any testing. prefix', () => {
+    withLocation('https://drishti.rotaract3011.org/beneficiaries', () => {
+      expect(mainSiteHref()).toBe('https://rotaract3011.org/');
+    });
+    withLocation('https://testing.drishti.rotaract3011.org/beneficiaries', () => {
+      expect(mainSiteHref()).toBe('https://testing.rotaract3011.org/');
+    });
+  });
+
+  it('both use the ?surface= query param on localhost, landing on /', () => {
+    withLocation('http://localhost:5173/dashboard', () => {
+      expect(surfaceHref('rcl')).toBe('http://localhost:5173/?surface=rcl');
+      expect(mainSiteHref()).toBe('http://localhost:5173/');
+    });
   });
 });

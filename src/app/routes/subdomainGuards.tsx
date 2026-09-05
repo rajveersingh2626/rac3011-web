@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router';
 import { useAuth } from '@/app/auth';
-import { mainSiteHref } from '@/components/layout/SubdomainShell';
+import { mainSiteHref } from '@/app/host';
 import { Container } from '@/components/ui/Container';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
