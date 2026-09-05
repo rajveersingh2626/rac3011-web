@@ -16,6 +16,11 @@ describe('resolveSurface', () => {
     ['localhost', 'main'],
     ['127.0.0.1', 'main'],
     ['staging.rotaract3011.org', 'main'],
+    ['testing.rotaract3011.org', 'main'],
+    ['testing.drishti.rotaract3011.org', 'drishti'],
+    ['testing.mission3011.rotaract3011.org', 'mission3011'],
+    ['testing.rcl.rotaract3011.org', 'rcl'],
+    ['testing.bogus.rotaract3011.org', 'main'],
     ['evil.com', 'main'],
   ])('%s → %s', (host, expected) => {
     expect(resolveSurface(host)).toBe(expected);

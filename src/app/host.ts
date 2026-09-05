@@ -13,9 +13,16 @@ function isLocalHost(hostname: string): boolean {
 
 export function resolveSurface(hostname: string, search = ''): Surface {
   const host = hostname.toLowerCase().replace(/\.$/, '');
-  const first = host.split('.')[0] ?? '';
+  const labels = host.split('.');
+  const first = labels[0] ?? '';
   const byPrefix = PROJECT_SURFACES.find((s) => s === first);
   if (byPrefix) return byPrefix;
+  // testing.<surface>.rotaract3011.org mirrors testing.rotaract3011.org (main's staging host)
+  // for the project subdomains, so each surface gets its own staging URL.
+  if (first === 'testing') {
+    const byTestingPrefix = PROJECT_SURFACES.find((s) => s === labels[1]);
+    if (byTestingPrefix) return byTestingPrefix;
+  }
   if (isLocalHost(host)) {
     const q = new URLSearchParams(search).get('surface');
     if (isSurface(q)) return q;
