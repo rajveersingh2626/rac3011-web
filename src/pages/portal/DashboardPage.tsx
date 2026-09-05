@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { fetchReports } from '@/lib/reports/api';
 import type { ReportStatus } from '@/lib/reports/types';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
+import { ClubPointsWidget } from './ClubPointsWidget';
 
 const STATUS_TONE: Record<ReportStatus, BadgeTone> = {
   draft: 'neutral',
@@ -70,6 +71,7 @@ export function DashboardPage() {
   const { me, can } = useAuth();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? null;
   const canReport = Boolean(clubId) && can('reports:submit', { type: 'club', id: clubId ?? undefined });
+  const canViewPoints = Boolean(clubId) && can('clubs:view', { type: 'club', id: clubId ?? undefined });
 
   return (
     <Container>
@@ -77,12 +79,13 @@ export function DashboardPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {canReport && clubId ? (
             <ReportStatusWidget clubId={clubId} />
-          ) : (
+          ) : !canViewPoints ? (
             <EmptyState
               title="No monthly report for this account"
-              body="Reporting applies to club presidents and secretaries. The rest of the dashboard — points trends and district announcements — is being built in a later phase."
+              body="Reporting applies to club presidents and secretaries."
             />
-          )}
+          ) : null}
+          {canViewPoints && clubId && <ClubPointsWidget clubId={clubId} />}
         </div>
       </Section>
     </Container>

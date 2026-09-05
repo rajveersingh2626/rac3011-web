@@ -24,3 +24,15 @@ export type Zone = z.infer<typeof zoneSchema>;
 export async function fetchZones(): Promise<Zone[]> {
   return apiFetch('/zones', { schema: z.array(zoneSchema) });
 }
+
+export const clubSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  shortName: z.string().nullable(),
+  zoneId: z.string().nullable(),
+});
+export type Club = z.infer<typeof clubSchema>;
+
+export async function fetchClub(id: string): Promise<Club> {
+  return apiFetch(`/clubs/${encodeURIComponent(id)}`, { schema: clubSchema.passthrough() });
+}
