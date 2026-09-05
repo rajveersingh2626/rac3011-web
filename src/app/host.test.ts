@@ -1,4 +1,5 @@
-import { mainSiteHref, resolveSurface, surfaceHref } from './host';
+import { renderHook } from '@testing-library/react';
+import { mainSiteHref, resolveSurface, surfaceHref, useMainSiteHref, useSurfaceHref } from './host';
 
 function withLocation(href: string, run: () => void) {
   const original = window.location.href;
@@ -71,6 +72,23 @@ describe('surfaceHref / mainSiteHref', () => {
     withLocation('http://localhost:5173/dashboard', () => {
       expect(surfaceHref('rcl')).toBe('http://localhost:5173/?surface=rcl');
       expect(mainSiteHref()).toBe('http://localhost:5173/');
+    });
+  });
+});
+
+describe('useSurfaceHref / useMainSiteHref (prerender safety)', () => {
+  // Computed in useEffect, not inline at render: prerendering only captures the first synchronous
+  // render (before effects run), so a plain function call here would bake whatever host the
+  // prerender crawler happens to be running against (localhost) into every visitor's static HTML.
+  it('resolves via useEffect to the same value the pure function would compute', () => {
+    withLocation('https://rotaract3011.org/', () => {
+      const { result: surface } = renderHook(() => useSurfaceHref('drishti'));
+      expect(surface.current).toBe(surfaceHref('drishti'));
+    });
+    withLocation('https://testing.drishti.rotaract3011.org/beneficiaries', () => {
+      const { result: main } = renderHook(() => useMainSiteHref());
+      expect(main.current).toBe(mainSiteHref());
+      expect(main.current).toBe('https://testing.rotaract3011.org/');
     });
   });
 });

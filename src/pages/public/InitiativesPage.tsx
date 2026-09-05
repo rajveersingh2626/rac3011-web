@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { CircleOff } from 'lucide-react';
-import { surfaceHref } from '@/app/host';
+import { useSurfaceHref } from '@/app/host';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchInitiatives, type InitiativeCard } from '@/lib/publicApi/initiatives';
 import { Container } from '@/components/ui/Container';
@@ -13,7 +13,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 
 function InitiativeTile({ card }: { card: InitiativeCard }) {
-  const href = surfaceHref(card.key);
+  const href = useSurfaceHref(card.key) ?? '#';
 
   if (card.status === 'unassigned') {
     return (

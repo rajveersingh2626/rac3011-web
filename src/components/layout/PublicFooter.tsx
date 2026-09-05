@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useSurfaceHref } from '@/app/host';
 
 const COLUMNS = [
   {
@@ -16,7 +17,7 @@ const COLUMNS = [
     links: [
       { label: 'Open a new club', to: '/get-involved/new-club' },
       { label: 'Sponsor a project', to: '/get-involved/sponsor' },
-      { label: 'Career Bridge', to: '/careerbridge/opportunities' },
+      { label: 'Career Bridge', to: '/careerbridge/opportunities', surface: 'careerbridge' as const },
       { label: 'Partner with us', to: '/partners' },
       { label: 'Contact', to: '/contact' },
     ],
@@ -39,6 +40,7 @@ export interface PublicFooterProps {
 
 export function PublicFooter({ visits }: PublicFooterProps) {
   const year = new Date().getFullYear();
+  const careerBridgeHref = useSurfaceHref('careerbridge');
   return (
     <footer className="bg-[#18181B] px-5 pb-6 pt-10 md:px-8 md:pt-12 lg:px-10 lg:pt-[52px]">
       <div className="grid grid-cols-1 gap-9 border-b border-white/10 pb-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-9">
@@ -55,11 +57,17 @@ export function PublicFooter({ visits }: PublicFooterProps) {
           <div key={col.heading}>
             <p className="m-0 mb-3.5 text-[10.5px] font-bold tracking-[1.2px] text-pink-bright">{col.heading.toUpperCase()}</p>
             <div className="flex flex-col gap-2.5 text-[12.5px] text-white/72">
-              {col.links.map((link) => (
-                <Link key={link.to} to={link.to} className="text-white/72 transition-colors hover:text-white">
-                  {link.label}
-                </Link>
-              ))}
+              {col.links.map((link) =>
+                'surface' in link ? (
+                  <a key={link.to} href={careerBridgeHref ?? '#'} className="text-white/72 transition-colors hover:text-white">
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link key={link.to} to={link.to} className="text-white/72 transition-colors hover:text-white">
+                    {link.label}
+                  </Link>
+                ),
+              )}
             </div>
           </div>
         ))}

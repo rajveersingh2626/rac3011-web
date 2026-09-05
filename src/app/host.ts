@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 export const SURFACES = ['main', 'mission3011', 'drishti', 'rcl', 'careerbridge', 'ride'] as const;
 export type Surface = (typeof SURFACES)[number];
 
@@ -62,4 +64,26 @@ export function surfaceHref(key: Exclude<Surface, 'main'>): string {
   url.pathname = '/';
   url.search = '';
   return url.toString();
+}
+
+function isPrerenderCrawl(): boolean {
+  return Boolean((window as unknown as { __RAC_PRERENDER_CRAWL__?: boolean }).__RAC_PRERENDER_CRAWL__);
+}
+
+// The crawler runs in a real browser genuinely on localhost, so effect timing can't help - it
+// skips computing entirely (flagged by scripts/prerender.ts) and lets real hydration fill it in.
+export function useMainSiteHref(): string | undefined {
+  const [href, setHref] = useState<string>();
+  useEffect(() => {
+    if (!isPrerenderCrawl()) setHref(mainSiteHref());
+  }, []);
+  return href;
+}
+
+export function useSurfaceHref(key: Exclude<Surface, 'main'>): string | undefined {
+  const [href, setHref] = useState<string>();
+  useEffect(() => {
+    if (!isPrerenderCrawl()) setHref(surfaceHref(key));
+  }, [key]);
+  return href;
 }

@@ -64,6 +64,10 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
   const context = await browser.newContext();
   try {
     const page = await context.newPage();
+    // Lets useSurfaceHref/useMainSiteHref detect the crawl and skip baking in localhost.
+    await page.addInitScript(() => {
+      (globalThis as unknown as { __RAC_PRERENDER_CRAWL__?: boolean }).__RAC_PRERENDER_CRAWL__ = true;
+    });
     const events: ApiResponseEvent[] = [];
     page.on('response', (res) => events.push({ url: res.url(), ok: res.ok() }));
     page.on('requestfailed', (req) => events.push({ url: req.url(), ok: false }));

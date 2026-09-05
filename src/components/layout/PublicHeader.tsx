@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Menu as MenuIcon } from 'lucide-react';
 import { Link } from 'react-router';
-import { surfaceHref } from '@/app/host';
+import { useSurfaceHref } from '@/app/host';
 import { cn } from '@/lib/cn';
 import { Drawer } from '@/components/ui/Drawer';
 import { useNavPrefetch } from '@/lib/prefetch';
@@ -18,6 +18,7 @@ const NAV_LINKS = [
 export function PublicHeader() {
   const [open, setOpen] = useState(false);
   const prefetchRoute = useNavPrefetch();
+  const careerBridgeHref = useSurfaceHref('careerbridge');
 
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line-accent bg-surface px-5 md:h-[60px] md:px-8 lg:h-[68px] lg:px-10">
@@ -40,7 +41,7 @@ export function PublicHeader() {
         </nav>
       </div>
       <div className="hidden items-center gap-3 lg:flex">
-        <a href={surfaceHref('careerbridge')} className="text-[13.5px] font-bold text-accent">
+        <a href={careerBridgeHref ?? '#'} className="text-[13.5px] font-bold text-accent">
           Career Bridge
         </a>
         <Link
@@ -72,7 +73,7 @@ export function PublicHeader() {
             </Link>
           ))}
           <a
-            href={surfaceHref('careerbridge')}
+            href={careerBridgeHref ?? '#'}
             onClick={() => setOpen(false)}
             className="flex min-h-11 items-center rounded-[8px] px-2 text-[14px] font-bold text-accent"
           >
