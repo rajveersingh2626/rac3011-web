@@ -624,6 +624,137 @@ app.patch('/drishti/beneficiaries/:id', (req, res) => {
   res.json(drishtiBeneficiariesStore[idx]);
 });
 
+const RCL_CLUBS: Record<string, { id: string; name: string; shortName: string }> = {
+  club_dse: { id: 'club_dse', name: 'Rotaract Club of Delhi South East', shortName: 'Delhi South East' },
+  club_agni: { id: 'club_agni', name: 'Rotaract Club of Agni Zone Central', shortName: 'Agni Central' },
+  club_saket: { id: 'club_saket', name: 'Rotaract Club of Saket', shortName: 'Saket' },
+};
+
+let rclTeamsStore = fixture('rcl-teams.json') as Array<Record<string, unknown>>;
+let rclFixturesStore = fixture('rcl-fixtures.json') as Array<Record<string, unknown>>;
+
+app.get('/rcl/teams', (req, res) => {
+  const clubId = req.query['filter[clubId]'] as string | undefined;
+  const season = req.query['filter[season]'] as string | undefined;
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = rclTeamsStore;
+  if (clubId) items = items.filter((t) => t.clubId === clubId);
+  if (season) items = items.filter((t) => String(t.season) === season);
+  if (status) items = items.filter((t) => t.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/rcl/teams/:id', (req, res) => {
+  const t = rclTeamsStore.find((x) => x.id === req.params.id);
+  if (!t) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(t);
+});
+
+app.post('/rcl/teams', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const clubId = body.clubId as string;
+  const players = (body.players as Array<{ memberId?: string | null; name: string; role?: string | null }>) ?? [];
+  if (players.length > 15) {
+    res.status(400).json({ statusCode: 400, error: 'ValidationError', message: 'A roster can have at most 15 players' });
+    return;
+  }
+  const id = `team_${rclTeamsStore.length + 1}`;
+  const now = new Date().toISOString();
+  const created = {
+    id,
+    season: body.season,
+    clubId,
+    club: RCL_CLUBS[clubId] ?? { id: clubId, name: clubId, shortName: clubId },
+    name: body.name,
+    captainName: body.captainName,
+    captainPhone: body.captainPhone,
+    status: 'registered',
+    players: players.map((p, i) => ({ id: `${id}_ply_${i}`, teamId: id, memberId: p.memberId ?? null, name: p.name, role: p.role ?? null })),
+    createdById: 'usr_e2e',
+    createdAt: now,
+    updatedAt: now,
+  };
+  rclTeamsStore = [...rclTeamsStore, created];
+  res.status(201).json(created);
+});
+
+app.patch('/rcl/teams/:id', (req, res) => {
+  const idx = rclTeamsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as Record<string, unknown>;
+  const players = body.players as Array<{ memberId?: string | null; name: string; role?: string | null }> | undefined;
+  if (players && players.length > 15) {
+    res.status(400).json({ statusCode: 400, error: 'ValidationError', message: 'A roster can have at most 15 players' });
+    return;
+  }
+  const id = req.params.id;
+  rclTeamsStore[idx] = {
+    ...rclTeamsStore[idx],
+    ...body,
+    ...(players ? { players: players.map((p, i) => ({ id: `${id}_ply_${i}`, teamId: id, memberId: p.memberId ?? null, name: p.name, role: p.role ?? null })) } : {}),
+    updatedAt: new Date().toISOString(),
+  };
+  res.json(rclTeamsStore[idx]);
+});
+
+app.get('/rcl/fixtures', (req, res) => {
+  const season = req.query['filter[season]'] as string | undefined;
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = rclFixturesStore;
+  if (season) items = items.filter((f) => String(f.season) === season);
+  if (status) items = items.filter((f) => f.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.post('/rcl/fixtures', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const homeTeam = rclTeamsStore.find((t) => t.id === body.homeTeamId);
+  const awayTeam = rclTeamsStore.find((t) => t.id === body.awayTeamId);
+  const id = `fix_${rclFixturesStore.length + 1}`;
+  const created = {
+    id,
+    season: body.season,
+    homeTeamId: body.homeTeamId,
+    homeTeam: homeTeam ? { id: homeTeam.id, name: homeTeam.name, clubId: homeTeam.clubId } : { id: body.homeTeamId, name: body.homeTeamId, clubId: '' },
+    awayTeamId: body.awayTeamId,
+    awayTeam: awayTeam ? { id: awayTeam.id, name: awayTeam.name, clubId: awayTeam.clubId } : { id: body.awayTeamId, name: body.awayTeamId, clubId: '' },
+    scheduledAt: body.scheduledAt,
+    venue: body.venue ?? null,
+    status: 'scheduled',
+    result: null,
+  };
+  rclFixturesStore = [...rclFixturesStore, created];
+  res.status(201).json(created);
+});
+
+app.put('/rcl/fixtures/:id', (req, res) => {
+  const idx = rclFixturesStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as { status?: string; venue?: string | null; scheduledAt?: string; result?: Record<string, unknown> };
+  const existing = rclFixturesStore[idx];
+  rclFixturesStore[idx] = {
+    ...existing,
+    ...(body.status ? { status: body.status } : {}),
+    ...(body.venue !== undefined ? { venue: body.venue } : {}),
+    ...(body.scheduledAt !== undefined ? { scheduledAt: body.scheduledAt } : {}),
+    ...(body.result ? { result: { ...body.result, fixtureId: req.params.id, enteredById: 'usr_e2e' } } : {}),
+  };
+  res.json(rclFixturesStore[idx]);
+});
+
+app.get('/public/rcl/fixtures', (_req, res) => void res.json(rclFixturesStore));
+
+app.get('/public/rcl/standings', (_req, res) => void res.json(fixture('rcl-standings.json')));
+
 app.use((_req, res) => void res.status(404).json({ statusCode: 404, error: 'NotFound' }));
 
 app.listen(PORT, () => console.log(`mock-api listening on ${PORT}`));

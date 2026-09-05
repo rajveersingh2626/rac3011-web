@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { RequireSubdomainAuth } from './subdomainGuards';
+import { StandingsPage } from '@/pages/rcl/StandingsPage';
+import { FixturesPage } from '@/pages/rcl/FixturesPage';
+import { RegisterPage } from '@/pages/rcl/RegisterPage';
 
 const NAV = [
   { label: 'Standings', to: '/standings' },
@@ -19,10 +22,18 @@ function Layout({ children }: { children: ReactNode }) {
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><ComingSoon title="Rotaract Champions League" /></Layout> },
-  { path: '/standings', element: <Layout><ComingSoon title="Standings" /></Layout> },
-  { path: '/fixtures', element: <Layout><ComingSoon title="Fixtures" /></Layout> },
-  { path: '/register', element: <Layout><ComingSoon title="Register a team" /></Layout> },
+  { index: true, element: <Layout><StandingsPage /></Layout> },
+  { path: '/standings', element: <Layout><StandingsPage /></Layout> },
+  { path: '/fixtures', element: <Layout><FixturesPage /></Layout> },
+  {
+    path: '/register',
+    element: (
+      <Layout>
+        <Outlet />
+      </Layout>
+    ),
+    children: [{ element: <RequireSubdomainAuth />, children: [{ index: true, element: <RegisterPage /> }] }],
+  },
   { path: '*', element: <Layout><NotFoundPage /></Layout> },
 ];
 
