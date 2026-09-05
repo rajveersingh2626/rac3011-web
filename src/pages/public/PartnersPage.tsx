@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { titleCaseSlug } from '@/lib/format';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchPartners } from '@/lib/publicApi/partners';
 import { Container } from '@/components/ui/Container';
@@ -49,7 +50,7 @@ export function PartnersPage() {
                   </div>
                 )}
                 <p className="m-0 text-[12.5px] font-bold text-fg">{partner.name}</p>
-                <Badge tone="neutral">{partner.tier}</Badge>
+                <Badge tone="neutral">{titleCaseSlug(partner.tier)}</Badge>
               </div>
             ))}
           </div>
