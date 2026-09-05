@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router';
+import { useSurfaceHref } from '@/app/host';
 import { useDocumentMeta } from '@/lib/meta';
 import { useHomeQuery } from '@/lib/publicApi/home';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
@@ -17,7 +18,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 const CTA_CARDS = [
   { title: 'Start a new club', body: 'Charter a Rotaract club in your college or community.', to: '/get-involved/new-club' },
   { title: 'Sponsor a project', body: 'Fund a district project and see the impact, rupee for rupee.', to: '/get-involved/sponsor' },
-  { title: 'Career Bridge', body: 'Post or find verified jobs, internships and mentorship.', to: '/careerbridge/opportunities' },
+  { title: 'Career Bridge', body: 'Post or find verified jobs, internships and mentorship.', to: '/careerbridge/opportunities', surface: 'careerbridge' as const },
   { title: 'Talk to us', body: 'Questions about the district or a project? Reach the secretariat.', to: '/contact' },
 ];
 
@@ -28,6 +29,7 @@ export function HomePage() {
   useVisitOnce();
   useIdlePrefetch(!isPending);
   const navigate = useNavigate();
+  const careerBridgeHref = useSurfaceHref('careerbridge');
 
   if (isPending) {
     return (
@@ -110,13 +112,21 @@ export function HomePage() {
 
         <Section eyebrow="Get involved" className="pb-16">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CTA_CARDS.map((cta) => (
-              <Link key={cta.to} to={cta.to} className="block">
-                <Card title={cta.title} tone="action" className="h-full hover:shadow-raised">
-                  {cta.body}
-                </Card>
-              </Link>
-            ))}
+            {CTA_CARDS.map((cta) =>
+              'surface' in cta ? (
+                <a key={cta.to} href={careerBridgeHref ?? '#'} className="block">
+                  <Card title={cta.title} tone="action" className="h-full hover:shadow-raised">
+                    {cta.body}
+                  </Card>
+                </a>
+              ) : (
+                <Link key={cta.to} to={cta.to} className="block">
+                  <Card title={cta.title} tone="action" className="h-full hover:shadow-raised">
+                    {cta.body}
+                  </Card>
+                </Link>
+              ),
+            )}
           </div>
         </Section>
       </Container>

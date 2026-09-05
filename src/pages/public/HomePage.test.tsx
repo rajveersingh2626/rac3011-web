@@ -58,4 +58,14 @@ describe('HomePage', () => {
     renderHome();
     await waitFor(() => expect(screen.getByText("Couldn't load the home page")).toBeInTheDocument());
   });
+
+  it('links the Career Bridge CTA card to the subdomain, not a same-router path', async () => {
+    server.use(http.get('/public/home', () => HttpResponse.json(HOME_BODY)), http.post('/public/visits', () => HttpResponse.json({ year: 2026, count: 501 })), liveHandler());
+    renderHome();
+    const card = await screen.findByText('Career Bridge');
+    const link = card.closest('a');
+    expect(link).not.toBeNull();
+    expect(link?.getAttribute('href')).toMatch(/careerbridge/);
+    expect(link?.getAttribute('href')).not.toBe('/careerbridge/opportunities');
+  });
 });
