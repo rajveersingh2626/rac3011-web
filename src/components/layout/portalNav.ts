@@ -45,6 +45,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     key: 'me',
     label: 'Me',
     items: [
+      { key: 'me-overview', label: 'Overview', to: '/portal/me' },
       { key: 'profile', label: 'Profile', to: '/portal/me/profile' },
       { key: 'contributions', label: 'Contributions', to: '/portal/me/contributions' },
       { key: 'certificates', label: 'Certificates', to: '/portal/me/certificates' },

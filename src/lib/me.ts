@@ -11,8 +11,19 @@ export const meSchema = z.object({
   profile: z
     .object({
       id: z.string().optional(),
+      fullName: z.string().optional(),
+      email: z.string().optional(),
+      phone: z.string().nullable().optional(),
+      rotaryId: z.string().nullable().optional(),
       clubId: z.string().nullable().optional(),
       photoUrl: z.string().nullable().optional(),
+      bio: z.string().nullable().optional(),
+      skills: z.array(z.string()).optional(),
+      interests: z.array(z.string()).optional(),
+      membershipAnniversary: z.string().nullable().optional(),
+      status: z.enum(['pending', 'approved', 'suspended']).optional(),
+      directoryOptIn: z.boolean().optional(),
+      isDacMember: z.boolean().optional(),
       themePreference: z.enum(['light', 'dark', 'system']).nullable().optional(),
     })
     .passthrough()

@@ -2,7 +2,8 @@ import { createBrowserRouter, type RouteObject } from 'react-router';
 import { PublicLayout, PortalLayout, AdminLayout } from './layouts';
 import { RequireAuth } from './guards';
 import { LoginPage } from '@/pages/portal/LoginPage';
-import { ComingSoon } from '@/pages/ComingSoon';
+import { RegisterPage } from '@/pages/portal/RegisterPage';
+import { PendingPage } from '@/pages/portal/PendingPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { UiKitPage } from '@/pages/UiKitPage';
 import { publicMainRouteObjects } from './publicMain.routes';
@@ -12,8 +13,8 @@ import { portalAdminRouteObjects } from './portalAdmin.routes';
 const routes: RouteObject[] = [
   { element: <PublicLayout />, children: publicMainRouteObjects },
   { path: '/portal/login', element: <LoginPage /> },
-  { path: '/portal/register', element: <ComingSoon title="Register" /> },
-  { path: '/portal/pending', element: <ComingSoon title="Registration pending" /> },
+  { path: '/portal/register', element: <RegisterPage /> },
+  { path: '/portal/pending', element: <PendingPage /> },
   {
     element: <RequireAuth />,
     children: [
