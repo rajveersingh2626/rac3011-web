@@ -11,8 +11,6 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 
-type SecondFactorMethod = 'totp' | 'email';
-
 const credentialsSchema = z.object({
   email: z.string().min(1, 'Enter the email you registered with').email('Enter a valid email address'),
   password: z.string().min(1, 'Enter your password'),
@@ -55,7 +53,6 @@ export function LoginPage() {
 
   const [step, setStep] = useState<'credentials' | 'second-factor'>('credentials');
   const [email, setEmail] = useState('');
-  const [method, setMethod] = useState<SecondFactorMethod>('email');
   const [formError, setFormError] = useState<string | null>(null);
   const countdown = useCountdown(30);
 
@@ -65,12 +62,10 @@ export function LoginPage() {
   const submitCredentials = credentials.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      const res = await apiFetch<{ twoFactorRedirect: boolean; method: SecondFactorMethod }>('/auth/sign-in/email', {
-        method: 'POST',
-        body: values,
-      });
+      // Every account goes through this second factor, and only email OTP is wired up in this UI
+      // (no TOTP toggle exists here), so `method` never needs to come from the sign-in response.
+      await apiFetch('/auth/sign-in/email', { method: 'POST', body: values });
       setEmail(values.email);
-      setMethod(res.method);
       setStep('second-factor');
       countdown.start(30);
     } catch (e) {
@@ -82,7 +77,10 @@ export function LoginPage() {
   const submitCode = secondFactor.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      await apiFetch('/auth/second-factor', { method: 'POST', body: { method, code: values.code, rememberDevice: values.rememberDevice } });
+      await apiFetch('/second-factor/verify', {
+        method: 'POST',
+        body: { method: 'email', code: values.code, rememberDevice: values.rememberDevice },
+      });
       await refresh();
       navigate(next, { replace: true });
     } catch (e) {
@@ -94,8 +92,9 @@ export function LoginPage() {
   const resend = async () => {
     if (countdown.remaining > 0) return;
     try {
-      const res = await apiFetch<{ ok: boolean; retryAfterSeconds: number }>('/auth/second-factor/resend', { method: 'POST' });
-      countdown.start(res.retryAfterSeconds);
+      // The API returns {status:'sent'} with no computed retry-after, so reuse the fixed 30s window.
+      await apiFetch('/second-factor/resend', { method: 'POST' });
+      countdown.start(30);
     } catch {
       countdown.start(30);
     }
