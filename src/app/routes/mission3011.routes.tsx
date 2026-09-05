@@ -1,28 +1,57 @@
-import type { ReactNode } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Outlet, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { useAuth } from '@/app/auth';
+import { RequirePermission } from './guards';
+import { RequireSubdomainAuth } from './subdomainGuards';
+import { SurfaceLoading } from './SurfaceLoading';
 
-const NAV = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Camps', to: '/camps' },
-];
+const Mission3011DashboardPage = lazy(() =>
+  import('@/pages/mission3011/Mission3011DashboardPage').then((m) => ({ default: m.Mission3011DashboardPage })),
+);
+const CampsPage = lazy(() => import('@/pages/mission3011/CampsPage').then((m) => ({ default: m.CampsPage })));
+const Mission3011AdminPage = lazy(() =>
+  import('@/pages/mission3011/Mission3011AdminPage').then((m) => ({ default: m.Mission3011AdminPage })),
+);
 
-function Layout({ children }: { children: ReactNode }) {
+const MANAGE_SCOPE = { type: 'project', id: 'mission3011' } as const;
+
+function Layout() {
+  const { can } = useAuth();
+  const nav = [
+    { label: 'Dashboard', to: '/dashboard' },
+    { label: 'Camps', to: '/camps' },
+    ...(can('subdomain:mission3011:manage', MANAGE_SCOPE) ? [{ label: 'Admin', to: '/admin' }] : []),
+  ];
   return (
-    <SubdomainShell surface="mission3011" title="Mission 3011" nav={NAV}>
-      {children}
+    <SubdomainShell surface="mission3011" title="Mission 3011" nav={nav}>
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </SubdomainShell>
   );
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><ComingSoon title="Mission 3011" /></Layout> },
-  { path: '/dashboard', element: <Layout><ComingSoon title="Mission 3011 dashboard" /></Layout> },
-  { path: '/camps', element: <Layout><ComingSoon title="Camps" /></Layout> },
-  { path: '/admin', element: <Layout><ComingSoon title="Mission 3011 admin" /></Layout> },
-  { path: '*', element: <Layout><NotFoundPage /></Layout> },
+  {
+    element: <Layout />,
+    children: [
+      { index: true, element: <Mission3011DashboardPage /> },
+      { path: '/dashboard', element: <Mission3011DashboardPage /> },
+      {
+        element: <RequireSubdomainAuth />,
+        children: [
+          { path: '/camps', element: <CampsPage /> },
+          {
+            element: <RequirePermission perm="subdomain:mission3011:manage" scope={MANAGE_SCOPE} />,
+            children: [{ path: '/admin', element: <Mission3011AdminPage /> }],
+          },
+        ],
+      },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ];
 
 export function createMission3011Router() {

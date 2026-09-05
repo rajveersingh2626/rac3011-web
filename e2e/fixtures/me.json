@@ -26,7 +26,8 @@
     "clubs:view": [{ "type": "club", "id": "club_dse" }],
     "showcase:submit": [{ "type": "club", "id": "club_dse" }],
     "club_events:log": [{ "type": "club", "id": "club_dse" }],
-    "profile:edit": [{ "type": "none" }]
+    "profile:edit": [{ "type": "none" }],
+    "subdomain:drishti:manage": [{ "type": "project", "id": "drishti" }]
   },
   "clubs": [{ "id": "club_dse", "name": "Rotaract Club of Delhi South East", "shortName": "Delhi South East", "zoneId": "zone_agni" }],
   "theme": "light"

@@ -1,8 +1,17 @@
-import type { ReactNode } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { lazy, Suspense } from 'react';
+import { createBrowserRouter, Outlet, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { RequireSubdomainAuth } from './subdomainGuards';
+import { SurfaceLoading } from './SurfaceLoading';
+
+const DrishtiDashboardPage = lazy(() =>
+  import('@/pages/drishti/DrishtiDashboardPage').then((m) => ({ default: m.DrishtiDashboardPage })),
+);
+const BeneficiariesPage = lazy(() =>
+  import('@/pages/drishti/BeneficiariesPage').then((m) => ({ default: m.BeneficiariesPage })),
+);
+const SurgeriesPage = lazy(() => import('@/pages/drishti/SurgeriesPage').then((m) => ({ default: m.SurgeriesPage })));
 
 const NAV = [
   { label: 'Dashboard', to: '/dashboard' },
@@ -10,20 +19,32 @@ const NAV = [
   { label: 'Surgeries', to: '/surgeries' },
 ];
 
-function Layout({ children }: { children: ReactNode }) {
+function Layout() {
   return (
     <SubdomainShell surface="drishti" title="Project Drishti" nav={NAV}>
-      {children}
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </SubdomainShell>
   );
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><ComingSoon title="Project Drishti" /></Layout> },
-  { path: '/dashboard', element: <Layout><ComingSoon title="Drishti dashboard" /></Layout> },
-  { path: '/beneficiaries', element: <Layout><ComingSoon title="Beneficiaries" /></Layout> },
-  { path: '/surgeries', element: <Layout><ComingSoon title="Surgery pipeline" /></Layout> },
-  { path: '*', element: <Layout><NotFoundPage /></Layout> },
+  {
+    element: <Layout />,
+    children: [
+      { index: true, element: <DrishtiDashboardPage /> },
+      { path: '/dashboard', element: <DrishtiDashboardPage /> },
+      {
+        element: <RequireSubdomainAuth />,
+        children: [
+          { path: '/beneficiaries', element: <BeneficiariesPage /> },
+          { path: '/surgeries', element: <SurgeriesPage /> },
+        ],
+      },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ];
 
 export function createDrishtiRouter() {

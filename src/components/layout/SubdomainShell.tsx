@@ -15,7 +15,7 @@ export interface SubdomainShellProps {
   children: ReactNode;
 }
 
-function mainSiteHref(): string {
+export function mainSiteHref(): string {
   const url = new URL(window.location.href);
   if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.localhost')) {
     url.searchParams.delete('surface');

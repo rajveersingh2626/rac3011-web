@@ -475,6 +475,139 @@ app.post('/auth/two-factor/enable', (_req, res) =>
 app.post('/auth/two-factor/verify-totp', (_req, res) => void res.json({ ok: true }));
 app.post('/auth/two-factor/disable', (_req, res) => void res.json({ ok: true }));
 
+app.get('/public/mission3011/dashboard', (_req, res) => void res.json(fixture('mission3011-dashboard.json')));
+app.get('/public/drishti/dashboard', (_req, res) => void res.json(fixture('drishti-dashboard.json')));
+
+let m3011CampsStore = fixture('mission3011-camps.json') as Array<Record<string, unknown>>;
+
+app.get('/mission3011/camps', (req, res) => {
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = m3011CampsStore;
+  if (status) items = items.filter((c) => c.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/mission3011/camps/:id', (req, res) => {
+  const c = m3011CampsStore.find((x) => x.id === req.params.id);
+  if (!c) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(c);
+});
+
+app.post('/mission3011/camps', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const created = {
+    id: `camp_${m3011CampsStore.length + 1}`,
+    leadClub: CLUB_DSE,
+    date: body.date,
+    venue: body.venue,
+    city: body.city ?? null,
+    unitsCollected: body.unitsCollected,
+    donorsRegistered: body.donorsRegistered ?? null,
+    partnerBloodBank: body.partnerBloodBank ?? null,
+    photos: body.photos ?? [],
+    status: 'submitted',
+    submittedById: 'usr_e2e',
+    reviewedById: null,
+    reviewedAt: null,
+    rejectionReason: null,
+    participatingClubs: [],
+    createdAt: new Date().toISOString(),
+  };
+  m3011CampsStore = [...m3011CampsStore, created];
+  res.status(201).json(created);
+});
+
+app.patch('/mission3011/camps/:id', (req, res) => {
+  const idx = m3011CampsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as Record<string, unknown>;
+  const isReview = body.status === 'approved' || body.status === 'rejected';
+  m3011CampsStore[idx] = {
+    ...m3011CampsStore[idx],
+    ...body,
+    ...(isReview ? { reviewedById: 'usr_e2e', reviewedAt: new Date().toISOString() } : {}),
+  };
+  res.json(m3011CampsStore[idx]);
+});
+
+let drishtiBeneficiariesStore = fixture('drishti-beneficiaries.json') as Array<Record<string, unknown>>;
+
+app.get('/drishti/beneficiaries', (req, res) => {
+  const stage = req.query['filter[stage]'] as string | undefined;
+  let items = drishtiBeneficiariesStore;
+  if (stage) items = items.filter((b) => b.stage === stage);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/drishti/beneficiaries/:id', (req, res) => {
+  const b = drishtiBeneficiariesStore.find((x) => x.id === req.params.id);
+  if (!b) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(b);
+});
+
+app.post('/drishti/beneficiaries', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const created = {
+    id: `ben_${drishtiBeneficiariesStore.length + 1}`,
+    club: (body.clubId as string | undefined) ? { id: body.clubId, name: 'Rotaract Club of Saket', shortName: 'Saket' } : CLUB_DSE,
+    name: body.name,
+    age: body.age ?? null,
+    gender: body.gender ?? null,
+    phone: body.phone ?? null,
+    eye: body.eye,
+    screenedOn: body.screenedOn,
+    campLocation: body.campLocation ?? null,
+    stage: 'screened',
+    notes: body.notes ?? null,
+    surgeries: [],
+    createdAt: new Date().toISOString(),
+  };
+  drishtiBeneficiariesStore = [...drishtiBeneficiariesStore, created];
+  res.status(201).json(created);
+});
+
+app.patch('/drishti/beneficiaries/:id', (req, res) => {
+  const idx = drishtiBeneficiariesStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as {
+    stage?: string;
+    notes?: string | null;
+    surgery?: { hospital: string; operatedOn: string; outcome?: string | null; followupOn?: string | null };
+  };
+  const existing = drishtiBeneficiariesStore[idx];
+  const surgeries = body.surgery
+    ? [
+        ...(existing.surgeries as unknown[]),
+        {
+          id: `sur_${Date.now()}`,
+          hospital: body.surgery.hospital,
+          operatedOn: body.surgery.operatedOn,
+          outcome: body.surgery.outcome ?? null,
+          followupOn: body.surgery.followupOn ?? null,
+        },
+      ]
+    : existing.surgeries;
+  drishtiBeneficiariesStore[idx] = {
+    ...existing,
+    ...(body.stage ? { stage: body.stage } : {}),
+    ...(body.notes !== undefined ? { notes: body.notes } : {}),
+    surgeries,
+  };
+  res.json(drishtiBeneficiariesStore[idx]);
+});
+
 app.use((_req, res) => void res.status(404).json({ statusCode: 404, error: 'NotFound' }));
 
 app.listen(PORT, () => console.log(`mock-api listening on ${PORT}`));
