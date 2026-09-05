@@ -755,6 +755,127 @@ app.get('/public/rcl/fixtures', (_req, res) => void res.json(rclFixturesStore));
 
 app.get('/public/rcl/standings', (_req, res) => void res.json(fixture('rcl-standings.json')));
 
+let cbListingsStore = fixture('careerbridge-listings.json') as Array<Record<string, unknown>>;
+const cbVerifyTokens = new Map<string, string>();
+
+function isCbLive(item: Record<string, unknown>): boolean {
+  return item.status === 'verified' || item.status === 'filled';
+}
+
+app.get('/public/careerbridge/listings', (req, res) => {
+  const type = req.query['filter[type]'] as string | undefined;
+  let items = cbListingsStore.filter(isCbLive);
+  if (type) items = items.filter((l) => l.type === type);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/public/careerbridge/listings/:id', (req, res) => {
+  const l = cbListingsStore.find((x) => x.id === req.params.id && isCbLive(x));
+  if (!l) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(l);
+});
+
+app.post('/public/careerbridge/listings', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  if (typeof body.website === 'string' && body.website.length > 0) {
+    res.status(201).json({ id: `cb_bot_${Date.now()}`, status: 'pending_email' });
+    return;
+  }
+  const id = `cb_${cbListingsStore.length + 1}`;
+  const now = new Date().toISOString();
+  const created = {
+    id,
+    title: body.title,
+    company: body.company,
+    type: body.type,
+    location: body.location,
+    mode: body.mode,
+    stipend: body.stipend ?? null,
+    description: body.description,
+    applyUrl: body.applyUrl ?? null,
+    contactEmail: body.contactEmail,
+    postedByName: body.postedByName,
+    postedByEmail: body.postedByEmail,
+    rotaryAffiliation: body.rotaryAffiliation ?? null,
+    status: 'pending_email',
+    verifiedById: null,
+    verifiedAt: null,
+    filledAt: null,
+    expiresAt: null,
+    rejectionReason: null,
+    createdAt: now,
+    updatedAt: now,
+  };
+  cbListingsStore = [...cbListingsStore, created];
+  // Mock-only convenience: the real API emails this token, Playwright can't read email.
+  const token = `token_${id}`;
+  cbVerifyTokens.set(token, id);
+  res.status(201).json({ id, status: 'pending_email', _testVerifyToken: token });
+});
+
+app.post('/public/careerbridge/listings/verify', (req, res) => {
+  const body = req.body as { token?: string };
+  const id = body.token ? cbVerifyTokens.get(body.token) : undefined;
+  if (!id) {
+    res.status(400).json({ statusCode: 400, error: 'BadRequest', message: 'Invalid or already-used verification token' });
+    return;
+  }
+  cbVerifyTokens.delete(body.token as string);
+  const idx = cbListingsStore.findIndex((x) => x.id === id);
+  if (idx !== -1) cbListingsStore[idx] = { ...cbListingsStore[idx], status: 'pending' };
+  res.status(201).json({ id, status: 'pending' });
+});
+
+app.get('/careerbridge/listings', (req, res) => {
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = cbListingsStore;
+  if (status) items = items.filter((l) => l.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/careerbridge/listings/stats', (_req, res) => {
+  const countOf = (status: string) => cbListingsStore.filter((l) => l.status === status).length;
+  res.json({
+    pending: countOf('pending'),
+    verified: countOf('verified'),
+    filled: countOf('filled'),
+    rejected: countOf('rejected'),
+    expired: countOf('expired'),
+    totalPosted: cbListingsStore.length,
+  });
+});
+
+app.get('/careerbridge/listings/:id', (req, res) => {
+  const l = cbListingsStore.find((x) => x.id === req.params.id);
+  if (!l) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(l);
+});
+
+app.patch('/careerbridge/listings/:id', (req, res) => {
+  const idx = cbListingsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as { status?: string; rejectionReason?: string | null };
+  const now = new Date().toISOString();
+  cbListingsStore[idx] = {
+    ...cbListingsStore[idx],
+    ...(body.status ? { status: body.status } : {}),
+    ...(body.status === 'verified' ? { verifiedById: 'usr_e2e', verifiedAt: now, expiresAt: '2026-12-01T00:00:00Z' } : {}),
+    ...(body.status === 'filled' ? { filledAt: now } : {}),
+    ...(body.status === 'rejected' ? { rejectionReason: body.rejectionReason ?? null } : {}),
+    updatedAt: now,
+  };
+  res.json(cbListingsStore[idx]);
+});
+
 app.use((_req, res) => void res.status(404).json({ statusCode: 404, error: 'NotFound' }));
 
 app.listen(PORT, () => console.log(`mock-api listening on ${PORT}`));

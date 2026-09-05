@@ -1,29 +1,67 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { useAuth } from '@/app/auth';
+import { RequirePermission } from './guards';
+import { RequireSubdomainAuth } from './subdomainGuards';
+import { SurfaceLoading } from './SurfaceLoading';
 
-const NAV = [
-  { label: 'Opportunities', to: '/opportunities' },
-  { label: 'Post an opening', to: '/post' },
-];
+const OpportunitiesPage = lazy(() =>
+  import('@/pages/careerbridge/OpportunitiesPage').then((m) => ({ default: m.OpportunitiesPage })),
+);
+const OpportunityDetailPage = lazy(() =>
+  import('@/pages/careerbridge/OpportunityDetailPage').then((m) => ({ default: m.OpportunityDetailPage })),
+);
+const PostOpportunityPage = lazy(() =>
+  import('@/pages/careerbridge/PostOpportunityPage').then((m) => ({ default: m.PostOpportunityPage })),
+);
+const VerifyEmailPage = lazy(() =>
+  import('@/pages/careerbridge/VerifyEmailPage').then((m) => ({ default: m.VerifyEmailPage })),
+);
+const CareerbridgeAdminPage = lazy(() =>
+  import('@/pages/careerbridge/CareerbridgeAdminPage').then((m) => ({ default: m.CareerbridgeAdminPage })),
+);
 
-function Layout({ children }: { children: ReactNode }) {
+const MANAGE_SCOPE = { type: 'project', id: 'careerbridge' } as const;
+
+function Layout() {
+  const { can } = useAuth();
+  const nav = [
+    { label: 'Opportunities', to: '/opportunities' },
+    { label: 'Post an opening', to: '/post' },
+    ...(can('subdomain:careerbridge:manage', MANAGE_SCOPE) ? [{ label: 'Admin', to: '/admin' }] : []),
+  ];
   return (
-    <SubdomainShell surface="careerbridge" title="Career Bridge" nav={NAV}>
-      {children}
+    <SubdomainShell surface="careerbridge" title="Career Bridge" nav={nav}>
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </SubdomainShell>
   );
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><ComingSoon title="Career Bridge" /></Layout> },
-  { path: '/opportunities', element: <Layout><ComingSoon title="Opportunities" /></Layout> },
-  { path: '/opportunities/:id', element: <Layout><ComingSoon title="Opportunity" /></Layout> },
-  { path: '/post', element: <Layout><ComingSoon title="Post an opening" /></Layout> },
-  { path: '/admin', element: <Layout><ComingSoon title="Career Bridge admin" /></Layout> },
-  { path: '*', element: <Layout><NotFoundPage /></Layout> },
+  {
+    element: <Layout />,
+    children: [
+      { index: true, element: <OpportunitiesPage /> },
+      { path: '/opportunities', element: <OpportunitiesPage /> },
+      { path: '/opportunities/:id', element: <OpportunityDetailPage /> },
+      { path: '/post', element: <PostOpportunityPage /> },
+      { path: '/verify', element: <VerifyEmailPage /> },
+      {
+        element: <RequireSubdomainAuth />,
+        children: [
+          {
+            element: <RequirePermission perm="subdomain:careerbridge:manage" scope={MANAGE_SCOPE} />,
+            children: [{ path: '/admin', element: <CareerbridgeAdminPage /> }],
+          },
+        ],
+      },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ];
 
 export function createCareerbridgeRouter() {
