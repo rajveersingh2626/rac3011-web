@@ -876,6 +876,165 @@ app.patch('/careerbridge/listings/:id', (req, res) => {
   res.json(cbListingsStore[idx]);
 });
 
+let rideSupportClubsStore = fixture('ride-support-clubs.json') as Array<Record<string, unknown>>;
+let rideDelegationsStore = fixture('ride-delegations.json') as Array<Record<string, unknown>>;
+let rideGalleryStore = fixture('ride-gallery.json') as Array<Record<string, unknown>>;
+
+function publicDelegation(d: Record<string, unknown>) {
+  const { contactName: _contactName, contactEmail: _contactEmail, hosts, ...rest } = d;
+  void _contactName;
+  void _contactEmail;
+  return { ...rest, hosts: (hosts as Array<{ club: unknown }>).map((h) => h.club) };
+}
+
+app.get('/public/ride/incoming', (_req, res) => {
+  const items = rideDelegationsStore.filter((d) => d.status !== 'cancelled').map(publicDelegation);
+  res.json({ items });
+});
+
+app.get('/public/ride/gallery', (req, res) => {
+  const year = req.query.year as string | undefined;
+  let items = rideGalleryStore;
+  if (year) items = items.filter((g) => String(g.year) === year);
+  const years = [...new Set(rideGalleryStore.map((g) => g.year as number))].sort((a, b) => b - a);
+  res.json({ items, years });
+});
+
+app.get('/public/ride/dashboard', (_req, res) => {
+  const delegationsThisRy = rideDelegationsStore.filter((d) => d.ryYear === 2026).length;
+  const hostClubIds = new Set(
+    rideDelegationsStore.flatMap((d) => (d.hosts as Array<{ club: { id: string } }>).map((h) => h.club.id)),
+  );
+  res.json({ delegationsThisRy, hostClubsThisRy: hostClubIds.size, updatedAt: new Date().toISOString() });
+});
+
+app.get('/ride/support-clubs', (req, res) => {
+  const clubId = req.query['filter[clubId]'] as string | undefined;
+  let items = rideSupportClubsStore;
+  if (clubId) items = items.filter((c) => (c.club as { id: string }).id === clubId);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.post('/ride/support-clubs', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const clubId = (body.clubId as string | undefined) ?? 'club_dse';
+  const existingIdx = rideSupportClubsStore.findIndex((c) => (c.club as { id: string }).id === clubId);
+  const now = new Date().toISOString();
+  const club = RCL_CLUBS[clubId] ?? CLUB_DSE;
+  const saved = {
+    id: existingIdx === -1 ? `rsc_${rideSupportClubsStore.length + 1}` : rideSupportClubsStore[existingIdx].id,
+    ryYear: (body.ryYear as number | undefined) ?? 2026,
+    club,
+    capacityDelegates: body.capacityDelegates,
+    homestayAvailable: body.homestayAvailable,
+    preferredMonths: body.preferredMonths ?? [],
+    contactMemberId: body.contactMemberId ?? null,
+    contactPhone: body.contactPhone,
+    notes: body.notes ?? null,
+    createdAt: existingIdx === -1 ? now : rideSupportClubsStore[existingIdx].createdAt,
+    updatedAt: now,
+  };
+  if (existingIdx === -1) rideSupportClubsStore = [...rideSupportClubsStore, saved];
+  else rideSupportClubsStore = rideSupportClubsStore.map((c, i) => (i === existingIdx ? saved : c));
+  res.status(201).json(saved);
+});
+
+app.get('/ride/delegations', (req, res) => {
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = rideDelegationsStore;
+  if (status) items = items.filter((d) => d.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/ride/delegations/:id', (req, res) => {
+  const d = rideDelegationsStore.find((x) => x.id === req.params.id);
+  if (!d) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(d);
+});
+
+app.post('/ride/delegations', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const created = {
+    id: `del_${rideDelegationsStore.length + 1}`,
+    ryYear: body.ryYear,
+    visitingDistrict: body.visitingDistrict,
+    country: body.country,
+    startsAt: body.startsAt,
+    endsAt: body.endsAt,
+    headcount: body.headcount,
+    contactName: body.contactName,
+    contactEmail: body.contactEmail ?? null,
+    status: body.status ?? 'planned',
+    hosts: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  rideDelegationsStore = [...rideDelegationsStore, created];
+  res.status(201).json(created);
+});
+
+app.patch('/ride/delegations/:id', (req, res) => {
+  const idx = rideDelegationsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  rideDelegationsStore[idx] = { ...rideDelegationsStore[idx], ...(req.body as Record<string, unknown>), updatedAt: new Date().toISOString() };
+  res.json(rideDelegationsStore[idx]);
+});
+
+app.put('/ride/delegations/:id/hosts', (req, res) => {
+  const idx = rideDelegationsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as { hosts: { clubId: string; daysHosted: number; membersSent: number }[] };
+  const hosts = body.hosts.map((h, i) => ({
+    id: `host_${req.params.id}_${i}`,
+    club: RCL_CLUBS[h.clubId] ?? CLUB_DSE,
+    daysHosted: h.daysHosted,
+    membersSent: h.membersSent,
+  }));
+  rideDelegationsStore[idx] = { ...rideDelegationsStore[idx], hosts, updatedAt: new Date().toISOString() };
+  res.json(rideDelegationsStore[idx]);
+});
+
+app.get('/ride/gallery-items', (req, res) => {
+  const year = req.query['filter[year]'] as string | undefined;
+  let items = rideGalleryStore;
+  if (year) items = items.filter((g) => String(g.year) === year);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.post('/ride/gallery-items', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const created = {
+    id: `rg_${rideGalleryStore.length + 1}`,
+    year: body.year,
+    url: body.url,
+    kind: body.kind,
+    caption: body.caption ?? null,
+    order: body.order ?? 0,
+    createdAt: new Date().toISOString(),
+  };
+  rideGalleryStore = [...rideGalleryStore, created];
+  res.status(201).json(created);
+});
+
+app.delete('/ride/gallery-items/:id', (req, res) => {
+  const exists = rideGalleryStore.some((g) => g.id === req.params.id);
+  if (!exists) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  rideGalleryStore = rideGalleryStore.filter((g) => g.id !== req.params.id);
+  res.status(204).end();
+});
+
 app.use((_req, res) => void res.status(404).json({ statusCode: 404, error: 'NotFound' }));
 
 app.listen(PORT, () => console.log(`mock-api listening on ${PORT}`));

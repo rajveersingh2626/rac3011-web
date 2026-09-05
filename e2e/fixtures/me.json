@@ -29,7 +29,8 @@
     "profile:edit": [{ "type": "none" }],
     "subdomain:drishti:manage": [{ "type": "project", "id": "drishti" }],
     "subdomain:rcl:manage": [{ "type": "project", "id": "rcl" }],
-    "subdomain:careerbridge:manage": [{ "type": "project", "id": "careerbridge" }]
+    "subdomain:careerbridge:manage": [{ "type": "project", "id": "careerbridge" }],
+    "subdomain:ride:manage": [{ "type": "project", "id": "ride" }]
   },
   "clubs": [{ "id": "club_dse", "name": "Rotaract Club of Delhi South East", "shortName": "Delhi South East", "zoneId": "zone_agni" }],
   "theme": "light"

@@ -1,30 +1,56 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
-import { ComingSoon } from '@/pages/ComingSoon';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { useAuth } from '@/app/auth';
+import { RequirePermission } from './guards';
+import { RequireSubdomainAuth } from './subdomainGuards';
+import { SurfaceLoading } from './SurfaceLoading';
 
-const NAV = [
-  { label: 'Incoming', to: '/incoming' },
-  { label: 'Support club', to: '/support-club' },
-  { label: 'Gallery', to: '/gallery' },
-];
+const RideIncomingPage = lazy(() => import('@/pages/ride/RideIncomingPage').then((m) => ({ default: m.RideIncomingPage })));
+const SupportClubPage = lazy(() => import('@/pages/ride/SupportClubPage').then((m) => ({ default: m.SupportClubPage })));
+const RideGalleryPage = lazy(() => import('@/pages/ride/RideGalleryPage').then((m) => ({ default: m.RideGalleryPage })));
+const RideAdminPage = lazy(() => import('@/pages/ride/RideAdminPage').then((m) => ({ default: m.RideAdminPage })));
 
-function Layout({ children }: { children: ReactNode }) {
+const MANAGE_SCOPE = { type: 'project', id: 'ride' } as const;
+
+function Layout() {
+  const { can } = useAuth();
+  const nav = [
+    { label: 'Incoming', to: '/incoming' },
+    { label: 'Support club', to: '/support-club' },
+    { label: 'Gallery', to: '/gallery' },
+    ...(can('subdomain:ride:manage', MANAGE_SCOPE) ? [{ label: 'Admin', to: '/admin' }] : []),
+  ];
   return (
-    <SubdomainShell surface="ride" title="RIDE" nav={NAV}>
-      {children}
+    <SubdomainShell surface="ride" title="RIDE" nav={nav}>
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </SubdomainShell>
   );
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><ComingSoon title="RIDE" /></Layout> },
-  { path: '/incoming', element: <Layout><ComingSoon title="Incoming delegations" /></Layout> },
-  { path: '/support-club', element: <Layout><ComingSoon title="Support club registration" /></Layout> },
-  { path: '/gallery', element: <Layout><ComingSoon title="Gallery" /></Layout> },
-  { path: '/admin', element: <Layout><ComingSoon title="RIDE admin" /></Layout> },
-  { path: '*', element: <Layout><NotFoundPage /></Layout> },
+  {
+    element: <Layout />,
+    children: [
+      { index: true, element: <RideIncomingPage /> },
+      { path: '/incoming', element: <RideIncomingPage /> },
+      { path: '/gallery', element: <RideGalleryPage /> },
+      {
+        element: <RequireSubdomainAuth />,
+        children: [
+          { path: '/support-club', element: <SupportClubPage /> },
+          {
+            element: <RequirePermission perm="subdomain:ride:manage" scope={MANAGE_SCOPE} />,
+            children: [{ path: '/admin', element: <RideAdminPage /> }],
+          },
+        ],
+      },
+      { path: '*', element: <NotFoundPage /> },
+    ],
+  },
 ];
 
 export function createRideRouter() {
