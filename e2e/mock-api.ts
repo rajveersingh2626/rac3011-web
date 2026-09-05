@@ -111,7 +111,7 @@ app.put('/mock-provider', (_req, res) => void res.sendStatus(204));
 
 app.get('/zones', (_req, res) => void res.json(fixture('zones.json')));
 
-const CLUB_DSE = { id: 'club_dse', name: 'Rotaract Club of Delhi South East', shortName: 'Delhi South East', zoneId: 'zone_agni' };
+const CLUB_DSE = { id: 'club_dse', name: 'Rotaract Club of Delhi South East', shortName: 'Delhi South East', zoneId: 'zone_agni', slug: 'delhi-south-east' };
 
 let reportsStore = fixture('reports.json') as Array<Record<string, unknown>>;
 let schemaStore = [fixture('report-schema.json') as Record<string, unknown>];
@@ -273,6 +273,207 @@ app.delete('/report-requests/:id', (req, res) => {
 app.put('/report-requests/:id/responses/:clubId', (req, res) =>
   void res.json({ id: 'resp_e2e', requestId: req.params.id, clubId: req.params.clubId, answers: (req.body as { answers: unknown }).answers, submittedById: 'usr_e2e' }),
 );
+
+let projectsStore = fixture('my-projects.json') as Array<Record<string, unknown>>;
+
+app.get('/projects', (req, res) => {
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = projectsStore;
+  if (status) items = items.filter((p) => p.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/projects/:id', (req, res) => {
+  const p = projectsStore.find((x) => x.id === req.params.id);
+  if (!p) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(p);
+});
+
+app.post('/projects', (req, res) => {
+  const body = req.body as Record<string, unknown>;
+  const created = {
+    id: `proj_${projectsStore.length + 1}`,
+    slug: null,
+    title: body.title,
+    category: body.category,
+    date: body.date,
+    summary: body.summary,
+    body: body.body ?? null,
+    beneficiaries: body.beneficiaries ?? null,
+    photos: body.photos ?? [],
+    submittedById: 'usr_e2e',
+    status: 'draft',
+    consentConfirmed: body.consentConfirmed ?? false,
+    submittedAt: null,
+    publishedTitle: null,
+    publishedSummary: null,
+    publishedBody: null,
+    editorNotes: null,
+    rejectionReason: null,
+    publishedAt: null,
+    publishedById: null,
+    clubs: [
+      { role: 'lead', club: CLUB_DSE },
+      ...((body.collaboratingClubIds as string[] | undefined) ?? []).map((id) => ({ role: 'collaborator', club: { id, name: id, shortName: null, zoneId: null } })),
+    ],
+  };
+  projectsStore = [...projectsStore, created];
+  res.status(201).json(created);
+});
+
+app.patch('/projects/:id', (req, res) => {
+  const idx = projectsStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as Record<string, unknown>;
+  const submitting = body.status === 'submitted';
+  projectsStore[idx] = {
+    ...projectsStore[idx],
+    ...body,
+    ...(submitting ? { submittedAt: new Date().toISOString() } : {}),
+  };
+  res.json(projectsStore[idx]);
+});
+
+app.delete('/projects/:id', (req, res) => {
+  projectsStore = projectsStore.filter((x) => x.id !== req.params.id);
+  res.status(204).send();
+});
+
+let membersStore = fixture('members.json') as Array<Record<string, unknown>>;
+
+app.post('/members/register', (req, res) => {
+  const body = req.body as { email: string };
+  if (membersStore.some((m) => m.email === body.email)) {
+    res.status(409).json({ statusCode: 409, error: 'Conflict', code: 'ALREADY_EXISTS', message: 'An account already exists for this email' });
+    return;
+  }
+  res.status(201).json({ id: `mp_${membersStore.length + 1}`, status: 'pending' });
+});
+
+app.get('/members', (req, res) => {
+  const clubId = req.query['filter[clubId]'] as string | undefined;
+  const status = req.query['filter[status]'] as string | undefined;
+  let items = membersStore;
+  if (clubId) items = items.filter((m) => m.clubId === clubId);
+  if (status) items = items.filter((m) => m.status === status);
+  res.json({ items, total: items.length, page: 1, pageSize: items.length || 1 });
+});
+
+app.get('/members/:id', (req, res) => {
+  const m = membersStore.find((x) => x.id === req.params.id);
+  if (!m) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  res.json(m);
+});
+
+app.patch('/members/:id', (req, res) => {
+  const idx = membersStore.findIndex((x) => x.id === req.params.id);
+  if (idx === -1) {
+    res.status(404).json({ statusCode: 404, error: 'NotFound' });
+    return;
+  }
+  const body = req.body as { status: string; rejectionReason?: string | null };
+  membersStore[idx] = {
+    ...membersStore[idx],
+    status: body.status,
+    rejectionReason: body.rejectionReason ?? null,
+    approvedAt: body.status === 'approved' ? new Date().toISOString() : membersStore[idx].approvedAt,
+  };
+  res.json(membersStore[idx]);
+});
+
+app.post('/members/imports', (req, res) => {
+  const body = req.body as { clubId: string; csv: string };
+  const lines = body.csv.trim().split('\n').slice(1).filter(Boolean);
+  const rows = lines.map((line, i) => {
+    const [fullName, email, phone, rotaryId] = line.split(',').map((c) => c.trim());
+    const existing = membersStore.some((m) => m.email === email);
+    return { lineNumber: i + 2, fullName, email, phone: phone || null, rotaryId: rotaryId || null, outcome: existing ? 'duplicate' : 'new', errors: [] as string[] };
+  });
+  res.status(201).json({
+    id: 'imp_1',
+    clubId: body.clubId,
+    rows,
+    summary: {
+      total: rows.length,
+      new: rows.filter((r) => r.outcome === 'new').length,
+      duplicate: rows.filter((r) => r.outcome === 'duplicate').length,
+      invalid: 0,
+    },
+  });
+});
+
+app.patch('/members/imports/:id', (req, res) => {
+  const body = req.body as { clubId: string; rows: { fullName: string; email: string }[] };
+  const created = body.rows.map((r, i) => {
+    const id = `mp_import_${membersStore.length + i + 1}`;
+    membersStore = [
+      ...membersStore,
+      {
+        id,
+        userId: `usr_import_${i}`,
+        fullName: r.fullName,
+        email: r.email,
+        phone: null,
+        rotaryId: null,
+        clubId: body.clubId,
+        club: { id: body.clubId, name: 'Rotaract Club of Delhi South East', shortName: 'DSE' },
+        photoUrl: null,
+        bio: null,
+        skills: [],
+        interests: [],
+        membershipAnniversary: null,
+        status: 'approved',
+        approvedById: 'usr_e2e',
+        approvedAt: new Date().toISOString(),
+        rejectionReason: null,
+        directoryOptIn: false,
+        isDacMember: false,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    return id;
+  });
+  res.json({ id: req.params.id, clubId: body.clubId, committed: created.length, skipped: 0, memberIds: created });
+});
+
+let privacyAccepted = false;
+app.get('/directory', (_req, res) => {
+  if (!privacyAccepted) {
+    res.status(409).json({ statusCode: 409, error: 'Conflict', code: 'PRIVACY_NOT_ACCEPTED', message: 'Accept the privacy policy first' });
+    return;
+  }
+  const items = fixture('directory.json') as unknown[];
+  res.json({ items, total: items.length, page: 1, pageSize: items.length });
+});
+
+app.post('/me/privacy-acceptances', (_req, res) => {
+  privacyAccepted = true;
+  res.json({ accepted: true });
+});
+
+app.get('/skill-tags', (_req, res) => void res.json(fixture('skill-tags.json')));
+app.get('/me/club', (_req, res) => void res.json(fixture('me-club.json')));
+app.get('/me/card', (_req, res) => void res.json(fixture('me-card.json')));
+app.get('/me/qr.svg', (_req, res) => void res.type('image/svg+xml').send('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"></svg>'));
+
+app.get('/auth/trusted-devices', (_req, res) =>
+  void res.json([{ id: 'td_1', userAgent: 'Chrome on Android', createdAt: '2026-01-01T00:00:00Z', expiresAt: '2026-01-01T05:00:00Z' }]),
+);
+app.delete('/auth/trusted-devices/:id', (_req, res) => void res.json({ ok: true }));
+app.post('/auth/two-factor/enable', (_req, res) =>
+  void res.json({ method: 'totp', totpURI: 'otpauth://totp/Rotaract:e2e@example.org?secret=ABC', backupCodes: ['aaa111', 'bbb222'] }),
+);
+app.post('/auth/two-factor/verify-totp', (_req, res) => void res.json({ ok: true }));
+app.post('/auth/two-factor/disable', (_req, res) => void res.json({ ok: true }));
 
 app.use((_req, res) => void res.status(404).json({ statusCode: 404, error: 'NotFound' }));
 
