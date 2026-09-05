@@ -21,6 +21,8 @@ const codeSchema = z.object({
   rememberDevice: z.boolean(),
 });
 
+type SecondFactorMethod = 'email' | 'totp';
+
 function useCountdown(seconds: number) {
   const [remaining, setRemaining] = useState(0);
   const timer = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -53,6 +55,7 @@ export function LoginPage() {
 
   const [step, setStep] = useState<'credentials' | 'second-factor'>('credentials');
   const [email, setEmail] = useState('');
+  const [method, setMethod] = useState<SecondFactorMethod>('email');
   const [formError, setFormError] = useState<string | null>(null);
   const countdown = useCountdown(30);
 
@@ -62,12 +65,16 @@ export function LoginPage() {
   const submitCredentials = credentials.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      // Every account goes through this second factor, and only email OTP is wired up in this UI
-      // (no TOTP toggle exists here), so `method` never needs to come from the sign-in response.
-      await apiFetch('/auth/sign-in/email', { method: 'POST', body: values });
+      // Better-Auth swaps the response shape entirely once an authenticator app is enrolled.
+      const res = await apiFetch<{ twoFactorRedirect?: boolean; twoFactorMethods?: string[] }>('/auth/sign-in/email', {
+        method: 'POST',
+        body: values,
+      });
+      const nextMethod: SecondFactorMethod = res.twoFactorRedirect && res.twoFactorMethods?.includes('totp') ? 'totp' : 'email';
       setEmail(values.email);
+      setMethod(nextMethod);
       setStep('second-factor');
-      countdown.start(30);
+      if (nextMethod === 'email') countdown.start(30);
     } catch (e) {
       if (e instanceof ApiError && e.details) credentials.setServerErrors(e.details);
       else setFormError(e instanceof ApiError ? e.message : 'Something went wrong. Try again.');
@@ -77,10 +84,16 @@ export function LoginPage() {
   const submitCode = secondFactor.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      await apiFetch('/second-factor/verify', {
-        method: 'POST',
-        body: { method: 'email', code: values.code, rememberDevice: values.rememberDevice },
-      });
+      // TOTP has no session yet to attach a "second factor" to (better-auth holds it in a separate
+      // challenge cookie), so it must complete through better-auth's own endpoint, not ours.
+      if (method === 'totp') {
+        await apiFetch('/auth/two-factor/verify-totp', { method: 'POST', body: { code: values.code } });
+      } else {
+        await apiFetch('/second-factor/verify', {
+          method: 'POST',
+          body: { method, code: values.code, rememberDevice: values.rememberDevice },
+        });
+      }
       await refresh();
       navigate(next, { replace: true });
     } catch (e) {
@@ -142,9 +155,17 @@ export function LoginPage() {
           <>
             <p className="m-0 mb-6 flex items-center gap-2 text-[12.5px] font-semibold text-fg-2">{email}</p>
             <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 2 OF 2</p>
-            <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">Check your email</h1>
+            <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">
+              {method === 'totp' ? 'Enter your authenticator code' : 'Check your email'}
+            </h1>
             <p className="m-0 mb-6 text-[13.5px] text-fg-2">
-              We&apos;ve sent a six-digit code to <span className="font-bold text-fg">{email}</span>. It&apos;s valid for ten minutes.
+              {method === 'totp' ? (
+                'Open your authenticator app and enter the current 6-digit code.'
+              ) : (
+                <>
+                  We&apos;ve sent a six-digit code to <span className="font-bold text-fg">{email}</span>. It&apos;s valid for ten minutes.
+                </>
+              )}
             </p>
             <Form onSubmit={submitCode} submitting={secondFactor.submitting}>
               <Field label="6-digit code" error={secondFactor.errors.code} required>
@@ -156,23 +177,27 @@ export function LoginPage() {
                   onChange={(e) => secondFactor.setValue('code', e.target.value.replace(/\D/g, ''))}
                 />
               </Field>
-              <p className="m-0 text-[12px] text-fg-2">
-                Didn&apos;t arrive?{' '}
-                <button
-                  type="button"
-                  onClick={() => void resend()}
-                  disabled={countdown.remaining > 0}
-                  className="font-bold text-accent disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Send it again
-                </button>{' '}
-                {countdown.remaining > 0 ? `in 0:${String(countdown.remaining).padStart(2, '0')}` : null}
-              </p>
-              <Checkbox
-                label="Stay signed in on this device for 5 hours"
-                checked={secondFactor.values.rememberDevice}
-                onChange={(e) => secondFactor.setValue('rememberDevice', e.target.checked)}
-              />
+              {method === 'email' ? (
+                <p className="m-0 text-[12px] text-fg-2">
+                  Didn&apos;t arrive?{' '}
+                  <button
+                    type="button"
+                    onClick={() => void resend()}
+                    disabled={countdown.remaining > 0}
+                    className="font-bold text-accent disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Send it again
+                  </button>{' '}
+                  {countdown.remaining > 0 ? `in 0:${String(countdown.remaining).padStart(2, '0')}` : null}
+                </p>
+              ) : null}
+              {method === 'email' ? (
+                <Checkbox
+                  label="Stay signed in on this device for 5 hours"
+                  checked={secondFactor.values.rememberDevice}
+                  onChange={(e) => secondFactor.setValue('rememberDevice', e.target.checked)}
+                />
+              ) : null}
               <Button type="submit" block loading={secondFactor.submitting}>
                 Sign in
               </Button>

@@ -52,8 +52,12 @@ app.post('/auth/sign-in/email', (req, res) => {
     res.status(401).json({ statusCode: 401, message: 'That email and password do not match an account' });
     return;
   }
-  // Matches the real /auth/sign-in/email contract - no twoFactorRedirect/method field, every
-  // account goes through second-factor next regardless.
+  // An authenticator-app account gets better-auth's own twoFactorRedirect shape (no user/token);
+  // everyone else gets the normal shape and always goes through email OTP next.
+  if (body.email === 'totp-user@example.com') {
+    res.json({ twoFactorRedirect: true, twoFactorMethods: ['totp'] });
+    return;
+  }
   res.json({ redirect: false, token: 'mock-token', user: { email: body.email, twoFactorEnabled: false } });
 });
 
@@ -68,6 +72,16 @@ app.post('/second-factor/verify', (req, res) => {
 });
 
 app.post('/second-factor/resend', (_req, res) => void res.json({ status: 'sent' }));
+
+app.post('/auth/two-factor/verify-totp', (req, res) => {
+  const body = req.body as { code?: string };
+  if (body.code !== '654321') {
+    res.status(401).json({ statusCode: 401, message: 'That code is not right. Check your authenticator app and try again.' });
+    return;
+  }
+  res.setHeader('Set-Cookie', `${SESSION_COOKIE}=1; Path=/; SameSite=Lax`);
+  res.json({ token: 'mock-totp-token', user: { email: 'totp-user@example.com', twoFactorEnabled: true } });
+});
 app.post('/auth/sign-out', (_req, res) => {
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; Max-Age=0`);
   res.json({ ok: true });
