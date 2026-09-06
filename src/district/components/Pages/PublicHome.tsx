@@ -221,10 +221,10 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     title: 'Mission 3011',
     surface: 'mission3011',
     category: 'Healthcare & Life',
-    subtitle: 'District Mega Blood Donation Drive (Mahadaan Week - March 2027)',
+    subtitle: 'District-Wide Blood Donation Campaign',
     image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1000&q=80',
     metric: '3,011 Units Target',
-    description: 'The premier district-wide blood donation movement mobilizing all 4 zones and 75 clubs during Mahadaan Week, with a district target of 3,011 certified life-saving units in partnership with accredited blood banks.'
+    description: 'A district-wide blood donation campaign running across the year, with clubs in all 4 zones holding their own camps toward a district target of 3,011 certified life-saving units, in partnership with accredited blood banks.'
   },
   {
     id: 2,

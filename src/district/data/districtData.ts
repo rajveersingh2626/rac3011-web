@@ -175,7 +175,7 @@ export const ROTARY_FOCUS_AREAS: FocusArea[] = [
 export const IMPACT_METRICS: ImpactMetric[] = [
   { label: "Active Clubs", value: "75", suffix: "Clubs", change: "RY 2026-27", color: "#123499" },
   { label: "Zones", value: "4", suffix: "Zones", change: "RY 2026-27", color: "#D81B60" },
-  { label: "Clubs Chartered", value: "3", suffix: "Clubs", change: "RY 2026-27", color: "#880E4F" }
+  { label: "Clubs Chartered", value: "5", suffix: "Clubs", change: "RY 2026-27", color: "#880E4F" }
 ];
 
 export const DISTRICT_ACHIEVEMENTS: Achievement[] = [
