@@ -105,11 +105,13 @@ export function ClubLeadershipPage() {
               <h1 className="m-0 text-[clamp(1.9rem,4.5vw,2.75rem)] font-black leading-[1.1] tracking-[-0.5px] text-white">
                 {data.name}
               </h1>
-              <p className="m-0 mt-3">
-                <span className="pill-gold" style={{ fontSize: '0.8rem' }}>
-                  <Users aria-hidden size={13} /> {data.memberCount} members
-                </span>
-              </p>
+              {data.memberCount > 0 ? (
+                <p className="m-0 mt-3">
+                  <span className="pill-gold" style={{ fontSize: '0.8rem' }}>
+                    <Users aria-hidden size={13} /> {data.memberCount} members
+                  </span>
+                </p>
+              ) : null}
             </div>
           </div>
         </Container>

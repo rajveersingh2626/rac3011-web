@@ -23,9 +23,11 @@ export function MyClubPage() {
         ) : (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
             <Card>
-              <div className="mb-4 grid grid-cols-2 gap-4">
-                <Stat label="Members" value={clubQuery.data.memberCount} />
-              </div>
+              {clubQuery.data.memberCount > 0 ? (
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <Stat label="Members" value={clubQuery.data.memberCount} />
+                </div>
+              ) : null}
               <KeyValue
                 items={[
                   { label: 'Club', value: clubQuery.data.name },

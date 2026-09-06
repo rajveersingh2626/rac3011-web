@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import type { FC, FormEvent, RefObject } from 'react';
+import type { FC, FormEvent, MouseEvent, RefObject } from 'react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
@@ -13,6 +13,7 @@ import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
 import { fetchAchievements, type Achievement as ApiAchievement } from '@/lib/publicApi/achievements';
+import { useSurfaceHref } from '@/app/host';
 
 const impactStatsSchema = z.array(
   z.object({
@@ -200,6 +201,8 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
   );
 }
 
+type FlagshipSurface = 'mission3011' | 'drishti' | 'rcl' | 'careerbridge';
+
 interface UpcomingProject {
   id: number;
   title: string;
@@ -208,12 +211,15 @@ interface UpcomingProject {
   image: string;
   metric: string;
   description: string;
+  // Project Ownership Bidding has no page of its own yet, so it stays non-navigable.
+  surface?: FlagshipSurface;
 }
 
 const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
   {
     id: 1,
     title: 'Mission 3011',
+    surface: 'mission3011',
     category: 'Healthcare & Life',
     subtitle: 'District Mega Blood Donation Drive (Mahadaan Week - March 2027)',
     image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1000&q=80',
@@ -223,6 +229,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
   {
     id: 2,
     title: 'Project Drishti',
+    surface: 'drishti',
     category: 'Vision Care & Surgery',
     subtitle: '100 Cataract Surgeries & Community Eye Health Camps',
     image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1000&q=80',
@@ -232,6 +239,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
   {
     id: 3,
     title: 'Rotaract Cricket League (RCL)',
+    surface: 'rcl',
     category: 'District Fellowship & Sports',
     subtitle: 'Inter-Club Championship & Youth Sports Festival',
     image: '/rcl-cricket.jpg',
@@ -241,6 +249,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
   {
     id: 4,
     title: 'Career Bridge',
+    surface: 'careerbridge',
     category: 'Youth Vocational Development',
     subtitle: 'Rotary Mentorship, Internships & Career Portal',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
@@ -262,6 +271,12 @@ type ExpandingCarouselProps = Record<string, never>;
 
 const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const surfaceHrefs: Record<FlagshipSurface, string | undefined> = {
+    mission3011: useSurfaceHref('mission3011'),
+    drishti: useSurfaceHref('drishti'),
+    rcl: useSurfaceHref('rcl'),
+    careerbridge: useSurfaceHref('careerbridge'),
+  };
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
 
@@ -293,12 +308,27 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     >
       {DISTRICT_UPCOMING_PROJECTS.map((proj, idx) => {
         const isActive = idx === selectedIndex;
+        const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+        const Card = proj.surface ? 'a' : 'div';
         return (
-          <div
+          <Card
             key={proj.id}
+            {...(proj.surface
+              ? { href: href ?? '#', 'aria-label': `${proj.title}: ${proj.subtitle}` }
+              : {})}
             onMouseEnter={() => !isMobile && setSelectedIndex(idx)}
-            onClick={() => isMobile && setSelectedIndex(idx)}
+            onFocus={() => setSelectedIndex(idx)}
+            onClick={(e: MouseEvent<HTMLElement>) => {
+              // On mobile the first tap only expands the card, matching the pre-link behaviour.
+              if (isMobile && !isActive) {
+                e.preventDefault();
+                setSelectedIndex(idx);
+              }
+            }}
             style={{
+              display: 'block',
+              textDecoration: 'none',
+              color: 'inherit',
               position: 'relative',
               flex: isActive ? (isMobile ? 'none' : 6) : (isMobile ? 'none' : 1),
               height: isMobile ? (isActive ? '340px' : '76px') : '100%',
@@ -429,7 +459,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
                 {proj.title}
               </div>
             )}
-          </div>
+          </Card>
         );
       })}
     </div>

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
-import { format } from 'date-fns';
 import { useDocumentMeta } from '@/lib/meta';
+import { formatEventDateTime } from '@/lib/format';
 import { fetchEvent } from '@/lib/publicApi/events';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/app/auth';
@@ -64,7 +64,7 @@ export function EventPage() {
       <Breadcrumbs items={[{ label: 'Calendar', href: '/calendar' }, { label: data.title }]} linkComponent={Link} />
       <ImageSlot src={data.coverUrl} alt={data.title} className="mt-4" prompt="Event photo coming soon" />
       <h1 className="m-0 mt-4 text-[24px] font-extrabold text-fg">{data.title}</h1>
-      <p className="mt-1 text-[13px] font-bold text-accent">{format(new Date(data.startsAt), 'EEEE d MMMM yyyy · h:mm a')}</p>
+      <p className="mt-1 text-[13px] font-bold text-accent">{formatEventDateTime(data.startsAt)}</p>
       {data.location ? <p className="mt-1 text-[13px] text-fg-2">{data.location}</p> : null}
       {data.description ? <p className="mt-4 text-[13.5px] leading-relaxed text-fg-2">{data.description}</p> : null}
       {data.capacity ? <Badge tone="neutral" className="mt-2">Capacity {data.capacity}</Badge> : null}

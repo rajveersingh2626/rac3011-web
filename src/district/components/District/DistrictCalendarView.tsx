@@ -16,7 +16,9 @@ import {
   CalendarCheck
 } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
+import { format } from 'date-fns';
 import { fetchEvents } from '@/lib/publicApi/events';
+import { parseEventStart } from '@/lib/format';
 import { drrBookingErrorMessage, postDrrBooking } from '@/lib/publicApi/drrBookings';
 import type { BookingPurpose, DrrBookingSubmitResponse } from '@/lib/publicApi/drrBookings';
 
@@ -122,13 +124,14 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
   const allEvents = useMemo<CalendarEntry[]>(() => {
     const items = eventsQuery.data?.items ?? [];
     return items.flatMap((ev) => {
-      const dt = new Date(ev.startsAt);
-      if (isNaN(dt.getTime())) return [];
+      const start = parseEventStart(ev.startsAt);
+      if (!start) return [];
       return [{
         id: ev.id,
         title: ev.title,
-        dateStr: dt.toISOString().split('T')[0],
-        time: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        dateStr: format(start.date, 'yyyy-MM-dd'),
+        // Midnight means the start time is unknown, so the entry shows the date alone.
+        time: start.hasTime ? format(start.date, 'h:mm a') : '',
         venue: ev.location || null,
         badge: 'Official Event',
         description: ev.description || '',
@@ -744,10 +747,12 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 <CalendarIcon size={16} style={{ color: 'var(--rotaract-pink)' }} />
                 <span>{selectedEvent.dateStr}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={16} style={{ color: 'var(--rotaract-pink)' }} />
-                <span>{selectedEvent.time}</span>
-              </div>
+              {selectedEvent.time ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Clock size={16} style={{ color: 'var(--rotaract-pink)' }} />
+                  <span>{selectedEvent.time}</span>
+                </div>
+              ) : null}
               {selectedEvent.venue && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <MapPin size={16} style={{ color: 'var(--rotaract-pink)' }} />

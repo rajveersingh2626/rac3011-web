@@ -29,7 +29,9 @@ export function ClubMapPanel({ club, onClose }: ClubMapPanelProps) {
 
       <KeyValue
         items={[
-          { label: 'Members', value: club.memberCount },
+          // A count of 0 means newly chartered or not yet on the roster; the API has no flag to tell
+          // those apart, so the row is omitted rather than reading as "0 members".
+          ...(club.memberCount > 0 ? [{ label: 'Members', value: club.memberCount }] : []),
           { label: 'Zone', value: club.zoneId ?? 'Not set' },
         ]}
       />
