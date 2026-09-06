@@ -29,6 +29,9 @@ const SettingsPage = lazy(() => import('@/pages/portal/admin/SettingsPage').then
 const PublicContentPage = lazy(() =>
   import('@/pages/portal/admin/PublicContentPage').then((m) => ({ default: m.PublicContentPage })),
 );
+const AdminAuditPage = lazy(() => import('@/pages/portal/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
+const AdminRolesPage = lazy(() => import('@/pages/portal/admin/AdminRolesPage').then((m) => ({ default: m.AdminRolesPage })));
+const AdminUsersPage = lazy(() => import('@/pages/portal/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
@@ -43,7 +46,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('requests:manage', '/portal/admin/requests/new', <NewRequestPage />),
   guarded('requests:manage', '/portal/admin/requests', <AdminRequestsPage />),
   guarded('content:edit', '/portal/content', <ContentEditorPage />),
-  guarded('roles:manage', '/portal/admin/roles', <ComingSoon title="Roles" />),
+  guarded('roles:manage', '/portal/admin/roles', <AdminRolesPage />),
   guarded('events:checkin', '/portal/admin/events/:slug', <ComingSoon title="Event check-in" />),
   guarded('members:approve', '/portal/members', <AdminMembersPage />),
   guarded('effort:approve', '/portal/admin/effort-log', <ComingSoon title="Effort log" />),
@@ -52,8 +55,8 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('settings:manage', '/portal/admin/settings', <SettingsPage />),
   guarded('feedback:review', '/portal/admin/feedback', <ComingSoon title="Feedback" />),
   guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
-  guarded('roles:manage', '/portal/admin/users', <ComingSoon title="Users" />),
+  guarded('roles:manage', '/portal/admin/users', <AdminUsersPage />),
   guarded('events:manage', '/portal/admin/events', <ComingSoon title="Events" />),
   guarded('public_content:manage', '/portal/admin/public-content/:kind?', <PublicContentPage />),
-  guarded('audit:view', '/portal/admin/audit', <ComingSoon title="Audit log" />),
+  guarded('audit:view', '/portal/admin/audit', <AdminAuditPage />),
 ];
