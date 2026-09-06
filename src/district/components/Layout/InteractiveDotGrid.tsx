@@ -182,9 +182,12 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
       mouse.y = -1000;
     };
 
-    document.fonts.ready.then(() => {
-      resizeCanvas();
-    });
+    // Canvas fillText does not trigger a webfont fetch, and document.fonts.ready
+    // resolves without loading a face nothing has rendered yet. Ask for it explicitly.
+    document.fonts
+      .load("600 80px 'Dancing Script'")
+      .catch(() => undefined)
+      .then(() => resizeCanvas());
 
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
