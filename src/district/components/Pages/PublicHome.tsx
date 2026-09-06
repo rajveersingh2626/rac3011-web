@@ -677,7 +677,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center 32%',
-              opacity: 0.22,
+              opacity: 0.42,
               filter: 'saturate(0.95) contrast(1.06)',
               transform: 'scale(1.02)'
             }}
@@ -687,7 +687,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 45%, rgba(255, 255, 255, 0.50) 80%, rgba(255, 255, 255, 0.85) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, transparent 40%, rgba(255, 255, 255, 0.90) 100%)'
+              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.84) 45%, rgba(255, 255, 255, 0.38) 80%, rgba(255, 255, 255, 0.62) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 40%, rgba(255, 255, 255, 0.62) 100%)'
             }}
           />
         </div>

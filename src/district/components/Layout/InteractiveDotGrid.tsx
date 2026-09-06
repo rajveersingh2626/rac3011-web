@@ -109,17 +109,40 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         offscreenCtx.textBaseline = 'top';
 
         const text = "'Fellowships through service'";
-        const fontSize = Math.min(width * 0.05, 80);
-        offscreenCtx.font = `600 ${fontSize}px 'Dancing Script', 'Satisfy', cursive`;
+        const gutter = Math.max(10, width * 0.02);
+        const textX = (width * 0.04) + gutter;
 
-        const textX = (width * 0.04) + Math.max(10, width * 0.02);
-        const textY = height * 0.85;
+        const setFont = (size: number) => {
+          offscreenCtx.font = `600 ${size}px 'Dancing Script', 'Satisfy', cursive`;
+        };
 
-        offscreenCtx.fillText(text, textX, textY);
+        // The 1024-1440 breakpoint collapses the hero to a short banner, so a fixed 85% offset
+        // lands on the copy and overflows the canvas; anchor below the copy and fit instead.
+        // offsetTop, not getBoundingClientRect: the copy block has an entrance transform.
+        const contentEl = canvas.parentElement?.querySelector<HTMLElement>('.section-content-animate');
+        const contentBottom = contentEl ? contentEl.offsetTop + contentEl.offsetHeight : 0;
+        const textY = Math.max(height * 0.85, contentBottom + 4);
+        const availableHeight = height - textY;
+
+        let fontSize = Math.min(width * 0.05, 80, availableHeight / 1.25);
+        let textSampleSpacing = 3.5;
+
+        if (fontSize >= 26) {
+          setFont(fontSize);
+          const maxTextWidth = width - textX - gutter;
+          const measured = offscreenCtx.measureText(text).width;
+          if (measured > maxTextWidth) {
+            fontSize = (fontSize * maxTextWidth) / measured;
+            setFont(fontSize);
+          }
+
+          offscreenCtx.fillText(text, textX, textY);
+          // Sample denser for smaller type, otherwise the strokes fall between sample points
+          textSampleSpacing = Math.max(2, Math.min(3.5, fontSize / 20));
+        }
 
         const imgData = offscreenCtx.getImageData(0, 0, width, height);
         const data = imgData.data;
-        const textSampleSpacing = 3.5;
 
         for (let y = 0; y < height; y += textSampleSpacing) {
           for (let x = 0; x < width; x += textSampleSpacing) {
@@ -287,7 +310,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: 0,
+        zIndex: 2,
         pointerEvents: 'auto',
         transition: 'opacity 0.15s ease-out'
       }}
