@@ -97,7 +97,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
 
       const isMobile = width < 768;
 
-      // Only render 'Fellowships through service' particle text on desktop and tablet viewports
+      // Only render 'Fellowship through service' particle text on desktop and tablet viewports
       if (!isMobile) {
         const offscreen = document.createElement('canvas');
         const offscreenCtx = offscreen.getContext('2d')!;
@@ -108,7 +108,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         offscreenCtx.textAlign = 'left';
         offscreenCtx.textBaseline = 'top';
 
-        const text = "'Fellowships through service'";
+        const text = "'Fellowship through service'";
         const gutter = Math.max(10, width * 0.02);
         const textX = (width * 0.04) + gutter;
 
