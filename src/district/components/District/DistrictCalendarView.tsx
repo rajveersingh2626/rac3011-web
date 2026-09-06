@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { 
   Calendar as CalendarIcon, 
   MapPin, 
@@ -16,9 +16,10 @@ import {
   CalendarCheck
 } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
-import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { fetchEvents } from '@/lib/publicApi/events';
 import type { PublicEvent } from '@/lib/publicApi/events';
+import { drrBookingErrorMessage, postDrrBooking } from '@/lib/publicApi/drrBookings';
+import type { BookingPurpose, DrrBookingSubmitResponse } from '@/lib/publicApi/drrBookings';
 
 interface CalendarEntry {
   id: string;
@@ -31,9 +32,6 @@ interface CalendarEntry {
   organizer: string;
   description: string;
   highlights: string[];
-  isCustom?: boolean;
-  // Only ever written by toggleBookingStatus on the selected-event copy; never rendered.
-  status?: string;
 }
 
 interface SignatureTile {
@@ -48,37 +46,27 @@ interface SignatureTile {
   icon: string;
 }
 
-interface DrrBooking {
-  id: string;
-  reference: string;
-  clubName: string;
+interface DrrRequestForm {
+  clubId: string;
   requesterName: string;
   requesterRole: string;
   requesterEmail: string;
   requesterPhone: string;
-  purpose: string;
-  dateStr: string;
-  time: string;
+  purpose: BookingPurpose;
+  preferredDate: string;
+  startTime: string;
+  endTime: string;
   venue: string;
-  expectedAttendance: string;
   notes: string;
-  status: string;
-  createdAt: string;
+  // Honeypot: real users never see this field, bots that autofill every input do.
+  website: string;
 }
 
-interface DrrRequestForm {
-  clubName: string;
-  requesterName: string;
-  requesterRole: string;
-  requesterEmail: string;
-  requesterPhone: string;
-  purpose: string;
-  preferredDate: string;
-  preferredTime: string;
-  venue: string;
-  expectedAttendance: string;
-  notes: string;
-}
+const PURPOSE_LABELS: Record<BookingPurpose, string> = {
+  installation: 'Club Installation Ceremony',
+  club_event: 'Club Event / Flagship Project',
+  meeting: 'Official Meeting or Club Visit',
+};
 
 export interface DistrictCalendarViewProps {
   isLoggedIn?: boolean;
@@ -294,8 +282,6 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
   const [currentYear, setCurrentYear] = useState(2026);
   const [currentMonth, setCurrentMonth] = useState(8); // 8 = September (0-indexed)
 
-  // Local storage synced bookings
-  const [customBookings, setCustomBookings] = useState<DrrBooking[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEntry | null>(null);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   // Value is written but never read in this view; only the setter is kept so the state write is preserved.
@@ -303,75 +289,33 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
 
   // Form State for Requesting DRR Presence
   const [formData, setFormData] = useState<DrrRequestForm>({
-    clubName: '',
+    clubId: '',
     requesterName: '',
     requesterRole: 'Club President',
     requesterEmail: '',
     requesterPhone: '',
-    purpose: 'Installation Ceremony',
+    purpose: 'installation',
     preferredDate: '',
-    preferredTime: '11:00 AM',
+    startTime: '11:00',
+    endTime: '14:00',
     venue: '',
-    expectedAttendance: '50-100',
-    notes: ''
+    notes: '',
+    website: ''
   });
 
-  const [formSubmittedRef, setFormSubmittedRef] = useState<DrrBooking | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState<DrrBookingSubmitResponse | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('drr_presence_bookings_v1');
-      const bookings: DrrBooking[] = stored ? JSON.parse(stored) : [];
+  const submitBooking = useMutation({
+    mutationFn: postDrrBooking,
+    onSuccess: (res) => {
+      setFormError(null);
+      setSubmitted(res);
+    },
+    onError: (err) => setFormError(drrBookingErrorMessage(err))
+  });
 
-      // Check if DRR clicked the approval link from email
-      const urlParams = new URLSearchParams(window.location.search);
-      const approveId = urlParams.get('approve') || (urlParams.get('action') === 'approve' ? urlParams.get('id') : null);
-      if (approveId) {
-        const found = bookings.find((b) => b.id === approveId);
-        if (found) {
-          found.status = 'confirmed';
-          localStorage.setItem('drr_presence_bookings_v1', JSON.stringify(bookings));
-          alert(`Official DRR Presence Request (${approveId}) for ${found.clubName} has been approved and confirmed on the District Calendar!`);
-        }
-      }
-
-      setCustomBookings(bookings);
-    } catch (e) {
-      console.warn('Error reading saved bookings:', e);
-    }
-  }, []);
-
-  // Save custom bookings
-  const saveBooking = (newBooking: DrrBooking) => {
-    try {
-      const updated = [...customBookings, newBooking];
-      setCustomBookings(updated);
-      localStorage.setItem('drr_presence_bookings_v1', JSON.stringify(updated));
-    } catch (e) {
-      console.warn('Error saving booking:', e);
-    }
-  };
-
-  // Toggle approval of a booking (for DRR / Admin test verification)
-  const toggleBookingStatus = (bookingId: string) => {
-    try {
-      const updated = customBookings.map((b) => {
-        if (b.id === bookingId) {
-          const newStatus = b.status === 'confirmed' ? 'requested' : 'confirmed';
-          return { ...b, status: newStatus };
-        }
-        return b;
-      });
-      setCustomBookings(updated);
-      localStorage.setItem('drr_presence_bookings_v1', JSON.stringify(updated));
-      if (selectedEvent && selectedEvent.id === bookingId) {
-        setSelectedEvent((prev) => (prev ? { ...prev, status: prev.status === 'confirmed' ? 'requested' : 'confirmed' } : prev));
-      }
-    } catch (e) {
-      console.warn('Error updating booking status:', e);
-    }
-  };
+  const selectedClubName = clubs.find((c) => c.id === formData.clubId)?.name ?? '';
 
   // Live events from PostgreSQL Database via API
   const eventsQuery = useQuery({
@@ -380,7 +324,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     staleTime: 5 * 60 * 1000,
   });
 
-  // Combined events list: dynamically populated from PostgreSQL DB + verified signature milestones + custom approved bookings
+  // Combined events list: dynamically populated from PostgreSQL DB + verified signature milestones
   const allEvents = useMemo(() => {
     let baseList = BASE_CALENDAR_EVENTS;
     if (eventsQuery.data?.items && eventsQuery.data.items.length > 0) {
@@ -411,28 +355,10 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
       baseList = [...dbEvents, ...extraBase];
     }
 
-    const customList = customBookings
-      .filter((b) => b.status === 'confirmed')
-      .map((b) => ({
-        id: b.id,
-        title: `DRR Official Visit – ${b.clubName}`,
-        dateStr: b.dateStr,
-        time: b.time,
-        venue: b.venue,
-        type: 'drr_visit',
-        badge: 'DRR Confirmed Visit',
-        organizer: b.clubName,
-        description: `Official DRR Archit presence confirmed for ${b.purpose}. Requested by ${b.requesterName} (${b.requesterRole}).`,
-        highlights: [
-          `Purpose: ${b.purpose}`,
-          `Expected Attendees: ${b.expectedAttendance}`,
-          `Reference ID: ${b.id}`
-        ],
-        isCustom: true
-      }));
-
-    return [...baseList, ...customList];
-  }, [eventsQuery.data, customBookings]);
+    // Confirmed DRR bookings are not projected into any public read endpoint yet, so the
+    // calendar shows only what the server actually exposes.
+    return baseList;
+  }, [eventsQuery.data]);
 
   // Month navigation helpers
   const handlePrevMonth = () => {
@@ -478,90 +404,51 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     setFormData((prev) => ({
       ...prev,
       preferredDate: defaultDateStr,
-      clubName: prev.clubName || (clubs.length > 0 ? clubs[0].name : 'Rotaract Club of New Delhi')
+      clubId: prev.clubId || (clubs.length > 0 ? clubs[0].id : '')
     }));
+    setFormError(null);
+    setSubmitted(null);
     setIsRequestModalOpen(true);
   };
 
   // Submit DRR presence form
   const handleSubmitBooking = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    const refId = `DRR-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const newBooking: DrrBooking = {
-      id: refId,
-      reference: refId,
-      clubName: formData.clubName,
-      requesterName: formData.requesterName,
-      requesterRole: formData.requesterRole,
-      requesterEmail: formData.requesterEmail,
-      requesterPhone: formData.requesterPhone,
-      purpose: formData.purpose,
-      dateStr: formData.preferredDate,
-      time: formData.preferredTime,
-      venue: formData.venue,
-      expectedAttendance: formData.expectedAttendance,
-      notes: formData.notes,
-      status: 'confirmed', // Automatically confirm in testing so user sees it right on the calendar!
-      createdAt: new Date().toISOString()
-    };
-
-    saveBooking(newBooking);
-
-    // Format mailto link to trigger email notification to itsdrrarchit@gmail.com
-    const emailSubject = encodeURIComponent(`[DRR Presence Request] ${formData.clubName} - ${formData.purpose} (${formData.preferredDate})`);
-    const approvalUrl = `${window.location.origin}/calendar?approve=${refId}`;
-    const emailBody = encodeURIComponent(
-      `Respected DRR Archit,\n\n` +
-      `A new official presence request has been submitted on the Rotaract District 3011 Platform.\n\n` +
-      `--- REQUEST DETAILS ---\n` +
-      `Reference ID: ${refId}\n` +
-      `Club: ${formData.clubName}\n` +
-      `Requested By: ${formData.requesterName} (${formData.requesterRole})\n` +
-      `Contact: ${formData.requesterEmail} | ${formData.requesterPhone}\n` +
-      `Purpose: ${formData.purpose}\n` +
-      `Date & Time: ${formData.preferredDate} at ${formData.preferredTime}\n` +
-      `Venue: ${formData.venue}\n` +
-      `Expected Attendance: ${formData.expectedAttendance}\n` +
-      `Notes / Dignitaries: ${formData.notes || 'None'}\n\n` +
-      `--- APPROVAL LINK ---\n` +
-      `To immediately approve & display this appointment on the District Platform, click:\n` +
-      `${approvalUrl}\n\n` +
-      `Yours in Rotaract,\nDistrict 3011 Secretariat`
-    );
-
-    // Sync enquiry to backend database if connected
-    postEnquiry({
-      kind: 'contact',
-      name: formData.requesterName || 'Club Officer',
-      email: formData.requesterEmail || 'officer@rotaract3011.org',
-      phone: formData.requesterPhone || '',
-      organisation: formData.clubName,
-      message: `[DRR Presence Request] ${formData.purpose} on ${formData.preferredDate} at ${formData.preferredTime} at ${formData.venue}. Notes: ${formData.notes || 'None'}. Ref: ${refId}`,
-      payload: newBooking as unknown as Record<string, unknown>
-    }).catch((err) => {
-      console.warn('Notice: Booking recorded locally (backend sync notice):', err);
-    });
-
-    // Attempt mailto in background
-    const mailtoUrl = `mailto:itsdrrarchit@gmail.com?subject=${emailSubject}&body=${emailBody}`;
-    try {
-      const link = document.createElement('a');
-      link.href = mailtoUrl;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch {
-      console.log('Mail client prompt triggered.');
+    const startsAt = new Date(`${formData.preferredDate}T${formData.startTime}`);
+    const endsAt = new Date(`${formData.preferredDate}T${formData.endTime}`);
+    if (isNaN(startsAt.getTime()) || isNaN(endsAt.getTime())) {
+      setFormError('Enter a valid date and time slot.');
+      return;
+    }
+    if (endsAt <= startsAt) {
+      setFormError('The end time must be after the start time.');
+      return;
     }
 
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setFormSubmittedRef(newBooking);
-    }, 600);
+    // The API models only purpose/club/requester/slot/notes, so the rest of the form is folded into notes.
+    const notes = [
+      `Venue: ${formData.venue}`,
+      `Requested by: ${formData.requesterName} (${formData.requesterRole})`,
+      selectedClubName ? `Host club: ${selectedClubName}` : null,
+      formData.notes.trim() ? `Notes: ${formData.notes.trim()}` : null
+    ]
+      .filter(Boolean)
+      .join('\n')
+      .slice(0, 2000);
+
+    setFormError(null);
+    submitBooking.mutate({
+      purpose: formData.purpose,
+      clubId: formData.clubId || undefined,
+      requesterName: formData.requesterName,
+      requesterEmail: formData.requesterEmail,
+      requesterPhone: formData.requesterPhone,
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+      notes,
+      website: formData.website || undefined
+    });
   };
 
   return (
@@ -635,7 +522,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
           </button>
 
           <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.75)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Info size={13} /> Official presence notification dispatched to itsdrrarchit@gmail.com
+            <Info size={13} /> Requests are filed with the district secretariat for the DRR to review
           </span>
         </div>
       </div>
@@ -1101,27 +988,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #E5E7EB' }}>
-              {selectedEvent.isCustom ? (
-                <button
-                  onClick={() => toggleBookingStatus(selectedEvent.id)}
-                  style={{
-                    backgroundColor: '#F3F4F6',
-                    color: '#374151',
-                    border: '1px solid #D1D5DB',
-                    borderRadius: '10px',
-                    padding: '8px 16px',
-                    fontSize: '0.82rem',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Toggle DRR Approval State
-                </button>
-              ) : (
-                <span style={{ fontSize: '0.82rem', color: '#6B7280', fontWeight: 600 }}>
-                  District 3011 Official Calendar
-                </span>
-              )}
+              <span style={{ fontSize: '0.82rem', color: '#6B7280', fontWeight: 600 }}>
+                District 3011 Official Calendar
+              </span>
 
               <button
                 onClick={() => setSelectedEvent(null)}
@@ -1174,7 +1043,8 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             <button
               onClick={() => {
                 setIsRequestModalOpen(false);
-                setFormSubmittedRef(null);
+                setSubmitted(null);
+                setFormError(null);
               }}
               style={{
                 position: 'absolute',
@@ -1195,7 +1065,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
               <X size={20} />
             </button>
 
-            {!formSubmittedRef ? (
+            {!submitted ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                   <span className="pill-pink" style={{ fontSize: '0.76rem', padding: '4px 12px' }}>
@@ -1210,10 +1080,27 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                   Request Official DRR Presence
                 </h3>
                 <p style={{ fontSize: '0.90rem', color: '#4B5563', lineHeight: 1.5, marginBottom: '24px' }}>
-                  Schedule DRR Archit’s official presence for your club installation, landmark community project, or inter-club symposium. This dispatches an official notification to <strong style={{ color: 'var(--rotaract-pink)' }}>itsdrrarchit@gmail.com</strong>.
+                  Schedule DRR Archit’s official presence for your club installation, landmark community project, or inter-club symposium. The district secretariat is notified straight away, and the DRR confirms or declines the slot.
                 </p>
 
                 <form onSubmit={handleSubmitBooking} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {formError ? (
+                    <div
+                      role="alert"
+                      style={{
+                        backgroundColor: '#FEF2F2',
+                        border: '1px solid #FECACA',
+                        color: '#991B1B',
+                        borderRadius: '12px',
+                        padding: '12px 14px',
+                        fontSize: '0.86rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {formError}
+                    </div>
+                  ) : null}
+
                   {/* Club Selection */}
                   <div>
                     <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#374151', marginBottom: '6px' }}>
@@ -1221,8 +1108,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     </label>
                     {clubs.length > 0 ? (
                       <select
-                        value={formData.clubName}
-                        onChange={(e) => setFormData({ ...formData, clubName: e.target.value })}
+                        aria-label="Host Rotaract Club"
+                        value={formData.clubId}
+                        onChange={(e) => setFormData({ ...formData, clubId: e.target.value })}
                         required
                         style={{
                           width: '100%',
@@ -1235,26 +1123,15 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                         }}
                       >
                         {clubs.map((c) => (
-                          <option key={c.id || c.name} value={c.name}>
+                          <option key={c.id} value={c.id}>
                             {c.name}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <input
-                        type="text"
-                        placeholder="e.g. Rotaract Club of New Delhi"
-                        value={formData.clubName}
-                        onChange={(e) => setFormData({ ...formData, clubName: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '10px 14px',
-                          borderRadius: '10px',
-                          border: '1.5px solid #D1D5DB',
-                          fontSize: '0.90rem'
-                        }}
-                      />
+                      <p style={{ fontSize: '0.86rem', color: '#6B7280', margin: 0 }}>
+                        Club list unavailable right now. Your request will still reach the secretariat; name your club in the notes below.
+                      </p>
                     )}
                   </div>
 
@@ -1352,8 +1229,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                         Purpose of DRR Presence *
                       </label>
                       <select
+                        aria-label="Purpose of DRR Presence"
                         value={formData.purpose}
-                        onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+                        onChange={(e) => setFormData({ ...formData, purpose: e.target.value as BookingPurpose })}
                         style={{
                           width: '100%',
                           padding: '10px 14px',
@@ -1363,12 +1241,11 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                           backgroundColor: '#FFFFFF'
                         }}
                       >
-                        <option value="Installation Ceremony">Club Installation Ceremony</option>
-                        <option value="Official Club Visit (OCV)">Official Club Visit (OCV)</option>
-                        <option value="Flagship Community Project">Flagship Community Project Launch</option>
-                        <option value="Joint Meeting / Assembly">Joint Inter-Club Assembly</option>
-                        <option value="Club Anniversary & Awards">Club Anniversary &amp; Awards</option>
-                        <option value="Other Official Meeting">Other Official Meeting</option>
+                        {(Object.keys(PURPOSE_LABELS) as BookingPurpose[]).map((value) => (
+                          <option key={value} value={value}>
+                            {PURPOSE_LABELS[value]}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div>
@@ -1393,24 +1270,45 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
 
                   {/* Timing & Venue */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '14px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#374151', marginBottom: '6px' }}>
-                        Time Slot *
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 4:00 PM – 7:00 PM"
-                        value={formData.preferredTime}
-                        onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '10px 14px',
-                          borderRadius: '10px',
-                          border: '1.5px solid #D1D5DB',
-                          fontSize: '0.90rem'
-                        }}
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#374151', marginBottom: '6px' }}>
+                          Start *
+                        </label>
+                        <input
+                          type="time"
+                          aria-label="Start time"
+                          value={formData.startTime}
+                          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            border: '1.5px solid #D1D5DB',
+                            fontSize: '0.90rem'
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#374151', marginBottom: '6px' }}>
+                          End *
+                        </label>
+                        <input
+                          type="time"
+                          aria-label="End time"
+                          value={formData.endTime}
+                          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                          required
+                          style={{
+                            width: '100%',
+                            padding: '10px 14px',
+                            borderRadius: '10px',
+                            border: '1.5px solid #D1D5DB',
+                            fontSize: '0.90rem'
+                          }}
+                        />
+                      </div>
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 800, color: '#374151', marginBottom: '6px' }}>
@@ -1454,6 +1352,17 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     />
                   </div>
 
+                  <input
+                    type="text"
+                    name="website"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className="sr-only"
+                    aria-hidden
+                  />
+
                   <div style={{
                     display: 'flex',
                     justifyContent: 'flex-end',
@@ -1479,7 +1388,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     </button>
                     <button
                       type="submit"
-                      disabled={isSubmitting}
+                      disabled={submitBooking.isPending}
                       style={{
                         padding: '12px 28px',
                         borderRadius: '12px',
@@ -1491,12 +1400,12 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                        cursor: submitBooking.isPending ? 'not-allowed' : 'pointer',
                         boxShadow: '0 4px 14px rgba(216, 27, 96, 0.4)'
                       }}
                     >
                       <Send size={16} />
-                      <span>{isSubmitting ? 'Dispatching...' : 'Submit Request to DRR Archit'}</span>
+                      <span>{submitBooking.isPending ? 'Sending...' : 'Submit Request to DRR Archit'}</span>
                     </button>
                   </div>
                 </form>
@@ -1519,10 +1428,16 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 </div>
 
                 <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#111827', marginBottom: '8px' }}>
-                  Request Dispatched to DRR Archit!
+                  Request received
                 </h3>
                 <p style={{ fontSize: '0.94rem', color: '#4B5563', maxWidth: '480px', margin: '0 auto 20px auto', lineHeight: 1.5 }}>
-                  Your request has been filed under reference <strong style={{ color: 'var(--rotaract-pink)' }}>{formSubmittedRef.reference}</strong>. A notification summary was prepared for <strong>itsdrrarchit@gmail.com</strong>.
+                  {submitted.reference ? (
+                    <>
+                      Your request is filed under reference <strong style={{ color: 'var(--rotaract-pink)' }}>{submitted.reference}</strong>. Keep it handy to check the status later.
+                    </>
+                  ) : (
+                    <>The district secretariat has your request.</>
+                  )}
                 </p>
 
                 <div style={{
@@ -1533,32 +1448,41 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                   marginBottom: '24px',
                   border: '1px solid #E5E7EB'
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Host Club:</span>
-                    <strong style={{ fontSize: '0.84rem', color: '#111827' }}>{formSubmittedRef.clubName}</strong>
-                  </div>
+                  {selectedClubName ? (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Host Club:</span>
+                      <strong style={{ fontSize: '0.84rem', color: '#111827' }}>{selectedClubName}</strong>
+                    </div>
+                  ) : null}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Purpose:</span>
-                    <strong style={{ fontSize: '0.84rem', color: '#111827' }}>{formSubmittedRef.purpose}</strong>
+                    <strong style={{ fontSize: '0.84rem', color: '#111827' }}>{PURPOSE_LABELS[formData.purpose]}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Confirmed Slot:</span>
-                    <strong style={{ fontSize: '0.84rem', color: 'var(--rotaract-pink)' }}>{formSubmittedRef.dateStr} at {formSubmittedRef.time}</strong>
+                    <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Requested Slot:</span>
+                    <strong style={{ fontSize: '0.84rem', color: 'var(--rotaract-pink)' }}>{formData.preferredDate}, {formData.startTime} to {formData.endTime}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Public Calendar Status:</span>
-                    <span style={{ fontSize: '0.80rem', color: '#059669', fontWeight: 800 }}>● Confirmed &amp; Live on Platform</span>
+                    <span style={{ fontSize: '0.78rem', color: '#6B7280', fontWeight: 600 }}>Status:</span>
+                    <span style={{ fontSize: '0.80rem', color: '#B45309', fontWeight: 800 }}>
+                      ● {submitted.status ?? 'requested'}: awaiting DRR decision
+                    </span>
                   </div>
+                  <p style={{ fontSize: '0.78rem', color: '#6B7280', margin: '10px 0 0 0', textAlign: 'left' }}>
+                    It appears on the district calendar only once the DRR confirms it.
+                  </p>
                 </div>
 
                 <button
                   onClick={() => {
                     setIsRequestModalOpen(false);
-                    setFormSubmittedRef(null);
-                    // Jump calendar to this booking's month
-                    const [y, m] = formSubmittedRef.dateStr.split('-').map(Number);
-                    setCurrentYear(y);
-                    setCurrentMonth(m - 1);
+                    setSubmitted(null);
+                    // Jump calendar to the requested month
+                    const [y, m] = formData.preferredDate.split('-').map(Number);
+                    if (y && m) {
+                      setCurrentYear(y);
+                      setCurrentMonth(m - 1);
+                    }
                   }}
                   style={{
                     backgroundColor: 'var(--rotaract-pink)',
@@ -1572,7 +1496,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     boxShadow: '0 4px 14px rgba(216, 27, 96, 0.4)'
                   }}
                 >
-                  View on District Calendar
+                  Back to District Calendar
                 </button>
               </div>
             )}

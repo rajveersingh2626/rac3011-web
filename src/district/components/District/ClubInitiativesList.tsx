@@ -4,11 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, Sparkles, Award, X } from 'lucide-react';
 import { DISTRICT_SHOWCASE_PROJECTS } from '../../data/districtData';
 import type { DistrictClub, ShowcaseProject } from '../../data/districtData';
-import { fetchProjects } from '@/lib/publicApi/showcase';
+import { fetchProject, fetchProjects } from '@/lib/publicApi/showcase';
 
-// TODO(port): the source reads `badge` / `gallery` / `leadRotaractor` / `sdg` off the local
-// showcase entries, but no entry in DISTRICT_SHOWCASE_PROJECTS has ever carried them (so the
-// `||` fallbacks always win). Typed as optional to keep the reads exactly as the source has them.
+// `badge` / `leadRotaractor` / `sdg` exist on neither the local entries nor the projects API,
+// so their `||` fallbacks always win; `gallery` is served by the API as `photos`.
 type LocalShowcaseProject = ShowcaseProject & {
   badge?: string;
   gallery?: string[];
@@ -43,16 +42,28 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const hasDbProjects = (projectsQuery.data?.items?.length ?? 0) > 0;
+
+  // `body` lives only on the detail endpoint, so the modal enriches itself on open.
+  const activeSlug = activeProjectModal?.slug;
+  const projectDetailQuery = useQuery({
+    queryKey: ['public', 'project', activeSlug],
+    queryFn: () => fetchProject(activeSlug ?? ''),
+    enabled: Boolean(activeSlug) && hasDbProjects,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const allProjects = useMemo<DisplayProject[]>(() => {
     if (!projectsQuery.data?.items || projectsQuery.data.items.length === 0) {
       return DISTRICT_SHOWCASE_PROJECTS;
     }
-    const dbProjects: DisplayProject[] = projectsQuery.data.items.map((p) => {
+    return projectsQuery.data.items.map((p) => {
       const local: LocalShowcaseProject | undefined = DISTRICT_SHOWCASE_PROJECTS.find(
         (lp) => (lp.title || '').toLowerCase() === (p.title || '').toLowerCase() || lp.id === p.id
       );
       return {
         id: p.id,
+        slug: p.slug || local?.slug,
         title: p.title || local?.title || 'Rotaract Initiative',
         clubName: p.leadClub?.name || local?.clubName || 'District 3011 Action Committee',
         zone: local?.zone || 'District 3011',
@@ -70,10 +81,6 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = () => {
         sdg: local?.sdg || 'SDG 3: Good Health & Well-Being'
       };
     });
-
-    const existingTitles = new Set(dbProjects.map((p) => p.title.toLowerCase()));
-    const extraDefaults = DISTRICT_SHOWCASE_PROJECTS.filter((dp) => !existingTitles.has(dp.title.toLowerCase()));
-    return [...dbProjects, ...extraDefaults];
   }, [projectsQuery.data]);
 
   const categories = [
@@ -425,7 +432,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = () => {
                   Execution &amp; Impact
                 </h4>
                 <p style={{ fontSize: '0.92rem', color: 'var(--text-primary)', lineHeight: 1.6, margin: 0 }}>
-                  {activeProjectModal.body}
+                  {projectDetailQuery.data?.body || activeProjectModal.body}
                 </p>
               </div>
 

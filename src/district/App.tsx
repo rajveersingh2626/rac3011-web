@@ -1,12 +1,11 @@
-import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from './components/Layout/Navbar';
 import Footer from './components/Layout/Footer';
 import PublicHome from './components/Pages/PublicHome';
 import PresidentModal from './components/Modals/PresidentModal';
-import { INITIAL_CLUBS, ZONE_ID_TO_NAME, type ClubInitiative, type DistrictClub } from './data/districtData';
-import { getParsedClubsFromExcel } from './data/excelReader';
+import { type ClubInitiative } from './data/districtData';
+import { useDistrictClubs, type DistrictClubLive } from './hooks/useDistrictClubs';
 import { useAuth } from '@/app/auth';
-import { fetchClubs as fetchApiClubs } from '@/lib/publicApi/clubs';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 
 const DistrictAccess = lazy(() => import('./components/Pages/DistrictAccess'));
@@ -116,74 +115,19 @@ export default function DistrictApp() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const [clubs, setClubs] = useState<DistrictClub[]>(INITIAL_CLUBS);
+  const { clubs: rosterClubs } = useDistrictClubs();
 
-  // Overlay live club data on the static roster: portal API first, local Excel roster as fallback.
-  useEffect(() => {
-    async function syncClubsData() {
-      try {
-        try {
-          const apiRes = await fetchApiClubs();
-          if (apiRes.items.length > 0) {
-            setClubs((prev) =>
-              prev.map((c) => {
-                const matched = apiRes.items.find(
-                  (ac) =>
-                    ac.name.toLowerCase().trim() === c.name.toLowerCase().trim() ||
-                    (ac.shortName && c.shortName && ac.shortName.toLowerCase() === c.shortName.toLowerCase()) ||
-                    c.name.toLowerCase().includes(ac.name.toLowerCase()) ||
-                    ac.name.toLowerCase().includes(c.name.toLowerCase()),
-                );
-                if (!matched) return c;
-                const resolvedZone = (matched.zoneId && ZONE_ID_TO_NAME[matched.zoneId]) || c.zone;
-                return {
-                  ...c,
-                  president: matched.president || c.president,
-                  zone: resolvedZone,
-                  phone: matched.phone || c.phone,
-                  email: matched.email || c.email,
-                  memberCount: matched.memberCount || c.memberCount,
-                };
-              }),
-            );
-            return;
-          }
-        } catch {
-          // Backend API not reachable or unseeded; fall through to the Excel roster.
-        }
-
-        const parsed = await getParsedClubsFromExcel();
-        if (parsed && parsed.length > 0) {
-          setClubs((prev) =>
-            prev.map((c) => {
-              const clean = (s: string | null | undefined) => (s || '').toLowerCase().replace(/rotaract|club|of|\s+/g, '');
-              const matched = parsed.find(
-                (ec) =>
-                  ec.name.toLowerCase().trim() === c.name.toLowerCase().trim() ||
-                  ec.name.toLowerCase().includes(c.name.toLowerCase()) ||
-                  c.name.toLowerCase().includes(ec.name.toLowerCase()) ||
-                  (c.shortName && ec.name.toLowerCase().includes(c.shortName.toLowerCase())) ||
-                  clean(ec.name).includes(clean(c.shortName || c.name)) ||
-                  clean(c.name).includes(clean(ec.name)),
-              );
-              if (!matched) return c;
-              return {
-                ...c,
-                president: matched.president || c.president,
-                isDirector: matched.isDirector || c.isDirector || '',
-                zone: matched.zone || c.zone,
-                phone: matched.phone || c.phone,
-                email: matched.email || c.email,
-              };
-            }),
-          );
-        }
-      } catch (err) {
-        console.warn('Clubs sync notice:', err);
-      }
-    }
-    void syncClubsData();
-  }, []);
+  // Initiatives posted in this session are layered over the API roster instead of being
+  // written into it, so a background refetch never drops them.
+  const [postedInitiatives, setPostedInitiatives] = useState<Record<string, ClubInitiative[]>>({});
+  const clubs = useMemo<DistrictClubLive[]>(
+    () =>
+      rosterClubs.map((club) => {
+        const posted = postedInitiatives[club.id];
+        return posted ? { ...club, initiatives: [...posted, ...(club.initiatives || [])] } : club;
+      }),
+    [rosterClubs, postedInitiatives],
+  );
 
   const isLoggedIn = Boolean(me);
   const userRole = me ? (me.roles[0]?.roleKey ?? 'member') : null;
@@ -202,7 +146,7 @@ export default function DistrictApp() {
   };
 
   const [uploaderModalMode, setUploaderModalMode] = useState<string | null>(null);
-  const [preselectedClubForModal] = useState<DistrictClub | null>(null);
+  const [preselectedClubForModal] = useState<DistrictClubLive | null>(null);
 
   const cursorDotRef = useRef<HTMLDivElement | null>(null);
   const cursorFollowerRef = useRef<HTMLDivElement | null>(null);
@@ -252,11 +196,7 @@ export default function DistrictApp() {
   }, []);
 
   const handleAddInitiative = (targetClubId: string, newInitiative: ClubInitiative) => {
-    setClubs((prevClubs) =>
-      prevClubs.map((club) =>
-        club.id === targetClubId ? { ...club, initiatives: [newInitiative, ...(club.initiatives || [])] } : club,
-      ),
-    );
+    setPostedInitiatives((prev) => ({ ...prev, [targetClubId]: [newInitiative, ...(prev[targetClubId] || [])] }));
     handlePageChange('district', 'map-clubs');
   };
 

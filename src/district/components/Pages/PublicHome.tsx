@@ -1,6 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { FC, FormEvent, RefObject } from 'react';
+import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
+import type { FocusArea, ImpactMetric, Achievement } from '../../data/districtData';
 import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers, Award } from 'lucide-react';
 import InteractiveDotGrid from '../Layout/InteractiveDotGrid';
 const rotaryWheelImg = '/images.png';
@@ -8,6 +11,39 @@ import Footer from '../Layout/Footer';
 import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
 import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
+import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
+import { fetchAchievements, type Achievement as ApiAchievement } from '@/lib/publicApi/achievements';
+
+const impactStatsSchema = z.array(
+  z.object({
+    label: z.string().optional(),
+    value: z.union([z.string(), z.number()]).optional(),
+    suffix: z.string().optional(),
+    note: z.string().optional(),
+    color: z.string().optional(),
+  })
+);
+
+const areasOfFocusSchema = z.array(
+  z.object({
+    order: z.number().optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+  })
+);
+
+function listBlockOf<T>(blocks: ContentBlocks | undefined, sectionKey: string, schema: z.ZodType<T>): T | null {
+  const block = blocks?.[sectionKey];
+  if (!block || block.type !== 'list') return null;
+  const parsed = schema.safeParse(block.value);
+  return parsed.success ? parsed.data : null;
+}
+
+const ACHIEVEMENT_BADGE_BY_TYPE: Record<ApiAchievement['type'], string> = {
+  chartered_club: 'Charter Expansion',
+  award: 'Award & Recognition',
+  milestone: 'District Milestone',
+};
 
 type ScreenSize = 'mobile' | 'tablet' | 'laptop' | 'desktop';
 
@@ -467,6 +503,68 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
     };
   }, []);
 
+  const homeContentQuery = useContentQuery('home');
+  const aboutContentQuery = useContentQuery('about');
+  const achievementsQuery = useQuery({
+    queryKey: ['public', 'achievements'],
+    queryFn: fetchAchievements,
+  });
+
+  const impactMetrics = useMemo<ImpactMetric[]>(() => {
+    const stats = listBlockOf(homeContentQuery.data, 'impact-stats', impactStatsSchema);
+    if (!stats || stats.length === 0) return IMPACT_METRICS;
+    return stats.map((stat, idx) => {
+      const base = IMPACT_METRICS[idx % IMPACT_METRICS.length];
+      return {
+        label: stat.label || base.label,
+        value: stat.value === undefined || stat.value === '' ? base.value : String(stat.value),
+        suffix: stat.suffix || base.suffix,
+        change: stat.note || base.change,
+        color: stat.color || base.color,
+      };
+    });
+  }, [homeContentQuery.data]);
+
+  const focusAreas = useMemo<FocusArea[]>(() => {
+    const areas = listBlockOf(aboutContentQuery.data, 'areas-of-focus', areasOfFocusSchema);
+    if (!areas || areas.length === 0) return ROTARY_FOCUS_AREAS;
+    return [...areas]
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((area, idx) => {
+        const base = ROTARY_FOCUS_AREAS[idx % ROTARY_FOCUS_AREAS.length];
+        return {
+          id: base.id,
+          name: area.title || base.name,
+          color: base.color,
+          icon: base.icon,
+          description: area.description || base.description,
+        };
+      });
+  }, [aboutContentQuery.data]);
+
+  const achievements = useMemo<Achievement[]>(() => {
+    const items = achievementsQuery.data?.items;
+    if (!items || items.length === 0) return DISTRICT_ACHIEVEMENTS;
+    return items.map((item, idx) => {
+      // Match by title, not index: the DB has no badge/value/colour, and index-joining a
+      // reordered or partial API list would hand each row someone else's presentation fields.
+      const base =
+        DISTRICT_ACHIEVEMENTS.find((a) => a.title.toLowerCase() === item.title.toLowerCase()) ??
+        DISTRICT_ACHIEVEMENTS[idx % DISTRICT_ACHIEVEMENTS.length];
+      const matched = base.title.toLowerCase() === item.title.toLowerCase();
+      return {
+        id: item.id,
+        title: item.title || base.title,
+        value: base.value,
+        badge: matched ? base.badge : (ACHIEVEMENT_BADGE_BY_TYPE[item.type] ?? base.badge),
+        metric: base.metric,
+        description: item.description || base.description,
+        highlight: item.title || base.highlight,
+        color: base.color,
+      };
+    });
+  }, [achievementsQuery.data]);
+
   const [contributionAmount, setContributionAmount] = useState(10000);
 
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -827,7 +925,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '20px', marginBottom: '64px' }}>
-            {DISTRICT_ACHIEVEMENTS.map((ach) => (
+            {achievements.map((ach) => (
               <div
                 key={ach.id}
                 className="rotaract-card"
@@ -879,7 +977,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
-            {IMPACT_METRICS.map((metric, idx) => (
+            {impactMetrics.map((metric, idx) => (
               <div key={idx} className="rotaract-card" style={{ padding: '24px 18px', textAlign: 'center', background: '#FFFFFF' }}>
                 <div style={{ fontSize: 'clamp(2.2rem, 3.6vw, 2.8rem)', fontWeight: 900, color: 'var(--rotaract-pink)', marginBottom: '4px' }}>
                   {metric.value}
@@ -912,7 +1010,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            {ROTARY_FOCUS_AREAS.map((area) => (
+            {focusAreas.map((area) => (
               <div
                 key={area.id}
                 className="rotaract-card"

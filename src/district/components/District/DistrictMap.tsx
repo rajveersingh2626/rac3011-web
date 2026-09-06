@@ -21,19 +21,9 @@ import {
   Check,
   UserCheck
 } from 'lucide-react';
-import { getParsedClubsFromExcel } from '../../data/excelReader';
-import { INITIAL_CLUBS } from '../../data/districtData';
-import type { DistrictClub } from '../../data/districtData';
-import { fetchClubs as fetchApiClubs } from '@/lib/publicApi/clubs';
+import { useDistrictClubs, useZoneNames, type DistrictClubLive } from '../../hooks/useDistrictClubs';
 
-// TODO(port): `zoneId` / `zoneName` / `presidentEmail` are not on `DistrictClub` — they only
-// appear on records merged in at runtime from the portal API. Typed here rather than widening
-// the shared data module.
-type MapClub = DistrictClub & {
-  zoneId?: string;
-  zoneName?: string;
-  presidentEmail?: string;
-};
+type MapClub = DistrictClubLive;
 
 interface RegionalZone {
   id: string;
@@ -50,20 +40,10 @@ interface RegionalZone {
   polygon: [number, number][];
 }
 
-// Not exported: the source exported these two consts but nothing ever imported them
-// (App.jsx uses the districtData copy), and exporting non-component values here trips
-// react-refresh/only-export-components.
-const ZONE_ID_TO_NAME: Record<string, string> = {
-  'cmtn8hw19001ill1sl3gxhvjc': 'Zone Prithvi',
-  'cmtn8hw0y001dll1sbp1tvm6i': 'Zone Prithvi',
-  'cmtn8hw17001hll1sgpqjgrai': 'Zone Agni',
-  'cmtn8hw12001ell1sdyds6zsz': 'Zone Agni',
-  'cmtn8hw1b001jll1sidh151lv': 'Zone Vayu',
-  'cmtn8hw14001fll1s69dnbafe': 'Zone Vayu',
-  'cmtn8hw1d001kll1soabcfcmd': 'Zone Akash',
-  'cmtn8hw16001gll1sqctt3qv7': 'Zone Akash',
-};
-
+// Not exported: the source exported this const but nothing ever imported it (App.jsx uses the
+// districtData copy), and exporting non-component values here trips
+// react-refresh/only-export-components. Zone polygons and colours are presentation constants,
+// so they stay in code; only the zone names/ids come from the API.
 const REGIONAL_ZONES: RegionalZone[] = [
   {
     id: 'zone-prithvi',
@@ -175,7 +155,7 @@ const getLeaflet = (): LeafletApi | null => {
 };
 
 interface DistrictMapProps {
-  clubs?: DistrictClub[];
+  clubs?: MapClub[];
   selectedClubId?: string | null;
   onSelectClub?: (clubId: string | null) => void;
   onOpenPostInitiativeModal?: (clubId: string) => void;
@@ -191,8 +171,10 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<LeafletMarker[]>([]);
 
-  const [activeClubs, setActiveClubs] = useState<MapClub[]>(() => (clubs && clubs.length > 0 ? clubs : INITIAL_CLUBS));
-  const [excelLoaded, setExcelLoaded] = useState(false);
+  // Same query key as `DistrictApp`, so TanStack serves both from one fetch.
+  const { clubs: rosterClubs, isLive } = useDistrictClubs();
+  const zoneNameById = useZoneNames();
+  const activeClubs: MapClub[] = clubs && clubs.length > 0 ? clubs : rosterClubs;
 
   const [hoveredClub, setHoveredClub] = useState<MapClub | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; transform: string }>({ x: 0, y: 0, transform: 'translate(-50%, -100%)' });
@@ -237,97 +219,6 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
     setCopiedField(fieldKey);
     setTimeout(() => setCopiedField(null), 1800);
   };
-
-  useEffect(() => {
-    let isMounted = true;
-    
-    if (clubs && clubs.length > 0) {
-      setActiveClubs(clubs);
-    } else {
-      setActiveClubs(INITIAL_CLUBS);
-    }
-
-    async function loadLiveClubs() {
-      // 1. Try real backend API
-      try {
-        const apiRes = await fetchApiClubs();
-        if (apiRes?.items?.length > 0 && isMounted) {
-          setActiveClubs(prev => {
-            const baseList: MapClub[] = prev && prev.length > 0 ? prev : INITIAL_CLUBS;
-            return baseList.map(c => {
-              const matched = apiRes.items.find(ac => {
-                const acName = (ac?.name || '').toLowerCase().trim();
-                const cName = (c?.name || '').toLowerCase().trim();
-                const acShort = (ac?.shortName || '').toLowerCase().trim();
-                const cShort = (c?.shortName || '').toLowerCase().trim();
-                return (acName && cName && acName === cName) ||
-                  (acShort && cShort && acShort === cShort) ||
-                  (cName && acName && (cName.includes(acName) || acName.includes(cName)));
-              });
-              if (matched) {
-                const resolvedZone = (matched.zoneId && ZONE_ID_TO_NAME[matched.zoneId]) || c.zone;
-                return {
-                  ...c,
-                  president: matched.president || c.president,
-                  zone: resolvedZone,
-                  zoneId: matched.zoneId || c.zoneId,
-                  phone: matched.phone || c.phone,
-                  email: matched.email || c.email,
-                  memberCount: matched.memberCount || c.memberCount
-                };
-              }
-              return c;
-            });
-          });
-          setExcelLoaded(true);
-          return;
-        }
-      } catch {
-        // Fallback to Excel
-      }
-
-      // 2. Fallback to parsed excel roster
-      try {
-        const parsed = await getParsedClubsFromExcel();
-        if (parsed && parsed.length > 0 && isMounted) {
-          setActiveClubs(prev => {
-            const baseList: MapClub[] = prev && prev.length > 0 ? prev : INITIAL_CLUBS;
-            return baseList.map(c => {
-              const clean = (s: string | undefined) => (s || '').toLowerCase().replace(/rotaract|club|of|\s+/g, '');
-              const matched = parsed.find(ec => {
-                const ecName = (ec?.name || '').toLowerCase().trim();
-                const cName = (c?.name || '').toLowerCase().trim();
-                const ecShort = (ec?.shortName || '').toLowerCase().trim();
-                const cShort = (c?.shortName || '').toLowerCase().trim();
-                return (ecName && cName && ecName === cName) ||
-                  (ecName && cName && (ecName.includes(cName) || cName.includes(ecName))) ||
-                  (ecShort && cShort && ecShort === cShort) ||
-                  (clean(ecName) && clean(cShort || cName) && clean(ecName).includes(clean(cShort || cName))) ||
-                  (clean(cName) && clean(ecName) && clean(cName).includes(clean(ecName)));
-              });
-              if (matched) {
-                return {
-                  ...c,
-                  president: matched.president || c.president,
-                  isDirector: matched.isDirector || c.isDirector || '',
-                  phone: matched.phone || c.phone,
-                  email: matched.email || c.email,
-                  zone: matched.zone || c.zone
-                };
-              }
-              return c;
-            });
-          });
-          setExcelLoaded(true);
-        }
-      } catch (err) {
-        console.warn('Excel load error in DistrictMap:', err);
-      }
-    }
-
-    loadLiveClubs();
-    return () => { isMounted = false; };
-  }, [clubs]);
 
   useEffect(() => {
     if (selectedClubId) {
@@ -428,8 +319,8 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
       z = zObj.name ?? zObj.id ?? zObj.title ?? '';
     }
     const raw = String(z).trim();
-    if (ZONE_ID_TO_NAME[raw]) {
-      return ZONE_ID_TO_NAME[raw].toLowerCase();
+    if (zoneNameById[raw]) {
+      return zoneNameById[raw].toLowerCase();
     }
     return raw.toLowerCase();
   };
@@ -708,7 +599,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
           <div>
             <div style={{ fontSize: '0.95rem', fontWeight: 900, letterSpacing: '0.5px', color: '#1E1E24', display: 'flex', alignItems: 'center', gap: '8px' }}>
               {activeZoneObj ? `${activeZoneObj.name.toUpperCase()} (${activeZoneObj.hindiName})` : 'ROTARACT DISTRICT 3011 • DIRECTORY'}
-              {excelLoaded && (
+              {isLive && (
                 <span className="pill-pink" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
                   <CheckCircle2 size={10} /> RY 2026-27 Active
                 </span>

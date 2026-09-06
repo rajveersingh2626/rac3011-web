@@ -21,6 +21,9 @@ interface ResourceCard {
 export type DistrictResourcesViewProps = Record<string, never>;
 
 export default function DistrictResourcesView() {
+  // GET /public/resources is a flat list (category/title/description/url/isLocked/comingSoonMonth):
+  // it cannot express the root drive flag, nested subfolders or sublinks, so the Google Drive
+  // folder tree stays local until the API grows a folder model.
   const masterDrive = DISTRICT_RESOURCES.find(r => r.isRoot);
   const staticSubfolders = DISTRICT_RESOURCES.filter(r => !r.isRoot);
 
@@ -45,7 +48,12 @@ export default function DistrictResourcesView() {
     [resourcesQuery.data],
   );
 
-  const subfolders: ResourceCard[] = [...portalResources, ...staticSubfolders];
+  // API wins on title collisions; the local drive folders only fill what it cannot serve.
+  const portalTitles = new Set(portalResources.map((r) => r.title.trim().toLowerCase()));
+  const subfolders: ResourceCard[] = [
+    ...portalResources,
+    ...staticSubfolders.filter((r) => !portalTitles.has(r.title.trim().toLowerCase())),
+  ];
 
   return (
     <div style={{ marginTop: '40px' }}>
@@ -137,7 +145,7 @@ export default function DistrictResourcesView() {
         </div>
 
         <a
-          href="https://drive.google.com/drive/folders/13jmmlVGeA0W3-c6uv2rcNr-b43eVJAB_"
+          href={masterDrive?.driveUrl}
           target="_blank"
           rel="noopener noreferrer"
           style={{

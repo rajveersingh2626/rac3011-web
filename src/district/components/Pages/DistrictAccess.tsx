@@ -61,6 +61,8 @@ export default function DistrictAccess({
         (l) => l.name.toLowerCase() === member.name.toLowerCase() || l.id === member.id
       );
 
+      // /public/district-team has no category field, so the local list is the only real source;
+      // kind/designation only give a coarse guess for members it doesn't know.
       let category = local?.category;
       if (!category) {
         if (member.kind === 'core') {
