@@ -17,7 +17,7 @@ const columns: Column<StandingsRow>[] = [
     cell: (r) => (
       <div>
         <p className="m-0 text-[13px] font-bold text-fg">{r.teamName}</p>
-        <p className="m-0 text-[11px] text-fg-3">{r.clubName}</p>
+        {r.clubName ? <p className="m-0 text-[11px] text-fg-3">{r.clubName}</p> : null}
       </div>
     ),
   },

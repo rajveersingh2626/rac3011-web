@@ -8,7 +8,7 @@ export type RclClubRef = z.infer<typeof rclClubRefSchema>;
 
 export const playerSchema = z.object({
   id: z.string(),
-  teamId: z.string(),
+  teamId: z.string().optional(),
   memberId: z.string().nullable(),
   name: z.string(),
   role: z.string().nullable(),
@@ -18,27 +18,32 @@ export type Player = z.infer<typeof playerSchema>;
 export const teamSchema = z.object({
   id: z.string(),
   season: z.number(),
-  clubId: z.string(),
+  clubId: z.string().optional(),
   club: rclClubRefSchema,
   name: z.string(),
   captainName: z.string(),
   captainPhone: z.string(),
   status: teamStatusSchema,
   players: z.array(playerSchema),
-  createdById: z.string(),
+  createdById: z.string().optional(),
   createdAt: z.string(),
-  updatedAt: z.string(),
+  updatedAt: z.string().optional(),
 });
 export type Team = z.infer<typeof teamSchema>;
 
 export const fixtureStatusSchema = z.enum(['scheduled', 'completed', 'abandoned']);
 export type FixtureStatus = z.infer<typeof fixtureStatusSchema>;
 
-export const fixtureTeamRefSchema = z.object({ id: z.string(), name: z.string(), clubId: z.string() });
+export const fixtureTeamRefSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  club: rclClubRefSchema.optional(),
+  clubId: z.string().optional(),
+});
 export type FixtureTeamRef = z.infer<typeof fixtureTeamRefSchema>;
 
 export const resultSchema = z.object({
-  fixtureId: z.string(),
+  fixtureId: z.string().optional(),
   homeRuns: z.number(),
   homeWickets: z.number(),
   homeOvers: z.number(),
@@ -47,21 +52,22 @@ export const resultSchema = z.object({
   awayOvers: z.number(),
   winnerTeamId: z.string().nullable(),
   notes: z.string().nullable(),
-  enteredById: z.string(),
+  enteredById: z.string().optional(),
 });
 export type Result = z.infer<typeof resultSchema>;
 
 export const fixtureSchema = z.object({
   id: z.string(),
   season: z.number(),
-  homeTeamId: z.string(),
+  homeTeamId: z.string().optional(),
   homeTeam: fixtureTeamRefSchema,
-  awayTeamId: z.string(),
+  awayTeamId: z.string().optional(),
   awayTeam: fixtureTeamRefSchema,
   scheduledAt: z.string(),
   venue: z.string().nullable(),
   status: fixtureStatusSchema,
   result: resultSchema.nullable(),
+  createdAt: z.string().optional(),
 });
 export type Fixture = z.infer<typeof fixtureSchema>;
 
@@ -69,7 +75,7 @@ export const standingsRowSchema = z
   .object({
     teamId: z.string(),
     teamName: z.string(),
-    clubName: z.string(),
+    clubName: z.string().optional(),
     played: z.number(),
     won: z.number(),
     lost: z.number(),

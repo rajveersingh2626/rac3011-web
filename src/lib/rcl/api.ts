@@ -126,9 +126,15 @@ export async function updateFixture(id: string, input: UpdateFixtureInput): Prom
 }
 
 export async function fetchPublicStandings(): Promise<StandingsRow[]> {
-  return apiFetch('/public/rcl/standings', { schema: z.array(standingsRowSchema) });
+  // The endpoint returns { season, standings, updatedAt }, not a bare array.
+  const res = await apiFetch('/public/rcl/standings', {
+    schema: z.object({ season: z.number(), standings: z.array(standingsRowSchema) }).passthrough(),
+  });
+  return res.standings;
 }
 
 export async function fetchPublicFixtures(): Promise<Fixture[]> {
-  return apiFetch('/public/rcl/fixtures', { schema: z.array(fixtureSchema) });
+  // The endpoint is paginated, so it returns { items, total, page, pageSize }.
+  const res = await apiFetch('/public/rcl/fixtures', { schema: fixturesPage });
+  return res.items;
 }

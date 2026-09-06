@@ -75,8 +75,8 @@ export function FixtureResultModal({ fixture, onClose }: FixtureResultModalProps
         status,
         homeRuns: Number(homeRuns),
         awayRuns: Number(awayRuns),
-        homeTeamId: f.homeTeamId,
-        awayTeamId: f.awayTeamId,
+        homeTeamId: f.homeTeam.id,
+        awayTeamId: f.awayTeam.id,
       });
       return updateFixture(f.id, {
         status,

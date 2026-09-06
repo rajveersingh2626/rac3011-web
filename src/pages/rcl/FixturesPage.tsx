@@ -45,7 +45,7 @@ function resultLine(fixture: Fixture): string | null {
   if (fixture.status === 'abandoned') return 'Match abandoned';
   const winnerId = fixture.result.winnerTeamId;
   if (!winnerId) return 'Match tied';
-  const winner = winnerId === fixture.homeTeamId ? fixture.homeTeam.name : fixture.awayTeam.name;
+  const winner = winnerId === fixture.homeTeam.id ? fixture.homeTeam.name : fixture.awayTeam.name;
   return `${winner} won`;
 }
 
