@@ -1,29 +1,5 @@
 import { PDRR_PHOTOS } from './pdrrImages';
 
-export interface DistrictInfo {
-  number: string;
-  region: string;
-  governor: string;
-  rotaractRepresentative: string;
-  theme: string;
-  year: string;
-  motto: string;
-}
-
-export interface DistrictZone {
-  id: string;
-  name: string;
-  hindiName: string;
-  zoneNumber: string;
-  adrr: string;
-  zrr: string;
-  zrs: string;
-  color: string;
-  fillColor: string;
-  clubsCount: number;
-  description: string;
-}
-
 export interface FocusArea {
   id: string;
   name: string;
@@ -97,23 +73,6 @@ export interface PastDrr {
   hasPhoto: boolean;
 }
 
-export interface Announcement {
-  id: string;
-  title: string;
-  date: string;
-  category: string;
-  author: string;
-  content: string;
-}
-
-export interface LeaderboardClub {
-  rank: number;
-  name: string;
-  points: number;
-  projects: number;
-  score: string;
-}
-
 export interface DistrictLeader {
   id: string;
   name: string;
@@ -147,100 +106,6 @@ export interface DistrictResource {
   sublinks?: ResourceSublink[];
   subfolders?: ResourceSubfolder[];
 }
-
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  date: string;
-  month: string;
-  timing: string;
-  venue: string;
-  category: string;
-  badge: string;
-  description: string;
-  highlights: string[];
-}
-
-export interface ShowcaseProject {
-  id: string;
-  slug: string;
-  title: string;
-  clubName: string;
-  zone: string;
-  category: string;
-  date: string;
-  beneficiaries: string;
-  metric: string;
-  photo: string;
-  summary: string;
-  body: string;
-  tags: string[];
-}
-
-export const DISTRICT_INFO: DistrictInfo = {
-  number: "3011",
-  region: "Delhi & National Capital Region (NCR), India",
-  governor: "Rtn. CA Ajeet Jalan",
-  rotaractRepresentative: "Rtn. Rtr. Archit Bhatia",
-  theme: "Unite for Good & Inspire Action",
-  year: "RY 2026-27",
-  motto: "Service Above Self • Fellowship Through Action"
-};
-
-export const DISTRICT_ZONES: DistrictZone[] = [
-  {
-    "id": "zone-prithvi",
-    "name": "Zone Prithvi",
-    "hindiName": "पृथ्वी",
-    "zoneNumber": "Zone 1",
-    "adrr": "Rtr. Ayush Rai",
-    "zrr": "Rtn. Rtr. Kanav Sachdeva",
-    "zrs": "Rtr. Hitaishi Chawla",
-    "color": "#10b981",
-    "fillColor": "#10b981",
-    "clubsCount": 18,
-    "description": "South & South-Central Delhi, Greater Noida & Sohna corridor."
-  },
-  {
-    "id": "zone-agni",
-    "name": "Zone Agni",
-    "hindiName": "अग्नि",
-    "zoneNumber": "Zone 2",
-    "adrr": "Rtr. Ayush Rai",
-    "zrr": "Rtr. Dhruv Kumar Jha",
-    "zrs": "Rtr. Kartik Kumar",
-    "color": "#D81B60",
-    "fillColor": "#D81B60",
-    "clubsCount": 19,
-    "description": "Central & East Delhi, Faridabad & Manesar industrial corridors."
-  },
-  {
-    "id": "zone-vayu",
-    "name": "Zone Vayu",
-    "hindiName": "वायु",
-    "zoneNumber": "Zone 3",
-    "adrr": "Rtr. Radhika Bansal",
-    "zrr": "Rtr. Tanishaa Sonker",
-    "zrs": "Rtr. Pratham Girdhar",
-    "color": "#0284c7",
-    "fillColor": "#0284c7",
-    "clubsCount": 19,
-    "description": "North & North-West Delhi, Dwarka & Cybercity Gurugram."
-  },
-  {
-    "id": "zone-akash",
-    "name": "Zone Akash",
-    "hindiName": "आकाश",
-    "zoneNumber": "Zone 4",
-    "adrr": "Rtr. Radhika Bansal",
-    "zrr": "Rtr. Palak Jain",
-    "zrs": "Rtr. Arjun Pratap Singh",
-    "color": "#123499",
-    "fillColor": "#123499",
-    "clubsCount": 19,
-    "description": "West Delhi, Janakpuri, University Enclave & South-West NCR."
-  }
-];
 
 export const ZONE_ID_TO_NAME: Record<string, string> = {
   'cmtn8hw19001ill1sl3gxhvjc': 'Zone Prithvi',
@@ -305,12 +170,12 @@ export const ROTARY_FOCUS_AREAS: FocusArea[] = [
   }
 ];
 
+// Only figures the district can evidence from its own roster. Anything without a
+// verifiable source (money raised, lives impacted, blood units) stays off the site.
 export const IMPACT_METRICS: ImpactMetric[] = [
-  { label: "Lives Impacted", value: "55,000+", suffix: "Lives", change: "+22% this year", color: "#D81B60" },
-  { label: "Active Clubs", value: "75 Clubs", suffix: "Clubs", change: "RY 2026-27 Roster", color: "#123499" },
-  { label: "Funds Mobilized", value: "₹1.5 Cr", suffix: "Capital", change: "100% Transparency", color: "#D81B60" },
-  { label: "High-Impact Projects", value: "500+", suffix: "Executed", change: "RY 2026-27", color: "#880E4F" },
-  { label: "Blood Units Donated", value: "15,000+", suffix: "Units", change: "Save 45k Lives", color: "#D81B60" }
+  { label: "Active Clubs", value: "75", suffix: "Clubs", change: "RY 2026-27", color: "#123499" },
+  { label: "Zones", value: "4", suffix: "Zones", change: "RY 2026-27", color: "#D81B60" },
+  { label: "Clubs Chartered", value: "3", suffix: "Clubs", change: "RY 2026-27", color: "#880E4F" }
 ];
 
 export const DISTRICT_ACHIEVEMENTS: Achievement[] = [
@@ -2180,41 +2045,6 @@ export const PAST_DRRS: PastDrr[] = [
   }
 ];
 
-export const ANNOUNCEMENTS: Announcement[] = [
-  {
-    id: "a1",
-    title: "RY 2026-27 District Conference Registration Open",
-    date: "August 5, 2026",
-    category: "District Event",
-    author: "District Secretariat",
-    content: "Register your club delegates for the flagship District 3011 Annual Conference in New Delhi. Early bird slots available until August 25."
-  },
-  {
-    id: "a2",
-    title: "Monthly Project Reporting Deadline: August 15",
-    date: "August 2, 2026",
-    category: "Reporting Alert",
-    author: "District Reporting Chair",
-    content: "All Club Presidents & Secretaries must upload their July project reports via the Portal to qualify for the Monthly District Awards."
-  },
-  {
-    id: "a3",
-    title: "Mega Blood Donation Drive across 4 Elemental Zones",
-    date: "July 28, 2026",
-    category: "Service Project",
-    author: "Rotary Blood Bank Alliance",
-    content: "Joint multi-club blood donation drives will be conducted on August 12 across Zone Prithvi, Zone Agni, Zone Vayu, and Zone Akash."
-  }
-];
-
-export const LEADERBOARD_CLUBS: LeaderboardClub[] = [
-  { rank: 1, name: "RAC Delhi South", points: 1480, projects: 24, score: "Platinum Elite" },
-  { rank: 2, name: "RAC Delhi Midtown Maitreyi", points: 1390, projects: 21, score: "Platinum Elite" },
-  { rank: 3, name: "RAC Delhi Capital Circle", points: 1310, projects: 19, score: "Gold Innovator" },
-  { rank: 4, name: "RAC Delhi Janak", points: 1220, projects: 16, score: "Gold Innovator" },
-  { rank: 5, name: "RAC Faridabad Aravalli", points: 1180, projects: 15, score: "Silver Achiever" }
-];
-
 export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
   {
     id: "lead-01",
@@ -2823,239 +2653,5 @@ export const DISTRICT_RESOURCES: DistrictResource[] = [
     description: 'Official territorial demarcations, Zonal Rotaract Representative (ZRR) appointments, and club zonal allocations for Zones Prithvi, Agni, Vayu, and Akash.',
     driveUrl: 'https://drive.google.com/drive/folders/1WY0XEbfNN4dbXwKklnmUAeOMSXrLivt1',
     badge: '4 Zones'
-  }
-];
-
-export const DISTRICT_CALENDAR_EVENTS: CalendarEvent[] = [
-  {
-    id: 'cal-ride',
-    title: 'RIDE (Rotaract Inter-District Exchange)',
-    date: 'November 2026',
-    month: 'November',
-    timing: 'Multi-Day District Immersion',
-    venue: 'New Delhi & NCR Heritage Hubs',
-    category: 'Fellowship & International Exchange',
-    badge: 'Signature Event',
-    description: 'Inter-district cultural exchange bringing together visiting Rotaract delegates from across national and international districts for cultural discovery, leadership dialogue, and lasting friendship.',
-    highlights: ['Multi-district delegate reception', 'Heritage walks & cultural showcase', 'Rotary-Rotaract joint fellowship']
-  },
-  {
-    id: 'cal-ryla',
-    title: 'RYLA (Rotary Youth Leadership Awards)',
-    date: 'December 2026 / January 2027',
-    month: 'December / January',
-    timing: '3-Day Residential Leadership Bootcamp',
-    venue: 'Leadership Camp Venue, Delhi NCR Belt',
-    category: 'Youth Leadership Bootcamp',
-    badge: 'High-Impact Training',
-    description: 'The premier youth leadership conference featuring world-class keynote speakers, survival challenges, experiential teamwork activities, and vocational mentoring for dynamic emerging leaders.',
-    highlights: ['Intensive leadership development', 'Corporate executive panel', 'Rotary sponsor engagement']
-  },
-  {
-    id: 'cal-discon',
-    title: 'District Conference (DISCON 2027)',
-    date: 'February / March 2027',
-    month: 'February / March',
-    timing: 'Annual Flagship District Convention',
-    venue: 'Grand Auditorium / Convention Centre, Delhi',
-    category: 'Annual District Convention',
-    badge: 'Pinnacle Assembly',
-    description: 'The supreme annual convention of Rotaract District 3011, uniting over 1,500+ delegates to celebrate youth achievements, vocational excellence, inter-club partnerships, and visionary keynotes.',
-    highlights: ['1,500+ Youth leaders & Rotarians', 'District citation & awards showcase', 'Celebrity keynote speakers & cultural gala']
-  },
-  {
-    id: 'cal-thanksgiving',
-    title: 'District Thanksgiving (Valedictory & Awards)',
-    date: 'June 2027',
-    month: 'June',
-    timing: 'Annual Valedictory Ceremony',
-    venue: 'Delhi NCR',
-    category: 'Valedictory & Recognition Night',
-    badge: 'Year-End Celebration',
-    description: 'The celebratory culmination of Rotary Year 2026-27, recognizing outstanding clubs, presidents, secretaries, and community projects with official district awards, gratitude, and handover.',
-    highlights: ['Annual District Awards distribution', 'DRR citation honors', 'Celebration of year-long community impact']
-  }
-];
-
-export const DISTRICT_SHOWCASE_PROJECTS: ShowcaseProject[] = [
-  {
-    id: 'proj-1',
-    slug: 'mahadan-blood-donation-marathon',
-    title: 'Mahadaan 9.0 – The Mega Blood Donation Marathon',
-    clubName: 'Rotaract Club of Delhi Heights',
-    zone: 'Zone Prithvi',
-    category: 'Disease Prevention & Treatment',
-    date: 'August 24, 2026',
-    beneficiaries: '12,500+',
-    metric: '12,500+ Units Collected',
-    photo: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Mobilized over 85 blood donation camps across Delhi NCR during Mahadaan Week, saving an estimated 37,500 lives in certified hospital tie-ups.',
-    body: 'Mahadaan 9.0 brought together clubs from all four zones of District 3011 in an unprecedented youth-led humanitarian mission. Over 85 partner colleges, corporates, and public transport hubs set up certified blood collection stalls equipped with state-of-the-art cold-chain storage and certified medical teams.',
-    tags: ['Blood Donation', 'Mahadaan', 'Healthcare', 'Zone Prithvi']
-  },
-  {
-    id: 'proj-2',
-    slug: 'project-drishti-cataract-surgeries',
-    title: 'Project Drishti – 100 Cataract Surgeries & Eye Health Camps',
-    clubName: 'Rotaract Club of New Delhi',
-    zone: 'Zone Agni',
-    category: 'Disease Prevention & Treatment',
-    date: 'August 15, 2026',
-    beneficiaries: '1,800+',
-    metric: '100 Surgeries Sponsored',
-    photo: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Comprehensive eye screening clinics, distribution of 800+ prescription spectacles, and 100 fully funded cataract operations for underprivileged elders.',
-    body: 'In partnership with premier eye hospitals, Project Drishti organized specialized outreach camps across rural clusters of Delhi and Haryana. Over 1,800 individuals were screened, free medicines and eye drops provided, and 100 senior citizens underwent seamless surgical procedures.',
-    tags: ['Vision Care', 'Cataract', 'Elderly Care', 'Zone Agni']
-  },
-  {
-    id: 'proj-3',
-    slug: 'yamuna-bank-rejuvenation',
-    title: 'Yamuna Bank Rejuvenation & Miyawaki Afforestation',
-    clubName: 'Rotaract Club of Delhi Central',
-    zone: 'Zone Vayu',
-    category: 'Environment',
-    date: 'August 10, 2026',
-    beneficiaries: '5,000+',
-    metric: '66,000+ Saplings Planted',
-    photo: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Intensive Miyawaki micro-forest planting drive and riverbank debris clearing along the Yamuna floodplain to restore local bio-diversity.',
-    body: 'Hundreds of Rotaract volunteers removed tons of non-biodegradable plastics and urban waste from the Yamuna riverbank, followed by planting high-density native tree species utilizing the proven Miyawaki afforestation method.',
-    tags: ['Clean Yamuna', 'Miyawaki Forest', 'Green NCR', 'Zone Vayu']
-  },
-  {
-    id: 'proj-4',
-    slug: 'stem-digital-literacy-labs',
-    title: 'STEM & Digital Literacy Labs in Government Schools',
-    clubName: 'Rotaract Club of Delhi University',
-    zone: 'Zone Akash',
-    category: 'Basic Education',
-    date: 'August 05, 2026',
-    beneficiaries: '1,200+',
-    metric: '12 Smart Labs Built',
-    photo: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Equipping underprivileged public schools in NCR with computer stations, interactive STEM robotics kits, and weekly digital literacy classes.',
-    body: 'Bridging the digital divide for rural and low-income students by setting up dedicated desktop stations, solar-backed power inverters, high-speed broadband connections, and weekend robotics coding sessions conducted by engineering Rotaractors.',
-    tags: ['Digital Labs', 'STEM Education', 'Youth Empowerment', 'Zone Akash']
-  },
-  {
-    id: 'proj-5',
-    slug: 'career-bridge-mentorship-conclave',
-    title: 'Career Bridge – Rotary Mentorship & Placement Conclave',
-    clubName: 'Rotaract Club of Delhi Midtown',
-    zone: 'Zone Prithvi',
-    category: 'Vocational Services',
-    date: 'July 28, 2026',
-    beneficiaries: '450+',
-    metric: '450+ Corporate Placements',
-    photo: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
-    summary: 'One-on-one executive mentoring sessions, CV masterclasses, and corporate internship matchmaking with senior Rotarian industry leaders.',
-    body: 'Career Bridge pairs graduating Rotaractors with C-suite executives, senior advocates, chartered accountants, and technology entrepreneurs from Rotary District 3011 for real-world internships, live projects, and placement assistance.',
-    tags: ['Mentorship', 'Career Bridge', 'Vocational', 'Zone Prithvi']
-  },
-  {
-    id: 'proj-6',
-    slug: 'swachh-vidyalaya-clean-water',
-    title: 'Project Swachh Vidyalaya – Clean Water & RO Infrastructure',
-    clubName: 'Rotaract Club of Delhi South',
-    zone: 'Zone Agni',
-    category: 'WASH',
-    date: 'July 22, 2026',
-    beneficiaries: '3,200+',
-    metric: '8 Heavy-Duty RO Plants',
-    photo: 'https://images.unsplash.com/photo-1541888946425-d0fbb18086f6?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Commissioning industrial RO water purification systems and renovated sanitation facilities across 8 public schools.',
-    body: 'Access to safe drinking water and hygienic toilets dramatically improves student attendance and reduces waterborne illnesses. The club engineered and installed 8 multi-stage reverse osmosis filtration systems with automatic chillers.',
-    tags: ['Safe Water', 'RO Plants', 'WASH', 'Zone Agni']
-  },
-  {
-    id: 'proj-7',
-    slug: 'rotaract-cricket-league-rcl',
-    title: 'Rotaract Cricket League (RCL 2026-27)',
-    clubName: 'Rotaract Club of Delhi Elite',
-    zone: 'Zone Vayu',
-    category: 'Sports & Fellowship',
-    date: 'July 18, 2026',
-    beneficiaries: '650+',
-    metric: '32 Clubs & 480 Players',
-    photo: '/rcl-cricket.jpg',
-    summary: 'The premier district sporting festival uniting 32 Rotaract clubs in a 4-weekend tournament promoting fitness, sportsmanship, and inter-club bonding.',
-    body: 'Held under professional stadium floodlights, the Rotaract Cricket League brought together men and women athletes from every zone. The tournament emphasized fair play, leadership on the field, and fellowship off the pitch.',
-    tags: ['Cricket Tournament', 'RCL', 'Fellowship', 'Zone Vayu']
-  },
-  {
-    id: 'proj-8',
-    slug: 'project-annapurna-hunger-relief',
-    title: 'Project Annapurna – Zero Hunger Food Relief Outreach',
-    clubName: 'Rotaract Club of Delhi Dynamic',
-    zone: 'Zone Akash',
-    category: 'Community Service',
-    date: 'July 12, 2026',
-    beneficiaries: '18,000+',
-    metric: '18,000+ Meals Served',
-    photo: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Food rescue and distribution initiative serving freshly cooked, nutritious meals and dry ration kits to daily wage migrant families.',
-    body: 'Operating continuous food drives near major hospital waiting areas, slums, and homeless shelters, Project Annapurna mobilized volunteer kitchens and food rescue networks to ensure no one sleeps hungry in Delhi NCR.',
-    tags: ['Zero Hunger', 'Food Relief', 'Community', 'Zone Akash']
-  },
-  {
-    id: 'proj-9',
-    slug: 'project-pankh-menstrual-hygiene',
-    title: 'Project Pankh – Menstrual Dignity & Health Education',
-    clubName: 'Rotaract Club of Delhi Synergy',
-    zone: 'Zone Prithvi',
-    category: 'Maternal & Child Health',
-    date: 'July 08, 2026',
-    beneficiaries: '2,400+',
-    metric: '5,000 Kits & 15 Workshops',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Breaking menstrual taboos through school awareness seminars, distribution of eco-friendly sanitary kits, and installation of incinerators.',
-    body: 'Partnering with gynecologists and public health specialists, Project Pankh conducted interactive myth-busting sessions across 15 government senior secondary schools and distributed reusable, organic menstrual hygiene packages.',
-    tags: ['Menstrual Health', 'Women Dignity', 'Healthcare', 'Zone Prithvi']
-  },
-  {
-    id: 'proj-10',
-    slug: 'skillup-women-entrepreneurship',
-    title: 'SkillUp – Vocational Tailoring & Digital Training for Women',
-    clubName: 'Rotaract Club of Delhi Leaders',
-    zone: 'Zone Agni',
-    category: 'Economic Development',
-    date: 'June 25, 2026',
-    beneficiaries: '160+',
-    metric: '160 Certified Women',
-    photo: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Community vocational centers providing free 3-month tailoring, handicrafts, and basic e-commerce courses empowering women toward financial independence.',
-    body: 'Graduates received sewing machine seed kits and digital onboarding onto craft marketplaces, enabling them to earn sustainable monthly incomes and establish independent self-help micro-enterprises.',
-    tags: ['Skill Development', 'Women Empowerment', 'Vocational', 'Zone Agni']
-  },
-  {
-    id: 'proj-11',
-    slug: 'pediatric-cardiac-health-screening',
-    title: 'Pediatric Health & Cardiac Screening Outreach',
-    clubName: 'Rotaract Club of Delhi Pioneers',
-    zone: 'Zone Vayu',
-    category: 'Disease Prevention & Treatment',
-    date: 'June 18, 2026',
-    beneficiaries: '2,800+',
-    metric: '2,800 Children Screened',
-    photo: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1000&q=80',
-    summary: 'Pediatric multi-specialty camps offering cardiac checkups, pediatric dental care, malnutrition interventions, and vitamin supplements.',
-    body: 'Conducted in partnership with top pediatric cardiology hospitals in Delhi NCR. Identified congenital heart defects in 14 children who were immediately routed for Rotary-sponsored corrective surgeries at zero cost to their families.',
-    tags: ['Pediatric Health', 'Cardiac Care', 'Child Welfare', 'Zone Vayu']
-  },
-  {
-    id: 'proj-12',
-    slug: 'peace-first-youth-harmony-conclave',
-    title: 'Peace First – Interfaith Youth Harmony Conclave',
-    clubName: 'Rotaract Club of Delhi Cosmopolitan',
-    zone: 'Zone Akash',
-    category: 'Peace & Conflict Resolution',
-    date: 'June 10, 2026',
-    beneficiaries: '850+',
-    metric: '850 Youth Peace Delegates',
-    photo: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1000&q=80',
-    summary: 'A vibrant youth conclave bringing diverse cultural and student groups together for peacebuilding workshops, dialogue, and collaborative service.',
-    body: 'Peace First showcased dialogue panels, peace pledges, intercultural dance performances, and community resolution workshops, training youth ambassadors in de-escalation, conflict resolution, and civic harmony.',
-    tags: ['Peacebuilding', 'Youth Dialogue', 'Harmony', 'Zone Akash']
   }
 ];

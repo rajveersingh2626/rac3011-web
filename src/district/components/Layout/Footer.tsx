@@ -57,7 +57,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
               <DistrictLogo size="small" />
             </div>
             <p style={{ color: '#A1A1AA', fontSize: isMobile ? '0.85rem' : '0.9rem', lineHeight: '1.7', marginBottom: '20px' }}>
-              Rotaract District Organization 3011 encompasses over 70+ clubs across Delhi &amp; NCR, uniting young leaders for impact, service, and global fellowship.
+              Rotaract District Organization 3011 encompasses 75 clubs across Delhi &amp; NCR, uniting young leaders for impact, service, and global fellowship.
             </p>
             <span className="pill-gold" style={{ fontSize: '0.8rem' }}>
               Service Above Self • RY 2026-27

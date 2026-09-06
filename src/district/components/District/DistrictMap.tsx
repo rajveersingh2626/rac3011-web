@@ -35,7 +35,6 @@ interface RegionalZone {
   zrs: string;
   color: string;
   fillColor: string;
-  clubsCount: number;
   center: [number, number];
   polygon: [number, number][];
 }
@@ -55,7 +54,6 @@ const REGIONAL_ZONES: RegionalZone[] = [
     zrs: 'Rtr. Hitaishi Chawla',
     color: '#10b981',
     fillColor: '#10b981',
-    clubsCount: 18,
     center: [28.5350, 77.2350],
     polygon: [
       [28.6000, 77.1600],
@@ -76,7 +74,6 @@ const REGIONAL_ZONES: RegionalZone[] = [
     zrs: 'Rtr. Kartik Kumar',
     color: '#E11D48',
     fillColor: '#E11D48',
-    clubsCount: 19,
     center: [28.6250, 77.2150],
     polygon: [
       [28.7200, 77.1500],
@@ -98,7 +95,6 @@ const REGIONAL_ZONES: RegionalZone[] = [
     zrs: 'Rtr. Pratham Girdhar',
     color: '#0284c7',
     fillColor: '#0284c7',
-    clubsCount: 19,
     center: [28.6850, 77.1650],
     polygon: [
       [28.7800, 77.0000],
@@ -120,7 +116,6 @@ const REGIONAL_ZONES: RegionalZone[] = [
     zrs: 'Rtr. Arjun Pratap Singh',
     color: '#4F46E5',
     fillColor: '#4F46E5',
-    clubsCount: 19,
     center: [28.6150, 77.0850],
     polygon: [
       [28.7200, 76.9000],
@@ -607,7 +602,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
             </div>
             <div style={{ fontSize: '0.74rem', color: '#4A4A5A', fontWeight: 600 }}>
               {activeZoneObj 
-                ? `ZRR: ${activeZoneObj.zrr} • ZRS: ${activeZoneObj.zrs} • ${activeZoneObj.clubsCount} Clubs`
+                ? `ZRR: ${activeZoneObj.zrr} • ZRS: ${activeZoneObj.zrs} • ${activeClubs.filter(c => clubMatchesZone(c, activeZoneObj.id)).length} Clubs`
                 : `4 Elemental Zones (Prithvi, Agni, Vayu, Akash) • ${activeClubs.length} Active Clubs`}
             </div>
           </div>

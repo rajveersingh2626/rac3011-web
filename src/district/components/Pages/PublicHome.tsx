@@ -218,7 +218,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     subtitle: 'District Mega Blood Donation Drive (Mahadaan Week - March 2027)',
     image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1000&q=80',
     metric: '3,011 Units Target',
-    description: 'The premier district-wide blood donation movement mobilizing all 4 zones and 75+ clubs during Mahadaan Week to collect 3,011+ certified life-saving units in partnership with accredited blood banks.'
+    description: 'The premier district-wide blood donation movement mobilizing all 4 zones and 75 clubs during Mahadaan Week, with a district target of 3,011 certified life-saving units in partnership with accredited blood banks.'
   },
   {
     id: 2,
@@ -226,8 +226,8 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     category: 'Vision Care & Surgery',
     subtitle: '100 Cataract Surgeries & Community Eye Health Camps',
     image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1000&q=80',
-    metric: '100 Surgeries Funded',
-    description: 'Combating avoidable blindness across Delhi NCR through comprehensive screening clinics, prescription spectacles distribution, and 100 fully sponsored cataract surgeries for underprivileged elders.'
+    metric: 'Target: 100 Surgeries',
+    description: 'Combating avoidable blindness across Delhi NCR through comprehensive screening clinics, prescription spectacles distribution, and a target of 100 fully sponsored cataract surgeries for underprivileged elders.'
   },
   {
     id: 3,
@@ -235,7 +235,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     category: 'District Fellowship & Sports',
     subtitle: 'Inter-Club Championship & Youth Sports Festival',
     image: '/rcl-cricket.jpg',
-    metric: '32+ Clubs Competing',
+    metric: 'Inter-Club Championship',
     description: 'District 3011’s marquee sports tournament fostering camaraderie, athletic grit, and inter-club fellowship across Delhi, Gurgaon, and Faridabad on the cricket pitch.'
   },
   {
@@ -244,7 +244,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     category: 'Youth Vocational Development',
     subtitle: 'Rotary Mentorship, Internships & Career Portal',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
-    metric: '500+ Career Placements',
+    metric: 'Mentorship & Placements',
     description: 'A live bridge connecting Rotarians and corporate leaders with aspiring Rotaractors for executive coaching, corporate internships, CV masterclasses, and verified job placements.'
   },
   {
@@ -254,7 +254,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     subtitle: 'Host District Projects Through Merit-Based Bidding',
     image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=80',
     metric: '100-Point Scoring Matrix',
-    description: 'Rotaract clubs bid to host flagship district initiatives, evaluated objectively on Vision (20%), Logistics & Execution (25%), Resource Mobilization (20%), Team (15%), and Social Impact (10%).'
+    description: 'Rotaract clubs bid to host flagship district initiatives, scored out of 100 on Understanding & Vision (20), Execution Plan (25), Resources & Partnerships (20), Team Capacity (15), District-Level Impact (10), and Commitment & Ownership (10).'
   }
 ];
 
@@ -722,7 +722,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
                 whiteSpace: 'pre-line'
               }}
             >
-              {"brings together clubs\nand thousands of young leaders across\nDelhi NCR\nto drive sustainable social change."}
+              {"brings together clubs\nand young leaders across\nDelhi NCR\nto drive sustainable social change."}
             </p>
           </div>
         </div>

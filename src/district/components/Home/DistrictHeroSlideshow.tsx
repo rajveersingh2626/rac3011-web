@@ -20,7 +20,7 @@ const SLIDES: Slide[] = [
     id: 'slide-2',
     src: '/slideshow-yugarambh-standing.jpg',
     title: 'United in Purpose: District Council',
-    subtitle: '75+ Rotaract Clubs Uniting Across Delhi & NCR'
+    subtitle: '75 Rotaract Clubs Uniting Across Delhi & NCR'
   },
   {
     id: 'slide-3',

@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
 import { fetchEvents } from '@/lib/publicApi/events';
-import type { PublicEvent } from '@/lib/publicApi/events';
 import { drrBookingErrorMessage, postDrrBooking } from '@/lib/publicApi/drrBookings';
 import type { BookingPurpose, DrrBookingSubmitResponse } from '@/lib/publicApi/drrBookings';
 
@@ -26,24 +25,9 @@ interface CalendarEntry {
   title: string;
   dateStr: string;
   time: string;
-  venue: string;
-  type: string;
+  venue: string | null;
   badge: string;
-  organizer: string;
   description: string;
-  highlights: string[];
-}
-
-interface SignatureTile {
-  id: string;
-  title: string;
-  edition: string;
-  month: string;
-  date: string;
-  venue: string;
-  attendees: string;
-  accentColor: string;
-  icon: string;
 }
 
 interface DrrRequestForm {
@@ -76,199 +60,8 @@ export interface DistrictCalendarViewProps {
   clubs?: DistrictClub[];
 }
 
-// Baseline District Signature & Official Events with concrete calendar dates
-const BASE_CALENDAR_EVENTS: CalendarEntry[] = [
-  {
-    id: 'cal-install',
-    title: 'District Installation 2026 – "Aarambh"',
-    dateStr: '2026-08-09',
-    time: '10:00 AM – 3:00 PM',
-    venue: 'Siri Fort Auditorium, August Kranti Marg, New Delhi',
-    type: 'signature',
-    badge: 'District Installation',
-    organizer: 'Rotaract District Organisation 3011',
-    description: 'The monumental commencement of Rotary Year 2026-27 under the leadership of DRR Archit and the District Action Committee. Over 500+ Rotaractors, Rotarians, and youth leaders in attendance.',
-    highlights: ['500+ Official Attendees', 'Rotary District Governor Address', 'Charter Presentation & Pins']
-  },
-  {
-    id: 'cal-drr-dh',
-    title: 'DRR Official Visit – RAC Delhi Heights',
-    dateStr: '2026-08-23',
-    time: '4:00 PM – 7:00 PM',
-    venue: 'India Habitat Centre, Lodhi Road, New Delhi',
-    type: 'drr_visit',
-    badge: 'DRR Official Visit',
-    organizer: 'Rotaract Club of Delhi Heights',
-    description: 'DRR Archit’s official presence at RAC Delhi Heights 15th Installation & Mega Blood Donation Strategy Conclave.',
-    highlights: ['Annual Club Audit', 'Installation of Club Board', 'DRR Address & Project Review']
-  },
-  {
-    id: 'cal-drr-nd',
-    title: 'DRR Official Visit – RAC New Delhi',
-    dateStr: '2026-09-12',
-    time: '5:00 PM – 8:00 PM',
-    venue: 'PHD House, August Kranti Marg, New Delhi',
-    type: 'drr_visit',
-    badge: 'DRR Official Visit',
-    organizer: 'Rotaract Club of New Delhi',
-    description: 'DRR Archit’s official presence for the launch of Project Drishti Phase II and Rotary-Rotaract Joint Assembly.',
-    highlights: ['Eye Care Initiative Launch', 'Rotary Sponsor Felicitation', 'Club Growth Review']
-  },
-  {
-    id: 'cal-drr-dc',
-    title: 'DRR Official Visit – RAC Delhi Central',
-    dateStr: '2026-09-20',
-    time: '3:30 PM – 6:30 PM',
-    venue: 'Delhi Club Hub, Connaught Place, New Delhi',
-    type: 'drr_visit',
-    badge: 'DRR Official Visit',
-    organizer: 'Rotaract Club of Delhi Central',
-    description: 'Official club inspection, community outreach review, and DRR presence for literacy kit distribution.',
-    highlights: ['Literacy Project Review', 'New Member Pinning', 'Official DRR Interaction']
-  },
-  {
-    id: 'cal-drr-ggn',
-    title: 'DRR Official Visit – RAC Gurgaon',
-    dateStr: '2026-10-04',
-    time: '11:00 AM – 2:00 PM',
-    venue: 'Cyber City Convention Hall, Gurugram',
-    type: 'drr_visit',
-    badge: 'DRR Official Visit',
-    organizer: 'Rotaract Club of Gurgaon',
-    description: 'DRR official address at the Corporate Mentorship Bridge symposium and flagship CSR roundtable.',
-    highlights: ['Corporate CSR Roundtable', 'Youth Mentorship Placements', 'Zone Prithvi Fellowship']
-  },
-  {
-    id: 'cal-rcl',
-    title: 'Rotaract Cricket League (RCL) – Championship',
-    dateStr: '2026-10-18',
-    time: '8:00 AM – 6:00 PM',
-    venue: 'Vasant Kunj Sports Complex, New Delhi',
-    type: 'signature',
-    badge: 'District Sports',
-    organizer: 'Rotaract District Organisation 3011',
-    description: 'Marquee inter-club cricket tournament featuring 32+ clubs across Delhi, Gurgaon, and Faridabad competing for the District Championship trophy.',
-    highlights: ['32+ Clubs Competing', 'Inter-Zone Fellowship', 'Grand Final & Trophy Presentation']
-  },
-  {
-    id: 'cal-ride',
-    title: 'RIDE (Rotaract Inter-District Exchange)',
-    dateStr: '2026-11-14',
-    time: 'Multi-Day District Immersion',
-    venue: 'New Delhi & NCR Heritage Hubs',
-    type: 'signature',
-    badge: 'Signature Exchange',
-    organizer: 'Rotaract District Organisation 3011',
-    description: 'Inter-district cultural exchange bringing together visiting Rotaract delegates from across national and international districts for cultural discovery, leadership dialogue, and lasting friendship.',
-    highlights: ['National & International Delegates', 'Heritage Walks & Cultural Showcase', 'Rotary-Rotaract Joint Fellowship']
-  },
-  {
-    id: 'cal-ryla',
-    title: 'RYLA (Rotary Youth Leadership Awards)',
-    dateStr: '2026-12-26',
-    time: '3-Day Residential Bootcamp',
-    venue: 'Leadership Camp Venue, Delhi NCR Belt',
-    type: 'signature',
-    badge: 'Youth Leadership Bootcamp',
-    organizer: 'Rotaract & Rotary District 3011',
-    description: 'The premier youth leadership bootcamp featuring executive mentorship, survival challenges, experiential teamwork activities, and vocational masterclasses.',
-    highlights: ['Intensive Leadership Development', 'Executive Mentorship Panels', 'Outdoor Teamwork Challenges']
-  },
-  {
-    id: 'cal-discon',
-    title: 'District Conference (DISCON 2027)',
-    dateStr: '2027-02-20',
-    time: 'Annual Flagship District Convention',
-    venue: 'Grand Convention Centre, New Delhi',
-    type: 'signature',
-    badge: 'Pinnacle Assembly',
-    organizer: 'Rotaract District Organisation 3011',
-    description: 'The supreme annual convention of Rotaract District 3011, uniting over 1,500+ delegates to celebrate youth achievements, vocational excellence, and visionary keynotes.',
-    highlights: ['1,500+ Youth Leaders & Rotarians', 'District Citation & Awards Showcase', 'Celebrity Keynote Speakers & Gala']
-  },
-  {
-    id: 'cal-thanksgiving',
-    title: 'District Thanksgiving (Valedictory & Awards)',
-    dateStr: '2027-06-20',
-    time: 'Annual Valedictory Ceremony',
-    venue: 'Auditorium Complex, Delhi NCR',
-    type: 'signature',
-    badge: 'Year-End Celebration',
-    organizer: 'Rotaract District Organisation 3011',
-    description: 'The celebratory culmination of Rotary Year 2026-27, recognizing outstanding clubs, presidents, secretaries, and community projects with official district awards.',
-    highlights: ['Annual District Awards Distribution', 'DRR Citation Honors', 'Year-Long Humanitarian Celebration']
-  }
-];
-
-// Square Signature Milestones for top tiles
-const SIGNATURE_TILES: SignatureTile[] = [
-  {
-    id: 'tile-install',
-    title: 'District Installation',
-    edition: 'Aarambh 2026',
-    month: 'August 2026',
-    date: 'Aug 9, 2026',
-    venue: 'Siri Fort, New Delhi',
-    attendees: '500+ Attendees',
-    accentColor: '#D81B60',
-    icon: 'Sparkles'
-  },
-  {
-    id: 'tile-rcl',
-    title: 'Rotaract Cricket League',
-    edition: 'RCL Season 2026',
-    month: 'October 2026',
-    date: 'Oct 18, 2026',
-    venue: 'Sports Complex, Delhi',
-    attendees: '32+ Clubs Competing',
-    accentColor: '#0284C7',
-    icon: 'Award'
-  },
-  {
-    id: 'tile-ride',
-    title: 'RIDE Immersion',
-    edition: 'Inter-District Exchange',
-    month: 'November 2026',
-    date: 'Nov 14–16, 2026',
-    venue: 'Delhi NCR Hubs',
-    attendees: 'Pan-India Delegates',
-    accentColor: '#9333EA',
-    icon: 'MapPin'
-  },
-  {
-    id: 'tile-ryla',
-    title: 'RYLA Leadership Camp',
-    edition: 'Youth Awards 2026-27',
-    month: 'Dec 2026 / Jan 2027',
-    date: 'Dec 26–28, 2026',
-    venue: 'Residential Camp, NCR',
-    attendees: 'Residential Bootcamp',
-    accentColor: '#EA580C',
-    icon: 'Award'
-  },
-  {
-    id: 'tile-discon',
-    title: 'District Conference',
-    edition: 'DISCON 2027',
-    month: 'Feb / Mar 2027',
-    date: 'Feb 20–21, 2027',
-    venue: 'Grand Convention Centre',
-    attendees: '1,500+ Leaders',
-    accentColor: '#D97706',
-    icon: 'CalendarIcon'
-  },
-  {
-    id: 'tile-thanks',
-    title: 'District Thanksgiving',
-    edition: 'Valedictory & Awards',
-    month: 'June 2027',
-    date: 'Jun 20, 2027',
-    venue: 'Delhi NCR',
-    attendees: 'Year-End Honors',
-    accentColor: '#16A34A',
-    icon: 'CheckCircle2'
-  }
-];
+// Tile accents are presentation only; every tile's content comes from the events API.
+const TILE_ACCENTS = ['#D81B60', '#0284C7', '#9333EA', '#EA580C', '#D97706', '#16A34A'];
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -324,41 +117,44 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     staleTime: 5 * 60 * 1000,
   });
 
-  // Combined events list: dynamically populated from PostgreSQL DB + verified signature milestones
-  const allEvents = useMemo(() => {
-    let baseList = BASE_CALENDAR_EVENTS;
-    if (eventsQuery.data?.items && eventsQuery.data.items.length > 0) {
-      const dbEvents = eventsQuery.data.items.map((ev) => {
-        const local = BASE_CALENDAR_EVENTS.find(
-          (b) => b.title.toLowerCase() === ev.title.toLowerCase() || b.id === ev.id
-        );
-        const dt = new Date(ev.startsAt);
-        const dateStr = !isNaN(dt.getTime()) ? dt.toISOString().split('T')[0] : (local?.dateStr || '2026-09-15');
-        const timeStr = !isNaN(dt.getTime()) ? dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : (local?.time || '11:00 AM');
+  // The calendar shows only events the API actually publishes. There is no hardcoded
+  // baseline list: an unreachable API renders an empty calendar, never invented entries.
+  const allEvents = useMemo<CalendarEntry[]>(() => {
+    const items = eventsQuery.data?.items ?? [];
+    return items.flatMap((ev) => {
+      const dt = new Date(ev.startsAt);
+      if (isNaN(dt.getTime())) return [];
+      return [{
+        id: ev.id,
+        title: ev.title,
+        dateStr: dt.toISOString().split('T')[0],
+        time: dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        venue: ev.location || null,
+        badge: 'Official Event',
+        description: ev.description || '',
+      }];
+    });
+  }, [eventsQuery.data]);
+
+  const signatureTiles = useMemo(() => {
+    return [...allEvents]
+      .sort((a, b) => a.dateStr.localeCompare(b.dateStr))
+      .slice(0, 6)
+      .map((ev, idx) => {
+        const d = new Date(`${ev.dateStr}T00:00:00`);
         return {
           id: ev.id,
           title: ev.title,
-          dateStr: local?.dateStr || dateStr,
-          time: local?.time || timeStr,
-          venue: ev.location || local?.venue || 'District 3011 Hub, New Delhi',
-          type: local?.type || 'official',
-          // TODO(port): the public events API/schema has no `isDistrictEvent`, so this always falls through to 'Official Event' (same as the JS source).
-          badge: local?.badge || ((ev as PublicEvent & { isDistrictEvent?: boolean }).isDistrictEvent ? 'District Event' : 'Official Event'),
-          organizer: local?.organizer || 'Rotaract District Organisation 3011',
-          description: ev.description || local?.description || '',
-          highlights: local?.highlights || ['Official District Attendance', 'Open for All Rotaractors']
+          badge: ev.badge,
+          venue: ev.venue,
+          monthIndex: d.getMonth(),
+          year: d.getFullYear(),
+          monthLabel: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`,
+          dateLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          accentColor: TILE_ACCENTS[idx % TILE_ACCENTS.length],
         };
       });
-
-      const existingTitles = new Set(dbEvents.map((e) => e.title.toLowerCase()));
-      const extraBase = BASE_CALENDAR_EVENTS.filter((b) => !existingTitles.has(b.title.toLowerCase()));
-      baseList = [...dbEvents, ...extraBase];
-    }
-
-    // Confirmed DRR bookings are not projected into any public read endpoint yet, so the
-    // calendar shows only what the server actually exposes.
-    return baseList;
-  }, [eventsQuery.data]);
+  }, [allEvents]);
 
   // Month navigation helpers
   const handlePrevMonth = () => {
@@ -528,6 +324,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
       </div>
 
       {/* 1. UPCOMING EVENTS SQUARE TILES (Top Section) */}
+      {signatureTiles.length > 0 && (
       <div style={{ marginBottom: '40px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -544,17 +341,10 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '18px'
         }}>
-          {SIGNATURE_TILES.map((tile) => (
+          {signatureTiles.map((tile) => (
             <div
               key={tile.id}
-              onClick={() => {
-                if (tile.id === 'tile-install') handleJumpToMonth(7, 2026);
-                if (tile.id === 'tile-rcl') handleJumpToMonth(9, 2026);
-                if (tile.id === 'tile-ride') handleJumpToMonth(10, 2026);
-                if (tile.id === 'tile-ryla') handleJumpToMonth(11, 2026);
-                if (tile.id === 'tile-discon') handleJumpToMonth(1, 2027);
-                if (tile.id === 'tile-thanks') handleJumpToMonth(5, 2027);
-              }}
+              onClick={() => handleJumpToMonth(tile.monthIndex, tile.year)}
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '18px',
@@ -588,35 +378,35 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     borderRadius: '6px',
                     textTransform: 'uppercase'
                   }}>
-                    {tile.month}
+                    {tile.monthLabel}
                   </span>
                   <span style={{ fontSize: '0.72rem', color: '#6B7280', fontWeight: 600 }}>
-                    {tile.attendees}
+                    {tile.badge}
                   </span>
                 </div>
 
-                <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#1F2937', lineHeight: 1.3, marginBottom: '4px' }}>
+                <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#1F2937', lineHeight: 1.3, margin: 0 }}>
                   {tile.title}
                 </h4>
-                <p style={{ fontSize: '0.78rem', color: '#4B5563', fontWeight: 600, margin: 0 }}>
-                  {tile.edition}
-                </p>
               </div>
 
               <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F3F4F6' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', color: '#111827', fontWeight: 700 }}>
                   <CalendarIcon size={13} style={{ color: tile.accentColor }} />
-                  <span>{tile.date}</span>
+                  <span>{tile.dateLabel}</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#6B7280', marginTop: '3px' }}>
-                  <MapPin size={13} style={{ color: tile.accentColor }} />
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tile.venue}</span>
-                </div>
+                {tile.venue && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#6B7280', marginTop: '3px' }}>
+                    <MapPin size={13} style={{ color: tile.accentColor }} />
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tile.venue}</span>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
       </div>
+      )}
 
       {/* 2. BIG INTERACTIVE MONTHLY CALENDAR */}
       <div style={{
@@ -695,9 +485,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
               { label: 'Aug \'26', m: 7, y: 2026 },
               { label: 'Sep \'26', m: 8, y: 2026 },
               { label: 'Oct \'26', m: 9, y: 2026 },
-              { label: 'Nov \'26 (RIDE)', m: 10, y: 2026 },
-              { label: 'Dec \'26 (RYLA)', m: 11, y: 2026 },
-              { label: 'Feb \'27 (DISCON)', m: 1, y: 2027 },
+              { label: 'Nov \'26', m: 10, y: 2026 },
+              { label: 'Dec \'26', m: 11, y: 2026 },
+              { label: 'Feb \'27', m: 1, y: 2027 },
               { label: 'Jun \'27', m: 5, y: 2027 }
             ].map((km) => (
               <button
@@ -843,7 +633,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 {/* Event Pills inside Day Cell */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
                   {dayEvents.map((ev) => {
-                    const isDrr = ev.type === 'drr_visit';
+                    const isDrr = false;
                     const pillBg = isDrr ? '#FEF3C7' : 'rgba(216, 27, 96, 0.12)';
                     const pillBorder = isDrr ? '#F59E0B' : 'var(--rotaract-pink)';
                     const pillText = isDrr ? '#92400E' : 'var(--rotaract-pink)';
@@ -934,17 +724,14 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
               <span style={{
-                backgroundColor: selectedEvent.type === 'drr_visit' ? '#FEF3C7' : 'rgba(216, 27, 96, 0.12)',
-                color: selectedEvent.type === 'drr_visit' ? '#92400E' : 'var(--rotaract-pink)',
+                backgroundColor: 'rgba(216, 27, 96, 0.12)',
+                color: 'var(--rotaract-pink)',
                 padding: '4px 12px',
                 borderRadius: '100px',
                 fontSize: '0.78rem',
                 fontWeight: 800
               }}>
                 {selectedEvent.badge}
-              </span>
-              <span style={{ fontSize: '0.80rem', color: '#6B7280', fontWeight: 600 }}>
-                {selectedEvent.organizer}
               </span>
             </div>
 
@@ -961,31 +748,17 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 <Clock size={16} style={{ color: 'var(--rotaract-pink)' }} />
                 <span>{selectedEvent.time}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={16} style={{ color: 'var(--rotaract-pink)' }} />
-                <span>{selectedEvent.venue}</span>
-              </div>
+              {selectedEvent.venue && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <MapPin size={16} style={{ color: 'var(--rotaract-pink)' }} />
+                  <span>{selectedEvent.venue}</span>
+                </div>
+              )}
             </div>
 
             <p style={{ fontSize: '0.94rem', color: '#4B5563', lineHeight: 1.6, marginBottom: '20px' }}>
               {selectedEvent.description}
             </p>
-
-            {selectedEvent.highlights && (
-              <div style={{ backgroundColor: '#F9FAFB', borderRadius: '14px', padding: '16px', marginBottom: '24px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
-                  Official Highlights:
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {selectedEvent.highlights.map((h, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.86rem', color: '#1F2937' }}>
-                      <CheckCircle2 size={14} style={{ color: '#10B981', flexShrink: 0 }} />
-                      <span>{h}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #E5E7EB' }}>
               <span style={{ fontSize: '0.82rem', color: '#6B7280', fontWeight: 600 }}>
