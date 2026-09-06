@@ -28,6 +28,7 @@ export default function Navbar({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredSubTab, setHoveredSubTab] = useState<string | null>(null);
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
 
@@ -42,6 +43,9 @@ export default function Navbar({
       setIsHovered(false);
     }, 280);
   };
+
+  // On mobile: always show the navbar (no hover on touch devices)
+  const shouldShowNavbar = isMobile || isHovered || isScrolled || isMenuOpen;
 
   const districtSubTabs = [
     { id: 'map-clubs', label: 'Interactive Map & Clubs', shortLabel: 'Map & Clubs', icon: <MapPin size={18} /> },
@@ -94,12 +98,24 @@ export default function Navbar({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
-  // On mobile: always show the navbar (no hover on touch devices)
-  const shouldShowNavbar = isMobile || isHovered || isScrolled || isMenuOpen;
+  // While hidden the wrapper is pointer-events:none, so onMouseEnter can never fire;
+  // hit-test the pointer against its box instead to keep hover-to-reveal working.
+  useEffect(() => {
+    if (isMobile || shouldShowNavbar) return;
+    const handlePointerMove = (e: MouseEvent) => {
+      const rect = wrapperRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        handleMouseEnter();
+      }
+    };
+    window.addEventListener('mousemove', handlePointerMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handlePointerMove);
+  }, [isMobile, shouldShowNavbar]);
 
   return (
     <div
+      ref={wrapperRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -108,7 +124,7 @@ export default function Navbar({
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
-        pointerEvents: 'auto',
+        pointerEvents: shouldShowNavbar ? 'auto' : 'none',
         paddingTop: '20px',
         paddingBottom: '20px',
         minWidth: '320px',

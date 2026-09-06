@@ -531,9 +531,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         </div>
 
         {/* Weekday Header Grid */}
-        <div style={{
+        <div className="district-calendar-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
+          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
           gap: '8px',
           marginBottom: '8px',
           textAlign: 'center'
@@ -541,6 +541,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
           {DAY_NAMES.map((day) => (
             <div
               key={day}
+              className="district-calendar-weekday"
               style={{
                 padding: '10px 4px',
                 fontSize: '0.82rem',
@@ -556,17 +557,19 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         </div>
 
         {/* Calendar Days 7-Column Grid */}
-        <div style={{
+        <div className="district-calendar-grid" style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
+          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
           gap: '8px'
         }}>
           {/* Empty cells before 1st of month */}
           {Array.from({ length: firstDayIndex }).map((_, idx) => (
             <div
               key={`empty-${idx}`}
+              className="district-calendar-day"
               style={{
                 minHeight: '110px',
+                minWidth: 0,
                 backgroundColor: '#F9FAFB',
                 borderRadius: '12px',
                 opacity: 0.4
@@ -583,8 +586,10 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             return (
               <div
                 key={`day-${dayNum}`}
+                className="district-calendar-day"
                 style={{
                   minHeight: '110px',
+                  minWidth: 0,
                   backgroundColor: dayEvents.length > 0 ? '#FEF2F2' : '#FAFAFA',
                   borderRadius: '12px',
                   border: dayEvents.length > 0 ? '1.5px solid rgba(216, 27, 96, 0.3)' : '1px solid #F3F4F6',
@@ -603,7 +608,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{
+                  <span className="district-calendar-daynum" style={{
                     fontSize: '0.88rem',
                     fontWeight: 800,
                     color: dayEvents.length > 0 ? 'var(--rotaract-pink)' : '#374151'
@@ -634,7 +639,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 </div>
 
                 {/* Event Pills inside Day Cell */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', minWidth: 0 }}>
                   {dayEvents.map((ev) => {
                     const isDrr = false;
                     const pillBg = isDrr ? '#FEF3C7' : 'rgba(216, 27, 96, 0.12)';
@@ -644,6 +649,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     return (
                       <div
                         key={ev.id}
+                        className="district-calendar-chip"
                         onClick={() => setSelectedEvent(ev)}
                         style={{
                           backgroundColor: pillBg,
@@ -657,7 +663,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          lineHeight: 1.2
+                          lineHeight: 1.2,
+                          // nowrap text would otherwise set the grid track's min-content floor
+                          minWidth: 0
                         }}
                         title={ev.title}
                       >
@@ -668,7 +676,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 </div>
 
                 {dayEvents.length === 0 && (
-                  <span style={{ fontSize: '0.68rem', color: '#D1D5DB', alignSelf: 'flex-end' }}>
+                  <span className="district-calendar-available" style={{ fontSize: '0.68rem', color: '#D1D5DB', alignSelf: 'flex-end' }}>
                     Available
                   </span>
                 )}

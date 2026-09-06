@@ -223,7 +223,9 @@ export default function DistrictApp() {
         className="top-left-global-visitors-badge"
         style={{
           position: 'fixed',
-          top: isMobile ? '14px' : '22px',
+          // On phones the centred navbar pill owns the whole top band, so anchor bottom-left instead.
+          top: isMobile ? 'auto' : '22px',
+          bottom: isMobile ? '14px' : 'auto',
           left: isMobile ? '14px' : '28px',
           zIndex: 998,
           display: 'inline-flex',

@@ -325,6 +325,12 @@ label {
     padding: clamp(32px, 5vh, 60px) clamp(16px, 3.5vw, 36px) !important;
   }
 
+  /* The collapse above is for content sections. The hero is a full-height panel
+     in the snap layout, and shrinking it to content height squashes it to a band. */
+  .snap-section.hero-section {
+    min-height: 100vh !important;
+  }
+
   .hero-main-title {
     font-size: clamp(2.4rem, 4.4vw, 4.2rem) !important;
     line-height: 0.98 !important;
@@ -970,6 +976,48 @@ button,
   }
 }
 
+/* Seven day-columns leave ~35px of track on a phone: nothing legible fits, so the chips
+   become colour bars (title stays in the tooltip and the event modal). */
+@media (max-width: 639px) {
+  .district-calendar-grid {
+    gap: 4px !important;
+  }
+
+  .district-calendar-weekday {
+    padding: 8px 0 !important;
+    font-size: 0.58rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .district-calendar-day {
+    padding: 4px 3px !important;
+    min-height: 74px !important;
+  }
+
+  .district-calendar-daynum {
+    font-size: 0.76rem !important;
+  }
+
+  .district-calendar-chip {
+    height: 6px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    border-left: none !important;
+    background-color: var(--rotaract-pink) !important;
+  }
+
+  .district-calendar-available {
+    display: none !important;
+  }
+}
+
+/* Below 360px the inline clamp() floor of 2.8rem makes "ORGANISATION" wider than the viewport. */
+@media (max-width: 360px) {
+  .hero-main-title {
+    font-size: clamp(1.9rem, 10.5vw, 2.8rem) !important;
+  }
+}
+
 /* ---- VERY SMALL MOBILE (< 400px) ---- */
 @media (max-width: 399px) {
   .snap-section {
@@ -1019,4 +1067,4 @@ button,
   box-shadow: 0 0 8px #D81B60;
   animation: live-dot-pulse 2s ease-in-out infinite;
 }
-
+

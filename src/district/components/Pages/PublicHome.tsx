@@ -395,10 +395,12 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
                 {proj.description}
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'var(--rotaract-pink)', padding: '4px 10px', borderRadius: '4px' }}>
+                {/* minWidth/overflowWrap: collapsed inactive panels are only ~2px wide, and long
+                    unbreakable words would otherwise push these pills past the panel edge. */}
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'var(--rotaract-pink)', padding: '4px 10px', borderRadius: '4px', minWidth: 0, overflowWrap: 'anywhere' }}>
                   {proj.category}
                 </span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '4px', backdropFilter: 'blur(4px)', minWidth: 0, overflowWrap: 'anywhere' }}>
                   {proj.metric}
                 </span>
               </div>
@@ -646,7 +648,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
       <BigRotaryWheel containerRef={containerRef} />
 
       <section
-        className="snap-section"
+        className="snap-section hero-section"
         style={{
           background: '#FFFFFF',
           textAlign: 'left',
