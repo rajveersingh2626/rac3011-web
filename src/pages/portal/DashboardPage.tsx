@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
+import { relativeTimeOrFallback } from '@/lib/format';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { fetchReports } from '@/lib/reports/api';
 import type { ReportStatus } from '@/lib/reports/types';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
+import { fetchAnnouncementFeed } from '@/lib/announcements/api';
 import { ClubPointsWidget } from './ClubPointsWidget';
 
 const STATUS_TONE: Record<ReportStatus, BadgeTone> = {
@@ -66,6 +68,44 @@ function ReportStatusWidget({ clubId }: { clubId: string }) {
   );
 }
 
+function AnnouncementsWidget() {
+  const navigate = useNavigate();
+  const query = useQuery({
+    queryKey: ['announcements', 'dashboard'],
+    queryFn: () => fetchAnnouncementFeed({ page: 1, pageSize: 3 }),
+  });
+
+  if (query.isPending) return <Skeleton shape="rect" className="h-40" />;
+  if (query.isError) return null;
+
+  const items = query.data.items;
+
+  return (
+    <Card
+      eyebrow="Announcements"
+      title="Latest from the district"
+      footer={
+        <Button variant="secondary" onClick={() => navigate('/portal/announcements')}>
+          See all
+        </Button>
+      }
+    >
+      {items.length === 0 ? (
+        <EmptyState title="No announcements yet" body="Messages sent to you or your role will show up here." />
+      ) : (
+        <ul className="m-0 flex list-none flex-col gap-3 p-0">
+          {items.map((a) => (
+            <li key={a.id}>
+              <p className="m-0 font-semibold text-fg">{a.title}</p>
+              <p className="m-0 text-[11.5px] text-fg-3">{relativeTimeOrFallback(a.sentAt)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 export function DashboardPage() {
   useDocumentMeta({ title: 'Dashboard' });
   const { me, can } = useAuth();
@@ -86,6 +126,7 @@ export function DashboardPage() {
             />
           ) : null}
           {canViewPoints && clubId && <ClubPointsWidget clubId={clubId} />}
+          <AnnouncementsWidget />
         </div>
       </Section>
     </Container>

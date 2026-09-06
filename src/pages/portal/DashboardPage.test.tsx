@@ -16,9 +16,15 @@ const ME = {
   theme: 'light',
 };
 
+const NO_ANNOUNCEMENTS = http.get('/announcements', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 3 }));
+
 describe('DashboardPage', () => {
   it("prompts to start the report when this month's report doesn't exist yet", async () => {
-    server.use(http.get('/me', () => HttpResponse.json(ME)), http.get('/reports', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 1 })));
+    server.use(
+      http.get('/me', () => HttpResponse.json(ME)),
+      http.get('/reports', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 1 })),
+      NO_ANNOUNCEMENTS,
+    );
     renderPage(<DashboardPage />);
 
     expect(await screen.findByText(/report isn't in yet/)).toBeInTheDocument();
@@ -35,6 +41,7 @@ describe('DashboardPage', () => {
           total: 1, page: 1, pageSize: 1,
         }),
       ),
+      NO_ANNOUNCEMENTS,
     );
     renderPage(<DashboardPage />);
 
@@ -42,9 +49,40 @@ describe('DashboardPage', () => {
   });
 
   it('shows a neutral message for accounts without reporting permission', async () => {
-    server.use(http.get('/me', () => HttpResponse.json({ ...ME, grants: {} })));
+    server.use(http.get('/me', () => HttpResponse.json({ ...ME, grants: {} })), NO_ANNOUNCEMENTS);
     renderPage(<DashboardPage />);
 
     expect(await screen.findByText('No monthly report for this account')).toBeInTheDocument();
+  });
+
+  it('shows the latest announcements with a link to the full feed', async () => {
+    server.use(
+      http.get('/me', () => HttpResponse.json(ME)),
+      http.get('/reports', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 1 })),
+      http.get('/announcements', () =>
+        HttpResponse.json({
+          items: [
+            {
+              id: 'ann_1',
+              title: 'District conference dates announced',
+              body: 'Save the date.',
+              audience: {},
+              channels: ['portal'],
+              sentAt: new Date().toISOString(),
+              recipientCount: 10,
+              createdById: 'usr_2',
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          total: 1,
+          page: 1,
+          pageSize: 3,
+        }),
+      ),
+    );
+    renderPage(<DashboardPage />);
+
+    expect(await screen.findByText('District conference dates announced')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'See all' })).toBeInTheDocument();
   });
 });

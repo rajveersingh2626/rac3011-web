@@ -19,6 +19,12 @@ const AdminShowcasePage = lazy(() =>
 const ContentEditorPage = lazy(() =>
   import('@/pages/portal/ContentEditorPage').then((m) => ({ default: m.ContentEditorPage })),
 );
+const AdminAnnouncementsPage = lazy(() =>
+  import('@/pages/portal/admin/AdminAnnouncementsPage').then((m) => ({ default: m.AdminAnnouncementsPage })),
+);
+const AnnouncementAudiencePage = lazy(() =>
+  import('@/pages/portal/admin/AnnouncementAudiencePage').then((m) => ({ default: m.AnnouncementAudiencePage })),
+);
 const SettingsPage = lazy(() => import('@/pages/portal/admin/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const PublicContentPage = lazy(() =>
   import('@/pages/portal/admin/PublicContentPage').then((m) => ({ default: m.PublicContentPage })),
@@ -41,8 +47,8 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('events:checkin', '/portal/admin/events/:slug', <ComingSoon title="Event check-in" />),
   guarded('members:approve', '/portal/members', <AdminMembersPage />),
   guarded('effort:approve', '/portal/admin/effort-log', <ComingSoon title="Effort log" />),
-  guarded('announcements:send', '/portal/admin/announcements', <ComingSoon title="Announcements" />),
-  guarded('announcements:send', '/portal/admin/announcements/audience', <ComingSoon title="Announcement audience" />),
+  guarded('announcements:send', '/portal/admin/announcements', <AdminAnnouncementsPage />),
+  guarded('announcements:send', '/portal/admin/announcements/audience', <AnnouncementAudiencePage />),
   guarded('settings:manage', '/portal/admin/settings', <SettingsPage />),
   guarded('feedback:review', '/portal/admin/feedback', <ComingSoon title="Feedback" />),
   guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
