@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -14,7 +16,22 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
+  gate:
+    runs-on: [self-hosted, linux, ARM64, oracle]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      # The root tsconfig is solution-style with "files": [], so a bare
+      # `tsc --noEmit` checks nothing at all.
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - run: npm run lint
+      - run: npm run test
+
   deploy:
+    needs: gate
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: [self-hosted, linux, ARM64, oracle]
     permissions:

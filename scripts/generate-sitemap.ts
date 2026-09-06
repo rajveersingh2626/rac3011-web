@@ -14,5 +14,6 @@ function buildRobots(): string {
   return `User-agent: *\nAllow: /\nSitemap: ${SITE_ORIGIN}/sitemap.xml\n`;
 }
 
-writeFileSync('public/sitemap.xml', buildSitemap(PUBLIC_ROUTES));
-writeFileSync('public/robots.txt', buildRobots());
+// Written into dist/, not public/: vite build copies public/ before this runs.
+writeFileSync('dist/sitemap.xml', buildSitemap(PUBLIC_ROUTES));
+writeFileSync('dist/robots.txt', buildRobots());

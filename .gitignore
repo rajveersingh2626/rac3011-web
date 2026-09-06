@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-public/sitemap.xml
-public/robots.txt
-
 test-results/
 playwright-report/
 blob-report/
