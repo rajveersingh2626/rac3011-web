@@ -1,6 +1,21 @@
 @import "./styles/tokens.css";
 @import "./district/index.css";
 
+/* Width-conditional chrome renders at every width and is hidden with CSS instead, so the
+   prerendered HTML (crawled at 1280px) is the same markup a 390px visitor hydrates.
+   !important because the district components carry inline `display` values. */
+@media (max-width: 767px) {
+  .wide-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .narrow-only {
+    display: none !important;
+  }
+}
+
 body {
   background: var(--bg);
   color: var(--fg);

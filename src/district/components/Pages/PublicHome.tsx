@@ -148,8 +148,9 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
     };
   }, [containerRef, screenSize]);
 
-  // Hide wheel entirely on mobile for optimal performance
-  if (screenSize === 'mobile') return null;
+  // Hidden with CSS rather than skipped, so mobile hydrates the same markup the desktop crawl
+  // prerendered; the animation effect above still no-ops on mobile, and the lazy image is never
+  // fetched inside a display:none subtree.
 
   let wheelSize = '1080px';
   let leftPos = '92%';
@@ -164,6 +165,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
   return (
     <div
       ref={wheelRef}
+      className="wide-only"
       style={{
         position: 'fixed',
         top: '50%',
@@ -188,7 +190,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
       <img
         src={rotaryWheelImg}
         alt="Rotary Wheel Anchor"
-        loading="eager"
+        loading="lazy"
         decoding="async"
         style={{
           width: '100%',
@@ -406,43 +408,43 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
               </div>
             </div>
 
-            {!isMobile && (
+            <div
+              className="wide-only"
+              style={{
+                position: 'absolute',
+                bottom: '30px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                height: '100%',
+                width: '100%',
+                paddingBottom: '30px',
+                pointerEvents: 'none'
+              }}
+            >
               <div
                 style={{
-                  position: 'absolute',
-                  bottom: '30px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  justifyContent: 'center',
-                  height: '100%',
-                  width: '100%',
-                  paddingBottom: '30px',
-                  pointerEvents: 'none'
+                  color: '#FFF',
+                  fontWeight: 800,
+                  fontSize: '1.25rem',
+                  whiteSpace: 'nowrap',
+                  opacity: isActive ? 0 : 1,
+                  transition: 'opacity 0.3s ease',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  writingMode: 'vertical-rl',
+                  transform: 'rotate(180deg)',
                 }}
               >
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontWeight: 800,
-                    fontSize: '1.25rem',
-                    whiteSpace: 'nowrap',
-                    opacity: isActive ? 0 : 1,
-                    transition: 'opacity 0.3s ease',
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase',
-                    writingMode: 'vertical-rl',
-                    transform: 'rotate(180deg)',
-                  }}
-                >
-                  {proj.title}
-                </div>
+                {proj.title}
               </div>
-            )}
+            </div>
 
-            {isMobile && !isActive && (
+            {!isActive && (
               <div
+                className="narrow-only"
                 style={{
                   position: 'absolute',
                   inset: 0,

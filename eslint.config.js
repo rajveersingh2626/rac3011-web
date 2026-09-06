@@ -21,7 +21,9 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
-        { allowConstantExport: true },
+        // `preload` is the hydration preloader's hook into a lazily loaded surface module
+        // (src/app/surfaces.ts); it has to sit in the chunk it preloads for.
+        { allowConstantExport: true, allowExportNames: ['preload'] },
       ],
     },
   },

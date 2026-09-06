@@ -89,23 +89,30 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const api = useMemo(() => ({ toast, dismiss }), [toast, dismiss]);
 
+  // Deferred to after mount: a portal rendered during hydration is reconciled against the
+  // prerendered DOM's leftover nodes and fails to claim one, which aborts the whole hydration.
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  useEffect(() => setPortalTarget(document.body), []);
+
   return (
     <ToastContext.Provider value={api}>
       {children}
-      {createPortal(
-        <div
-          role="region"
-          aria-label="Notifications"
-          className="pointer-events-none fixed top-4 left-4 right-4 z-50 md:top-auto md:right-6 md:bottom-6 md:left-auto md:w-[360px]"
-        >
-          <ul aria-live="polite" aria-atomic="false" className="pointer-events-auto m-0 flex list-none flex-col gap-[9px] p-0">
-            {toasts.map((t) => (
-              <Toast key={t.id} title={t.title} body={t.body} tone={t.tone} onDismiss={() => dismiss(t.id)} />
-            ))}
-          </ul>
-        </div>,
-        document.body,
-      )}
+      {portalTarget
+        ? createPortal(
+            <div
+              role="region"
+              aria-label="Notifications"
+              className="pointer-events-none fixed top-4 left-4 right-4 z-50 md:top-auto md:right-6 md:bottom-6 md:left-auto md:w-[360px]"
+            >
+              <ul aria-live="polite" aria-atomic="false" className="pointer-events-auto m-0 flex list-none flex-col gap-[9px] p-0">
+                {toasts.map((t) => (
+                  <Toast key={t.id} title={t.title} body={t.body} tone={t.tone} onDismiss={() => dismiss(t.id)} />
+                ))}
+              </ul>
+            </div>,
+            portalTarget,
+          )
+        : null}
     </ToastContext.Provider>
   );
 }

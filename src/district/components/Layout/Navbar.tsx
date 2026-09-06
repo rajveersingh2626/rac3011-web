@@ -133,49 +133,48 @@ export default function Navbar({
       }}
     >
       {/* Persistent affordance: shows a menu exists before any hover/scroll on desktop/tablet */}
-      {!isMobile && (
-        <button
-          type="button"
-          onClick={handleMouseEnter}
-          onMouseEnter={handleMouseEnter}
-          onFocus={(e) => {
-            handleMouseEnter();
-            e.currentTarget.style.boxShadow = '0 0 0 2px #123499, 0 8px 16px rgba(0, 0, 0, 0.35)';
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.35)';
-          }}
-          aria-label="Show navigation menu"
-          aria-expanded={shouldShowNavbar}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '52px',
-            height: '18px',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            paddingBottom: '2px',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            borderTop: 'none',
-            borderRadius: '0 0 10px 10px',
-            backgroundColor: 'rgba(15, 18, 24, 0.75)',
-            backdropFilter: 'blur(24px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.35)',
-            cursor: 'pointer',
-            zIndex: 1001,
-            opacity: shouldShowNavbar ? 0 : 1,
-            pointerEvents: shouldShowNavbar ? 'none' : 'auto',
-            transition: 'opacity 0.3s ease',
-            outline: 'none'
-          }}
-        >
-          <ChevronDown size={12} color="#FFFFFF" aria-hidden="true" />
-        </button>
-      )}
+      <button
+        type="button"
+        className="wide-only"
+        onClick={handleMouseEnter}
+        onMouseEnter={handleMouseEnter}
+        onFocus={(e) => {
+          handleMouseEnter();
+          e.currentTarget.style.boxShadow = '0 0 0 2px #123499, 0 8px 16px rgba(0, 0, 0, 0.35)';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.35)';
+        }}
+        aria-label="Show navigation menu"
+        aria-expanded={shouldShowNavbar}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '52px',
+          height: '18px',
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          paddingBottom: '2px',
+          border: '1px solid rgba(255, 255, 255, 0.18)',
+          borderTop: 'none',
+          borderRadius: '0 0 10px 10px',
+          backgroundColor: 'rgba(15, 18, 24, 0.75)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.35)',
+          cursor: 'pointer',
+          zIndex: 1001,
+          opacity: shouldShowNavbar ? 0 : 1,
+          pointerEvents: shouldShowNavbar ? 'none' : 'auto',
+          transition: 'opacity 0.3s ease',
+          outline: 'none'
+        }}
+      >
+        <ChevronDown size={12} color="#FFFFFF" aria-hidden="true" />
+      </button>
 
       <div
         style={{
@@ -242,9 +241,10 @@ export default function Navbar({
 
 
         {/* District sub-tabs: hidden on mobile (use MorphedMenu instead), shown on tablet+ */}
-        {activePage === 'district' && !isMobile && (
+        {activePage === 'district' && (
           <>
-            <div 
+            <div
+              className="wide-only"
               style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -316,7 +316,8 @@ export default function Navbar({
               })}
             </div>
 
-            <div 
+            <div
+              className="wide-only"
               style={{ 
                 width: '1px', 
                 height: '20px', 

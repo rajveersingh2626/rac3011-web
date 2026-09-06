@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { loadEnv, preview, type PreviewServer } from 'vite';
-import { chromium, type Browser, type Route } from '@playwright/test';
+import { chromium, type Browser, type Page, type Route } from '@playwright/test';
 import { PRERENDER_ROUTES, outputFileFor } from './prerenderRoutes';
 import { isDegraded, type ApiResponseEvent } from '../src/lib/prerenderDegradation';
 
@@ -61,6 +61,59 @@ async function proxyPastCors(route: Route): Promise<void> {
   }
 }
 
+// A DOM snapshot is not React's own SSR output, so three things have to be repaired before it can
+// be hydrated: portal roots that live outside #root, DOM that a non-React library built imperatively
+// (Leaflet's tiles and panes), and adjacent text nodes that HTML serialization silently merges into
+// one (React renders one text node per text child and, in real SSR, separates them with `<!-- -->`;
+// without that, hydration runs out of nodes and client-renders the whole root).
+async function preparePageForHydration(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    interface MinimalNode {
+      nodeType: number;
+      firstChild: MinimalNode | null;
+      nextSibling: MinimalNode | null;
+      insertBefore: (node: unknown, before: MinimalNode | null) => void;
+    }
+    interface MinimalElement extends MinimalNode {
+      id: string;
+      tagName: string;
+      remove: () => void;
+    }
+    const RAW_TEXT_TAGS = ['SCRIPT', 'STYLE'];
+    const doc = (globalThis as unknown as {
+      document: {
+        body: MinimalNode & { children: ArrayLike<MinimalElement> };
+        createComment: (data: string) => unknown;
+        querySelectorAll: (selector: string) => ArrayLike<{ innerHTML: string }>;
+      };
+    }).document;
+
+    for (const el of Array.from(doc.body.children)) {
+      if (el.id !== 'root' && el.tagName !== 'SCRIPT') el.remove();
+    }
+
+    // Leaflet fills its container itself, after mount; React's own first render leaves it empty.
+    for (const map of Array.from(doc.querySelectorAll('.leaflet-container'))) map.innerHTML = '';
+
+    // Iterative on purpose: esbuild's keepNames wraps a named inner function in a `__name` helper
+    // that does not exist inside page.evaluate.
+    const TEXT_NODE = 3;
+    const ELEMENT_NODE = 1;
+    const stack: MinimalNode[] = [doc.body];
+    while (stack.length) {
+      const node = stack.pop() as MinimalNode;
+      let child = node.firstChild;
+      while (child) {
+        const next = child.nextSibling;
+        if (child.nodeType === TEXT_NODE && next?.nodeType === TEXT_NODE) node.insertBefore(doc.createComment(''), next);
+        // A comment serialized inside a script or style body is not a comment, it is a syntax error.
+        if (child.nodeType === ELEMENT_NODE && !RAW_TEXT_TAGS.includes((child as MinimalElement).tagName)) stack.push(child);
+        child = next;
+      }
+    }
+  });
+}
+
 async function prerenderRoute(browser: Browser, baseUrl: string, route: string): Promise<{ ok: true; html: string } | { ok: false }> {
   const context = await browser.newContext();
   try {
@@ -85,6 +138,8 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
       .catch(() => undefined);
 
     if (isDegraded(events, API_ORIGIN)) return { ok: false };
+
+    await preparePageForHydration(page);
 
     const stateJson = await page.evaluate(() => {
       const w = globalThis as unknown as { __RAC_DEHYDRATE__?: () => string };

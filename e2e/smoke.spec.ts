@@ -1,18 +1,23 @@
 import { expect, test } from '@playwright/test';
+import { PRERENDER_ROUTES } from '../scripts/prerenderRoutes';
 
 const BASE = process.env.SMOKE_BASE_URL ?? 'https://testing.rotaract3011.org';
 const API = process.env.SMOKE_API_ORIGIN ?? 'https://api-testing.rotaract3011.org';
 
-const PUBLIC_ROUTES = [
-  '/', '/directory', '/map', '/heritage', '/showcase', '/resources',
-  '/calendar', '/governance', '/leadership', '/achievements', '/contact',
-  '/partners', '/publications', '/privacy-policy', '/terms-of-service',
-];
+// Driven off the prerender list so a newly prerendered route cannot escape the hydration check.
+const PRERENDERED_ROUTES = PRERENDER_ROUTES;
+
+// '/' is served as the plain SPA shell so the intro curtain can play, so it takes the createRoot
+// path and never hydrates. It gets the same render checks and deliberately NOT the hydration one:
+// #418/#423 cannot occur without hydration, so asserting on them here would prove nothing.
+const CLIENT_RENDERED_ROUTES = ['/'];
 
 const SURFACES = ['mission3011', 'drishti', 'rcl', 'careerbridge', 'ride'];
 
 test.describe('public routes', () => {
-  for (const path of PUBLIC_ROUTES) {
+  for (const path of [...PRERENDERED_ROUTES, ...CLIENT_RENDERED_ROUTES]) {
+    const isPrerendered = PRERENDERED_ROUTES.includes(path);
+
     test(`${path} renders without client errors`, async ({ page }) => {
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
@@ -27,10 +32,13 @@ test.describe('public routes', () => {
       expect(body.length, `${path} rendered content`).toBeGreaterThan(200);
       expect(body).not.toMatch(/Couldn't load|Something went wrong/i);
 
-      // React #418/#423 mean the prerendered HTML was thrown away at hydration.
-      // KNOWN OPEN BUG, expected to fail against production today: scripts/prerender.ts
-      // snapshots the live DOM via page.content(), which carries none of React's
-      // hydration boundary markers. Not in this plan's scope. Do not weaken.
+      if (!isPrerendered) return;
+
+      // React #418/#423 mean the prerendered HTML was thrown away at hydration. Fixed in
+      // scripts/prerender.ts + src/main.tsx; production still shows it until the next deploy.
+      // Anything rendered during hydration that a DOM snapshot cannot carry (a Suspense
+      // boundary, a portal, third-party DOM, markup that branches on viewport width) brings it
+      // back. Do not weaken.
       expect(errors.join('\n'), `${path} client errors`).not.toMatch(/Minified React error #(418|423)/);
     });
   }

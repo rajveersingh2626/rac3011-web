@@ -1,28 +1,27 @@
-import { lazy, Suspense } from 'react';
+import { Suspense, type ComponentType } from 'react';
 import { Providers } from '@/app/providers';
-import { resolveSurface, type Surface } from '@/app/host';
+import { SURFACE_APPS, currentSurface } from '@/app/surfaces';
 import { SurfaceLoading } from '@/app/routes/SurfaceLoading';
 
-// One lazy chunk per surface: a visitor to any single hostname downloads only that
-// surface's route tree, never the other five. Public pages inside each tree stay eager.
-const SURFACE_APPS: Record<Surface, ReturnType<typeof lazy>> = {
-  main: lazy(() => import('@/app/routes/MainSurfaceApp')),
-  mission3011: lazy(() => import('@/app/routes/Mission3011SurfaceApp')),
-  drishti: lazy(() => import('@/app/routes/DrishtiSurfaceApp')),
-  rcl: lazy(() => import('@/app/routes/RclSurfaceApp')),
-  careerbridge: lazy(() => import('@/app/routes/CareerbridgeSurfaceApp')),
-  ride: lazy(() => import('@/app/routes/RideSurfaceApp')),
-};
-
 export function App() {
-  const surface = resolveSurface(window.location.hostname, window.location.search);
-  const SurfaceApp = SURFACE_APPS[surface];
+  const SurfaceApp = SURFACE_APPS[currentSurface()];
 
   return (
     <Providers>
       <Suspense fallback={<SurfaceLoading />}>
         <SurfaceApp />
       </Suspense>
+    </Providers>
+  );
+}
+
+// Hydration path only: the surface chunk is already resolved, so there is no Suspense boundary
+// and no fallback render to mismatch the prerendered DOM (which, being a DOM snapshot, carries
+// none of React's `<!--$-->` boundary markers for React to park a mismatch on).
+export function HydratedApp({ SurfaceApp }: { SurfaceApp: ComponentType }) {
+  return (
+    <Providers>
+      <SurfaceApp />
     </Providers>
   );
 }

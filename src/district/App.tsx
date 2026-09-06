@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react';
 import Navbar from './components/Layout/Navbar';
 import Footer from './components/Layout/Footer';
 import PublicHome from './components/Pages/PublicHome';
@@ -7,8 +7,28 @@ import { type ClubInitiative } from './data/districtData';
 import { useDistrictClubs, type DistrictClubLive } from './hooks/useDistrictClubs';
 import { useAuth } from '@/app/auth';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
+import { isPrerendered } from '@/app/prerender';
 
-const DistrictAccess = lazy(() => import('./components/Pages/DistrictAccess'));
+type DistrictAccessComponent = (typeof import('./components/Pages/DistrictAccess'))['default'];
+type DistrictAccessProps = ComponentProps<DistrictAccessComponent>;
+
+let loadedDistrictAccess: DistrictAccessComponent | null = null;
+
+function loadDistrictAccess() {
+  return import('./components/Pages/DistrictAccess').then((m) => {
+    loadedDistrictAccess = m.default;
+    return m;
+  });
+}
+
+const DistrictAccessLazy = lazy(loadDistrictAccess);
+
+// Awaited before hydration starts (see main.tsx): a Suspense boundary can only hydrate against
+// React's own `<!--$-->` markers, which a prerendered DOM snapshot does not carry, so the district
+// pages must render their directory chunk directly on the first pass.
+export function preload(pathname: string): Promise<unknown> | undefined {
+  return routeFor(pathname).page === 'district' ? loadDistrictAccess() : undefined;
+}
 
 const rotaryLogoImg = '/images.png';
 
@@ -42,6 +62,31 @@ const ROUTE_MAP: Record<string, RouteState> = {
   '/leadership': { page: 'district', tab: 'leadership' },
 };
 
+function routeFor(pathname: string): RouteState {
+  const path = pathname.toLowerCase().replace(/\/$/, '') || '/';
+  return ROUTE_MAP[path] ?? { page: 'home', tab: 'map-clubs' };
+}
+
+function DistrictAccessSection(props: DistrictAccessProps) {
+  // Resolved once per mount: swapping between the eager and the lazy element type mid-mount would
+  // remount the whole directory.
+  const [Loaded] = useState(() => loadedDistrictAccess);
+  if (Loaded) return <Loaded {...props} />;
+
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+          <RotaryLoaderLogo size={64} />
+          <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--rotaract-pink)', letterSpacing: '1px' }}>LOADING DISTRICT 3011 DIRECTORY...</div>
+        </div>
+      }
+    >
+      <DistrictAccessLazy {...props} />
+    </Suspense>
+  );
+}
+
 function getPathFromState(page: DistrictPage, tab: string): string {
   if (page === 'home') return '/';
   if (tab === 'heritage') return '/heritage';
@@ -64,8 +109,7 @@ export default function DistrictApp() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const initialPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-  const initialRoute = ROUTE_MAP[initialPath] ?? { page: 'home', tab: 'map-clubs' };
+  const initialRoute = routeFor(window.location.pathname);
 
   const [activePage, setActivePageState] = useState<DistrictPage>(initialRoute.page);
   const [activeDistrictTab, setActiveDistrictTabState] = useState(initialRoute.tab);
@@ -105,8 +149,7 @@ export default function DistrictApp() {
 
   useEffect(() => {
     const handlePopState = () => {
-      const currentPath = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/';
-      const route = ROUTE_MAP[currentPath] ?? { page: 'home' as const, tab: 'map-clubs' };
+      const route = routeFor(window.location.pathname);
       setActivePageState(route.page);
       setActiveDistrictTabState(route.tab);
     };
@@ -152,17 +195,21 @@ export default function DistrictApp() {
   const cursorFollowerRef = useRef<HTMLDivElement | null>(null);
   const [cursorHovered, setCursorHovered] = useState(false);
 
-  const [showCurtain, setShowCurtain] = useState(true);
+  // A prerendered page already paints the finished content, and its HTML is snapshotted after the
+  // curtain is gone, so replaying the intro would both flash and break hydration.
+  const curtainEnabled = !isPrerendered();
+  const [showCurtain, setShowCurtain] = useState(curtainEnabled);
   const [curtainAnimated, setCurtainAnimated] = useState(false);
 
   useEffect(() => {
+    if (!curtainEnabled) return;
     const timer1 = setTimeout(() => setCurtainAnimated(true), 150);
     const timer2 = setTimeout(() => setShowCurtain(false), 2200);
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, []);
+  }, [curtainEnabled]);
 
   useEffect(() => {
     let rAFId: number | null = null;
@@ -286,25 +333,14 @@ export default function DistrictApp() {
         )}
 
         {activePage === 'district' && (
-          <Suspense
-            fallback={
-              <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
-                <RotaryLoaderLogo size={64} />
-                <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--rotaract-pink)', letterSpacing: '1px' }}>
-                  LOADING DISTRICT 3011 DIRECTORY...
-                </div>
-              </div>
-            }
-          >
-            <DistrictAccess
-              clubs={clubs}
-              activeDistrictTab={activeDistrictTab}
-              isLoggedIn={isLoggedIn}
-              userRole={userRole ?? undefined}
-              onOpenLoginModal={handleOpenLogin}
-              onOpenUploadClubModal={() => setUploaderModalMode('uploadClub')}
-            />
-          </Suspense>
+          <DistrictAccessSection
+            clubs={clubs}
+            activeDistrictTab={activeDistrictTab}
+            isLoggedIn={isLoggedIn}
+            userRole={userRole ?? undefined}
+            onOpenLoginModal={handleOpenLogin}
+            onOpenUploadClubModal={() => setUploaderModalMode('uploadClub')}
+          />
         )}
 
         {activePage !== 'home' && <Footer onNavigatePage={(page: string) => handlePageChange(page)} />}
