@@ -278,7 +278,7 @@ export default function DistrictApp() {
         {activePage === 'home' && (
           <PublicHome
             onNavigateDistrict={() => handlePageChange('district', 'map-clubs')}
-            onNavigatePage={(page: string) => handlePageChange(page)}
+            onNavigatePage={handlePageChange}
             onOpenLoginModal={handleOpenLogin}
           />
         )}

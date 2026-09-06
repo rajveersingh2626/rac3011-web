@@ -9,6 +9,7 @@ import InteractiveDotGrid from '../Layout/InteractiveDotGrid';
 const rotaryWheelImg = '/images.png';
 import Footer from '../Layout/Footer';
 import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
+import ClubShowcasePreview from '../Home/ClubShowcasePreview';
 import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
@@ -468,7 +469,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
 
 export interface PublicHomeProps {
   onNavigateDistrict?: () => void;
-  onNavigatePage?: (page: string) => void;
+  onNavigatePage?: (page: string, tab?: string) => void;
   onOpenLoginModal?: () => void;
 }
 
@@ -1024,6 +1025,12 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
 
         </div>
       </section>
+
+      <ClubShowcasePreview
+        onOpenShowcase={() =>
+          onNavigatePage ? onNavigatePage('district', 'initiatives') : (window.location.href = '/showcase')
+        }
+      />
 
       <section className="snap-section" style={{ backgroundColor: '#FFFFFF', padding: '24px 24px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1280px', position: 'relative', zIndex: 10 }}>
