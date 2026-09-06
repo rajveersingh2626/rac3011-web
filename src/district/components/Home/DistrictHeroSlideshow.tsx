@@ -83,7 +83,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
       className="snap-section"
       style={{
         padding: isMobile ? '16px 12px' : '24px 32px',
-        backgroundColor: '#0F1218',
+        backgroundColor: '#FFFFFF',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -105,7 +105,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
           overflow: 'hidden',
           position: 'relative',
           zIndex: 10,
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
           background: '#090B0E'
         }}
       >
