@@ -43,7 +43,8 @@ export function shouldPersistQuery(query: Query): boolean {
 
 function ThemeFromProfile({ children }: { children: ReactNode }) {
   const { me } = useAuth();
-  const pref = me?.profile?.themePreference ?? me?.theme ?? null;
+  const rawPref = me?.profile?.themePreference ?? me?.theme ?? null;
+  const pref: ThemePreference = rawPref === 'dark' ? 'dark' : 'light';
   const persist = useCallback(
     (p: ThemePreference) => {
       if (!me) return;

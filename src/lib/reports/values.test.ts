@@ -112,20 +112,34 @@ describe('activitiesOf', () => {
 });
 
 describe('activitySummaryLabel / activitySummaryDetail', () => {
-  it('prefers activity_title, falls back to any string field', () => {
+  it('prefers event_name, then activity_title, then any string field', () => {
+    expect(activitySummaryLabel({ event_name: 'Blood camp', activity_title: 'Old title' })).toBe('Blood camp');
     expect(activitySummaryLabel({ activity_title: 'Blood camp' })).toBe('Blood camp');
     expect(activitySummaryLabel({ other: 'Something' })).toBe('Something');
     expect(activitySummaryLabel({})).toBe('Untitled activity');
   });
 
-  it('builds a compact detail line from known keys', () => {
+  it('builds a compact detail line from the avenue-report field names', () => {
+    const detail = activitySummaryDetail({
+      event_date: '2026-08-24',
+      venue: 'Community Hall',
+      club_strength: 24,
+      beneficiary_count: 180,
+    });
+    expect(detail).toBe('2026-08-24 · Community Hall · 24 attendees · 180 beneficiaries');
+  });
+
+  it('still reads the legacy field names so older drafts keep rendering', () => {
     const detail = activitySummaryDetail({
       activity_date: '2026-08-24',
-      avenue: 'community',
       people_reached: 180,
-      collaborating_clubs: ['club_a', 'club_b'],
     });
-    expect(detail).toBe('2026-08-24 · Community · 180 reached · 2 collaborators');
+    expect(detail).toBe('2026-08-24 · 180 beneficiaries');
+  });
+
+  it('omits parts that are absent rather than leaving empty separators', () => {
+    expect(activitySummaryDetail({ event_date: '2026-08-24' })).toBe('2026-08-24');
+    expect(activitySummaryDetail({})).toBe('');
   });
 });
 

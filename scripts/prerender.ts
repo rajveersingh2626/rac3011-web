@@ -10,6 +10,7 @@ const DIST_DIR = join(process.cwd(), 'dist');
 const VITE_ENV = loadEnv(process.env.VITE_MODE ?? 'production', process.cwd(), 'VITE_');
 const API_ORIGIN = process.env.VITE_API_ORIGIN ?? VITE_ENV.VITE_API_ORIGIN ?? '';
 const NAV_TIMEOUT_MS = 15_000;
+const CURTAIN_TIMEOUT_MS = 6_000;
 
 async function startPreviewServer(): Promise<{ server: PreviewServer; baseUrl: string }> {
   const server = await preview({ preview: { port: 0 }, logLevel: 'error' });
@@ -77,6 +78,11 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
 
     await page.goto(`${baseUrl.replace(/\/$/, '')}${route}`, { waitUntil: 'domcontentloaded', timeout: NAV_TIMEOUT_MS });
     await page.waitForLoadState('networkidle', { timeout: NAV_TIMEOUT_MS }).catch(() => undefined);
+    // The district site opens behind a ~2.2s curtain overlay, which networkidle beats; snapshotting
+    // then would bake an empty pink curtain into the HTML crawlers read.
+    await page
+      .waitForSelector('.curtain-container', { state: 'detached', timeout: CURTAIN_TIMEOUT_MS })
+      .catch(() => undefined);
 
     if (isDegraded(events, API_ORIGIN)) return { ok: false };
 

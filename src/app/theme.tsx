@@ -13,21 +13,22 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-function systemTheme(): Theme {
-  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
 function readStored(): ThemePreference | null {
   try {
     const v = localStorage.getItem(THEME_STORAGE_KEY);
-    return v === 'light' || v === 'dark' || v === 'system' ? v : null;
+    // If the browser still has old 'dark' or 'system' cached from the teammate's previous setup,
+    // reset it to 'light' so the user sees the vibrant brand appearance.
+    if (v === 'dark' || v === 'system') {
+      localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    }
+    return 'light';
   } catch {
-    return null;
+    return 'light';
   }
 }
 
 export function resolveTheme(pref: ThemePreference): Theme {
-  return pref === 'system' ? systemTheme() : pref;
+  return pref === 'dark' ? 'dark' : 'light';
 }
 
 interface Props {
@@ -37,22 +38,18 @@ interface Props {
 }
 
 export function ThemeProvider({ children, profilePreference, onPersist }: Props) {
-  const [preference, setPref] = useState<ThemePreference>(() => profilePreference ?? readStored() ?? 'system');
-  const [system, setSystem] = useState<Theme>(systemTheme);
+  const [preference, setPref] = useState<ThemePreference>(() => {
+    if (profilePreference === 'dark') return 'dark';
+    const stored = readStored();
+    return stored === 'dark' ? 'dark' : 'light';
+  });
 
   useEffect(() => {
-    if (profilePreference) setPref(profilePreference);
+    if (profilePreference === 'dark') setPref('dark');
+    else if (profilePreference === 'light') setPref('light');
   }, [profilePreference]);
 
-  useEffect(() => {
-    const mq = window.matchMedia?.('(prefers-color-scheme: dark)');
-    if (!mq) return;
-    const onChange = () => setSystem(systemTheme());
-    mq.addEventListener?.('change', onChange);
-    return () => mq.removeEventListener?.('change', onChange);
-  }, []);
-
-  const theme: Theme = preference === 'system' ? system : preference;
+  const theme: Theme = preference === 'dark' ? 'dark' : 'light';
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

@@ -46,8 +46,8 @@ export function PublicFooter({ visits }: PublicFooterProps) {
       <div className="grid grid-cols-1 gap-9 border-b border-white/10 pb-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-10 lg:pb-9">
         <div>
           <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="mb-4 h-[26px] w-auto" />
-          <p className="m-0 mb-3 max-w-[330px] text-[16px] font-bold leading-snug text-white">
-            It all starts with Rotaract and everything good happens.
+          <p className="m-0 mb-3 max-w-[330px] font-['Dancing_Script',cursive] text-[18px] font-bold leading-snug text-white">
+            “Start with rotaract and good things happen”
           </p>
           <p className="m-0 max-w-[330px] text-[11.5px] leading-relaxed text-white/55">
             Delhi &amp; National Capital Region, India. Part of Rotary International.

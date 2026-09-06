@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { ComboboxOption } from '@/components/ui/Combobox';
 import type { ReportField } from '@/lib/reports/types';
@@ -26,6 +26,11 @@ function validate(fields: ReportField[], activity: Record<string, unknown>): Rec
 export function ActivityForm({ fields, activity, index, clubOptions, onSave, onCancel }: ActivityFormProps) {
   const [draft, setDraft] = useState(activity);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setDraft(activity);
+    setErrors({});
+  }, [activity]);
 
   const setField = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
 

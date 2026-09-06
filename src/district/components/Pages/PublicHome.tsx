@@ -1,0 +1,1220 @@
+import { useState, useEffect, useRef } from 'react';
+import type { FC, FormEvent, RefObject } from 'react';
+import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
+import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers, Award } from 'lucide-react';
+import InteractiveDotGrid from '../Layout/InteractiveDotGrid';
+const rotaryWheelImg = '/images.png';
+import Footer from '../Layout/Footer';
+import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
+import { postEnquiry } from '@/lib/publicApi/enquiries';
+import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
+
+type ScreenSize = 'mobile' | 'tablet' | 'laptop' | 'desktop';
+
+interface BigRotaryWheelProps {
+  containerRef: RefObject<HTMLDivElement | null>;
+}
+
+function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const targetScrollYRef = useRef(0);
+  const smoothScrollYRef = useRef(0);
+  const ambientRotationRef = useRef(0);
+  const [screenSize, setScreenSize] = useState<ScreenSize>(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w < 768) return 'mobile';
+    if (w < 1024) return 'tablet';
+    if (w < 1440 || h < 850) return 'laptop';
+    return 'desktop';
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w < 768) setScreenSize('mobile');
+      else if (w < 1024) setScreenSize('tablet');
+      else if (w < 1440 || h < 850) setScreenSize('laptop');
+      else setScreenSize('desktop');
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (screenSize === 'mobile') return;
+
+    let animFrameId: number;
+    let lastTime = performance.now();
+
+    const getScrollTop = () => {
+      const windowScroll = window.scrollY || document.documentElement.scrollTop || 0;
+      const containerScroll = containerRef && containerRef.current ? containerRef.current.scrollTop : 0;
+      return Math.max(windowScroll, containerScroll);
+    };
+
+    // Initialize to current scroll position immediately to prevent initial jump
+    const initialScroll = getScrollTop();
+    targetScrollYRef.current = initialScroll;
+    smoothScrollYRef.current = initialScroll;
+
+    const handleScroll = () => {
+      targetScrollYRef.current = getScrollTop();
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    const containerEl = containerRef?.current;
+    if (containerEl) {
+      containerEl.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    const updateFrame = (now: number) => {
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
+
+      // Frame-rate independent exponential smoothing (~15% smoother damping)
+      const smoothingFactor = 1 - Math.exp(-4.8 * dt);
+      const targetY = targetScrollYRef.current;
+      smoothScrollYRef.current += (targetY - smoothScrollYRef.current) * smoothingFactor;
+
+      // Ambient gentle continuous rotation (3.0 degrees/sec)
+      ambientRotationRef.current += dt * 3.0;
+
+      const smoothY = smoothScrollYRef.current;
+
+      // Smoothstep easing for scaling & offset across viewport transitions
+      const progress = Math.min(1, Math.max(0, smoothY / 1000));
+      const smoothProgress = progress * progress * (3 - 2 * progress);
+
+      const scale = 1.0 - smoothProgress * 0.20;
+      const offsetX = smoothProgress * 42;
+      const totalRotation = ambientRotationRef.current + smoothY * 0.075;
+
+      if (wheelRef.current) {
+        // High-precision GPU transform without string rounding truncations
+        wheelRef.current.style.transform = `translate3d(calc(-50% + ${offsetX}px), -50%, 0) scale(${scale}) rotate(${totalRotation}deg)`;
+      }
+
+      animFrameId = requestAnimationFrame(updateFrame);
+    };
+
+    animFrameId = requestAnimationFrame(updateFrame);
+
+    return () => {
+      cancelAnimationFrame(animFrameId);
+      window.removeEventListener('scroll', handleScroll);
+      if (containerEl) {
+        containerEl.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [containerRef, screenSize]);
+
+  // Hide wheel entirely on mobile for optimal performance
+  if (screenSize === 'mobile') return null;
+
+  let wheelSize = '1080px';
+  let leftPos = '92%';
+  if (screenSize === 'tablet') {
+    wheelSize = '680px';
+    leftPos = '95%';
+  } else if (screenSize === 'laptop') {
+    wheelSize = '840px';
+    leftPos = '94%';
+  }
+
+  return (
+    <div
+      ref={wheelRef}
+      style={{
+        position: 'fixed',
+        top: '50%',
+        left: leftPos,
+        transform: 'translate3d(-50%, -50%, 0) scale(1) rotate(0deg)',
+        width: wheelSize,
+        height: wheelSize,
+        maxWidth: '95vw',
+        maxHeight: '95vw',
+        pointerEvents: 'none',
+        zIndex: 1,
+        willChange: 'transform',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transformOrigin: 'center center',
+        opacity: 0.80,
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
+      }}
+    >
+      <img
+        src={rotaryWheelImg}
+        alt="Rotary Wheel Anchor"
+        loading="eager"
+        decoding="async"
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))',
+          pointerEvents: 'none'
+        }}
+      />
+    </div>
+  );
+}
+
+interface UpcomingProject {
+  id: number;
+  title: string;
+  category: string;
+  subtitle: string;
+  image: string;
+  metric: string;
+  description: string;
+}
+
+const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
+  {
+    id: 1,
+    title: 'Mission 3011',
+    category: 'Healthcare & Life',
+    subtitle: 'District Mega Blood Donation Drive (Mahadaan Week - March 2027)',
+    image: 'https://images.unsplash.com/photo-1615461066841-6116e61058f4?auto=format&fit=crop&w=1000&q=80',
+    metric: '3,011 Units Target',
+    description: 'The premier district-wide blood donation movement mobilizing all 4 zones and 75+ clubs during Mahadaan Week to collect 3,011+ certified life-saving units in partnership with accredited blood banks.'
+  },
+  {
+    id: 2,
+    title: 'Project Drishti',
+    category: 'Vision Care & Surgery',
+    subtitle: '100 Cataract Surgeries & Community Eye Health Camps',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1000&q=80',
+    metric: '100 Surgeries Funded',
+    description: 'Combating avoidable blindness across Delhi NCR through comprehensive screening clinics, prescription spectacles distribution, and 100 fully sponsored cataract surgeries for underprivileged elders.'
+  },
+  {
+    id: 3,
+    title: 'Rotaract Cricket League (RCL)',
+    category: 'District Fellowship & Sports',
+    subtitle: 'Inter-Club Championship & Youth Sports Festival',
+    image: '/rcl-cricket.jpg',
+    metric: '32+ Clubs Competing',
+    description: 'District 3011’s marquee sports tournament fostering camaraderie, athletic grit, and inter-club fellowship across Delhi, Gurgaon, and Faridabad on the cricket pitch.'
+  },
+  {
+    id: 4,
+    title: 'Career Bridge',
+    category: 'Youth Vocational Development',
+    subtitle: 'Rotary Mentorship, Internships & Career Portal',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80',
+    metric: '500+ Career Placements',
+    description: 'A live bridge connecting Rotarians and corporate leaders with aspiring Rotaractors for executive coaching, corporate internships, CV masterclasses, and verified job placements.'
+  },
+  {
+    id: 5,
+    title: 'Project Ownership Bidding',
+    category: 'Club Leadership & Merit Allocation',
+    subtitle: 'Host District Projects Through Merit-Based Bidding',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1000&q=80',
+    metric: '100-Point Scoring Matrix',
+    description: 'Rotaract clubs bid to host flagship district initiatives, evaluated objectively on Vision (20%), Logistics & Execution (25%), Resource Mobilization (20%), Team (15%), and Social Impact (10%).'
+  }
+];
+
+type ExpandingCarouselProps = Record<string, never>;
+
+const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const w = window.innerWidth;
+      setIsMobile(w < 768);
+      setIsTablet(w >= 768 && w < 1024);
+    };
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        width: '100%',
+        maxWidth: '1350px',
+        margin: '0 auto',
+        gap: isMobile ? '10px' : '16px',
+        /* Tablet: reduce height from 650px to 500px */
+        height: isMobile ? 'auto' : isTablet ? '480px' : '580px',
+        padding: isMobile ? '0 12px' : '0 20px',
+        zIndex: 5,
+        position: 'relative'
+      }}
+    >
+      {DISTRICT_UPCOMING_PROJECTS.map((proj, idx) => {
+        const isActive = idx === selectedIndex;
+        return (
+          <div
+            key={proj.id}
+            onMouseEnter={() => !isMobile && setSelectedIndex(idx)}
+            onClick={() => isMobile && setSelectedIndex(idx)}
+            style={{
+              position: 'relative',
+              flex: isActive ? (isMobile ? 'none' : 6) : (isMobile ? 'none' : 1),
+              height: isMobile ? (isActive ? '340px' : '76px') : '100%',
+              borderRadius: '24px',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              transition: 'flex 0.65s cubic-bezier(0.25, 1, 0.5, 1), height 0.65s cubic-bezier(0.25, 1, 0.5, 1)',
+              backgroundColor: '#0F1218',
+              boxShadow: isActive ? '0 15px 35px rgba(216,27,96,0.28)' : '0 4px 10px rgba(0,0,0,0.08)'
+            }}
+          >
+            <img
+              src={proj.image}
+              alt={proj.title}
+              onError={(e) => {
+                if (proj.id === 3 || proj.title?.includes('RCL') || proj.title?.includes('Cricket')) {
+                  e.currentTarget.src = '/rcl-cricket.jpg';
+                }
+              }}
+              loading="lazy"
+              decoding="async"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: isActive ? 1 : 0.45,
+                transition: 'opacity 0.65s ease',
+              }}
+            />
+
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: isActive
+                  ? 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)'
+                  : 'rgba(0,0,0,0.3)',
+                transition: 'background 0.7s ease',
+              }}
+            />
+
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '0',
+                left: '0',
+                right: '0',
+                padding: '30px',
+                color: '#FFF',
+                opacity: isActive ? 1 : 0,
+                transform: isActive ? 'translateY(0)' : 'translateY(30px)',
+                transition: 'opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s',
+                pointerEvents: isActive ? 'auto' : 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}
+            >
+              <h3 style={{ fontSize: 'clamp(1.5rem, 2vw, 2rem)', fontWeight: 900, margin: 0, lineHeight: 1.1, letterSpacing: '-0.5px' }}>
+                {proj.title}
+              </h3>
+              <p style={{ fontSize: '0.95rem', margin: 0, opacity: 0.9, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.5 }}>
+                {proj.description}
+              </p>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'var(--rotaract-pink)', padding: '4px 10px', borderRadius: '4px' }}>
+                  {proj.category}
+                </span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(255,255,255,0.2)', padding: '4px 10px', borderRadius: '4px', backdropFilter: 'blur(4px)' }}>
+                  {proj.metric}
+                </span>
+              </div>
+            </div>
+
+            {!isMobile && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '30px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  height: '100%',
+                  width: '100%',
+                  paddingBottom: '30px',
+                  pointerEvents: 'none'
+                }}
+              >
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontWeight: 800,
+                    fontSize: '1.25rem',
+                    whiteSpace: 'nowrap',
+                    opacity: isActive ? 0 : 1,
+                    transition: 'opacity 0.3s ease',
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    writingMode: 'vertical-rl',
+                    transform: 'rotate(180deg)',
+                  }}
+                >
+                  {proj.title}
+                </div>
+              </div>
+            )}
+
+            {isMobile && !isActive && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFF',
+                  fontWeight: 800,
+                  fontSize: '1.2rem',
+                  opacity: 1,
+                  transition: 'opacity 0.3s ease',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  pointerEvents: 'none'
+                }}
+              >
+                {proj.title}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+export interface PublicHomeProps {
+  onNavigateDistrict?: () => void;
+  onNavigatePage?: (page: string) => void;
+  onOpenLoginModal?: () => void;
+}
+
+export default function PublicHome({ onNavigateDistrict, onNavigatePage }: PublicHomeProps) {
+  useVisitOnce();
+  useLiveVisits();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const currentSectionRef = useRef(0);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [, setScrollProgress] = useState(0);
+
+  const handleScrollToTop = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollToBottom = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: containerRef.current.scrollHeight, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleScrollSync = () => {
+      const sections = Array.from(el.querySelectorAll<HTMLElement>('.snap-section, .snap-section-footer'));
+      const scrollTop = el.scrollTop;
+      let closestIndex = 0;
+      let minDiff = Infinity;
+
+      sections.forEach((sec, idx) => {
+        const diff = Math.abs(sec.offsetTop - scrollTop);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIndex = idx;
+        }
+      });
+      currentSectionRef.current = closestIndex;
+      if (el.scrollHeight > el.clientHeight) {
+        setScrollProgress(el.scrollTop / (el.scrollHeight - el.clientHeight));
+      }
+    };
+
+    el.addEventListener('scroll', handleScrollSync, { passive: true });
+    handleScrollSync();
+
+    return () => {
+      el.removeEventListener('scroll', handleScrollSync);
+    };
+  }, []);
+
+  const [contributionAmount, setContributionAmount] = useState(10000);
+
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [joinName, setJoinName] = useState('');
+  const [joinEmail, setJoinEmail] = useState('');
+  const [joinPhone, setJoinPhone] = useState('');
+  const [joinZone, setJoinZone] = useState('Zone Prithvi');
+  const [joinInterest, setJoinInterest] = useState('Community Service');
+  const [joinSubmitted, setJoinSubmitted] = useState(false);
+  const [isJoinSubmitting, setIsJoinSubmitting] = useState(false);
+
+  const pediatricScreenings = Math.floor(contributionAmount / 500);
+  const treesPlanted = Math.floor(contributionAmount / 150);
+  const waterLiters = Math.floor(contributionAmount * 1.5);
+  const hygieneKits = Math.floor(contributionAmount / 200);
+
+  const handleJoinSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsJoinSubmitting(true);
+    try {
+      await postEnquiry({
+        kind: 'contact',
+        name: joinName.trim() || 'Prospective Member',
+        email: joinEmail.trim(),
+        phone: joinPhone.trim() || undefined,
+        message: `New Member Application (RY 2026-27) - Preferred Zone: ${joinZone} | Area of Interest: ${joinInterest}`,
+        payload: { zone: joinZone, interest: joinInterest }
+      });
+      setJoinSubmitted(true);
+    } catch (err) {
+      console.warn('Notice: Enquiry recorded locally (backend sync notice):', err);
+      setJoinSubmitted(true);
+    } finally {
+      setIsJoinSubmitting(false);
+    }
+    setTimeout(() => {
+      setJoinSubmitted(false);
+      setIsJoinModalOpen(false);
+      setJoinName('');
+      setJoinEmail('');
+      setJoinPhone('');
+    }, 2500);
+  };
+
+  return (
+    <div ref={containerRef} className="snap-container" style={{ backgroundColor: '#FFFFFF' }}>
+
+      <BigRotaryWheel containerRef={containerRef} />
+
+      <section
+        className="snap-section"
+        style={{
+          background: '#FFFFFF',
+          textAlign: 'left',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          overflow: 'hidden',
+          padding: isMobile ? '80px 16px 40px 16px' : '0 4vw'
+        }}
+      >
+        {/* Authentic Group Photo Background of DAC 2026-27 Oath */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: 'none',
+            overflow: 'hidden'
+          }}
+        >
+          <img
+            src="/hero-dac-oath.jpg"
+            alt="Rotaract District 3011 Administrative Council Oath"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 32%',
+              opacity: 0.22,
+              filter: 'saturate(0.95) contrast(1.06)',
+              transform: 'scale(1.02)'
+            }}
+          />
+          {/* Multi-layer gradient mask for high contrast text legibility */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.88) 45%, rgba(255, 255, 255, 0.50) 80%, rgba(255, 255, 255, 0.85) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, transparent 40%, rgba(255, 255, 255, 0.90) 100%)'
+            }}
+          />
+        </div>
+
+        <InteractiveDotGrid />
+
+        <div
+          className="section-content-animate"
+          style={{
+            width: '100%',
+            maxWidth: '100%',
+            margin: '0',
+            position: 'relative',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            justifyContent: 'center',
+            textAlign: 'left',
+            paddingLeft: 'max(10px, 2vw)'
+          }}
+        >
+          <h1
+            className="hero-main-title"
+            style={{
+              fontSize: 'clamp(2.8rem, 5.5vw, 6.2rem)',
+              fontWeight: 900,
+              color: '#1a1a1a',
+              lineHeight: 0.95,
+              margin: '0 0 16px 0',
+              letterSpacing: '-1.5px',
+              textTransform: 'uppercase',
+              textAlign: 'left',
+              whiteSpace: 'pre-line'
+            }}
+          >
+            {"ROTARACT\nDISTRICT\nORGANISATION"}
+          </h1>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <span
+              className="hero-number-accent"
+              style={{
+                fontSize: 'clamp(4.5rem, 8.5vw, 9rem)',
+                fontWeight: 900,
+                color: '#0044ff',
+                lineHeight: 0.85,
+                letterSpacing: '-3px'
+              }}
+            >
+              3011
+            </span>
+
+            <p
+              className="hero-subtitle"
+              style={{
+                fontSize: 'clamp(0.95rem, 1.4vw, 1.35rem)',
+                color: '#0044ff',
+                margin: '0',
+                lineHeight: 1.3,
+                fontWeight: 600,
+                textAlign: 'left',
+                whiteSpace: 'pre-line'
+              }}
+            >
+              {"brings together clubs\nand thousands of young leaders across\nDelhi NCR\nto drive sustainable social change."}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Automated Full-Screen Slideshow with White Dove & Cursive Quote */}
+      <DistrictHeroSlideshow />
+
+      <section className="snap-section" style={{ backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '36px 14px' : '56px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative', zIndex: 10 }}>
+          <span className="pill-pink" style={{ marginBottom: '6px', fontSize: '0.85rem', padding: '5px 16px', borderRadius: '6px' }}>
+            <Layers size={14} /> UPCOMING DISTRICT PROJECTS (RY 2026-27)
+          </span>
+          <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
+            Upcoming Projects &amp; Project Ownership Bidding
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '720px', margin: '8px auto 0' }}>
+            Flagship district community &amp; youth initiatives available for club bidding and district-wide execution in RY 2026–27.
+          </p>
+        </div>
+
+        <ExpandingCarousel />
+      </section>
+
+      <section className="snap-section" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #FDF8FA 100%)', padding: '40px 32px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1320px', width: '100%', position: 'relative', zIndex: 10 }}>
+
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <span className="pill-pink" style={{ marginBottom: '10px', fontSize: '0.92rem', padding: '7px 20px' }}>
+              <Calculator size={16} /> DYNAMIC IMPACT CALCULATOR
+            </span>
+            <h2 style={{ fontSize: 'clamp(2.4rem, 4.2vw, 3.5rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px', marginBottom: '8px' }}>
+              See What Your Support Accomplishes
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.08rem', maxWidth: '720px', margin: '0 auto' }}>
+              Slide the interactive bar or click a preset below to calculate real-world social impact in District 3011.
+            </p>
+          </div>
+
+          <div
+            style={{
+              background: '#FFFFFF',
+              /* Reduce padding on mobile from 28px/36px to 16px */
+              padding: 'clamp(16px, 3vw, 36px)',
+              borderRadius: '24px',
+              border: '2px solid rgba(216, 27, 96, 0.15)',
+              boxShadow: '0 10px 35px rgba(216, 27, 96, 0.06)',
+              marginBottom: '28px',
+              width: '100%'
+            }}
+          >
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                Slide to Adjust Contribution
+              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FDF0F5', padding: '10px 24px', borderRadius: '8px', border: '2px solid var(--rotaract-pink)', boxShadow: '0 4px 15px rgba(216, 27, 96, 0.12)' }}>
+                <span style={{ fontWeight: 900, color: 'var(--rotaract-pink)', fontSize: '1.4rem' }}>₹</span>
+                <input
+                  type="number"
+                  step="500"
+                  min="500"
+                  max="100000"
+                  value={contributionAmount}
+                  onChange={(e) => setContributionAmount(Math.max(0, Number(e.target.value)))}
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    fontSize: '1.4rem',
+                    fontWeight: 900,
+                    color: 'var(--text-primary)',
+                    width: '130px'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ position: 'relative', width: '100%', marginBottom: '8px' }}>
+              <input
+                type="range"
+                min="1000"
+                max="50000"
+                step="1000"
+                value={contributionAmount > 50000 ? 50000 : Math.max(1000, contributionAmount)}
+                onChange={(e) => setContributionAmount(Number(e.target.value))}
+                className="rotaract-slider-bar"
+                style={{
+                  width: '100%',
+                  height: '12px',
+                  borderRadius: '10px',
+                  appearance: 'none',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  background: `linear-gradient(to right, var(--rotaract-pink) 0%, var(--rotaract-pink) ${((Math.min(50000, Math.max(1000, contributionAmount)) - 1000) / (50000 - 1000)) * 100}%, #E4E4E7 ${((Math.min(50000, Math.max(1000, contributionAmount)) - 1000) / (50000 - 1000)) * 100}%, #E4E4E7 100%)`
+                }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)' }}>
+              <span>₹1,000</span>
+              <span>₹10,000</span>
+              <span>₹25,000</span>
+              <span>₹50,000+</span>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', marginRight: '6px' }}>Quick Presets:</span>
+              {[2500, 5000, 10000, 20000, 50000].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setContributionAmount(preset)}
+                  style={{
+                    background: contributionAmount === preset ? 'var(--rotaract-pink)' : '#FDF0F5',
+                    color: contributionAmount === preset ? '#FFFFFF' : 'var(--rotaract-pink)',
+                    border: '1.5px solid rgba(216, 27, 96, 0.25)',
+                    borderRadius: '6px',
+                    padding: '7px 18px',
+                    fontSize: '0.88rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: contributionAmount === preset ? '0 4px 14px rgba(216, 27, 96, 0.3)' : 'none'
+                  }}
+                >
+                  ₹{preset.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '22px', width: '100%' }}>
+            <div className="rotaract-card" style={{ padding: '26px 20px', textAlign: 'center', borderTop: '4px solid var(--rotaract-pink)' }}>
+              <div style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--rotaract-pink)', lineHeight: 1 }}>
+                {pediatricScreenings.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '1.02rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '8px' }}>
+                Child Health Screenings
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Free health checkups provided
+              </div>
+            </div>
+
+            <div className="rotaract-card" style={{ padding: '26px 20px', textAlign: 'center', borderTop: '4px solid var(--skyline-gold)' }}>
+              <div style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--skyline-gold-dark)', lineHeight: 1 }}>
+                {treesPlanted.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '1.02rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '8px' }}>
+                Native Trees Planted
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Environmental saplings across NCR
+              </div>
+            </div>
+
+            <div className="rotaract-card" style={{ padding: '26px 20px', textAlign: 'center', borderTop: '4px solid var(--rotaract-pink)' }}>
+              <div style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--rotaract-pink)', lineHeight: 1 }}>
+                {waterLiters.toLocaleString()} L
+              </div>
+              <div style={{ fontSize: '1.02rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '8px' }}>
+                Clean Water Filtered
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Drinking water supply delivered
+              </div>
+            </div>
+
+            <div className="rotaract-card" style={{ padding: '26px 20px', textAlign: 'center', borderTop: '4px solid var(--skyline-gold)' }}>
+              <div style={{ fontSize: '2.4rem', fontWeight: 900, color: 'var(--skyline-gold-dark)', lineHeight: 1 }}>
+                {hygieneKits.toLocaleString()}
+              </div>
+              <div style={{ fontSize: '1.02rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '8px' }}>
+                Hygiene Dignity Kits
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Sanitary & wellness kits distributed
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section className="snap-section" style={{ backgroundColor: '#FDF8FA', padding: '40px 24px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
+
+          {/* Key District Achievements */}
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <span className="pill-pink" style={{ marginBottom: '8px', fontSize: '0.88rem', padding: '6px 18px' }}>
+              <Award size={15} /> DISTRICT ACHIEVEMENTS &amp; MILESTONES (RY 2026-27)
+            </span>
+            <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
+              Pillars of District Excellence
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '720px', margin: '6px auto 0' }}>
+              Celebrating notable achievements in club expansion, leadership governance, and district-wide fellowship.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '20px', marginBottom: '64px' }}>
+            {DISTRICT_ACHIEVEMENTS.map((ach) => (
+              <div
+                key={ach.id}
+                className="rotaract-card"
+                style={{
+                  padding: '24px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  borderTop: `4px solid ${ach.color}`,
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span className="pill-gold" style={{ fontSize: '0.74rem', padding: '3px 8px' }}>
+                      {ach.badge}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: ach.color }}>
+                      {ach.metric}
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', lineHeight: 1.25 }}>
+                    {ach.title}
+                  </h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                    {ach.description}
+                  </p>
+                </div>
+                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle2 size={15} style={{ color: '#10B981', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.80rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    {ach.highlight}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* District Impact Metrics */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <span className="pill-gold" style={{ marginBottom: '6px', fontSize: '0.80rem', padding: '4px 14px' }}>
+              DISTRICT IMPACT SNAPSHOT
+            </span>
+            <h3 style={{ fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              Measurable Change Across Delhi &amp; NCR
+            </h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
+            {IMPACT_METRICS.map((metric, idx) => (
+              <div key={idx} className="rotaract-card" style={{ padding: '24px 18px', textAlign: 'center', background: '#FFFFFF' }}>
+                <div style={{ fontSize: 'clamp(2.2rem, 3.6vw, 2.8rem)', fontWeight: 900, color: 'var(--rotaract-pink)', marginBottom: '4px' }}>
+                  {metric.value}
+                </div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  {metric.label}
+                </div>
+                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
+                  {metric.change}
+                </span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      <section className="snap-section" style={{ backgroundColor: '#FFFFFF', padding: '24px 24px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1280px', position: 'relative', zIndex: 10 }}>
+          <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+            <span className="pill-pink" style={{ marginBottom: '8px', fontSize: '0.85rem', padding: '5px 18px' }}>
+              AREAS OF FOCUS
+            </span>
+            <h2 style={{ fontSize: 'clamp(2.2rem, 3.8vw, 3.2rem)', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', letterSpacing: '-1px' }}>
+              Causes We Support
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', maxWidth: '680px', margin: '0 auto' }}>
+              Aligned with Rotary International's 7 Causes to address critical community challenges.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+            {ROTARY_FOCUS_AREAS.map((area) => (
+              <div
+                key={area.id}
+                className="rotaract-card"
+                style={{
+                  padding: '20px 18px',
+                  borderTop: '4px solid var(--rotaract-pink)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+              >
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    background: 'var(--rotaract-pink-light)',
+                    color: 'var(--rotaract-pink)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}
+                >
+                  <Sparkles size={20} />
+                </div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                  {area.name}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', lineHeight: 1.45 }}>
+                  {area.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="snap-section-footer" style={{ width: '100%', position: 'relative', zIndex: 20, backgroundColor: '#18181B' }}>
+        <Footer
+          isFullScreen={false}
+          onNavigatePage={(page: string) => {
+            if (onNavigatePage) {
+              onNavigatePage(page);
+            } else if (page === 'district' && onNavigateDistrict) {
+              onNavigateDistrict();
+            } else if (page === 'home') {
+              handleScrollToTop();
+            }
+          }}
+        />
+      </div>
+
+      {/* Floating Home Quick-Scroll Navigator (Go to Top & Go to Bottom) */}
+      <div
+        style={{
+          position: 'fixed',
+          right: isMobile ? '12px' : '24px',
+          bottom: isMobile ? '16px' : '28px',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px'
+        }}
+      >
+        <button
+          onClick={handleScrollToTop}
+          style={{
+            width: isMobile ? '40px' : '46px',
+            height: isMobile ? '40px' : '46px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(12px)',
+            border: '1.5px solid rgba(216, 27, 96, 0.35)',
+            color: 'var(--rotaract-pink)',
+            boxShadow: '0 8px 24px rgba(216, 27, 96, 0.25)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px) scale(1.08)';
+            e.currentTarget.style.backgroundColor = 'var(--rotaract-pink)';
+            e.currentTarget.style.color = '#FFFFFF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.92)';
+            e.currentTarget.style.color = 'var(--rotaract-pink)';
+          }}
+          title="Go to Top of Homepage"
+          aria-label="Go to Top"
+        >
+          <ArrowUp size={isMobile ? 18 : 22} />
+        </button>
+
+        <button
+          onClick={handleScrollToBottom}
+          style={{
+            width: isMobile ? '40px' : '46px',
+            height: isMobile ? '40px' : '46px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(12px)',
+            border: '1.5px solid rgba(216, 27, 96, 0.35)',
+            color: 'var(--rotaract-pink)',
+            boxShadow: '0 8px 24px rgba(216, 27, 96, 0.25)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(3px) scale(1.08)';
+            e.currentTarget.style.backgroundColor = 'var(--rotaract-pink)';
+            e.currentTarget.style.color = '#FFFFFF';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0) scale(1)';
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.92)';
+            e.currentTarget.style.color = 'var(--rotaract-pink)';
+          }}
+          title="Go to Bottom of Homepage"
+          aria-label="Go to Bottom"
+        >
+          <ArrowDown size={isMobile ? 18 : 22} />
+        </button>
+      </div>
+
+      {isJoinModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(6px)',
+            zIndex: 2000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div
+            className="rotaract-card"
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              padding: '32px',
+              position: 'relative',
+              border: '2px solid var(--rotaract-pink)',
+              animation: 'fadeInUp 0.3s ease-out forwards'
+            }}
+          >
+            <button
+              onClick={() => setIsJoinModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: '#FDF0F5',
+                border: 'none',
+                color: 'var(--rotaract-pink)',
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            {joinSubmitted ? (
+              <div style={{ textAlign: 'center', padding: '30px 10px' }}>
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--rotaract-pink-light)', color: 'var(--rotaract-pink)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  Thank You for Your Interest!
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                  Our District Membership Committee and Zone Representative will reach out to you within 24 hours.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleJoinSubmit}>
+                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                  <span className="pill-pink" style={{ marginBottom: '8px' }}>
+                    JOIN ROTARACT DISTRICT 3011
+                  </span>
+                  <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
+                    Express Your Interest
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
+                    Fill out this form to connect with a Rotaract club in your area.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, marginBottom: '4px' }}>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ananya Sharma"
+                      required
+                      value={joinName}
+                      onChange={(e) => setJoinName(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E4E4E7' }}
+                    />
+                  </div>
+
+                  {/* Email and Phone: single column on mobile, two columns on desktop */}
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, marginBottom: '4px' }}>
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="you@email.com"
+                        required
+                        value={joinEmail}
+                        onChange={(e) => setJoinEmail(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E4E4E7' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, marginBottom: '4px' }}>
+                        Phone Number
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        value={joinPhone}
+                        onChange={(e) => setJoinPhone(e.target.value)}
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E4E4E7' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, marginBottom: '4px' }}>
+                      Preferred Zone / Location in NCR *
+                    </label>
+                    <select
+                      value={joinZone}
+                      onChange={(e) => setJoinZone(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E4E4E7' }}
+                    >
+                      <option value="Zone Prithvi">Zone Prithvi (पृथ्वी) - South & East NCR</option>
+                      <option value="Zone Agni">Zone Agni (अग्नि) - Central & Faridabad</option>
+                      <option value="Zone Vayu">Zone Vayu (वायु) - North & Gurugram</option>
+                      <option value="Zone Akash">Zone Akash (आकाश) - West & University</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 800, marginBottom: '4px' }}>
+                      What area interests you most?
+                    </label>
+                    <select
+                      value={joinInterest}
+                      onChange={(e) => setJoinInterest(e.target.value)}
+                      style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #E4E4E7' }}
+                    >
+                      <option value="Community Service">Community Service & Health</option>
+                      <option value="Professional Development">Professional & Vocational Development</option>
+                      <option value="Youth Leadership">Youth Leadership & Public Speaking</option>
+                      <option value="International Exchange">International Fellowship & Exchange</option>
+                      <option value="Sports & Culture">Cultural Festivals & Sports</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isJoinSubmitting}
+                  className="btn-rotaract"
+                  style={{
+                    width: '100%',
+                    justifyContent: 'center',
+                    padding: '13px',
+                    opacity: isJoinSubmitting ? 0.75 : 1,
+                    cursor: isJoinSubmitting ? 'wait' : 'pointer'
+                  }}
+                >
+                  <Send size={18} /> {isJoinSubmitting ? 'Submitting...' : 'Submit Interest Form'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}

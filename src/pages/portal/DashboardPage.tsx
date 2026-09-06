@@ -108,6 +108,7 @@ function AnnouncementsWidget() {
 
 export function DashboardPage() {
   useDocumentMeta({ title: 'Dashboard' });
+  const navigate = useNavigate();
   const { me, can } = useAuth();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? null;
   const canReport = Boolean(clubId) && can('reports:submit', { type: 'club', id: clubId ?? undefined });
@@ -127,6 +128,19 @@ export function DashboardPage() {
           ) : null}
           {canViewPoints && clubId && <ClubPointsWidget clubId={clubId} />}
           <AnnouncementsWidget />
+
+          <Card eyebrow="District Engagement" title="Request DRR Official Presence">
+            <p className="mb-4 text-sm text-fg-2">
+              Invite the DRR to your club installation, a landmark community project, or an official
+              club visit.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={() => navigate('/calendar')}>Request DRR presence</Button>
+              <Button variant="secondary" onClick={() => navigate('/calendar')}>
+                View district calendar
+              </Button>
+            </div>
+          </Card>
         </div>
       </Section>
     </Container>

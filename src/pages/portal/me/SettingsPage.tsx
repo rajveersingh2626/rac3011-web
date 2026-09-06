@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '@/app/auth';
-import { useTheme } from '@/app/theme';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -23,25 +21,6 @@ function useTrustedDevices() {
     queryKey: ['auth', 'trusted-devices'],
     queryFn: () => apiFetch<TrustedDevice[]>('/auth/trusted-devices'),
   });
-}
-
-function ThemeSection() {
-  const { preference, setPreference } = useTheme();
-  return (
-    <Card>
-      <p className="m-0 mb-3 text-[10.5px] font-bold tracking-[1px] text-fg-3">APPEARANCE</p>
-      <SegmentedControl
-        label="Theme"
-        value={preference}
-        onChange={(v) => setPreference(v as 'light' | 'dark' | 'system')}
-        options={[
-          { value: 'light', label: 'Light' },
-          { value: 'dark', label: 'Dark' },
-          { value: 'system', label: 'System' },
-        ]}
-      />
-    </Card>
-  );
 }
 
 function TwoFactorSection() {
@@ -254,7 +233,6 @@ export function SettingsPage() {
         description="Manage how you sign in and what this device is allowed to do."
       >
         <div className="flex flex-col gap-5">
-          <ThemeSection />
           <TwoFactorSection />
           <TrustedDevicesSection />
           <PushPermissionSection />

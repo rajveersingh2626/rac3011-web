@@ -1,8 +1,11 @@
+import { surfaceHref, type Surface } from '@/app/host';
+
 export interface NavItem {
   key: string;
   label: string;
   to: string;
   perm?: string;
+  external?: boolean;
 }
 
 export interface NavGroup {
@@ -10,6 +13,11 @@ export interface NavGroup {
   label: string;
   items: NavItem[];
   perm?: string;
+}
+
+function safeSurfaceHref(key: Exclude<Surface, 'main'>): string {
+  if (typeof window === 'undefined') return `/?surface=${key}`;
+  return surfaceHref(key);
 }
 
 export const PORTAL_NAV_GROUPS: NavGroup[] = [
@@ -39,6 +47,17 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'events', label: 'Events', to: '/portal/events', perm: 'club_events:log' },
       { key: 'showcase', label: 'Showcase', to: '/portal/showcase/mine', perm: 'showcase:submit' },
       { key: 'directory', label: 'Directory', to: '/portal/directory', perm: 'directory:view' },
+    ],
+  },
+  {
+    key: 'initiatives',
+    label: 'District Initiatives',
+    items: [
+      { key: 'drishti', label: 'Project Drishti', to: safeSurfaceHref('drishti'), external: true },
+      { key: 'mission3011', label: 'Mission 3011', to: safeSurfaceHref('mission3011'), external: true },
+      { key: 'careerbridge', label: 'Career Bridge', to: safeSurfaceHref('careerbridge'), external: true },
+      { key: 'rcl', label: 'Cricket League (RCL)', to: safeSurfaceHref('rcl'), external: true },
+      { key: 'ride', label: 'RIDE Youth Exchange', to: safeSurfaceHref('ride'), external: true },
     ],
   },
   {

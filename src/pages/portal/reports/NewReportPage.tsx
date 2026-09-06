@@ -13,10 +13,9 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
-import { emptyActivity, splitFields } from '@/lib/reports/values';
+import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail } from '@/lib/reports/values';
 import { ApiError } from '@/lib/api';
 import { ActivityForm } from './ActivityForm';
-import { ActivityList } from './ActivityList';
 import { ReportFieldControl } from './ReportFieldControl';
 import { useAutosave, type AutosaveStatus } from './useAutosave';
 
@@ -86,6 +85,69 @@ export function NewReportPage() {
   });
 
   const autosavePayload = useMemo(() => ({ values, notes }), [values, notes]);
+
+  const [activeAvenue, setActiveAvenue] = useState<string | null>(null);
+  const [isAddingOrEditing, setIsAddingOrEditing] = useState(false);
+
+  // Memoised, not just hoisted above the guards: splitFields returns fresh arrays, so an
+  // unmemoised call makes ActivityForm reset mid-edit on every autosave tick.
+  const { topFields, activityFields } = useMemo(
+    () => splitFields(schemaQuery.data?.fields ?? []),
+    [schemaQuery.data?.fields],
+  );
+  const activities = useMemo(
+    () => (Array.isArray(values.activities) ? (values.activities as Record<string, unknown>[]) : []),
+    [values.activities],
+  );
+
+  const REPORT_AVENUES = useMemo(() => [
+    {
+      id: 'Club Meetings',
+      title: 'Club Meetings',
+      icon: '🤝',
+      description: 'General body meetings, board meetings, speaker sessions, and club assemblies',
+    },
+    {
+      id: 'Club Services',
+      title: 'Club Services',
+      icon: '👥',
+      description: 'Internal fellowship, celebrations, orientations, sports, and member development',
+    },
+    {
+      id: 'Community Services',
+      title: 'Community Services',
+      icon: '🌍',
+      description: 'Blood donation, health camps, relief drives, education, and ecological action',
+    },
+    {
+      id: 'International Services',
+      title: 'International Services',
+      icon: '🌐',
+      description: 'Sister club twinings, international meetings, peace initiatives, and global fellowship',
+    },
+    {
+      id: 'Vocational Services',
+      title: 'Vocational Services',
+      icon: '💼',
+      description: 'Career conclaves, mentorship, industrial visits, and professional skill workshops',
+    },
+    {
+      id: 'District Projects',
+      title: 'District Projects',
+      icon: '🏆',
+      description: 'Participation in Mission 3011, Project Drishti, RCL, RIDE, RYLA, and DISCON',
+    },
+  ], []);
+
+  const draftActivity = useMemo(() => {
+    if (editingIndex !== null && activities[editingIndex]) {
+      return activities[editingIndex];
+    }
+    const empty = emptyActivity(activityFields);
+    if (activeAvenue) empty.avenue = activeAvenue;
+    return empty;
+  }, [editingIndex, activities, activityFields, activeAvenue]);
+
   const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data));
 
   if (!clubId) {
@@ -119,9 +181,6 @@ export function NewReportPage() {
   }
 
   const report = reportQuery.data!;
-  const schema = schemaQuery.data!;
-  const { topFields, activityFields } = splitFields(schema.fields);
-  const activities = Array.isArray(values.activities) ? (values.activities as Record<string, unknown>[]) : [];
   const clubOptions = (clubsQuery.data ?? []).filter((c) => c.id !== clubId).map((c) => ({ value: c.id, label: c.name }));
 
   const setTopField = (key: string, value: unknown) => setValues((v) => ({ ...v, [key]: value }));
@@ -141,64 +200,202 @@ export function NewReportPage() {
     if (editingIndex === index) setEditingIndex(null);
   };
 
-  const draftActivity = editingIndex !== null ? activities[editingIndex] : emptyActivity(activityFields);
+
+  const startAddForAvenue = (avenueId: string) => {
+    setActiveAvenue(avenueId);
+    setEditingIndex(null);
+    setIsAddingOrEditing(true);
+  };
+
+  const startEditActivity = (index: number) => {
+    const act = activities[index];
+    setActiveAvenue((act?.avenue as string) || null);
+    setEditingIndex(index);
+    setIsAddingOrEditing(true);
+  };
+
+  const cancelAddOrEdit = () => {
+    setEditingIndex(null);
+    setIsAddingOrEditing(false);
+  };
+
+  const handleSaveActivity = (activity: Record<string, unknown>) => {
+    const finalActivity = {
+      ...activity,
+      avenue: activeAvenue || activity.avenue || 'Club Services',
+    };
+    saveActivity(finalActivity);
+    setIsAddingOrEditing(false);
+  };
+
 
   return (
     <Container>
       <Section
-        eyebrow={`Monthly report · ${monthLabel}`}
-        title="Everything the club did this month"
-        description="Add each activity as you remember it. You submit the month once, at the end."
+        eyebrow={`Monthly Report · ${monthLabel}`}
+        title="Monthly Avenue Reporting"
+        description="6 avenues to report club activities and impact. Add events and projects under each respective avenue below."
         action={
           <Button variant="secondary" onClick={() => navigate(`/portal/reports/${report.id}/review`)}>
             Review and submit →
           </Button>
         }
       >
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
-          <div className="flex flex-col gap-8">
-            {topFields.length > 0 && (
-              <div className="rounded-[16px] border border-line-accent bg-surface p-5">
-                <p className="m-0 mb-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">This month at the club</p>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {topFields.map((field) => (
-                    <ReportFieldControl
-                      key={field.id}
-                      field={field}
-                      value={values[field.fieldKey]}
-                      onChange={(v) => setTopField(field.fieldKey, v)}
-                      onBlur={autosave.flush}
-                      clubOptions={clubOptions}
-                    />
-                  ))}
-                </div>
+        <div className="flex flex-col gap-8">
+          {topFields.length > 0 && (
+            <div className="rounded-[16px] border border-line-accent bg-surface p-5 shadow-sm">
+              <p className="m-0 mb-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Monthly Club Statistics</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {topFields.map((field) => (
+                  <ReportFieldControl
+                    key={field.id}
+                    field={field}
+                    value={values[field.fieldKey]}
+                    onChange={(v) => setTopField(field.fieldKey, v)}
+                    onBlur={autosave.flush}
+                    clubOptions={clubOptions}
+                  />
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            <ActivityForm
-              key={editingIndex ?? 'new'}
-              fields={activityFields}
-              activity={draftActivity}
-              index={editingIndex ?? activities.length}
-              clubOptions={clubOptions}
-              onSave={saveActivity}
-              onCancel={editingIndex !== null ? () => setEditingIndex(null) : undefined}
-            />
+          {/* Form when adding or editing a project under an avenue */}
+          {isAddingOrEditing ? (
+            <div className="rounded-[18px] border-2 border-[#D81B60]/30 bg-surface p-6 shadow-md">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+                <div>
+                  <span className="rounded-full bg-[#D81B60] px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
+                    {activeAvenue || 'Project Details'}
+                  </span>
+                  <h3 className="mt-2 text-xl font-black text-fg">
+                    {editingIndex !== null ? 'Edit Project / Event' : `Add Project to ${activeAvenue}`}
+                  </h3>
+                  <p className="mt-1 text-xs text-fg-3">
+                    Fill in event name, date, venue, attendance, and project links below.
+                  </p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={cancelAddOrEdit}>
+                  Back to All Avenues
+                </Button>
+              </div>
 
-            <Field label="Notes for the district" hint="Anything you'd like the secretariat to know while reviewing this month.">
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={autosave.flush} maxLength={5000} rows={4} />
-            </Field>
+              <ActivityForm
+                key={editingIndex ?? activeAvenue ?? 'new'}
+                fields={activityFields}
+                activity={draftActivity}
+                index={editingIndex ?? activities.length}
+                clubOptions={clubOptions}
+                onSave={handleSaveActivity}
+                onCancel={cancelAddOrEdit}
+              />
+            </div>
+          ) : (
+            /* 6 Avenues to Report Dashboard Grid */
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-black text-fg">6 Avenues of Service</h3>
+                <span className="text-xs font-bold text-fg-3">
+                  {activities.length} Total Project{activities.length === 1 ? '' : 's'} Logged for {monthLabel}
+                </span>
+              </div>
 
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {REPORT_AVENUES.map((av) => {
+                  const avenueActivities = activities
+                    .map((act, origIndex) => ({ act, origIndex }))
+                    .filter(({ act }) => (act.avenue === av.id) || (act.avenue === av.title));
+
+                  return (
+                    <div
+                      key={av.id}
+                      className="flex flex-col justify-between rounded-[16px] border border-line-accent bg-surface p-5 shadow-sm transition-all hover:border-[#D81B60]/40 hover:shadow-md"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-2xl">{av.icon}</span>
+                            <h4 className="m-0 text-base font-extrabold text-fg">{av.title}</h4>
+                          </div>
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${avenueActivities.length > 0 ? 'bg-[#D81B60]/10 text-[#D81B60]' : 'bg-page text-fg-3'}`}>
+                            {avenueActivities.length} {avenueActivities.length === 1 ? 'project' : 'projects'}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs text-fg-3 leading-relaxed">
+                          {av.description}
+                        </p>
+
+                        {/* List of projects already under this avenue */}
+                        {avenueActivities.length > 0 && (
+                          <div className="mt-4 space-y-2 border-t border-line pt-3">
+                            {avenueActivities.map(({ act, origIndex }) => (
+                              <div
+                                key={origIndex}
+                                className="flex items-start justify-between gap-2 rounded-lg bg-page p-2.5 text-xs"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="m-0 truncate font-bold text-fg">
+                                    {activitySummaryLabel(act)}
+                                  </p>
+                                  <p className="m-0 truncate text-[11px] text-fg-3">
+                                    {activitySummaryDetail(act) || 'No details'}
+                                  </p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditActivity(origIndex)}
+                                    className="rounded p-1 text-fg-3 hover:bg-surface hover:text-[#D81B60]"
+                                    title="Edit project"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeActivity(origIndex)}
+                                    className="rounded p-1 text-fg-3 hover:bg-surface hover:text-danger-fg"
+                                    title="Remove project"
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-5 border-t border-line pt-3">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="w-full justify-center font-bold text-[#D81B60] hover:bg-pink-50"
+                          onClick={() => startAddForAvenue(av.id)}
+                        >
+                          + Add Project / Item
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <Field label="Notes for the district secretariat" hint="Anything you'd like the district to know while reviewing this month's report.">
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={autosave.flush} maxLength={5000} rows={4} />
+          </Field>
+
+          <div className="flex items-center justify-between pt-2">
             <p
               role="status"
               className={autosave.status === 'error' ? 'm-0 text-[12px] font-semibold text-danger-fg' : 'm-0 text-[12px] text-fg-3'}
             >
               {statusMessage(autosave.status)}
             </p>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <ActivityList activities={activities} monthLabel={monthLabel} onEdit={setEditingIndex} onRemove={removeActivity} />
+            <Button variant="primary" onClick={() => navigate(`/portal/reports/${report.id}/review`)}>
+              Proceed to Review &amp; Submit ({activities.length} Projects) →
+            </Button>
           </div>
         </div>
       </Section>

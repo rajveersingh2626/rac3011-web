@@ -9,6 +9,7 @@ export interface MenuProps {
   label: ReactNode;
   items: MenuItem[];
   align?: 'start' | 'end';
+  triggerClassName?: string;
 }
 
 type Row = MenuItem;
@@ -25,7 +26,7 @@ function ordered(items: MenuItem[]): Row[] {
   return [...normal, { type: 'separator' as const, id: `${destructive[0].id}-sep` }, ...destructive];
 }
 
-export function Menu({ label, items, align = 'start' }: MenuProps) {
+export function Menu({ label, items, align = 'start', triggerClassName }: MenuProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const rows = useMemo(() => ordered(items), [items]);
@@ -129,7 +130,10 @@ export function Menu({ label, items, align = 'start' }: MenuProps) {
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : openWith(enabled[0] ?? -1))}
         onKeyDown={onTriggerKeyDown}
-        className="inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-line bg-surface px-3.5 text-[13.5px] font-bold text-fg-2 transition-colors hover:bg-accent-soft"
+        className={cn(
+          'inline-flex min-h-11 items-center gap-2 rounded-[8px] border border-line bg-surface px-3.5 text-[13.5px] font-bold text-fg-2 transition-colors hover:bg-accent-soft',
+          triggerClassName,
+        )}
       >
         {label}
       </button>

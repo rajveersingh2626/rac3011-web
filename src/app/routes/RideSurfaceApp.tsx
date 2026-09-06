@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { RouterProvider } from 'react-router';
 import { createRideRouter } from './ride.routes';
 
 export default function RideSurfaceApp() {
-  return <RouterProvider router={createRideRouter()} />;
+  const [router] = useState(createRideRouter);
+  return <RouterProvider router={router} />;
 }

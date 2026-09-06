@@ -2,9 +2,11 @@
 export const PRERENDER_ROUTES: readonly string[] = [
   '/',
   '/map',
+  '/directory',
   '/showcase',
   '/heritage',
   '/leadership',
+  '/governance',
   '/initiatives',
   '/resources',
   '/resources/documents',

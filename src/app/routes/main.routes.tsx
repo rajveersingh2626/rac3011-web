@@ -4,13 +4,28 @@ import { RequireAuth } from './guards';
 import { LoginPage } from '@/pages/portal/LoginPage';
 import { RegisterPage } from '@/pages/portal/RegisterPage';
 import { PendingPage } from '@/pages/portal/PendingPage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
 import { UiKitPage } from '@/pages/UiKitPage';
 import { publicMainRouteObjects } from './publicMain.routes';
 import { portalMemberRouteObjects } from './portalMember.routes';
 import { portalAdminRouteObjects } from './portalAdmin.routes';
+import DistrictApp from '@/district/App';
+
+// Outside PublicLayout: the district site renders its own chrome and self-routes via pushState.
+const districtSitePaths = [
+  '/',
+  '/directory',
+  '/map',
+  '/heritage',
+  '/initiatives',
+  '/showcase',
+  '/resources',
+  '/calendar',
+  '/governance',
+  '/leadership',
+];
 
 const routes: RouteObject[] = [
+  ...districtSitePaths.map((path) => ({ path, element: <DistrictApp /> })),
   { element: <PublicLayout />, children: publicMainRouteObjects },
   { path: '/portal/login', element: <LoginPage /> },
   { path: '/portal/register', element: <RegisterPage /> },
@@ -23,7 +38,7 @@ const routes: RouteObject[] = [
     ],
   },
   { path: '/__ui', element: <UiKitPage /> },
-  { path: '*', element: <NotFoundPage /> },
+  { path: '*', element: <DistrictApp /> },
 ];
 
 export function createMainRouter() {

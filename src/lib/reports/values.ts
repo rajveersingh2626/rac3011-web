@@ -82,7 +82,7 @@ export function activitiesOf(values: Record<string, unknown> | null | undefined)
 }
 
 export function activitySummaryLabel(activity: Record<string, unknown>): string {
-  const title = activity.activity_title;
+  const title = activity.event_name ?? activity.activity_title;
   if (typeof title === 'string' && title.trim()) return title;
   const anyText = Object.values(activity).find((v) => typeof v === 'string' && v.trim());
   return typeof anyText === 'string' ? anyText : 'Untitled activity';
@@ -90,14 +90,18 @@ export function activitySummaryLabel(activity: Record<string, unknown>): string 
 
 export function activitySummaryDetail(activity: Record<string, unknown>): string {
   const parts: string[] = [];
-  const date = activity.activity_date;
+  const date = activity.event_date ?? activity.activity_date;
   if (typeof date === 'string' && date) parts.push(date);
-  const avenue = activity.avenue;
-  if (typeof avenue === 'string' && avenue) parts.push(humanize(avenue));
-  const reached = activity.people_reached;
-  if (typeof reached === 'number') parts.push(`${reached} reached`);
-  const collaborators = activity.collaborating_clubs;
-  if (Array.isArray(collaborators) && collaborators.length > 0) parts.push(`${collaborators.length} collaborators`);
+  const venue = activity.venue;
+  if (typeof venue === 'string' && venue.trim()) parts.push(venue.trim());
+  const strength = activity.club_strength ?? activity.members_participated;
+  if (typeof strength === 'number' || (typeof strength === 'string' && strength !== '')) {
+    parts.push(`${strength} attendees`);
+  }
+  const reached = activity.beneficiary_count ?? activity.people_reached;
+  if (typeof reached === 'number' || (typeof reached === 'string' && reached !== '')) {
+    parts.push(`${reached} beneficiaries`);
+  }
   return parts.join(' · ');
 }
 

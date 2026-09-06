@@ -61,39 +61,41 @@ describe('NewReportPage', () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
   afterEach(() => vi.useRealTimers());
 
-  it('renders the fields from the live active schema, grouped by section', async () => {
+  it('renders the live schema stats and the six service avenues', async () => {
     installHandlers();
     renderPage(<NewReportPage />);
 
-    expect(await screen.findByText('This month at the club')).toBeInTheDocument();
+    expect(await screen.findByText('Monthly Club Statistics')).toBeInTheDocument();
     expect(screen.getByLabelText(/Physical meetings/)).toBeInTheDocument();
-    expect(screen.getByText('Activity 1')).toBeInTheDocument();
-    expect(screen.getByLabelText(/What did you do\?/)).toBeInTheDocument();
+    expect(screen.getByText('6 Avenues of Service')).toBeInTheDocument();
+    expect(screen.getByText('Community Services')).toBeInTheDocument();
   });
 
   it('shows a validation error when saving an activity without a required field', async () => {
     installHandlers();
     renderPage(<NewReportPage />);
-    await screen.findByText('Activity 1');
+    await screen.findByText('6 Avenues of Service');
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await user.click(screen.getByRole('button', { name: /Save this activity, add another/ }));
+    await user.click(screen.getAllByRole('button', { name: /Add Project \/ Item/ })[0]);
+    await user.click(await screen.findByRole('button', { name: /Save this activity, add another/ }));
 
     expect(await screen.findByText('What did you do? is required')).toBeInTheDocument();
   });
 
-  it('adds an activity to the sidebar list once required fields are filled', async () => {
+  it('files a saved activity under the avenue it was added from', async () => {
     installHandlers();
     renderPage(<NewReportPage />);
-    await screen.findByText('Activity 1');
+    await screen.findByText('6 Avenues of Service');
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await user.type(screen.getByLabelText(/What did you do\?/), 'Blood donation camp');
+    await user.click(screen.getAllByRole('button', { name: /Add Project \/ Item/ })[0]);
+    await user.type(await screen.findByLabelText(/What did you do\?/), 'Blood donation camp');
     await user.type(screen.getByLabelText(/When\?/), '2026-08-10');
     await user.click(screen.getByRole('button', { name: /Save this activity, add another/ }));
 
     expect(await screen.findByText('Blood donation camp')).toBeInTheDocument();
-    expect(screen.getByText('Activity 2')).toBeInTheDocument();
+    expect(screen.getByText(/1 Total Project Logged/)).toBeInTheDocument();
   });
 
   it('marks the draft unsaved after a change, then autosaves without an explicit save click', async () => {

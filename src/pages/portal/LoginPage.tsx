@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { z } from 'zod';
 import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/app/auth';
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 
 const credentialsSchema = z.object({
-  email: z.string().min(1, 'Enter the email you registered with').email('Enter a valid email address'),
+  email: z.string().trim().min(1, 'Enter your Rotary ID or email address'),
   password: z.string().min(1, 'Enter your password'),
 });
 
@@ -74,7 +74,11 @@ export function LoginPage() {
       setEmail(values.email);
       setMethod(nextMethod);
       setStep('second-factor');
-      if (nextMethod === 'email') countdown.start(30);
+      if (nextMethod === 'email') {
+        countdown.start(30);
+        // Automatically dispatch verification code to email
+        apiFetch('/second-factor/resend', { method: 'POST' }).catch(() => undefined);
+      }
     } catch (e) {
       if (e instanceof ApiError && e.details) credentials.setServerErrors(e.details);
       else setFormError(e instanceof ApiError ? e.message : 'Something went wrong. Try again.');
@@ -115,8 +119,9 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-page px-4 py-10">
-      <div className="w-full max-w-[430px] rounded-[16px] border border-line-accent bg-surface p-8 shadow-raised">
-        <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="mb-6 h-8 w-auto" />
+      <div className="relative w-full max-w-[430px] overflow-hidden rounded-[16px] border border-line-accent bg-surface p-8 shadow-raised">
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#D81B60] via-[#123499] to-[#880E4F]" />
+        <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="mb-6 h-8 w-auto dark:brightness-0 dark:invert" />
         {formError ? (
           <div className="mb-4">
             <Alert tone="error" title="Sign-in problem">
@@ -132,7 +137,7 @@ export function LoginPage() {
             <Form onSubmit={submitCredentials} submitting={credentials.submitting}>
               <Field label="Rotary ID or email" error={credentials.errors.email} required>
                 <Input
-                  type="email"
+                  type="text"
                   autoComplete="username"
                   value={credentials.values.email}
                   onChange={(e) => credentials.setValue('email', e.target.value)}
@@ -150,6 +155,12 @@ export function LoginPage() {
                 Continue
               </Button>
             </Form>
+            <p className="mt-6 text-center text-[13px] text-fg-2">
+              Need to set up your account?{' '}
+              <Link to="/portal/register" className="font-bold text-accent hover:underline">
+                Join your club
+              </Link>
+            </p>
           </>
         ) : (
           <>
