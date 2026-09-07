@@ -480,7 +480,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         <div
           style={{
             position: 'absolute',
-            top: '24px',
+            top: '76px',
             left: '24px',
             zIndex: 1000,
             background: 'rgba(255, 255, 255, 0.95)',
