@@ -78,8 +78,32 @@ export function useDistrictClubs(): { clubs: DistrictClubLive[]; isLive: boolean
 
   return useMemo(() => {
     const items = data?.items ?? [];
-    // Static roster is the fallback only: an API blip must never empty the map.
     if (items.length === 0) return { clubs: INITIAL_CLUBS as DistrictClubLive[], isLive: false };
-    return { clubs: items.map((api) => toDistrictClub(api, zoneNameById)), isLive: true };
+
+    const mapById = new Map<string, DistrictClubLive>();
+    for (const c of INITIAL_CLUBS) {
+      mapById.set(c.id, { ...c });
+    }
+
+    for (const api of items) {
+      const s = findStatic(api);
+      const clubLive = toDistrictClub(api, zoneNameById);
+      if (s) {
+        mapById.set(s.id, {
+          ...s,
+          ...clubLive,
+          lat: clubLive.lat !== 0 ? clubLive.lat : s.lat,
+          lng: clubLive.lng !== 0 ? clubLive.lng : s.lng,
+          president: clubLive.president || s.president,
+          secretary: clubLive.secretary || s.secretary,
+          phone: clubLive.phone || s.phone,
+          email: clubLive.email || s.email,
+        });
+      } else {
+        mapById.set(api.id, clubLive);
+      }
+    }
+
+    return { clubs: Array.from(mapById.values()), isLive: true };
   }, [data, zoneNameById]);
 }
