@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { Briefcase, PlusCircle, ShieldCheck } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useAuth } from '@/app/auth';
@@ -28,9 +29,11 @@ const MANAGE_SCOPE = { type: 'project', id: 'careerbridge' } as const;
 function Layout() {
   const { can } = useAuth();
   const nav = [
-    { label: 'Opportunities', to: '/opportunities' },
-    { label: 'Post an opening', to: '/post' },
-    ...(can('subdomain:careerbridge:manage', MANAGE_SCOPE) ? [{ label: 'Admin', to: '/admin' }] : []),
+    { label: 'Opportunities', to: '/opportunities', icon: <Briefcase size={18} /> },
+    { label: 'Post an opening', to: '/post', icon: <PlusCircle size={18} /> },
+    ...(can('subdomain:careerbridge:manage', MANAGE_SCOPE)
+      ? [{ label: 'Admin', to: '/admin', icon: <ShieldCheck size={18} /> }]
+      : []),
   ];
   return (
     <SubdomainShell surface="careerbridge" title="Career Bridge" nav={nav}>

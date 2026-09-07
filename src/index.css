@@ -20,7 +20,3 @@ body {
   background: var(--bg);
   color: var(--fg);
 }
-
-@media (max-width: 767px) {
-  [data-pill] { transform: translateY(0) !important; opacity: 1 !important; }
-}

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { LayoutDashboard, Users, Stethoscope } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireSubdomainAuth } from './subdomainGuards';
@@ -14,9 +15,9 @@ const BeneficiariesPage = lazy(() =>
 const SurgeriesPage = lazy(() => import('@/pages/drishti/SurgeriesPage').then((m) => ({ default: m.SurgeriesPage })));
 
 const NAV = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Beneficiaries', to: '/beneficiaries' },
-  { label: 'Surgeries', to: '/surgeries' },
+  { label: 'Dashboard', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
+  { label: 'Beneficiaries', to: '/beneficiaries', icon: <Users size={18} /> },
+  { label: 'Surgeries', to: '/surgeries', icon: <Stethoscope size={18} /> },
 ];
 
 function Layout() {

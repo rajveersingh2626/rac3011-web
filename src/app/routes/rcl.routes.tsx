@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { Trophy, CalendarDays, UserPlus } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireSubdomainAuth } from './subdomainGuards';
@@ -10,9 +11,9 @@ const FixturesPage = lazy(() => import('@/pages/rcl/FixturesPage').then((m) => (
 const RegisterPage = lazy(() => import('@/pages/rcl/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 
 const NAV = [
-  { label: 'Standings', to: '/standings' },
-  { label: 'Fixtures', to: '/fixtures' },
-  { label: 'Register', to: '/register' },
+  { label: 'Standings', to: '/standings', icon: <Trophy size={18} /> },
+  { label: 'Fixtures', to: '/fixtures', icon: <CalendarDays size={18} /> },
+  { label: 'Register', to: '/register', icon: <UserPlus size={18} /> },
 ];
 
 function Layout() {

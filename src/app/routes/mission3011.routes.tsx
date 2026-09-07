@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { LayoutDashboard, Droplets, ShieldCheck } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useAuth } from '@/app/auth';
@@ -20,9 +21,11 @@ const MANAGE_SCOPE = { type: 'project', id: 'mission3011' } as const;
 function Layout() {
   const { can } = useAuth();
   const nav = [
-    { label: 'Dashboard', to: '/dashboard' },
-    { label: 'Camps', to: '/camps' },
-    ...(can('subdomain:mission3011:manage', MANAGE_SCOPE) ? [{ label: 'Admin', to: '/admin' }] : []),
+    { label: 'Dashboard', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { label: 'Camps', to: '/camps', icon: <Droplets size={18} /> },
+    ...(can('subdomain:mission3011:manage', MANAGE_SCOPE)
+      ? [{ label: 'Admin', to: '/admin', icon: <ShieldCheck size={18} /> }]
+      : []),
   ];
   return (
     <SubdomainShell surface="mission3011" title="Mission 3011" nav={nav}>

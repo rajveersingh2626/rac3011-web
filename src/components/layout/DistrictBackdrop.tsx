@@ -18,7 +18,7 @@ export function DistrictBackdrop() {
           loading="lazy"
           decoding="async"
           className="h-full w-full object-contain"
-          style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))' }}
+          style={{ filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))', animation: 'spinWheel 20s linear infinite' }}
         />
       </div>
     </div>

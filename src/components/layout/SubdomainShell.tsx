@@ -5,6 +5,7 @@ import { DistrictFrame } from './DistrictFrame';
 export interface SubdomainNavLink {
   label: string;
   to: string;
+  icon?: ReactNode;
 }
 
 export interface SubdomainShellProps {

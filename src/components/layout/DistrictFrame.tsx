@@ -17,7 +17,7 @@ export function DistrictFrame({ nav, children }: DistrictFrameProps) {
     <div className="relative flex min-h-screen flex-col">
       <DistrictBackdrop />
       <FloatingNav {...nav} />
-      <main className="relative z-[1] mx-auto w-full max-w-[1440px] flex-1 px-4 pt-[88px] pb-10 md:px-8">{children}</main>
+      <main className="relative z-[1] mx-auto w-full max-w-[1440px] flex-1 px-4 pt-[112px] pb-10 md:px-8 md:pt-[104px]">{children}</main>
       <div className="relative z-[1]">
         <Footer onNavigatePage={onNavigatePage} />
       </div>
