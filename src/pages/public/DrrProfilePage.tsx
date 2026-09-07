@@ -42,7 +42,7 @@ export function DrrProfilePage() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
+      <div className="-mt-12 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] pt-12 md:mt-0 md:pt-0">
         <Container width="narrow" className="py-3">
           <Breadcrumbs items={[{ label: 'Heritage', href: '/heritage' }, { label: data.name }]} linkComponent={Link} />
         </Container>

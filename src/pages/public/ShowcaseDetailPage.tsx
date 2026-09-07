@@ -44,7 +44,7 @@ export function ShowcaseDetailPage() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
+      <div className="-mt-12 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] pt-12 md:mt-0 md:pt-0">
         <Container width="narrow" className="py-3">
           <Breadcrumbs items={[{ label: 'Showcase', href: '/showcase' }, { label: data.title ?? 'Project' }]} linkComponent={Link} />
         </Container>
@@ -52,7 +52,7 @@ export function ShowcaseDetailPage() {
 
       <header style={{ background: HERO_GRADIENT }}>
         <Container width="narrow" className="py-12">
-          <div className="section-content-animate">
+          <div className="reveal">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
                 {categoryLabelOf(data.category)}

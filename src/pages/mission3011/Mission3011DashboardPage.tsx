@@ -116,7 +116,7 @@ export function Mission3011DashboardPage() {
         {data.byZone.length === 0 ? (
           <EmptyState title="No approved camps yet" body="Zone totals will appear as camps are logged and approved." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={zoneColumns} rows={data.byZone} rowKey={(z) => z.zoneId ?? 'unassigned'} empty="No zones yet." />
           </Card>
         )}
@@ -126,7 +126,7 @@ export function Mission3011DashboardPage() {
         {data.latestApprovedCamps.length === 0 ? (
           <EmptyState title="No approved camps yet" body="Approved camps will show up here as soon as the district signs them off." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={campColumns} rows={data.latestApprovedCamps} rowKey={(c) => c.id} empty="No camps yet." />
           </Card>
         )}
@@ -136,7 +136,7 @@ export function Mission3011DashboardPage() {
         {data.perClub.length === 0 ? (
           <EmptyState title="No club totals yet" body="Once camps are approved, each club's running total shows up here." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={clubColumns} rows={data.perClub} rowKey={(c) => c.clubId} empty="No clubs yet." />
           </Card>
         )}

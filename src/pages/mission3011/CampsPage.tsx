@@ -126,7 +126,7 @@ export function CampsPage() {
             action={canLog ? <Button onClick={() => setCreating(true)}>Log a camp</Button> : undefined}
           />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={columns} rows={query.data.items} rowKey={(c) => c.id} empty="No camps match this filter." />
           </Card>
         )}

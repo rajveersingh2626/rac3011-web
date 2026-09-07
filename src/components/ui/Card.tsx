@@ -3,11 +3,13 @@ import { cn } from '@/lib/cn';
 
 export type CardTone = 'plain' | 'action' | 'dashed';
 export type CardRule = 'pink' | 'navy' | 'cranberry' | 'accent' | 'none';
+export type CardPadding = 'normal' | 'compact' | 'none';
 
 export interface CardProps {
   as?: ElementType;
   tone?: CardTone;
   rule?: CardRule;
+  padding?: CardPadding;
   eyebrow?: ReactNode;
   title?: ReactNode;
   footer?: ReactNode;
@@ -36,6 +38,7 @@ export function Card({
   as = 'div',
   tone = 'plain',
   rule = 'none',
+  padding = 'normal',
   eyebrow,
   title,
   footer,
@@ -53,12 +56,14 @@ export function Card({
     <Tag
       data-tone={tone}
       data-rule={rule}
+      data-padding={padding}
       href={href}
       target={target}
       rel={rel}
       onClick={onClick}
       className={cn(
-        'rounded-[16px] p-5',
+        'rounded-[16px]',
+        padding === 'normal' ? 'p-5' : padding === 'compact' ? 'p-0 sm:p-2' : 'p-0',
         toneClass[tone],
         ruled && ruleClass[rule],
         ruled && 'shadow-lift',

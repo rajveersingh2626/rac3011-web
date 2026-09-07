@@ -440,7 +440,7 @@ export function RideAdminPage() {
         ) : delegationsQuery.data.items.length === 0 ? (
           <EmptyState title="No delegations yet" body="Add the first incoming delegation above." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
           </Card>
         )}

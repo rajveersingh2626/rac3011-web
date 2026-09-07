@@ -93,7 +93,7 @@ export function RideIncomingPage() {
         ) : query.data.length === 0 ? (
           <EmptyState title="No incoming delegations yet" body="Confirmed and planned visits will show up here." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={columns} rows={query.data} rowKey={(d) => d.id} empty="No delegations yet." />
           </Card>
         )}

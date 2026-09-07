@@ -10,7 +10,7 @@ export function PublicLayout() {
   return (
     <>
       <DistrictBackdrop />
-      <div className="relative z-[1]">
+      <div className="relative z-[1] pt-12 md:pt-0">
         <DistrictPageShell>
           <Outlet />
         </DistrictPageShell>

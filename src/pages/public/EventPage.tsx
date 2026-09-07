@@ -8,6 +8,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/app/auth';
 import { Container } from '@/components/ui/Container';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { ImageSlot } from '@/components/ui/ImageSlot';
 import { Badge } from '@/components/ui/Badge';
@@ -63,7 +64,7 @@ export function EventPage() {
   return (
     <Container className="py-8" width="narrow">
       <Breadcrumbs items={[{ label: 'Calendar', href: '/calendar' }, { label: data.title }]} linkComponent={Link} />
-      <h1 className="heading-display mt-4">{data.title}</h1>
+      <Section align="center" title={data.title} className="pt-6 pb-8" />
       <Card rule="accent" className="mt-4">
         <ImageSlot src={data.coverUrl} alt={data.title} prompt="Event photo coming soon" />
         <p className="mt-4 text-[13px] font-bold text-accent">{formatEventDateTime(data.startsAt)}</p>

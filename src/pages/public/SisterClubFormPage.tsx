@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Alert } from '@/components/ui/Alert';
 
@@ -11,7 +12,7 @@ export function SisterClubFormPage() {
   return (
     <Container className="py-8" width="narrow">
       <Breadcrumbs items={[{ label: 'Resources', href: '/resources' }, { label: 'Sister club request' }]} linkComponent={Link} />
-      <h1 className="heading-display mt-3">Request a sister club</h1>
+      <Section align="center" title="Request a sister club" className="pt-6 pb-8" />
       <Card rule="accent" className="mt-6">
         <p className="text-[13.5px] text-fg-2">
           Presidents and secretaries can request an international or domestic sister-club pairing on behalf of their club.

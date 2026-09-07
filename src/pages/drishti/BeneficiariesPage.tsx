@@ -104,7 +104,7 @@ export function BeneficiariesPage() {
             action={canCreate ? <Button onClick={() => setCreating(true)}>Log a patient</Button> : undefined}
           />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={columns} rows={query.data.items} rowKey={(b) => b.id} empty="No patients match this filter." />
           </Card>
         )}

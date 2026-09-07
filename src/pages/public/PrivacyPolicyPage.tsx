@@ -16,7 +16,7 @@ export function PrivacyPolicyPage() {
   const body = richTextOf(data, 'body');
 
   return (
-    <Container className="pt-8" width="narrow">
+    <Container width="narrow">
       <Section align="center" eyebrow="District 3011" title="Privacy Policy" className="pb-6" />
       <div className="mx-auto max-w-[72ch] pb-14 md:pb-20">
         {isPending ? (

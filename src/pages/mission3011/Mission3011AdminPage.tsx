@@ -130,7 +130,7 @@ export function Mission3011AdminPage() {
         ) : query.data.items.length === 0 ? (
           <EmptyState title="Nothing waiting" body="No camps are currently awaiting review." />
         ) : (
-          <Card rule="accent" className="p-2 sm:p-4">
+          <Card rule="accent" padding="compact">
             <div className="flex flex-col gap-3.5">
               {query.data.items.map((camp) => (
                 <CampReviewCard key={camp.id} camp={camp} />

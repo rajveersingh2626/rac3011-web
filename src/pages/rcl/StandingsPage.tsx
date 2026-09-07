@@ -52,7 +52,7 @@ export function StandingsPage() {
         ) : query.data.length === 0 ? (
           <EmptyState title="No teams registered yet" body="Standings will appear here once clubs register their teams and fixtures are played." />
         ) : (
-          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
             <Table columns={columns} rows={query.data} rowKey={(r) => r.teamId} empty="No standings yet." />
           </Card>
         )}

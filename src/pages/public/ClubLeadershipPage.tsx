@@ -89,7 +89,7 @@ export function ClubLeadershipPage() {
 
   return (
     <div className="bg-white">
-      <div className="border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)]">
+      <div className="-mt-12 border-b border-[var(--border-subtle)] bg-[var(--bg-subtle)] pt-12 md:mt-0 md:pt-0">
         <Container className="py-3">
           <Breadcrumbs items={[{ label: 'Leadership', href: '/leadership' }, { label: data.name }]} linkComponent={Link} />
         </Container>

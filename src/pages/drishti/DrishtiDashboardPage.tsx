@@ -112,7 +112,9 @@ export function DrishtiDashboardPage() {
         {data.hospitals.length === 0 ? (
           <EmptyState title="No surgeries recorded yet" body="Partner hospitals will show up here once surgeries are logged." />
         ) : (
-          <Table columns={hospitalColumns} rows={data.hospitals} rowKey={(h) => h.hospital} empty="No hospitals yet." />
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
+            <Table columns={hospitalColumns} rows={data.hospitals} rowKey={(h) => h.hospital} empty="No hospitals yet." />
+          </Card>
         )}
       </Section>
 
@@ -120,7 +122,9 @@ export function DrishtiDashboardPage() {
         {data.perClub.length === 0 ? (
           <EmptyState title="No club totals yet" body="Once patients are screened, each club's running total shows up here." />
         ) : (
-          <Table columns={clubColumns} rows={data.perClub} rowKey={(c) => c.clubId} empty="No clubs yet." />
+          <Card rule="accent" padding="compact" className="overflow-x-auto">
+            <Table columns={clubColumns} rows={data.perClub} rowKey={(c) => c.clubId} empty="No clubs yet." />
+          </Card>
         )}
       </Section>
     </Container>

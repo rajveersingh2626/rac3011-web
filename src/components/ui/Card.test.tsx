@@ -51,4 +51,17 @@ describe('Card', () => {
     const { container } = render(<Card as="a" href="/x" rule="accent">x</Card>);
     expect(container.firstElementChild?.className ?? '').toMatch(/hover:-translate-y-1/);
   });
+  it('compact padding renders p-0 and sm:p-2, not p-5', () => {
+    const { container } = render(<Card padding="compact">x</Card>);
+    const el = container.firstElementChild;
+    expect(el).toHaveAttribute('data-padding', 'compact');
+    expect(el?.className ?? '').toMatch(/p-0/);
+    expect(el?.className ?? '').toMatch(/sm:p-2/);
+    expect(el?.className ?? '').not.toMatch(/p-5/);
+  });
+  it('default padding renders p-5', () => {
+    const { container } = render(<Card>x</Card>);
+    expect(container.firstElementChild).toHaveAttribute('data-padding', 'normal');
+    expect(container.firstElementChild?.className ?? '').toMatch(/p-5/);
+  });
 });

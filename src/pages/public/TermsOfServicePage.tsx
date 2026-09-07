@@ -16,7 +16,7 @@ export function TermsOfServicePage() {
   const body = richTextOf(data, 'body');
 
   return (
-    <Container className="pt-8" width="narrow">
+    <Container width="narrow">
       <Section align="center" eyebrow="District 3011" title="Terms of Service" className="pb-6" />
       <div className="mx-auto max-w-[72ch] pb-14 md:pb-20">
         {isPending ? (

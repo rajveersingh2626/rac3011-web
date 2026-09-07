@@ -5,6 +5,7 @@ import { useDocumentMeta } from '@/lib/meta';
 import { fetchResources, categoryLabel } from '@/lib/publicApi/resources';
 import { Container } from '@/components/ui/Container';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -43,7 +44,7 @@ export function ResourceCategoryPage({ category: fixedCategory }: ResourceCatego
   return (
     <Container className="py-8" width="narrow">
       <Breadcrumbs items={[{ label: 'Resources', href: '/resources' }, { label: categoryLabel(category) }]} linkComponent={Link} />
-      <h1 className="heading-display mt-3">{categoryLabel(category)}</h1>
+      <Section align="center" title={categoryLabel(category)} className="pt-6 pb-8" />
 
       <Card rule="accent" className="mt-6">
         {items.length === 0 ? (
