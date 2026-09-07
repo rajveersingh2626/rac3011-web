@@ -22,4 +22,10 @@ describe('Badge', () => {
     );
     expect(container.querySelector('[data-theme="dark"] [data-tone]')).toBeInTheDocument();
   });
+  it('renders outline tone', () => {
+    render(<Badge tone="outline">Live</Badge>);
+    const el = screen.getByText('Live');
+    expect(el).toHaveAttribute('data-tone', 'outline');
+    expect(el.className).toMatch(/border-accent/);
+  });
 });

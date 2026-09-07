@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
   return createPortal(
     <div
       data-testid="modal-backdrop"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-5"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E1E24]/45 backdrop-blur-[2px] p-5"
       onMouseDown={onMouseDown}
       onClick={onClick}
     >
@@ -65,7 +65,10 @@ export function Modal({ open, onClose, title, description, children, footer, siz
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}
         data-size={size}
-        className={cn('w-full rounded-[16px] bg-surface p-[26px] shadow-overlay', sizeClass[size])}
+        className={cn(
+          'w-full rounded-[16px] bg-white/92 backdrop-blur-md p-[26px] shadow-overlay [[data-theme=dark]_&]:bg-[#141722]/92',
+          sizeClass[size],
+        )}
       >
         <h2 id={titleId} className="text-[15.5px] font-extrabold text-fg">
           {title}

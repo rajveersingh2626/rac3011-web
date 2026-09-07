@@ -15,7 +15,7 @@ describe('Chip', () => {
     expect(b).toHaveAttribute('aria-pressed', 'false');
     await userEvent.click(b);
     expect(b).toHaveAttribute('aria-pressed', 'true');
-    expect(b.className).toMatch(/bg-accent /);
+    expect(b.className).toMatch(/bg-gradient-accent/);
   });
   it('keeps 44px min height and shows count', () => {
     render(<Chip count={12}>Zone 4</Chip>);
@@ -52,5 +52,9 @@ describe('Chip', () => {
       </div>,
     );
     expect(container.querySelector('[data-theme="dark"] button')).toBeInTheDocument();
+  });
+  it('selected chip uses the accent gradient', () => {
+    render(<Chip selected>All</Chip>);
+    expect(screen.getByRole('button').className).toMatch(/bg-gradient-accent/);
   });
 });

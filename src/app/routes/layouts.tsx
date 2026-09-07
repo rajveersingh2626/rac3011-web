@@ -4,12 +4,18 @@ import { PortalShell } from '@/components/layout/PortalShell';
 import { AdminShell } from '@/components/layout/AdminShell';
 import { SurfaceLoading } from './SurfaceLoading';
 import { DistrictPageShell } from '@/district/components/Layout/DistrictPageShell';
+import { DistrictBackdrop } from '@/components/layout/DistrictBackdrop';
 
 export function PublicLayout() {
   return (
-    <DistrictPageShell>
-      <Outlet />
-    </DistrictPageShell>
+    <>
+      <DistrictBackdrop />
+      <div className="relative z-[1]">
+        <DistrictPageShell>
+          <Outlet />
+        </DistrictPageShell>
+      </div>
+    </>
   );
 }
 

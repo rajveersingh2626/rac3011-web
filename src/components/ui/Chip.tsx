@@ -16,8 +16,10 @@ function textOf(label: string | undefined, children: ReactNode): string {
 
 function chipClass(selected: boolean | undefined, disabled: boolean | undefined, className: string | undefined): string {
   return cn(
-    'inline-flex min-h-11 select-none items-center gap-1.5 rounded-[5px] border px-3 text-[12.5px] font-bold transition-colors',
-    selected ? 'bg-accent border-accent text-accent-fg' : 'bg-transparent border-line-accent text-fg-2 hover:bg-accent-soft',
+    'inline-flex min-h-11 select-none items-center gap-1.5 rounded-[8px] border px-3 text-[12.5px] font-bold transition-colors',
+    selected
+      ? 'bg-gradient-accent border-transparent text-accent-fg shadow-glow'
+      : 'bg-transparent border-line-accent text-fg-2 hover:bg-accent-soft',
     disabled && 'cursor-not-allowed opacity-60',
     className,
   );

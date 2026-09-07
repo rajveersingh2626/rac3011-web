@@ -31,4 +31,19 @@ describe('Section', () => {
     );
     expect(container.querySelector('[data-theme="dark"] h2')).toHaveTextContent('Dark');
   });
+  it('center mode renders pill eyebrow, display heading and lead', () => {
+    render(
+      <Section align="center" eyebrow="Career Bridge" title="Opportunities" description="Lead text" icon={<span data-testid="ico" />}>
+        body
+      </Section>,
+    );
+    expect(screen.getByText('Career Bridge').className).toMatch(/eyebrow-pill/);
+    expect(screen.getByRole('heading', { name: 'Opportunities' }).className).toMatch(/heading-display/);
+    expect(screen.getByText('Lead text').className).toMatch(/\blead\b/);
+    expect(screen.getByTestId('ico')).toBeInTheDocument();
+  });
+  it('start mode is unchanged', () => {
+    render(<Section eyebrow="E" title="T">body</Section>);
+    expect(screen.getByText('E').className).not.toMatch(/eyebrow-pill/);
+  });
 });

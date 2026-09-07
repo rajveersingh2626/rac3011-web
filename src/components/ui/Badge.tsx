@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
-export type BadgeTone = 'neutral' | 'pink' | 'green' | 'amber' | 'red' | 'blue';
+export type BadgeTone = 'neutral' | 'pink' | 'green' | 'amber' | 'red' | 'blue' | 'outline';
 
 export interface BadgeProps {
   tone?: BadgeTone;
@@ -22,6 +22,8 @@ const toneClass: Record<BadgeTone, string> = {
     'bg-[#FBEAEC] text-[#8A1027] border-[#EFC9CE] [[data-theme=dark]_&]:bg-[#2C1216] [[data-theme=dark]_&]:text-[#E58B98] [[data-theme=dark]_&]:border-[#4A1C24]',
   blue:
     'bg-[#EEF1FA] text-[#123499] border-[#CBD5EF] [[data-theme=dark]_&]:bg-[#121A2F] [[data-theme=dark]_&]:text-[#93A9E8] [[data-theme=dark]_&]:border-[#25325A]',
+  outline:
+    'bg-transparent text-accent border-accent [[data-theme=dark]_&]:text-[#F7A8C4] [[data-theme=dark]_&]:border-[#F7A8C4]',
 };
 
 export function Badge({ tone = 'neutral', children, className }: BadgeProps) {

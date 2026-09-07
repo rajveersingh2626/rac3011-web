@@ -35,4 +35,20 @@ describe('Card', () => {
     );
     expect(container.querySelector('[data-theme="dark"] [data-tone]')).toBeInTheDocument();
   });
+  it('has no rule by default', () => {
+    const { container } = render(<Card>x</Card>);
+    expect(container.firstElementChild).toHaveAttribute('data-rule', 'none');
+    expect(container.firstElementChild?.className ?? '').not.toMatch(/border-t-4/);
+  });
+  it.each(['pink', 'navy', 'cranberry', 'accent'] as const)('renders %s top rule', (rule) => {
+    const { container } = render(<Card rule={rule}>x</Card>);
+    const el = container.firstElementChild;
+    expect(el).toHaveAttribute('data-rule', rule);
+    expect(el?.className ?? '').toMatch(/border-t-4/);
+    expect(el?.className ?? '').toMatch(/shadow-lift/);
+  });
+  it('ruled link card lifts on hover', () => {
+    const { container } = render(<Card as="a" href="/x" rule="accent">x</Card>);
+    expect(container.firstElementChild?.className ?? '').toMatch(/hover:-translate-y-1/);
+  });
 });

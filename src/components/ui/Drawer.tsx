@@ -50,7 +50,12 @@ export function Drawer({ open, onClose, title, side = 'right', children, footer 
   };
 
   return createPortal(
-    <div data-testid="drawer-backdrop" className="fixed inset-0 z-50 bg-black/40" onMouseDown={onMouseDown} onClick={onClick}>
+    <div
+      data-testid="drawer-backdrop"
+      className="fixed inset-0 z-50 bg-[#1E1E24]/45 backdrop-blur-[2px]"
+      onMouseDown={onMouseDown}
+      onClick={onClick}
+    >
       <div
         ref={panelRef}
         role="dialog"
@@ -58,7 +63,7 @@ export function Drawer({ open, onClose, title, side = 'right', children, footer 
         aria-labelledby={titleId}
         data-side={side}
         className={cn(
-          'fixed flex flex-col overflow-y-auto bg-surface p-[20px] shadow-overlay transition-transform duration-200 translate-x-0 translate-y-0',
+          'fixed flex flex-col overflow-y-auto bg-white/92 backdrop-blur-md p-[20px] shadow-overlay transition-transform duration-200 translate-x-0 translate-y-0 [[data-theme=dark]_&]:bg-[#141722]/92',
           sideClass[side],
         )}
       >

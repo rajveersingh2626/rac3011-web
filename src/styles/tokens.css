@@ -30,6 +30,13 @@
   --shadow-overlay: 0 18px 44px rgba(216, 27, 96, 0.14);
   --shadow-button: 0 6px 20px rgba(216, 27, 96, 0.25);
   --portal-bar: #FFFFFF;
+  --gradient-accent: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  --gradient-deep: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
+  --rule-pink: #D81B60;
+  --rule-navy: #123499;
+  --rule-cranberry: #880E4F;
+  --shadow-lift: 0 10px 30px rgba(216, 27, 96, 0.08);
+  --shadow-glow: 0 8px 24px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 [data-theme="dark"] {
   --bg: #0C0E14;
@@ -52,6 +59,13 @@
   --shadow-overlay: 0 20px 50px rgba(0, 0, 0, 0.6);
   --shadow-button: 0 6px 20px rgba(216, 27, 96, 0.4);
   --portal-bar: #141722;
+  --gradient-accent: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  --gradient-deep: linear-gradient(135deg, var(--accent-deep) 0%, var(--accent) 100%);
+  --rule-pink: #E91E63;
+  --rule-navy: #5C7CFA;
+  --rule-cranberry: #FF6090;
+  --shadow-lift: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 8px 24px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 [data-surface="drishti"] { --accent: #123499; --accent-hover: #0C2470; --accent-soft: #EEF1FA; --accent-deep: #0C2470; --accent-fg: #FFFFFF; }
 [data-surface="rcl"] { --accent: #0F7B6C; --accent-hover: #0A5347; --accent-soft: #E9F5F2; --accent-deep: #0A5347; --accent-fg: #FFFFFF; }
@@ -84,6 +98,29 @@
 @utility shadow-button { box-shadow: var(--shadow-button); }
 @utility bg-portal-bar { background-color: var(--portal-bar); }
 @utility control { min-height: 44px; }
+@utility bg-gradient-accent { background-image: var(--gradient-accent); }
+@utility bg-gradient-deep { background-image: var(--gradient-deep); }
+@utility shadow-lift { box-shadow: var(--shadow-lift); }
+@utility shadow-glow { box-shadow: var(--shadow-glow); }
+@utility eyebrow-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--accent); border-radius: 8px;
+  padding: 6px 14px; background: color-mix(in srgb, var(--accent) 6%, white);
+  color: var(--accent); font-size: 12px; font-weight: 800;
+  letter-spacing: 1.2px; text-transform: uppercase; line-height: 1.4;
+}
+@utility heading-display {
+  font-weight: 800; letter-spacing: -0.02em; line-height: 1.05;
+  font-size: clamp(28px, 4vw, 52px); color: var(--fg); margin: 0;
+}
+@utility lead {
+  font-size: clamp(15px, 1.2vw, 17px); line-height: 1.6; color: var(--fg-2); margin: 0;
+}
+@utility reveal { animation: section-fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes section-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* Layered (not bare) so Tailwind utility classes — e.g. text-white/72 on an <a> — can override these resets; unlayered CSS beats every @layer regardless of specificity. */
 @layer base {

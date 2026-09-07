@@ -31,4 +31,14 @@ describe('Button', () => {
     );
     expect(container.querySelector('[data-theme="dark"] button')).toBeInTheDocument();
   });
+  it('primary uses the accent gradient and glow', () => {
+    render(<Button>Go</Button>);
+    const cls = screen.getByRole('button').className;
+    expect(cls).toMatch(/bg-gradient-accent/);
+    expect(cls).toMatch(/shadow-glow/);
+  });
+  it.each(['navy', 'deep'] as const)('renders %s variant', (variant) => {
+    render(<Button variant={variant}>Go</Button>);
+    expect(screen.getByRole('button')).toHaveAttribute('data-variant', variant);
+  });
 });

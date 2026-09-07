@@ -56,7 +56,7 @@ export function DistrictPageShell({ children }: DistrictPageShellProps) {
             : 'map-clubs';
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'transparent' }}>
       <Navbar
         activePage="district"
         setActivePage={handlePageChange}

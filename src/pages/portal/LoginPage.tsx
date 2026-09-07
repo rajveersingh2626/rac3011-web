@@ -118,104 +118,100 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-page px-4 py-10">
-      <div className="relative w-full max-w-[430px] overflow-hidden rounded-[16px] border border-line-accent bg-surface p-8 shadow-raised">
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#D81B60] via-[#123499] to-[#880E4F]" />
-        <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="mb-6 h-8 w-auto dark:brightness-0 dark:invert" />
-        {formError ? (
-          <div className="mb-4">
-            <Alert tone="error" title="Sign-in problem">
-              {formError}
-            </Alert>
-          </div>
-        ) : null}
-        {step === 'credentials' ? (
-          <>
-            <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 1 OF 2</p>
-            <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">Club portal</h1>
-            <p className="m-0 mb-6 text-[13.5px] text-fg-2">For club presidents, secretaries and district officers.</p>
-            <Form onSubmit={submitCredentials} submitting={credentials.submitting}>
-              <Field label="Rotary ID or email" error={credentials.errors.email} required>
-                <Input
-                  type="text"
-                  autoComplete="username"
-                  value={credentials.values.email}
-                  onChange={(e) => credentials.setValue('email', e.target.value)}
-                />
-              </Field>
-              <Field label="Password" error={credentials.errors.password} required>
-                <Input
-                  type="password"
-                  autoComplete="current-password"
-                  value={credentials.values.password}
-                  onChange={(e) => credentials.setValue('password', e.target.value)}
-                />
-              </Field>
-              <Button type="submit" block loading={credentials.submitting}>
-                Continue
-              </Button>
-            </Form>
-            <p className="mt-6 text-center text-[13px] text-fg-2">
-              Need to set up your account?{' '}
-              <Link to="/portal/register" className="font-bold text-accent hover:underline">
-                Join your club
-              </Link>
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="m-0 mb-6 flex items-center gap-2 text-[12.5px] font-semibold text-fg-2">{email}</p>
-            <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 2 OF 2</p>
-            <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">
-              {method === 'totp' ? 'Enter your authenticator code' : 'Check your email'}
-            </h1>
-            <p className="m-0 mb-6 text-[13.5px] text-fg-2">
-              {method === 'totp' ? (
-                'Open your authenticator app and enter the current 6-digit code.'
-              ) : (
-                <>
-                  We&apos;ve sent a six-digit code to <span className="font-bold text-fg">{email}</span>. It&apos;s valid for ten minutes.
-                </>
-              )}
-            </p>
-            <Form onSubmit={submitCode} submitting={secondFactor.submitting}>
-              <Field label="6-digit code" error={secondFactor.errors.code} required>
-                <Input
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  value={secondFactor.values.code}
-                  onChange={(e) => secondFactor.setValue('code', e.target.value.replace(/\D/g, ''))}
-                />
-              </Field>
-              {method === 'email' ? (
-                <p className="m-0 text-[12px] text-fg-2">
-                  Didn&apos;t arrive?{' '}
-                  <button
-                    type="button"
-                    onClick={() => void resend()}
-                    disabled={countdown.remaining > 0}
-                    className="font-bold text-accent disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Send it again
-                  </button>{' '}
-                  {countdown.remaining > 0 ? `in 0:${String(countdown.remaining).padStart(2, '0')}` : null}
-                </p>
-              ) : null}
-              {method === 'email' ? (
-                <Checkbox
-                  label="Stay signed in on this device for 5 hours"
-                  checked={secondFactor.values.rememberDevice}
-                  onChange={(e) => secondFactor.setValue('rememberDevice', e.target.checked)}
-                />
-              ) : null}
-              <Button type="submit" block loading={secondFactor.submitting}>
-                Sign in
-              </Button>
-            </Form>
-          </>
-        )}
-      </div>
+    <div>
+      {formError ? (
+        <div className="mb-4">
+          <Alert tone="error" title="Sign-in problem">
+            {formError}
+          </Alert>
+        </div>
+      ) : null}
+      {step === 'credentials' ? (
+        <>
+          <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 1 OF 2</p>
+          <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">Club portal</h1>
+          <p className="m-0 mb-6 text-[13.5px] text-fg-2">For club presidents, secretaries and district officers.</p>
+          <Form onSubmit={submitCredentials} submitting={credentials.submitting}>
+            <Field label="Rotary ID or email" error={credentials.errors.email} required>
+              <Input
+                type="text"
+                autoComplete="username"
+                value={credentials.values.email}
+                onChange={(e) => credentials.setValue('email', e.target.value)}
+              />
+            </Field>
+            <Field label="Password" error={credentials.errors.password} required>
+              <Input
+                type="password"
+                autoComplete="current-password"
+                value={credentials.values.password}
+                onChange={(e) => credentials.setValue('password', e.target.value)}
+              />
+            </Field>
+            <Button type="submit" block loading={credentials.submitting}>
+              Continue
+            </Button>
+          </Form>
+          <p className="mt-6 text-center text-[13px] text-fg-2">
+            Need to set up your account?{' '}
+            <Link to="/portal/register" className="font-bold text-accent hover:underline">
+              Join your club
+            </Link>
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="m-0 mb-6 flex items-center gap-2 text-[12.5px] font-semibold text-fg-2">{email}</p>
+          <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 2 OF 2</p>
+          <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">
+            {method === 'totp' ? 'Enter your authenticator code' : 'Check your email'}
+          </h1>
+          <p className="m-0 mb-6 text-[13.5px] text-fg-2">
+            {method === 'totp' ? (
+              'Open your authenticator app and enter the current 6-digit code.'
+            ) : (
+              <>
+                We&apos;ve sent a six-digit code to <span className="font-bold text-fg">{email}</span>. It&apos;s valid for ten minutes.
+              </>
+            )}
+          </p>
+          <Form onSubmit={submitCode} submitting={secondFactor.submitting}>
+            <Field label="6-digit code" error={secondFactor.errors.code} required>
+              <Input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                value={secondFactor.values.code}
+                onChange={(e) => secondFactor.setValue('code', e.target.value.replace(/\D/g, ''))}
+              />
+            </Field>
+            {method === 'email' ? (
+              <p className="m-0 text-[12px] text-fg-2">
+                Didn&apos;t arrive?{' '}
+                <button
+                  type="button"
+                  onClick={() => void resend()}
+                  disabled={countdown.remaining > 0}
+                  className="font-bold text-accent disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Send it again
+                </button>{' '}
+                {countdown.remaining > 0 ? `in 0:${String(countdown.remaining).padStart(2, '0')}` : null}
+              </p>
+            ) : null}
+            {method === 'email' ? (
+              <Checkbox
+                label="Stay signed in on this device for 5 hours"
+                checked={secondFactor.values.rememberDevice}
+                onChange={(e) => secondFactor.setValue('rememberDevice', e.target.checked)}
+              />
+            ) : null}
+            <Button type="submit" block loading={secondFactor.submitting}>
+              Sign in
+            </Button>
+          </Form>
+        </>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { PublicLayout, PortalLayout, AdminLayout } from './layouts';
 import { RequireAuth } from './guards';
+import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LoginPage } from '@/pages/portal/LoginPage';
 import { RegisterPage } from '@/pages/portal/RegisterPage';
 import { PendingPage } from '@/pages/portal/PendingPage';
@@ -27,9 +28,14 @@ const districtSitePaths = [
 const routes: RouteObject[] = [
   ...districtSitePaths.map((path) => ({ path, element: <DistrictApp /> })),
   { element: <PublicLayout />, children: publicMainRouteObjects },
-  { path: '/portal/login', element: <LoginPage /> },
-  { path: '/portal/register', element: <RegisterPage /> },
-  { path: '/portal/pending', element: <PendingPage /> },
+  {
+    element: <AuthLayout />,
+    children: [
+      { path: '/portal/login', element: <LoginPage /> },
+      { path: '/portal/register', element: <RegisterPage /> },
+      { path: '/portal/pending', element: <PendingPage /> },
+    ],
+  },
   {
     element: <RequireAuth />,
     children: [

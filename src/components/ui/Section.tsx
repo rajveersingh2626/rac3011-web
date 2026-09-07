@@ -3,27 +3,53 @@ import { cn } from '@/lib/cn';
 
 export interface SectionProps {
   eyebrow?: ReactNode;
+  icon?: ReactNode;
   title?: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
   as?: ElementType;
   headingLevel?: 2 | 3 | 4;
+  align?: 'start' | 'center';
   className?: string;
   children?: ReactNode;
 }
 
 export function Section({
   eyebrow,
+  icon,
   title,
   description,
   action,
   as: Tag = 'section',
   headingLevel = 2,
+  align = 'start',
   className,
   children,
 }: SectionProps) {
   const Heading = `h${headingLevel}` as ElementType;
   const hasHeader = Boolean(eyebrow || title || description || action);
+
+  if (align === 'center') {
+    return (
+      <Tag className={cn('reveal py-14 md:py-20', className)}>
+        {hasHeader && (
+          <div className="mb-10 flex flex-col items-center gap-4 text-center">
+            {eyebrow && (
+              <span className="eyebrow-pill">
+                {icon}
+                {eyebrow}
+              </span>
+            )}
+            {title && <Heading className="heading-display">{title}</Heading>}
+            {description && <p className="lead mx-auto max-w-[62ch]">{description}</p>}
+            {action && <div className="mt-2 flex flex-wrap items-center justify-center gap-3">{action}</div>}
+          </div>
+        )}
+        {children}
+      </Tag>
+    );
+  }
+
   return (
     <Tag className={cn('py-10', className)}>
       {hasHeader && (

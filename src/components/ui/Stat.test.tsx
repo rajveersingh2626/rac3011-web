@@ -20,4 +20,13 @@ describe('Stat', () => {
     );
     expect(container.querySelector('[data-theme="dark"]')).toHaveTextContent('9');
   });
+  it('renders as a ruled card when card is set', () => {
+    const { container } = render(<Stat card rule="navy" label="Zones" value="4" />);
+    expect(container.firstElementChild).toHaveAttribute('data-rule', 'navy');
+    expect(screen.getByText('4').className).toMatch(/text-accent/);
+  });
+  it('plain rendering is unchanged', () => {
+    const { container } = render(<Stat label="Zones" value="4" />);
+    expect(container.firstElementChild).not.toHaveAttribute('data-rule');
+  });
 });
