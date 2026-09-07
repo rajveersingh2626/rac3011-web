@@ -1,11 +1,13 @@
-import type { ReactNode } from 'react';
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { RequireSubdomainAuth } from './subdomainGuards';
-import { StandingsPage } from '@/pages/rcl/StandingsPage';
-import { FixturesPage } from '@/pages/rcl/FixturesPage';
-import { RegisterPage } from '@/pages/rcl/RegisterPage';
+import { SurfaceLoading } from './SurfaceLoading';
+
+const StandingsPage = lazy(() => import('@/pages/rcl/StandingsPage').then((m) => ({ default: m.StandingsPage })));
+const FixturesPage = lazy(() => import('@/pages/rcl/FixturesPage').then((m) => ({ default: m.FixturesPage })));
+const RegisterPage = lazy(() => import('@/pages/rcl/RegisterPage').then((m) => ({ default: m.RegisterPage })));
 
 const NAV = [
   { label: 'Standings', to: '/standings' },
@@ -13,28 +15,27 @@ const NAV = [
   { label: 'Register', to: '/register' },
 ];
 
-function Layout({ children }: { children: ReactNode }) {
+function Layout() {
   return (
     <SubdomainShell surface="rcl" title="Rotaract Champions League" nav={NAV}>
-      {children}
+      <Suspense fallback={<SurfaceLoading />}>
+        <Outlet />
+      </Suspense>
     </SubdomainShell>
   );
 }
 
 const routes: RouteObject[] = [
-  { index: true, element: <Layout><StandingsPage /></Layout> },
-  { path: '/standings', element: <Layout><StandingsPage /></Layout> },
-  { path: '/fixtures', element: <Layout><FixturesPage /></Layout> },
   {
-    path: '/register',
-    element: (
-      <Layout>
-        <Outlet />
-      </Layout>
-    ),
-    children: [{ element: <RequireSubdomainAuth />, children: [{ index: true, element: <RegisterPage /> }] }],
+    element: <Layout />,
+    children: [
+      { index: true, element: <StandingsPage /> },
+      { path: '/standings', element: <StandingsPage /> },
+      { path: '/fixtures', element: <FixturesPage /> },
+      { element: <RequireSubdomainAuth />, children: [{ path: '/register', element: <RegisterPage /> }] },
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
-  { path: '*', element: <Layout><NotFoundPage /></Layout> },
 ];
 
 export function createRclRouter() {

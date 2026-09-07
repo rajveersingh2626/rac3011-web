@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
+import { Trophy } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { currentRyYear } from '@/lib/reports/month';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -54,19 +56,21 @@ export function RegisterPage() {
     <Container width="narrow">
       <Section
         eyebrow="Rotaract Champions League"
+        icon={<Trophy size={14} />}
         title={team ? 'Manage your team' : 'Register a team'}
         description={
           team
             ? `Your club's ${season} season roster. One team per club per season.`
             : `Register your club's team for the ${season} season. Rosters can have up to 15 players.`
         }
+        align="center"
       >
         {query.isPending ? (
           <Skeleton shape="rect" className="h-64" />
         ) : query.isError ? (
           <ErrorState title="Couldn't load your team" onRetry={() => void query.refetch()} />
         ) : (
-          <>
+          <Card rule="accent" className="mx-auto max-w-[720px]">
             {team ? (
               <div className="mb-5 flex items-center gap-2">
                 <Badge tone={STATUS_TONE[team.status]}>{STATUS_LABEL[team.status]}</Badge>
@@ -80,7 +84,7 @@ export function RegisterPage() {
               team={team ?? undefined}
               onDone={() => void query.refetch()}
             />
-          </>
+          </Card>
         )}
       </Section>
     </Container>

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Trophy } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { currentRyYear } from '@/lib/reports/month';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -59,7 +61,7 @@ function FixtureRow({ fixture, canManage, onEnterResult }: FixtureRowProps) {
   const summary = scoreSummary(fixture);
   const result = resultLine(fixture);
   return (
-    <li className="rounded-[14px] border border-line-accent p-4">
+    <Card as="li" rule="accent">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <p className="m-0 text-[14.5px] font-extrabold text-fg">
           {fixture.homeTeam.name} <span className="text-fg-3">vs</span> {fixture.awayTeam.name}
@@ -77,7 +79,7 @@ function FixtureRow({ fixture, canManage, onEnterResult }: FixtureRowProps) {
           {fixture.result ? 'Edit result' : 'Enter result'}
         </Button>
       ) : null}
-    </li>
+    </Card>
   );
 }
 
@@ -98,9 +100,11 @@ export function FixturesPage() {
     <Container width="wide">
       <Section
         eyebrow="Rotaract Champions League"
+        icon={<Trophy size={14} />}
         title="Fixtures"
         description="The full season schedule. Completed matches show the final score."
         action={canManage ? <Button onClick={() => setCreating(true)}>New fixture</Button> : null}
+        align="center"
       >
         {query.isPending ? (
           <Skeleton shape="rect" className="h-64" />

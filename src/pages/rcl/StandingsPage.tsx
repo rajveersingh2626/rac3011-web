@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { Trophy } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
-import { Section } from '@/components/ui/Section';
+import { PageHero } from '@/components/ui/PageHero';
+import { Card } from '@/components/ui/Card';
 import { Table, type Column } from '@/components/ui/Table';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -35,11 +37,14 @@ export function StandingsPage() {
 
   return (
     <Container width="wide">
-      <Section
+      <PageHero
         eyebrow="Rotaract Champions League"
+        icon={<Trophy size={14} />}
         title="Standings"
-        description="Win = 2 points, tie or abandoned = 1 point each, loss = 0. Ties broken by NRR, then wins, then name."
-      >
+        lead="Win = 2 points, tie or abandoned = 1 point each, loss = 0. Ties broken by NRR, then wins, then name."
+        secondary={{ label: 'Fixtures', to: '/fixtures' }}
+      />
+      <section className="reveal pb-16">
         {query.isPending ? (
           <Skeleton shape="rect" className="h-64" />
         ) : query.isError ? (
@@ -47,9 +52,11 @@ export function StandingsPage() {
         ) : query.data.length === 0 ? (
           <EmptyState title="No teams registered yet" body="Standings will appear here once clubs register their teams and fixtures are played." />
         ) : (
-          <Table columns={columns} rows={query.data} rowKey={(r) => r.teamId} empty="No standings yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={columns} rows={query.data} rowKey={(r) => r.teamId} empty="No standings yet." />
+          </Card>
         )}
-      </Section>
+      </section>
     </Container>
   );
 }
