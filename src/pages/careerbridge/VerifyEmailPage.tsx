@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router';
+import { Briefcase } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { verifyListing } from '@/lib/publicApi/careerbridge';
 import { Container } from '@/components/ui/Container';
+import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -20,35 +23,20 @@ export function VerifyEmailPage() {
     if (token) mutate();
   }, [token, mutate]);
 
+  let body: ReactNode;
   if (!token) {
-    return (
-      <Container width="narrow" className="py-16">
-        <ErrorState title="Missing verification link" body="This page needs a verification token from your email link." />
-      </Container>
+    body = <ErrorState title="Missing verification link" body="This page needs a verification token from your email link." />;
+  } else if (mutation.isPending || mutation.isIdle) {
+    body = <Skeleton shape="rect" className="h-32" />;
+  } else if (mutation.isError) {
+    body = (
+      <ErrorState
+        title="This link is invalid or already used"
+        body="Verification links can only be used once. If you posted more than once, check your inbox for the most recent email."
+      />
     );
-  }
-
-  if (mutation.isPending || mutation.isIdle) {
-    return (
-      <Container width="narrow" className="py-16">
-        <Skeleton shape="rect" className="h-32" />
-      </Container>
-    );
-  }
-
-  if (mutation.isError) {
-    return (
-      <Container width="narrow" className="py-16">
-        <ErrorState
-          title="This link is invalid or already used"
-          body="Verification links can only be used once. If you posted more than once, check your inbox for the most recent email."
-        />
-      </Container>
-    );
-  }
-
-  return (
-    <Container width="narrow" className="py-16">
+  } else {
+    body = (
       <EmptyState
         title="Email verified"
         body="Your listing has been sent to the Career Bridge admins for review. You'll hear back once it's approved."
@@ -58,6 +46,16 @@ export function VerifyEmailPage() {
           </Link>
         }
       />
+    );
+  }
+
+  return (
+    <Container width="narrow">
+      <Section align="center" icon={<Briefcase size={14} />} eyebrow="Career Bridge" title="Verify your listing">
+        <Card rule="accent" className="mx-auto max-w-[720px]">
+          {body}
+        </Card>
+      </Section>
     </Container>
   );
 }

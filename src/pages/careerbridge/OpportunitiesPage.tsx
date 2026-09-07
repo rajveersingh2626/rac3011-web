@@ -1,23 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
+import { Briefcase } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchListings } from '@/lib/publicApi/careerbridge';
 import type { ListingType } from '@/lib/careerbridge/types';
 import { Container } from '@/components/ui/Container';
-import { Section } from '@/components/ui/Section';
+import { PageHero } from '@/components/ui/PageHero';
 import { Chip } from '@/components/ui/Chip';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Button } from '@/components/ui/Button';
 
 const TYPE_LABEL: Record<ListingType, string> = { job: 'Jobs', internship: 'Internships', mentorship: 'Mentorship' };
 
 export function OpportunitiesPage() {
   useDocumentMeta({ title: 'Opportunities', description: 'Jobs, internships and mentorship posted for Rotaractors across the district.' });
-  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const type = (params.get('type') as ListingType | null) ?? undefined;
 
@@ -32,13 +31,15 @@ export function OpportunitiesPage() {
 
   return (
     <Container>
-      <Section
+      <PageHero
         eyebrow="Career Bridge"
+        icon={<Briefcase size={14} />}
         title="Opportunities"
-        description="Jobs, internships and mentorship shared by clubs, companies and Rotaractors across the district."
-        action={<Button onClick={() => navigate('/post')}>Post an opening</Button>}
-      >
-        <div className="mb-5 flex flex-wrap gap-2">
+        lead="Jobs, internships and mentorship shared by clubs, companies and Rotaractors across the district."
+        primary={{ label: 'Post an opening', to: '/post' }}
+      />
+      <section className="reveal pb-16">
+        <div className="mb-6 flex flex-wrap justify-center gap-2">
           <Chip selected={!type} onClick={() => setType(undefined)}>
             All types
           </Chip>
@@ -64,6 +65,8 @@ export function OpportunitiesPage() {
             {query.data.items.map((listing) => (
               <Link key={listing.id} to={`/opportunities/${listing.id}`} className="block h-full">
                 <Card
+                  rule="accent"
+                  className="h-full"
                   eyebrow={TYPE_LABEL[listing.type]}
                   title={listing.title}
                   footer={listing.status === 'filled' ? <Badge tone="neutral">Filled</Badge> : <Badge tone="green">Open</Badge>}
@@ -75,7 +78,7 @@ export function OpportunitiesPage() {
             ))}
           </div>
         )}
-      </Section>
+      </section>
     </Container>
   );
 }

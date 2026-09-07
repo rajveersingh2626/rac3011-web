@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -179,35 +180,39 @@ export function CareerbridgeAdminPage() {
           </div>
         ) : null}
 
-        {pendingQuery.isPending ? (
-          <Skeleton shape="rect" className="h-64" />
-        ) : pendingQuery.isError ? (
-          <ErrorState title="Couldn't load the review queue" onRetry={() => void pendingQuery.refetch()} />
-        ) : pendingQuery.data.items.length === 0 ? (
-          <EmptyState title="Nothing waiting" body="No listings are currently awaiting review." />
-        ) : (
-          <div className="flex flex-col gap-3.5">
-            {pendingQuery.data.items.map((listing) => (
-              <ListingReviewCard key={listing.id} listing={listing} />
-            ))}
-          </div>
-        )}
+        <Card rule="accent">
+          {pendingQuery.isPending ? (
+            <Skeleton shape="rect" className="h-64" />
+          ) : pendingQuery.isError ? (
+            <ErrorState title="Couldn't load the review queue" onRetry={() => void pendingQuery.refetch()} />
+          ) : pendingQuery.data.items.length === 0 ? (
+            <EmptyState title="Nothing waiting" body="No listings are currently awaiting review." />
+          ) : (
+            <div className="flex flex-col gap-3.5">
+              {pendingQuery.data.items.map((listing) => (
+                <ListingReviewCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+        </Card>
       </Section>
 
       <Section eyebrow="Live listings" title="Verified & filled" description="Mark a listing filled, or expire it ahead of its automatic expiry date.">
-        {liveQuery.isPending ? (
-          <Skeleton shape="rect" className="h-40" />
-        ) : liveQuery.isError ? (
-          <ErrorState title="Couldn't load listings" onRetry={() => void liveQuery.refetch()} />
-        ) : live.length === 0 ? (
-          <EmptyState title="No live listings yet" body="Verified listings will appear here." />
-        ) : (
-          <div>
-            {live.map((listing) => (
-              <ManageRow key={listing.id} listing={listing} />
-            ))}
-          </div>
-        )}
+        <Card rule="accent">
+          {liveQuery.isPending ? (
+            <Skeleton shape="rect" className="h-40" />
+          ) : liveQuery.isError ? (
+            <ErrorState title="Couldn't load listings" onRetry={() => void liveQuery.refetch()} />
+          ) : live.length === 0 ? (
+            <EmptyState title="No live listings yet" body="Verified listings will appear here." />
+          ) : (
+            <div>
+              {live.map((listing) => (
+                <ManageRow key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+        </Card>
       </Section>
     </Container>
   );

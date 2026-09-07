@@ -6,6 +6,7 @@ import { fetchListing } from '@/lib/publicApi/careerbridge';
 import type { ListingType } from '@/lib/careerbridge/types';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -45,43 +46,45 @@ export function OpportunityDetailPage() {
         title={listing.title}
         description={`${listing.company} · ${listing.location} · ${listing.mode}`}
       >
-        <div className="mb-5 flex flex-wrap gap-2">
-          {listing.status === 'filled' ? <Badge tone="neutral">Filled</Badge> : <Badge tone="green">Open</Badge>}
-          {listing.rotaryAffiliation ? <Badge tone="pink">{listing.rotaryAffiliation}</Badge> : null}
-        </div>
+        <Card rule="accent">
+          <div className="mb-5 flex flex-wrap gap-2">
+            {listing.status === 'filled' ? <Badge tone="neutral">Filled</Badge> : <Badge tone="green">Open</Badge>}
+            {listing.rotaryAffiliation ? <Badge tone="pink">{listing.rotaryAffiliation}</Badge> : null}
+          </div>
 
-        <p className="whitespace-pre-line text-[14px] leading-relaxed text-fg-2">{listing.description}</p>
+          <p className="whitespace-pre-line text-[14px] leading-relaxed text-fg-2">{listing.description}</p>
 
-        <div className="mt-6">
-          <KeyValue
-            items={[
-              { label: 'Stipend', value: listing.stipend ?? 'Not specified' },
-              { label: 'Posted', value: new Date(listing.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
-            ]}
-          />
-        </div>
+          <div className="mt-6">
+            <KeyValue
+              items={[
+                { label: 'Stipend', value: listing.stipend ?? 'Not specified' },
+                { label: 'Posted', value: new Date(listing.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
+              ]}
+            />
+          </div>
 
-        <div className="mt-6 flex flex-wrap gap-2.5">
-          {listing.applyUrl ? (
-            <a
-              href={listing.applyUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex min-h-11 items-center rounded-[8px] bg-accent px-5 text-[13.5px] font-bold text-accent-fg shadow-button hover:bg-accent-hover"
-            >
-              Apply now
-            </a>
-          ) : null}
-          {revealed ? (
-            <a href={`mailto:${listing.contactEmail}`} className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent">
-              {listing.contactEmail}
-            </a>
-          ) : (
-            <Button variant="secondary" onClick={() => setRevealed(true)}>
-              Reveal contact email
-            </Button>
-          )}
-        </div>
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {listing.applyUrl ? (
+              <a
+                href={listing.applyUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex min-h-11 items-center rounded-[8px] bg-accent px-5 text-[13.5px] font-bold text-accent-fg shadow-button hover:bg-accent-hover"
+              >
+                Apply now
+              </a>
+            ) : null}
+            {revealed ? (
+              <a href={`mailto:${listing.contactEmail}`} className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent">
+                {listing.contactEmail}
+              </a>
+            ) : (
+              <Button variant="secondary" onClick={() => setRevealed(true)}>
+                Reveal contact email
+              </Button>
+            )}
+          </div>
+        </Card>
 
         <p className="mt-8 text-[12.5px]">
           <Link to="/opportunities" className="font-bold text-accent">
