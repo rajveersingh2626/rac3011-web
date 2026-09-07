@@ -35,19 +35,12 @@ export function AchievementsPage() {
   }
 
   return (
-    <Container className="section-content-animate">
+    <Container>
       <Section
-        eyebrow={<span className="pill-pink">District 3011</span>}
-        title={
-          <span className="font-black tracking-[-0.6px]" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)' }}>
-            Achievements
-          </span>
-        }
-        description={
-          <span className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
-            Milestones the district has reached, this Rotary year and beyond.
-          </span>
-        }
+        align="center"
+        eyebrow="District 3011"
+        title="Achievements"
+        description="Milestones the district has reached, this Rotary year and beyond."
       >
         {data.items.length === 0 ? (
           <EmptyState title="No achievements published yet" />

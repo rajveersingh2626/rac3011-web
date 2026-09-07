@@ -35,19 +35,12 @@ export function PartnersPage() {
   }
 
   return (
-    <Container className="section-content-animate">
+    <Container>
       <Section
-        eyebrow={<span className="pill-pink">District 3011</span>}
-        title={
-          <span className="font-black tracking-[-0.6px]" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)' }}>
-            Partners
-          </span>
-        }
-        description={
-          <span className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
-            Organisations that support district projects.
-          </span>
-        }
+        align="center"
+        eyebrow="District 3011"
+        title="Partners"
+        description="Organisations that support district projects."
       >
         {data.items.length === 0 ? (
           <EmptyState title="No partners listed yet" />

@@ -8,6 +8,7 @@ import { apiFetch, ApiError } from '@/lib/api';
 import { useAuth } from '@/app/auth';
 import { Container } from '@/components/ui/Container';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Card } from '@/components/ui/Card';
 import { ImageSlot } from '@/components/ui/ImageSlot';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -62,41 +63,43 @@ export function EventPage() {
   return (
     <Container className="py-8" width="narrow">
       <Breadcrumbs items={[{ label: 'Calendar', href: '/calendar' }, { label: data.title }]} linkComponent={Link} />
-      <ImageSlot src={data.coverUrl} alt={data.title} className="mt-4" prompt="Event photo coming soon" />
-      <h1 className="m-0 mt-4 text-[24px] font-extrabold text-fg">{data.title}</h1>
-      <p className="mt-1 text-[13px] font-bold text-accent">{formatEventDateTime(data.startsAt)}</p>
-      {data.location ? <p className="mt-1 text-[13px] text-fg-2">{data.location}</p> : null}
-      {data.description ? <p className="mt-4 text-[13.5px] leading-relaxed text-fg-2">{data.description}</p> : null}
-      {data.capacity ? <Badge tone="neutral" className="mt-2">Capacity {data.capacity}</Badge> : null}
+      <h1 className="heading-display mt-4">{data.title}</h1>
+      <Card rule="accent" className="mt-4">
+        <ImageSlot src={data.coverUrl} alt={data.title} prompt="Event photo coming soon" />
+        <p className="mt-4 text-[13px] font-bold text-accent">{formatEventDateTime(data.startsAt)}</p>
+        {data.location ? <p className="mt-1 text-[13px] text-fg-2">{data.location}</p> : null}
+        {data.description ? <p className="mt-4 text-[13.5px] leading-relaxed text-fg-2">{data.description}</p> : null}
+        {data.capacity ? <Badge tone="neutral" className="mt-2">Capacity {data.capacity}</Badge> : null}
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        {isPast ? (
-          <Link to="/portal/feedback" className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent hover:bg-accent-soft">
-            Share feedback
-          </Link>
-        ) : data.rsvpOpen ? (
-          status === 'authenticated' ? (
-            <Button onClick={() => void rsvp()} loading={rsvpSubmitting}>
-              RSVP
-            </Button>
-          ) : (
-            <Link
-              to={`/portal/login?next=${encodeURIComponent(`/calendar/${slug}`)}`}
-              className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent hover:bg-accent-soft"
-            >
-              Sign in to RSVP
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          {isPast ? (
+            <Link to="/portal/feedback" className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent hover:bg-accent-soft">
+              Share feedback
             </Link>
-          )
-        ) : (
-          <Badge tone="neutral">RSVP closed</Badge>
-        )}
-      </div>
-
-      {rsvpState ? (
-        <div className="mt-4">
-          <Alert tone={rsvpState.tone} title={rsvpState.message} />
+          ) : data.rsvpOpen ? (
+            status === 'authenticated' ? (
+              <Button onClick={() => void rsvp()} loading={rsvpSubmitting}>
+                RSVP
+              </Button>
+            ) : (
+              <Link
+                to={`/portal/login?next=${encodeURIComponent(`/calendar/${slug}`)}`}
+                className="inline-flex min-h-11 items-center rounded-[8px] border-2 border-accent px-5 text-[13.5px] font-bold text-accent hover:bg-accent-soft"
+              >
+                Sign in to RSVP
+              </Link>
+            )
+          ) : (
+            <Badge tone="neutral">RSVP closed</Badge>
+          )}
         </div>
-      ) : null}
+
+        {rsvpState ? (
+          <div className="mt-4">
+            <Alert tone={rsvpState.tone} title={rsvpState.message} />
+          </div>
+        ) : null}
+      </Card>
     </Container>
   );
 }

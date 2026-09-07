@@ -49,8 +49,8 @@ export function DrrProfilePage() {
       </div>
 
       <header style={{ background: HERO_GRADIENT }}>
-        <Container width="narrow" className="py-12">
-          <div className="section-content-animate flex flex-col items-start gap-7 sm:flex-row sm:items-center">
+        <Container width="narrow" className="reveal py-12">
+          <div className="flex flex-col items-start gap-7 sm:flex-row sm:items-center">
             <div className="w-[220px] shrink-0 rounded-[20px] bg-white/95 p-2.5 shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
               {data.isLowResPhoto ? (
                 <LowResPortrait src={data.photoUrl} alt={data.name} />
@@ -62,9 +62,7 @@ export function DrrProfilePage() {
               <span className="pill-gold" style={{ fontSize: '0.78rem', padding: '5px 12px' }}>
                 <Calendar aria-hidden size={13} /> {groupTermsLabel(data.terms)}
               </span>
-              <h1 className="m-0 mt-3 text-[clamp(2rem,5vw,2.75rem)] font-black leading-[1.1] tracking-[-0.5px] text-white">
-                {data.name}
-              </h1>
+              <h1 className="heading-display mt-3 text-white">{data.name}</h1>
             </div>
           </div>
         </Container>

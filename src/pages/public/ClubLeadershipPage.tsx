@@ -26,7 +26,7 @@ const COLUMNS: Column<BoardMember>[] = [
           {r.bloodGroup}
         </span>
       ) : (
-        <span className="text-[var(--text-muted)]">—</span>
+        <span className="text-[var(--text-muted)]">–</span>
       ),
   },
   {
@@ -96,15 +96,13 @@ export function ClubLeadershipPage() {
       </div>
 
       <header style={{ background: HERO_GRADIENT }}>
-        <Container className="py-12">
-          <div className="section-content-animate flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+        <Container className="reveal py-12">
+          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
             <span className="inline-flex shrink-0 rounded-full bg-white/95 p-2 shadow-[0_12px_32px_rgba(0,0,0,0.22)] [&>*]:size-[84px] [&>*]:border-0 [&>*]:text-[26px]">
               <Avatar name={data.name} src={data.logoUrl ?? undefined} size="xl" />
             </span>
             <div className="min-w-0">
-              <h1 className="m-0 text-[clamp(1.9rem,4.5vw,2.75rem)] font-black leading-[1.1] tracking-[-0.5px] text-white">
-                {data.name}
-              </h1>
+              <h1 className="heading-display text-white">{data.name}</h1>
               {data.memberCount > 0 ? (
                 <p className="m-0 mt-3">
                   <span className="pill-gold" style={{ fontSize: '0.8rem' }}>

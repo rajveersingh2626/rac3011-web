@@ -61,9 +61,7 @@ export function ShowcaseDetailPage() {
                 <Calendar aria-hidden size={13} /> {data.date}
               </span>
             </div>
-            <h1 className="m-0 mt-4 text-[clamp(2rem,5vw,3rem)] font-black leading-[1.1] tracking-[-1px] text-white">
-              {data.title}
-            </h1>
+            <h1 className="heading-display mt-4 text-white">{data.title}</h1>
             {data.summary ? (
               <p className="m-0 mt-4 max-w-[62ch] text-[1.05rem] font-medium leading-[1.6] text-[#FCE4EC]">{data.summary}</p>
             ) : null}

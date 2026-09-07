@@ -46,11 +46,11 @@ export function NewClubPage() {
 
   return (
     <Container className="py-8" width="narrow">
-      <Section eyebrow="Get involved" title="Start a new club">
+      <Section align="center" eyebrow="Get involved" title="Start a new club">
         {content.isPending ? <Skeleton lines={2} className="mb-6" /> : intro ? <div className="mb-6"><RichText html={intro} /></div> : null}
 
         {routedTo ? (
-          <Alert tone="action" title="Thanks — we've got it">
+          <Alert tone="action" title="Thanks, we've got it">
             Your request has been routed to {routedTo}. They'll reach out with next steps for chartering your club.
           </Alert>
         ) : (

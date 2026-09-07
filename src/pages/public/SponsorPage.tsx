@@ -61,7 +61,7 @@ export function SponsorPage() {
 
   return (
     <Container className="py-8" width="narrow">
-      <Section eyebrow="Get involved" title="Sponsor a project">
+      <Section align="center" eyebrow="Get involved" title="Sponsor a project">
         {content.isPending ? <Skeleton lines={2} className="mb-6" /> : intro ? <div className="mb-6"><RichText html={intro} /></div> : null}
 
         <div className="mb-8 rounded-[16px] border border-line-accent bg-surface p-5">
@@ -82,7 +82,7 @@ export function SponsorPage() {
         </div>
 
         {routedTo ? (
-          <Alert tone="action" title="Thanks — we've got it">
+          <Alert tone="action" title="Thanks, we've got it">
             Your sponsorship interest has been routed to {routedTo}, who'll follow up with details.
           </Alert>
         ) : (

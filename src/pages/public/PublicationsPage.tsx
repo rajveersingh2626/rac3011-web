@@ -37,19 +37,12 @@ export function PublicationsPage() {
   }
 
   return (
-    <Container className="section-content-animate">
+    <Container>
       <Section
-        eyebrow={<span className="pill-pink">For members</span>}
-        title={
-          <span className="font-black tracking-[-0.6px]" style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)' }}>
-            Publications
-          </span>
-        }
-        description={
-          <span className="text-[15px] leading-relaxed text-[var(--text-secondary)]">
-            District directories and newsletters, issue by issue.
-          </span>
-        }
+        align="center"
+        eyebrow="For members"
+        title="Publications"
+        description="District directories and newsletters, issue by issue."
       >
         {data.items.length === 0 ? (
           <EmptyState title="No publications yet" body="Directories and newsletters will appear here once issued." />

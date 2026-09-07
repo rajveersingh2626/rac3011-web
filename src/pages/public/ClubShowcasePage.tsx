@@ -61,11 +61,9 @@ export function ClubShowcasePage() {
       </div>
 
       <header style={{ background: HERO_GRADIENT }}>
-        <Container className="py-12">
-          <div className="section-content-animate min-w-0">
-            <h1 className="m-0 text-[clamp(2rem,5vw,3rem)] font-black leading-[1.1] tracking-[-1px] text-white">
-              {club.data.name}
-            </h1>
+        <Container className="reveal py-12">
+          <div className="min-w-0">
+            <h1 className="heading-display text-white">{club.data.name}</h1>
             <p className="m-0 mt-4">
               <Link
                 to={`/leadership/clubs/${clubSlug}`}

@@ -45,7 +45,7 @@ export function ContactPage() {
 
   return (
     <Container className="py-8" width="narrow">
-      <Section eyebrow="District 3011" title="Contact">
+      <Section align="center" eyebrow="District 3011" title="Contact">
         {content.isPending ? (
           <Skeleton lines={3} className="mb-6" />
         ) : (
