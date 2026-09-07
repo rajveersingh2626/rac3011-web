@@ -98,15 +98,17 @@ export function Mission3011DashboardPage() {
           { value: data.byZone.length, label: 'Zones reporting', rule: 'pink' },
         ]}
       >
-        <Card rule="accent" className="mx-auto flex max-w-[720px] flex-col items-center gap-6 sm:flex-row sm:justify-center">
-          <RadialGauge
-            size={168}
-            value={data.totalUnits}
-            max={data.target}
-            label={data.totalUnits.toLocaleString('en-IN')}
-            sublabel={`of ${data.target.toLocaleString('en-IN')} units`}
-          />
-          <Stat label="Clubs participating" value={data.perClub.length} />
+        <Card rule="accent" className="mx-auto max-w-[720px]">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+            <RadialGauge
+              size={168}
+              value={data.totalUnits}
+              max={data.target}
+              label={data.totalUnits.toLocaleString('en-IN')}
+              sublabel={`of ${data.target.toLocaleString('en-IN')} units`}
+            />
+            <Stat label="Clubs participating" value={data.perClub.length} />
+          </div>
         </Card>
       </PageHero>
 

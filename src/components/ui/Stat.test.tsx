@@ -29,4 +29,10 @@ describe('Stat', () => {
     const { container } = render(<Stat label="Zones" value="4" />);
     expect(container.firstElementChild).not.toHaveAttribute('data-rule');
   });
+  it('card mode stacks value over label in a flex-column container', () => {
+    render(<Stat card label="Zones" value="4" />);
+    const inner = screen.getByText('4').parentElement;
+    expect(inner?.className).toMatch(/flex-col/);
+    expect(inner).toHaveTextContent('Zones');
+  });
 });

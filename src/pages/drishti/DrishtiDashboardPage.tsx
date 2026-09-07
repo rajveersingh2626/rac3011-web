@@ -79,15 +79,17 @@ export function DrishtiDashboardPage() {
           { value: data.hospitals.length, label: 'Partner hospitals', rule: 'pink' },
         ]}
       >
-        <Card rule="accent" className="mx-auto flex max-w-[720px] flex-col items-center gap-6 sm:flex-row sm:justify-center">
-          <RadialGauge
-            size={168}
-            value={data.operatedCount}
-            max={data.target}
-            label={data.operatedCount.toLocaleString('en-IN')}
-            sublabel={`of ${data.target.toLocaleString('en-IN')} surgeries`}
-          />
-          <Stat label="Clubs participating" value={data.perClub.length} />
+        <Card rule="accent" className="mx-auto max-w-[720px]">
+          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+            <RadialGauge
+              size={168}
+              value={data.operatedCount}
+              max={data.target}
+              label={data.operatedCount.toLocaleString('en-IN')}
+              sublabel={`of ${data.target.toLocaleString('en-IN')} surgeries`}
+            />
+            <Stat label="Clubs participating" value={data.perClub.length} />
+          </div>
         </Card>
       </PageHero>
 
