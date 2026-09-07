@@ -113,7 +113,7 @@ export function SupportClubForm({ clubId, supportClub, onDone }: SupportClubForm
         />
       </Field>
 
-      <Field label="Preferred months" hint="Optional — when your club is best placed to host">
+      <Field label="Preferred months" hint="Optional: when your club is best placed to host">
         <MultiSelect
           options={MONTH_OPTIONS}
           values={preferredMonths}
@@ -123,7 +123,7 @@ export function SupportClubForm({ clubId, supportClub, onDone }: SupportClubForm
         />
       </Field>
 
-      <Field label="Point of contact" hint="Optional — a specific member coordinating this">
+      <Field label="Point of contact" hint="Optional: a specific member coordinating this">
         <Select
           value={contactMemberId ?? ''}
           onChange={(e) => setContactMemberId(e.target.value || null)}
@@ -133,7 +133,7 @@ export function SupportClubForm({ clubId, supportClub, onDone }: SupportClubForm
         />
       </Field>
 
-      <Field label="Notes" hint="Optional — anything the district office should know">
+      <Field label="Notes" hint="Optional: anything the district office should know">
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} />
       </Field>
 

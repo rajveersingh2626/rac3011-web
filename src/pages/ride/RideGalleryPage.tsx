@@ -44,7 +44,7 @@ function GalleryTile({ item }: { item: PublicGalleryItem }) {
 }
 
 export function RideGalleryPage() {
-  useDocumentMeta({ title: 'RIDE — Gallery' });
+  useDocumentMeta({ title: 'Gallery' });
   const query = useQuery({ queryKey: ['public', 'ride', 'gallery'], queryFn: () => fetchRideGallery() });
   const [year, setYear] = useState<string | null>(null);
 
@@ -67,7 +67,7 @@ export function RideGalleryPage() {
   if (years.length === 0) {
     return (
       <Container width="wide">
-        <Section eyebrow="RIDE" title="Gallery">
+        <Section eyebrow="RIDE" title="Gallery" align="center">
           <EmptyState title="No photos yet" body="Photos and videos from hosted delegations will appear here." />
         </Section>
       </Container>
@@ -79,7 +79,7 @@ export function RideGalleryPage() {
 
   return (
     <Container width="wide">
-      <Section eyebrow="RIDE" title="Gallery" description="Moments with visiting delegations, year by year.">
+      <Section eyebrow="RIDE" title="Gallery" description="Moments with visiting delegations, year by year." align="center">
         <Tabs
           label="Gallery year"
           value={activeYear}

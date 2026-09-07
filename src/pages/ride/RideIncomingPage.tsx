@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { Plane } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
-import { Section } from '@/components/ui/Section';
+import { PageHero } from '@/components/ui/PageHero';
+import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Table, type Column } from '@/components/ui/Table';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -29,7 +31,7 @@ function formatDate(value: string): string {
 
 export function RideIncomingPage() {
   useDocumentMeta({
-    title: 'RIDE — Incoming delegations',
+    title: 'Incoming delegations',
     description: 'Visiting Rotaractors from other districts and countries, and the district clubs hosting them.',
   });
 
@@ -75,11 +77,15 @@ export function RideIncomingPage() {
 
   return (
     <Container width="wide">
-      <Section
+      <PageHero
         eyebrow="RIDE"
+        icon={<Plane size={14} />}
         title="Incoming delegations"
-        description="Rotaractors visiting District 3011 from other districts and countries, and the clubs stepping up to host them."
-      >
+        lead="Rotaractors visiting District 3011 from other districts and countries, and the clubs stepping up to host them."
+        primary={{ label: 'Register as a support club', to: '/support-club' }}
+        secondary={{ label: 'Gallery', to: '/gallery' }}
+      />
+      <section className="reveal pb-16">
         {query.isPending ? (
           <Skeleton shape="rect" className="h-64" />
         ) : query.isError ? (
@@ -87,9 +93,11 @@ export function RideIncomingPage() {
         ) : query.data.length === 0 ? (
           <EmptyState title="No incoming delegations yet" body="Confirmed and planned visits will show up here." />
         ) : (
-          <Table columns={columns} rows={query.data} rowKey={(d) => d.id} empty="No delegations yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={columns} rows={query.data} rowKey={(d) => d.id} empty="No delegations yet." />
+          </Card>
         )}
-      </Section>
+      </section>
     </Container>
   );
 }

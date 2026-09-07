@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
+import { Plane } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -10,7 +12,7 @@ import { fetchSupportClubs } from '@/lib/ride/api';
 import { SupportClubForm } from './SupportClubForm';
 
 export function SupportClubPage() {
-  useDocumentMeta({ title: 'RIDE — Support club registration' });
+  useDocumentMeta({ title: 'Support club registration' });
   const { me, can } = useAuth();
   const clubId = me?.profile?.clubId ?? null;
   const canRegister = clubId ? can('club_events:log', { type: 'club', id: clubId }) : false;
@@ -38,24 +40,28 @@ export function SupportClubPage() {
     <Container width="narrow">
       <Section
         eyebrow="RIDE"
+        icon={<Plane size={14} />}
         title={supportClub ? 'Manage your support-club registration' : 'Register as a support club'}
         description={
           supportClub
-            ? "Your club's current registration for this Rotary year. One registration per club per year — resubmitting updates it in place."
+            ? "Your club's current registration for this Rotary year. One registration per club per year: resubmitting updates it in place."
             : "Tell the district office your club is available to host a visiting delegation this Rotary year."
         }
+        align="center"
       >
         {query.isPending ? (
           <Skeleton shape="rect" className="h-64" />
         ) : query.isError ? (
           <ErrorState title="Couldn't load your registration" onRetry={() => void query.refetch()} />
         ) : (
-          <SupportClubForm
-            key={supportClub?.id ?? 'create'}
-            clubId={clubId}
-            supportClub={supportClub ?? undefined}
-            onDone={() => void query.refetch()}
-          />
+          <Card rule="accent" className="mx-auto max-w-[720px]">
+            <SupportClubForm
+              key={supportClub?.id ?? 'create'}
+              clubId={clubId}
+              supportClub={supportClub ?? undefined}
+              onDone={() => void query.refetch()}
+            />
+          </Card>
         )}
       </Section>
     </Container>

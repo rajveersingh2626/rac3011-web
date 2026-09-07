@@ -4,6 +4,7 @@ import { useDocumentMeta } from '@/lib/meta';
 import { currentRyYear } from '@/lib/reports/month';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
@@ -194,7 +195,7 @@ function HostAssignmentDrawer({ delegation, supportClubs, onClose, onSaved }: Ho
     <Drawer
       open={Boolean(delegation)}
       onClose={onClose}
-      title={delegation ? `Assign hosts — ${delegation.country}` : 'Assign hosts'}
+      title={delegation ? `Assign hosts: ${delegation.country}` : 'Assign hosts'}
       footer={
         <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
           Save host assignments
@@ -347,26 +348,28 @@ function GalleryAdminSection() {
       ) : years.length === 0 ? (
         <EmptyState title="No items yet" body="Add the first photo or video above." />
       ) : (
-        <div className="flex flex-col gap-5">
-          {years.map((y) => (
-            <div key={y}>
-              <p className="m-0 mb-2 text-[12px] font-bold text-fg">{y}</p>
-              <div className="flex flex-col gap-2">
-                {(byYear.get(y) ?? []).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-3 rounded-[10px] border border-line p-2.5">
-                    <div className="min-w-0">
-                      <p className="m-0 truncate text-[12.5px] font-semibold text-fg">{item.caption ?? item.url}</p>
-                      <p className="m-0 text-[11px] text-fg-3">{item.kind}</p>
+        <Card rule="accent">
+          <div className="flex flex-col gap-5">
+            {years.map((y) => (
+              <div key={y}>
+                <p className="m-0 mb-2 text-[12px] font-bold text-fg">{y}</p>
+                <div className="flex flex-col gap-2">
+                  {(byYear.get(y) ?? []).map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-3 rounded-[10px] border border-line p-2.5">
+                      <div className="min-w-0">
+                        <p className="m-0 truncate text-[12.5px] font-semibold text-fg">{item.caption ?? item.url}</p>
+                        <p className="m-0 text-[11px] text-fg-3">{item.kind}</p>
+                      </div>
+                      <IconButton label="Remove" onClick={() => deleteMutation.mutate(item.id)} disabled={deleteMutation.isPending}>
+                        <Trash2 />
+                      </IconButton>
                     </div>
-                    <IconButton label="Remove" onClick={() => deleteMutation.mutate(item.id)} disabled={deleteMutation.isPending}>
-                      <Trash2 />
-                    </IconButton>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
       )}
     </Section>
   );
@@ -437,7 +440,9 @@ export function RideAdminPage() {
         ) : delegationsQuery.data.items.length === 0 ? (
           <EmptyState title="No delegations yet" body="Add the first incoming delegation above." />
         ) : (
-          <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
+          </Card>
         )}
       </Section>
 
