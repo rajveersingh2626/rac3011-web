@@ -81,9 +81,6 @@ export function useDistrictClubs(): { clubs: DistrictClubLive[]; isLive: boolean
     if (items.length === 0) return { clubs: INITIAL_CLUBS as DistrictClubLive[], isLive: false };
 
     const mapById = new Map<string, DistrictClubLive>();
-    for (const c of INITIAL_CLUBS) {
-      mapById.set(c.id, { ...c });
-    }
 
     for (const api of items) {
       const s = findStatic(api);
