@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router';
 import { ChevronDown, Home, X, LogIn, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/app/auth';
+import { portalHref } from '@/app/host';
 import { useFocusTrap } from '@/components/ui/useFocusTrap';
 import { cn } from '@/lib/cn';
 
@@ -70,7 +71,7 @@ export function FloatingNav({ links, homeHref, title }: FloatingNavProps) {
 
   // Desktop: pill hides until hover/scroll/open. Mobile: always shown via the `md:` translate classes below.
   const shown = hovered || revealed || open;
-  const portalHref = me ? '/portal/dashboard' : '/portal/login';
+  const portalCtaHref = me ? portalHref('/portal/dashboard') : portalHref('/portal/login');
 
   return (
     <div
@@ -201,7 +202,7 @@ export function FloatingNav({ links, homeHref, title }: FloatingNavProps) {
             <div className="my-4 border-t border-white/10" />
 
             <a
-              href={portalHref}
+              href={portalCtaHref}
               onClick={() => setOpen(false)}
               className="flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-gradient-to-r from-[#D81B60] to-[#C21350] text-[14px] font-extrabold text-white shadow-[0_10px_28px_rgba(216,27,96,0.35)]"
             >

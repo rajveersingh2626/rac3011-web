@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react';
-import { mainSiteHref, resolveSurface, surfaceHref, useMainSiteHref, useSurfaceHref } from './host';
+import { mainSiteHref, portalHref, resolveSurface, surfaceHref, useMainSiteHref, useSurfaceHref } from './host';
 
 function withLocation(href: string, run: () => void) {
   const original = window.location.href;
@@ -72,6 +72,20 @@ describe('surfaceHref / mainSiteHref', () => {
     withLocation('http://localhost:5173/dashboard', () => {
       expect(surfaceHref('rcl')).toBe('http://localhost:5173/?surface=rcl');
       expect(mainSiteHref()).toBe('http://localhost:5173/');
+    });
+  });
+});
+
+describe('portalHref', () => {
+  it('defaults to /portal/login on the apex origin of the current host', () => {
+    withLocation('https://rcl.rotaract3011.org/opportunities', () => {
+      expect(portalHref()).toBe('https://rotaract3011.org/portal/login');
+    });
+  });
+
+  it('points at the given path on the apex origin, keeping any testing. prefix', () => {
+    withLocation('https://testing.drishti.rotaract3011.org/beneficiaries', () => {
+      expect(portalHref('/portal/dashboard')).toBe('https://testing.rotaract3011.org/portal/dashboard');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router';
 import { useAuth } from '@/app/auth';
-import { mainSiteHref } from '@/app/host';
+import { portalHref } from '@/app/host';
 import { Container } from '@/components/ui/Container';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -22,7 +22,7 @@ export function RequireSubdomainAuth() {
   if (status === 'loading') return <AuthCheckSkeleton />;
 
   if (status !== 'authenticated') {
-    const loginHref = `${new URL(mainSiteHref()).origin}/portal/login`;
+    const loginHref = portalHref('/portal/login');
     return (
       <Container className="py-16">
         <EmptyState

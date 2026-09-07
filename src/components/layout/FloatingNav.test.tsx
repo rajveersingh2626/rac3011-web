@@ -24,7 +24,10 @@ describe('FloatingNav', () => {
     expect(screen.getAllByRole('link', { name: /Opportunities/ })).toHaveLength(1);
     expect(screen.getByTestId('ico')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /District Website/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Login to District Portal/ })).toHaveAttribute('href', '/portal/login');
+    expect(screen.getByRole('link', { name: /Login to District Portal/ })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/portal\/login$/),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.getByRole('button', { name: 'Open menu' })).toHaveAttribute('aria-expanded', 'false');

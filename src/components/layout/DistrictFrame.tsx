@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { portalHref } from '@/app/host';
 import Footer from '@/district/components/Layout/Footer';
 import { DistrictBackdrop } from './DistrictBackdrop';
 import { FloatingNav, type FloatingNavProps } from './FloatingNav';
@@ -10,7 +11,7 @@ export interface DistrictFrameProps {
 
 export function DistrictFrame({ nav, children }: DistrictFrameProps) {
   const onNavigatePage = (page: string) => {
-    if (page === 'portal') window.location.href = '/portal/login';
+    if (page === 'portal') window.location.href = portalHref('/portal/login');
     else window.location.href = nav.homeHref;
   };
   return (
