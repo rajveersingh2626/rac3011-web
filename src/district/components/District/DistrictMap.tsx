@@ -30,7 +30,6 @@ interface RegionalZone {
   name: string;
   hindiName: string;
   zoneNumber: string;
-  adrr: string;
   zrr: string;
   zrs: string;
   color: string;
@@ -49,8 +48,7 @@ const REGIONAL_ZONES: RegionalZone[] = [
     name: 'Zone Prithvi',
     hindiName: 'पृथ्वी',
     zoneNumber: 'Zone 1 & 5',
-    adrr: 'Rtr. Ayush Rai',
-    zrr: 'Rtn. Rtr. Kanav Sachdeva • Rtr. Vartika Sharma',
+    zrr: 'Rtn. Rtr. Kanav Sachdeva',
     zrs: 'Rtr. Hitaishi Chawla',
     color: '#10b981',
     fillColor: '#10b981',
@@ -69,8 +67,7 @@ const REGIONAL_ZONES: RegionalZone[] = [
     name: 'Zone Agni',
     hindiName: 'अग्नि',
     zoneNumber: 'Zone 2 & 6',
-    adrr: 'Rtr. Ayush Rai',
-    zrr: 'Rtr. Dhruv Kumar Jha • Rtr. Khushi Kalra',
+    zrr: 'Rtr. Dhruv Kumar Jha',
     zrs: 'Rtr. Kartik Kumar',
     color: '#E11D48',
     fillColor: '#E11D48',
@@ -90,8 +87,7 @@ const REGIONAL_ZONES: RegionalZone[] = [
     name: 'Zone Vayu',
     hindiName: 'वायु',
     zoneNumber: 'Zone 3 & 7',
-    adrr: 'Rtr. Radhika Bansal',
-    zrr: 'Rtr. Tanishaa Sonker • Rtr. Priyanshu Ranjan',
+    zrr: 'Rtr. Tanishaa Sonker',
     zrs: 'Rtr. Pratham Girdhar',
     color: '#0284c7',
     fillColor: '#0284c7',
@@ -111,8 +107,7 @@ const REGIONAL_ZONES: RegionalZone[] = [
     name: 'Zone Akash',
     hindiName: 'आकाश',
     zoneNumber: 'Zone 4 & 8',
-    adrr: 'Rtr. Radhika Bansal',
-    zrr: 'Rtr. Palak Jain • Rtr. Harshita Kalra',
+    zrr: 'Rtr. Palak Jain',
     zrs: 'Rtr. Arjun Pratap Singh',
     color: '#4F46E5',
     fillColor: '#4F46E5',
@@ -480,7 +475,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         <div
           style={{
             position: 'absolute',
-            top: '76px',
+            top: '84px',
             left: '24px',
             zIndex: 1000,
             background: 'rgba(255, 255, 255, 0.95)',
