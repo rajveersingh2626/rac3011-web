@@ -242,8 +242,8 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
     }
 
     const map = Leaflet.map(mapContainerRef.current, {
-      center: [28.5800, 77.1025],
-      zoom: 11,
+      center: [28.6050, 77.1800],
+      zoom: 12,
       scrollWheelZoom: true,
       zoomControl: false
     });
@@ -381,7 +381,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
       if (coordCounts[key]) {
         const count = coordCounts[key];
         const angle = (count * 60) * (Math.PI / 180);
-        const radius = 0.007 * Math.ceil(count / 5);
+        const radius = 0.0095 * Math.ceil(count / 4);
         lat += Math.sin(angle) * radius;
         lng += Math.cos(angle) * radius;
         coordCounts[key] = count + 1;
@@ -438,13 +438,13 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
     if (activeZoneId === zoneId) {
       setActiveZoneId(null);
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.flyTo([28.5800, 77.1025], 11, { duration: 1.2 });
+        mapInstanceRef.current.flyTo([28.6050, 77.1800], 12, { duration: 1.2 });
       }
     } else {
       setActiveZoneId(zoneId);
       const zoneObj = REGIONAL_ZONES.find(z => z.id === zoneId);
       if (zoneObj && mapInstanceRef.current) {
-        mapInstanceRef.current.flyTo(zoneObj.center, 12, { duration: 1.2 });
+        mapInstanceRef.current.flyTo(zoneObj.center, 12.8, { duration: 1.2 });
       }
     }
   };
