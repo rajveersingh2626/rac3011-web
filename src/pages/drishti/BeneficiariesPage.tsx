@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
+import { Eye } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Table, type Column } from '@/components/ui/Table';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -68,7 +70,7 @@ export function BeneficiariesPage() {
       ),
     },
     { key: 'eye', header: 'Eye', cell: (b) => <span className="capitalize">{b.eye}</span> },
-    { key: 'phone', header: 'Phone', cell: (b) => b.phone ?? '—' },
+    { key: 'phone', header: 'Phone', cell: (b) => b.phone ?? '–' },
     { key: 'stage', header: 'Stage', cell: (b) => <Badge tone={STAGE_TONE[b.stage]}>{STAGE_LABEL[b.stage]}</Badge> },
   ];
 
@@ -76,9 +78,11 @@ export function BeneficiariesPage() {
     <Container width="wide">
       <Section
         eyebrow="Screening and surgery records"
+        icon={<Eye size={14} />}
         title="Beneficiaries"
         description="Every patient screened toward the Project Drishti target, and where they stand in the pipeline."
         action={canCreate ? <Button onClick={() => setCreating(true)}>Log a patient</Button> : null}
+        align="center"
       >
         <div className="mb-6">
           <SegmentedControl
@@ -100,7 +104,9 @@ export function BeneficiariesPage() {
             action={canCreate ? <Button onClick={() => setCreating(true)}>Log a patient</Button> : undefined}
           />
         ) : (
-          <Table columns={columns} rows={query.data.items} rowKey={(b) => b.id} empty="No patients match this filter." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={columns} rows={query.data.items} rowKey={(b) => b.id} empty="No patients match this filter." />
+          </Card>
         )}
       </Section>
 

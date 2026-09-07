@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { Eye } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { PageHero } from '@/components/ui/PageHero';
 import { Card } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { RadialGauge } from '@/components/ui/RadialGauge';
@@ -61,12 +63,23 @@ export function DrishtiDashboardPage() {
 
   return (
     <Container width="wide">
-      <Section
+      <PageHero
         eyebrow="District flagship"
+        icon={<Eye size={14} />}
         title="Project Drishti"
-        description="Restoring sight, one surgery at a time, toward 100 cataract surgeries this Rotary year."
+        lead="Restoring sight, one surgery at a time, toward 100 cataract surgeries this Rotary year."
+        stats={[
+          { value: data.operatedCount.toLocaleString('en-IN'), label: 'Surgeries completed', rule: 'accent' },
+          { value: data.target.toLocaleString('en-IN'), label: 'Target', rule: 'navy' },
+          {
+            value: (data.pipelineCounts.screened + data.pipelineCounts.scheduled).toLocaleString('en-IN'),
+            label: 'In pipeline',
+            rule: 'cranberry',
+          },
+          { value: data.hospitals.length, label: 'Partner hospitals', rule: 'pink' },
+        ]}
       >
-        <Card className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:justify-between">
+        <Card rule="accent" className="mx-auto flex max-w-[720px] flex-col items-center gap-6 sm:flex-row sm:justify-center">
           <RadialGauge
             size={168}
             value={data.operatedCount}
@@ -74,20 +87,14 @@ export function DrishtiDashboardPage() {
             label={data.operatedCount.toLocaleString('en-IN')}
             sublabel={`of ${data.target.toLocaleString('en-IN')} surgeries`}
           />
-          <div className="grid flex-1 grid-cols-2 gap-6 sm:grid-cols-3">
-            <Stat label="Surgeries completed" value={data.operatedCount} />
-            <Stat label="Target" value={data.target} />
-            <Stat label="In pipeline" value={data.pipelineCounts.screened + data.pipelineCounts.scheduled} />
-            <Stat label="Partner hospitals" value={data.hospitals.length} />
-            <Stat label="Clubs participating" value={data.perClub.length} />
-          </div>
+          <Stat label="Clubs participating" value={data.perClub.length} />
         </Card>
-      </Section>
+      </PageHero>
 
-      <Section eyebrow="Where patients stand" title="Pipeline">
+      <Section eyebrow="Where patients stand" title="Pipeline" align="center">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {DRISHTI_STAGES.map((stage) => (
-            <Card key={stage}>
+            <Card key={stage} rule="accent">
               <ProgressBar
                 value={data.pipelineCounts[stage] ?? 0}
                 max={maxPipeline}
@@ -99,7 +106,7 @@ export function DrishtiDashboardPage() {
         </div>
       </Section>
 
-      <Section eyebrow="Partner network" title="Hospitals">
+      <Section eyebrow="Partner network" title="Hospitals" align="center">
         {data.hospitals.length === 0 ? (
           <EmptyState title="No surgeries recorded yet" body="Partner hospitals will show up here once surgeries are logged." />
         ) : (
@@ -107,7 +114,7 @@ export function DrishtiDashboardPage() {
         )}
       </Section>
 
-      <Section eyebrow="Club leaderboard" title="Per club">
+      <Section eyebrow="Club leaderboard" title="Per club" align="center">
         {data.perClub.length === 0 ? (
           <EmptyState title="No club totals yet" body="Once patients are screened, each club's running total shows up here." />
         ) : (

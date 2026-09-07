@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Eye } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
@@ -126,12 +127,14 @@ export function SurgeriesPage() {
     <Container width="wide">
       <Section
         eyebrow="Surgery pipeline"
+        icon={<Eye size={14} />}
         title="Surgeries"
         description={
           canManage
             ? 'Move patients forward through the pipeline. Moving to operated needs the surgery details.'
             : 'Read-only view of every club’s patients moving through the pipeline.'
         }
+        align="center"
       >
         {moveError && (
           <div className="mb-5">
