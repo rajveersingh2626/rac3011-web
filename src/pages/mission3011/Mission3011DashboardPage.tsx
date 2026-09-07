@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
+import { Droplets } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { PageHero } from '@/components/ui/PageHero';
 import { Card } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { RadialGauge } from '@/components/ui/RadialGauge';
@@ -84,12 +86,19 @@ export function Mission3011DashboardPage() {
 
   return (
     <Container width="wide">
-      <Section
+      <PageHero
         eyebrow="District flagship"
+        icon={<Droplets size={14} />}
         title="Mission 3011"
-        description="One unit at a time, toward 3,011 units of blood collected across the district this Rotary year."
+        lead="One unit at a time, toward 3,011 units of blood collected across the district this Rotary year."
+        stats={[
+          { value: data.totalUnits.toLocaleString('en-IN'), label: 'Units collected', rule: 'accent' },
+          { value: data.target.toLocaleString('en-IN'), label: 'Target', rule: 'navy' },
+          { value: campsApproved, label: 'Camps approved', rule: 'cranberry' },
+          { value: data.byZone.length, label: 'Zones reporting', rule: 'pink' },
+        ]}
       >
-        <Card className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:justify-between">
+        <Card rule="accent" className="mx-auto flex max-w-[720px] flex-col items-center gap-6 sm:flex-row sm:justify-center">
           <RadialGauge
             size={168}
             value={data.totalUnits}
@@ -97,37 +106,37 @@ export function Mission3011DashboardPage() {
             label={data.totalUnits.toLocaleString('en-IN')}
             sublabel={`of ${data.target.toLocaleString('en-IN')} units`}
           />
-          <div className="grid flex-1 grid-cols-2 gap-6 sm:grid-cols-3">
-            <Stat label="Units collected" value={data.totalUnits.toLocaleString('en-IN')} />
-            <Stat label="Target" value={data.target.toLocaleString('en-IN')} />
-            <Stat label="Camps approved" value={campsApproved} />
-            <Stat label="Zones reporting" value={data.byZone.length} />
-            <Stat label="Clubs participating" value={data.perClub.length} />
-          </div>
+          <Stat label="Clubs participating" value={data.perClub.length} />
         </Card>
-      </Section>
+      </PageHero>
 
-      <Section eyebrow="Where units are coming from" title="By zone">
+      <Section eyebrow="Where units are coming from" title="By zone" align="center">
         {data.byZone.length === 0 ? (
           <EmptyState title="No approved camps yet" body="Zone totals will appear as camps are logged and approved." />
         ) : (
-          <Table columns={zoneColumns} rows={data.byZone} rowKey={(z) => z.zoneId ?? 'unassigned'} empty="No zones yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={zoneColumns} rows={data.byZone} rowKey={(z) => z.zoneId ?? 'unassigned'} empty="No zones yet." />
+          </Card>
         )}
       </Section>
 
-      <Section eyebrow="Freshly approved" title="Latest approved camps">
+      <Section eyebrow="Freshly approved" title="Latest approved camps" align="center">
         {data.latestApprovedCamps.length === 0 ? (
           <EmptyState title="No approved camps yet" body="Approved camps will show up here as soon as the district signs them off." />
         ) : (
-          <Table columns={campColumns} rows={data.latestApprovedCamps} rowKey={(c) => c.id} empty="No camps yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={campColumns} rows={data.latestApprovedCamps} rowKey={(c) => c.id} empty="No camps yet." />
+          </Card>
         )}
       </Section>
 
-      <Section eyebrow="Club leaderboard" title="Per club">
+      <Section eyebrow="Club leaderboard" title="Per club" align="center">
         {data.perClub.length === 0 ? (
           <EmptyState title="No club totals yet" body="Once camps are approved, each club's running total shows up here." />
         ) : (
-          <Table columns={clubColumns} rows={data.perClub} rowKey={(c) => c.clubId} empty="No clubs yet." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={clubColumns} rows={data.perClub} rowKey={(c) => c.clubId} empty="No clubs yet." />
+          </Card>
         )}
       </Section>
     </Container>

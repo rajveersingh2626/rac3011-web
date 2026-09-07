@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -68,11 +69,11 @@ function CampReviewCard({ camp }: { camp: Camp }) {
         </div>
         <div>
           <p className="m-0 text-fg-3">Donors registered</p>
-          <p className="m-0 font-bold text-fg">{camp.donorsRegistered ?? '—'}</p>
+          <p className="m-0 font-bold text-fg">{camp.donorsRegistered ?? '–'}</p>
         </div>
         <div>
           <p className="m-0 text-fg-3">Partner blood bank</p>
-          <p className="m-0 font-bold text-fg">{camp.partnerBloodBank ?? '—'}</p>
+          <p className="m-0 font-bold text-fg">{camp.partnerBloodBank ?? '–'}</p>
         </div>
         <div>
           <p className="m-0 text-fg-3">Participating clubs</p>
@@ -129,11 +130,13 @@ export function Mission3011AdminPage() {
         ) : query.data.items.length === 0 ? (
           <EmptyState title="Nothing waiting" body="No camps are currently awaiting review." />
         ) : (
-          <div className="flex flex-col gap-3.5">
-            {query.data.items.map((camp) => (
-              <CampReviewCard key={camp.id} camp={camp} />
-            ))}
-          </div>
+          <Card rule="accent" className="p-2 sm:p-4">
+            <div className="flex flex-col gap-3.5">
+              {query.data.items.map((camp) => (
+                <CampReviewCard key={camp.id} camp={camp} />
+              ))}
+            </div>
+          </Card>
         )}
       </Section>
     </Container>

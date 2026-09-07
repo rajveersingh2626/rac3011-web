@@ -133,7 +133,7 @@ export function CampForm({ mode, clubId, camp, onDone }: CampFormProps) {
         </Field>
       </div>
 
-      <Field label="Participating clubs" hint="Optional — other clubs that helped run this camp">
+      <Field label="Participating clubs" hint="Optional: other clubs that helped run this camp">
         <MultiSelect options={clubOptions} values={participatingClubIds} onChange={setParticipatingClubIds} placeholder="Search clubs…" />
       </Field>
 

@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
+import { Droplets } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Table, type Column } from '@/components/ui/Table';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -98,9 +100,11 @@ export function CampsPage() {
     <Container width="wide">
       <Section
         eyebrow="Blood donation camps"
+        icon={<Droplets size={14} />}
         title="Camps"
         description="Every camp a club has logged toward the Mission 3011 target, and where it stands in review."
         action={canLog ? <Button onClick={() => setCreating(true)}>Log a camp</Button> : null}
+        align="center"
       >
         <div className="mb-6">
           <SegmentedControl
@@ -122,7 +126,9 @@ export function CampsPage() {
             action={canLog ? <Button onClick={() => setCreating(true)}>Log a camp</Button> : undefined}
           />
         ) : (
-          <Table columns={columns} rows={query.data.items} rowKey={(c) => c.id} empty="No camps match this filter." />
+          <Card rule="accent" className="overflow-x-auto p-0 sm:p-2">
+            <Table columns={columns} rows={query.data.items} rowKey={(c) => c.id} empty="No camps match this filter." />
+          </Card>
         )}
       </Section>
 
