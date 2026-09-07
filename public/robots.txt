@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://rotaract3011.org/sitemap.xml

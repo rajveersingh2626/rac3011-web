@@ -1090,6 +1090,93 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         </div>
       </section>
 
+      <section className="snap-section" style={{ backgroundColor: '#FDF8FA', padding: '40px 24px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
+          
+          {/* Key District Achievements */}
+          <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+            <span className="pill-pink" style={{ marginBottom: '8px', fontSize: '0.88rem', padding: '6px 18px' }}>
+              <Award size={15} /> DISTRICT ACHIEVEMENTS &amp; MILESTONES (RY 2026-27)
+            </span>
+            <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
+              Pillars of District Excellence
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '720px', margin: '6px auto 0' }}>
+              Celebrating notable achievements in club expansion, leadership governance, and district-wide fellowship.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: '20px', marginBottom: '64px' }}>
+            {DISTRICT_ACHIEVEMENTS.map((ach) => (
+              <div
+                key={ach.id}
+                className="rotaract-card"
+                style={{
+                  padding: '24px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  borderTop: `4px solid ${ach.color}`,
+                  background: '#FFFFFF',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span className="pill-gold" style={{ fontSize: '0.74rem', padding: '3px 8px' }}>
+                      {ach.badge}
+                    </span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: ach.color }}>
+                      {ach.metric}
+                    </span>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', lineHeight: 1.25 }}>
+                    {ach.title}
+                  </h3>
+                  <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
+                    {ach.description}
+                  </p>
+                </div>
+                <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CheckCircle2 size={15} style={{ color: '#10B981', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.80rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    {ach.highlight}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* District Impact Metrics */}
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <span className="pill-gold" style={{ marginBottom: '6px', fontSize: '0.80rem', padding: '4px 14px' }}>
+              DISTRICT IMPACT SNAPSHOT
+            </span>
+            <h3 style={{ fontSize: 'clamp(1.6rem, 2.8vw, 2.2rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
+              Measurable Change Across Delhi &amp; NCR
+            </h3>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
+            {IMPACT_METRICS.map((metric, idx) => (
+              <div key={idx} className="rotaract-card" style={{ padding: '24px 18px', textAlign: 'center', background: '#FFFFFF' }}>
+                <div style={{ fontSize: 'clamp(2.2rem, 3.6vw, 2.8rem)', fontWeight: 900, color: 'var(--rotaract-pink)', marginBottom: '4px' }}>
+                  {metric.value}
+                </div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                  {metric.label}
+                </div>
+                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
+                  {metric.change}
+                </span>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
       <div className="snap-section-footer" style={{ width: '100%', position: 'relative', zIndex: 20, backgroundColor: '#18181B' }}>
         <Footer
           isFullScreen={false}

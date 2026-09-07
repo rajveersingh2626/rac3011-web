@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Olive Branch in Beak -->
+  <path d="M42 98 C46 94, 52 86, 56 80 C60 74, 68 64, 76 56" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Olive Leaves -->
+  <path d="M42 98 C38 90, 39 82, 46 80 C52 79, 52 87, 42 98 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"/>
+  <path d="M48 88 C43 81, 46 73, 53 73 C58 73, 57 81, 48 88 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"/>
+  <path d="M56 80 C53 70, 58 63, 66 64 C72 65, 70 74, 56 80 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"/>
+  <path d="M64 71 C62 61, 68 54, 76 56 C82 58, 79 67, 64 71 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"/>
+  <path d="M72 61 C72 50, 80 44, 88 47 C93 50, 88 59, 72 61 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="#FFFFFF" stroke-width="1"/>
+  <!-- Dove Head & Beak -->
+  <path d="M48 98 L41 99 C39 99, 39 96, 42 95 L50 93" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="#FFFFFF"/>
+  <path d="M48 98 C48 106, 55 113, 65 116 C76 119, 87 117, 98 123 C115 133, 126 149, 142 153 C151 155, 160 151, 166 142" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <!-- Dove Eye -->
+  <circle cx="58" cy="94" r="2.2" fill="#FFFFFF"/>
+  <!-- Dove Crown & Neck -->
+  <path d="M50 93 C52 85, 60 81, 68 83 C76 85, 83 91, 88 98" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+  <!-- Left Main Wing (Outstretched) -->
+  <path d="M88 98 C92 78, 103 54, 123 37 C129 32, 137 31, 138 38 C139 46, 133 54, 129 62 C138 52, 146 50, 147 57 C148 65, 140 73, 134 81 C143 72, 151 71, 152 78 C153 86, 144 94, 136 102 C143 95, 150 94, 150 101 C150 109, 138 118, 123 124 C108 130, 96 128, 88 124" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Back Wing (Elevated Behind) -->
+  <path d="M123 37 C128 32, 137 27, 147 28 C155 29, 154 36, 148 42 C158 35, 165 37, 165 44 C165 52, 154 59, 147 64 C155 58, 163 60, 162 67 C160 74, 150 81, 142 86" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>
+  <!-- Tail Feathers -->
+  <path d="M166 142 C169 146, 172 153, 171 160 C170 164, 165 166, 161 163 C158 160, 157 155, 158 150" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  <path d="M161 163 C158 168, 152 172, 146 170 C142 168, 142 162, 145 157" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+  <path d="M146 170 C141 174, 134 174, 130 169 C127 165, 130 158, 135 154" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+</svg>
