@@ -35,4 +35,5 @@ outputs/
 *.cmd
 *.key
 *.pem
-
+*HANDOFF*
+*handoff*
