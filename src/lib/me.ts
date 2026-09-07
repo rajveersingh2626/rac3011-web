@@ -30,7 +30,7 @@ export const meSchema = z.object({
     .nullable(),
   roles: z.array(z.object({ roleKey: z.string(), scope: scopeSchema })),
   grants: z.record(z.string(), z.array(scopeSchema)),
-  clubs: z.array(z.object({ id: z.string(), name: z.string(), shortName: z.string(), zoneId: z.string().nullable() })),
+  clubs: z.array(z.object({ id: z.string(), name: z.string(), shortName: z.string().nullable(), zoneId: z.string().nullable() })),
   theme: z.enum(['light', 'dark', 'system']).nullable().optional(),
 });
 export type Me = z.infer<typeof meSchema>;
