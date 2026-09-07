@@ -29,3 +29,10 @@ playwright/.cache/
 *.sw?
 
 outputs/
+.env
+.env.*
+*.bat
+*.cmd
+*.key
+*.pem
+
