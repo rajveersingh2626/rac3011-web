@@ -1,25 +1,24 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Shield, Key, Search, Users, Check, X, Info, ChevronRight, Lock, Filter } from 'lucide-react';
+import { Shield, Key, Search, Users } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { fetchPublicClubs, fetchZones, type PublicClub, type Zone } from '@/lib/clubs';
+import { fetchPublicClubs, fetchZones } from '@/lib/clubs';
 import {
   fetchRoles,
-  fetchPermissions,
   fetchUserDirectory,
   grantUserRole,
   revokeUserRole,
 } from '@/lib/rbac/api';
-import type { RoleRecord, ScopeType, UserDirectoryItem } from '@/lib/rbac/types';
-import { SCOPE_LABEL, errorMessageOf } from '@/lib/rbac/ui';
+import type { ScopeType, UserDirectoryItem } from '@/lib/rbac/types';
+import { errorMessageOf } from '@/lib/rbac/ui';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
-import { Select, type SelectOption } from '@/components/ui/Select';
+import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Modal } from '@/components/ui/Modal';
@@ -149,7 +148,6 @@ export function AdminUsersPage() {
   });
 
   const rolesQuery = useQuery({ queryKey: ['roles'], queryFn: fetchRoles });
-  const permissionsQuery = useQuery({ queryKey: ['permissions'], queryFn: fetchPermissions });
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
 
@@ -159,7 +157,6 @@ export function AdminUsersPage() {
 
   const clubsById = useMemo(() => new Map(clubs.map((c) => [c.id, c.name])), [clubs]);
   const zonesById = useMemo(() => new Map(zones.map((z) => [z.id, z.name])), [zones]);
-  const rolesById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
 
   // Selected role for grant
   const selectedRole = roles.find((r) => r.id === grantRoleId) ?? null;
@@ -332,7 +329,7 @@ export function AdminUsersPage() {
             </span>
           </div>
           <Button
-            variant="outline"
+            variant="secondary"
             className="flex items-center gap-2"
             onClick={() => setIsMatrixOpen(true)}
           >
@@ -390,14 +387,14 @@ export function AdminUsersPage() {
         {directoryQuery.isPending ? (
           <Skeleton className="h-64 w-full" />
         ) : directoryQuery.isError ? (
-          <ErrorState message="Could not load users directory." />
+          <ErrorState body="Could not load users directory." />
         ) : filteredUsers.length === 0 ? (
           <EmptyState
             title="No users match your filter"
-            description="Try loosening your search query or role filter."
+            body="Try loosening your search query or role filter."
           />
         ) : (
-          <Table columns={columns} data={filteredUsers} rowKey={(u) => u.id} />
+          <Table<UserDirectoryItem> columns={columns} rows={filteredUsers} rowKey={(u) => u.id} />
         )}
 
         {/* User Role Management Modal */}
@@ -406,7 +403,7 @@ export function AdminUsersPage() {
             open={Boolean(managingUser)}
             onClose={() => setManagingUser(null)}
             title={`Manage Access: ${liveManagingUser.name}`}
-            size="large"
+            size="lg"
           >
             <div className="flex flex-col gap-6">
               {/* User summary card */}
@@ -587,7 +584,7 @@ export function AdminUsersPage() {
           open={isMatrixOpen}
           onClose={() => setIsMatrixOpen(false)}
           title="District 3011 — Complete Permissions & Capabilities Matrix"
-          size="large"
+          size="lg"
         >
           <div className="flex flex-col gap-6">
             <p className="m-0 text-[13.5px] text-fg-2">

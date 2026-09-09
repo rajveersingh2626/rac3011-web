@@ -12,6 +12,7 @@ import { Stat } from '@/components/ui/Stat';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { fetchReports, addReportQuery, downloadZoneReportsCsv, downloadDistrictReportsCsv } from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
@@ -132,7 +133,7 @@ export function AdminClubsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               loading={exportingZone}
               onClick={async () => {

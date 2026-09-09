@@ -192,7 +192,7 @@ export function ReportDetailPage() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               loading={exporting === 'pdf'}
               onClick={async () => {
