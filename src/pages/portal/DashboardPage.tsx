@@ -141,7 +141,7 @@ export function DashboardPage() {
                       onClick={() => navigate('/portal/admin/users')}
                       className="shadow-md shadow-accent/25 font-bold"
                     >
-                      🛡️ Give / Revoke Access
+                      Give / Revoke Access
                     </Button>
                     <Button
                       variant="secondary"

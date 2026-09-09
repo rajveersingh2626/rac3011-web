@@ -10,6 +10,7 @@ import { Field } from '@/components/ui/Field';
 import { Textarea } from '@/components/ui/Textarea';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
@@ -104,37 +105,37 @@ export function NewReportPage() {
     {
       id: 'Club Meetings',
       title: 'Club Meetings',
-      icon: '🤝',
+      icon: Calendar,
       description: 'General body meetings, board meetings, speaker sessions, and club assemblies',
     },
     {
       id: 'Club Services',
       title: 'Club Services',
-      icon: '👥',
+      icon: Users,
       description: 'Internal fellowship, celebrations, orientations, sports, and member development',
     },
     {
       id: 'Community Services',
       title: 'Community Services',
-      icon: '🌍',
+      icon: Heart,
       description: 'Blood donation, health camps, relief drives, education, and ecological action',
     },
     {
       id: 'International Services',
       title: 'International Services',
-      icon: '🌐',
+      icon: Globe,
       description: 'Sister club twinings, international meetings, peace initiatives, and global fellowship',
     },
     {
       id: 'Vocational Services',
       title: 'Vocational Services',
-      icon: '💼',
+      icon: Briefcase,
       description: 'Career conclaves, mentorship, industrial visits, and professional skill workshops',
     },
     {
       id: 'District Projects',
       title: 'District Projects',
-      icon: '🏆',
+      icon: Award,
       description: 'Participation in Mission 3011, Project Drishti, RCL, RIDE, RYLA, and DISCON',
     },
   ], []);
@@ -306,6 +307,7 @@ export function NewReportPage() {
                     .map((act, origIndex) => ({ act, origIndex }))
                     .filter(({ act }) => (act.avenue === av.id) || (act.avenue === av.title));
 
+                  const Icon = av.icon;
                   return (
                     <div
                       key={av.id}
@@ -314,7 +316,9 @@ export function NewReportPage() {
                       <div>
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2.5">
-                            <span className="text-2xl">{av.icon}</span>
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#D81B60]/10 text-[#D81B60]">
+                              <Icon size={18} />
+                            </div>
                             <h4 className="m-0 text-base font-extrabold text-fg">{av.title}</h4>
                           </div>
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${avenueActivities.length > 0 ? 'bg-[#D81B60]/10 text-[#D81B60]' : 'bg-page text-fg-3'}`}>
