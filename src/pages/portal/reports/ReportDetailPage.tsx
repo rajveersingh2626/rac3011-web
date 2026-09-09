@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { KeyValue } from '@/components/ui/KeyValue';
-import { fetchReport, fetchReportSchemaVersion, addReportQuery, replyReportQuery, fetchReportAssist } from '@/lib/reports/api';
+import { fetchReport, fetchReportSchemaVersion, addReportQuery, replyReportQuery, fetchReportAssist, downloadReportPdf, downloadReportCsv } from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
 import { formatMonthLabel } from '@/lib/reports/month';
 import { activitiesOf, formatFieldValue, splitFields } from '@/lib/reports/values';
@@ -181,6 +181,7 @@ export function ReportDetailPage() {
   const monthLabel = formatMonthLabel(report.month.slice(0, 7));
   const { topFields, activityFields } = splitFields(schemaQuery.data.fields);
   const activities = activitiesOf(report.values);
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
 
   return (
     <Container>
@@ -188,7 +189,43 @@ export function ReportDetailPage() {
         eyebrow={report.club?.name ?? monthLabel}
         title={`${monthLabel} report`}
         description={report.status === 'queried' ? 'This month was sent back with a query. Reply below to resubmit it.' : undefined}
-        action={<Badge tone={STATUS_TONE[report.status]}>{report.status.toUpperCase()}</Badge>}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              loading={exporting === 'pdf'}
+              onClick={async () => {
+                setExporting('pdf');
+                try {
+                  const club = report.club?.shortName || report.club?.name || 'club';
+                  await downloadReportPdf(report.id, `${club}-${monthLabel}-report.pdf`);
+                } finally {
+                  setExporting(null);
+                }
+              }}
+            >
+              Export PDF
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={exporting === 'csv'}
+              onClick={async () => {
+                setExporting('csv');
+                try {
+                  const club = report.club?.shortName || report.club?.name || 'club';
+                  await downloadReportCsv(report.id, `${club}-${monthLabel}-report.csv`);
+                } finally {
+                  setExporting(null);
+                }
+              }}
+            >
+              Export CSV
+            </Button>
+            <Badge tone={STATUS_TONE[report.status]}>{report.status.toUpperCase()}</Badge>
+          </div>
+        }
       >
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
           <div className="flex flex-col gap-6">

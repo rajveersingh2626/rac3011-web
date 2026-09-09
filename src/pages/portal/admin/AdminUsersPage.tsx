@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Shield, Key, Search, Users, Check, X, Info, ChevronRight, Lock, Filter } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
-import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
-import { fetchMembers } from '@/lib/members/api';
-import type { Member } from '@/lib/members/types';
 import { fetchPublicClubs, fetchZones, type PublicClub, type Zone } from '@/lib/clubs';
-import { fetchRoles, fetchUserRoles, grantUserRole, revokeUserRole } from '@/lib/rbac/api';
-import type { RoleRecord, ScopeType, UserRole } from '@/lib/rbac/types';
+import {
+  fetchRoles,
+  fetchPermissions,
+  fetchUserDirectory,
+  grantUserRole,
+  revokeUserRole,
+} from '@/lib/rbac/api';
+import type { RoleRecord, ScopeType, UserDirectoryItem } from '@/lib/rbac/types';
 import { SCOPE_LABEL, errorMessageOf } from '@/lib/rbac/ui';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
@@ -24,10 +28,93 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 
-interface SelectedUser {
-  id: string;
-  label: string;
-}
+// Extensive breakdown of all 39 District 3011 capabilities
+const PERMISSION_DOMAINS = [
+  {
+    name: 'Reporting & Scoring',
+    description: 'Monthly club report submissions, queries, reviews, and scoring by district evaluators.',
+    permissions: [
+      { key: 'reports:submit', name: 'Submit Club Reports', desc: 'Can compile, edit, and submit the monthly club report.' },
+      { key: 'reports:review', name: 'Review & Query Reports', desc: 'Can review submissions from clubs and raise official queries.' },
+      { key: 'reports:score', name: 'Score Reports & Points', desc: 'Can evaluate reports, verify achievements, and award official district points.' },
+    ],
+  },
+  {
+    name: 'Member & Access Governance',
+    description: 'Roster management, registration approvals, and role/permission grants.',
+    permissions: [
+      { key: 'members:view', name: 'View Club Rosters', desc: 'Can inspect member lists, contacts, and membership status.' },
+      { key: 'members:approve', name: 'Approve Registrations', desc: 'Can approve or decline pending club join registrations.' },
+      { key: 'members:import', name: 'Bulk Import Members', desc: 'Can import member rosters from Excel or CSV files.' },
+      { key: 'roles:manage', name: 'Manage Roles & Access', desc: 'Super Admin capability to grant, switch, and revoke roles across all IDs.' },
+    ],
+  },
+  {
+    name: 'Events & DRR Calendar',
+    description: 'District events, club calendars, check-in tracking, and official DRR presence visits.',
+    permissions: [
+      { key: 'events:manage', name: 'Manage District Events', desc: 'Create and publish district-wide events on the public calendar.' },
+      { key: 'club_events:log', name: 'Log Club Events', desc: 'Propose and schedule events on the club calendar.' },
+      { key: 'events:checkin', name: 'Event Check-in Scanner', desc: 'Scan attendee QR codes and confirm physical presence.' },
+      { key: 'drr_calendar:manage', name: 'Manage DRR Calendar', desc: 'Confirm or decline DRR presence requests and schedule official visits.' },
+    ],
+  },
+  {
+    name: 'Content, Showcase & Media',
+    description: 'Editorial control over public stories, flagship project showcase, and media.',
+    permissions: [
+      { key: 'showcase:submit', name: 'Submit Project Showcase', desc: 'Submit impactful club projects for district showcase consideration.' },
+      { key: 'showcase:publish', name: 'Publish Showcase Stories', desc: 'Review, edit, and feature submitted projects on the public site.' },
+      { key: 'content:edit', name: 'Draft Website Content', desc: 'Draft articles, announcements, and district leadership profiles.' },
+      { key: 'content:publish', name: 'Publish Website Content', desc: 'Make web updates live on the public District 3011 portal.' },
+      { key: 'public_content:manage', name: 'Manage Public Pages', desc: 'Direct control over public landing pages and assets.' },
+      { key: 'resources:manage', name: 'Manage Document Vault', desc: 'Upload and manage forms, guidelines, templates, and certificates.' },
+    ],
+  },
+  {
+    name: 'Communication & Feedback',
+    description: 'District-wide broadcasts, push alerts, and enquiry resolution.',
+    permissions: [
+      { key: 'announcements:send', name: 'Send Club Announcements', desc: 'Broadcast notices and updates to club members.' },
+      { key: 'announcements:send_all', name: 'District-Wide Broadcast', desc: 'Send alerts to all active members across every club in 3011.' },
+      { key: 'feedback:submit', name: 'Submit Feedback & Enquiries', desc: 'Send inquiries and feedback to the district council.' },
+      { key: 'feedback:review', name: 'Review & Respond to Feedback', desc: 'Triage and reply to submissions from members and public.' },
+    ],
+  },
+  {
+    name: 'District Settings & Operations',
+    description: 'Point calculation rules, club verification, and compliance audit logs.',
+    permissions: [
+      { key: 'settings:manage', name: 'Manage Platform Settings', desc: 'Configure district-level variables, deadlines, and features.' },
+      { key: 'point_rules:manage', name: 'Configure Point System', desc: 'Modify scoring categories, rules, and multiplier weights.' },
+      { key: 'club_facts:edit', name: 'Edit Club Factsheets', desc: 'Update charter dates, sponsor Rotary clubs, and legacy stats.' },
+      { key: 'clubs:view', name: 'View Clubs Directory', desc: 'Inspect club details, officers, and zone assignments.' },
+      { key: 'clubs:edit', name: 'Edit Club Information', desc: 'Update club contact details, social links, and meeting venue.' },
+      { key: 'audit:view', name: 'View Security Audit Log', desc: 'Inspect full trail of actions, logins, grants, and administrative edits.' },
+    ],
+  },
+  {
+    name: 'District Flagship Subdomains',
+    description: 'Special administrative capabilities for District 3011 subdomains.',
+    permissions: [
+      { key: 'subdomain:mission3011:manage', name: 'Mission 3011 Admin', desc: 'Manage blood donation drives, camps, and donor registries.' },
+      { key: 'subdomain:drishti:manage', name: 'Drishti Admin', desc: 'Manage eye care drives, screening camps, and spectacles distribution.' },
+      { key: 'subdomain:rcl:manage', name: 'RCL Admin', desc: 'Manage the Rotaract Cricket League fixtures, teams, and scores.' },
+      { key: 'subdomain:careerbridge:manage', name: 'CareerBridge Admin', desc: 'Manage career fairs, job listings, and mentorship programs.' },
+      { key: 'subdomain:ride:manage', name: 'RIDE Admin', desc: 'Manage the Rotaract Inter-District Exchange delegates and hosts.' },
+    ],
+  },
+  {
+    name: 'Member Self-Service',
+    description: 'Personal profile, volunteering hours, and district directory opt-in.',
+    permissions: [
+      { key: 'profile:edit', name: 'Update Personal Profile', desc: 'Change bio, contact info, photo, and skills.' },
+      { key: 'directory:view', name: 'Access District Directory', desc: 'Browse fellow Rotaractors who opted into the public directory.' },
+      { key: 'effort:log', name: 'Log Volunteering Hours', desc: 'Record personal service hours and community contributions.' },
+      { key: 'effort:approve', name: 'Approve Service Hours', desc: 'Verify and approve volunteer effort submitted by club members.' },
+    ],
+  },
+];
 
 interface GrantInput {
   roleId: string;
@@ -35,349 +122,523 @@ interface GrantInput {
   scopeId?: string;
 }
 
-interface GrantFormProps {
-  roles: RoleRecord[];
-  clubs: PublicClub[];
-  zones: Zone[];
-  onSave: (input: GrantInput) => void;
-  saving: boolean;
-  errorMessage: string | null;
-}
-
-function GrantForm({ roles, clubs, zones, onSave, saving, errorMessage }: GrantFormProps) {
-  const [roleId, setRoleId] = useState('');
-  const [scopeId, setScopeId] = useState('');
-
-  const role = roles.find((r) => r.id === roleId) ?? null;
-  const scopeType = role?.scopeType ?? null;
-
-  function submit() {
-    if (!role || !scopeType) return;
-    onSave({
-      roleId: role.id,
-      scopeType,
-      scopeId: scopeType === 'none' ? undefined : scopeId.trim(),
-    });
-  }
-
-  const canSubmit = Boolean(role) && (scopeType === 'none' || scopeId.trim() !== '');
-
-  const roleOptions: SelectOption[] = roles.map((r) => ({ value: r.id, label: `${r.name} (${r.key})` }));
-  const clubOptions: SelectOption[] = clubs.map((c) => ({ value: c.id, label: c.name }));
-  const zoneOptions: SelectOption[] = zones.map((z) => ({ value: z.id, label: z.name }));
-
-  return (
-    <div className="flex flex-col gap-3">
-      {errorMessage && (
-        <Alert tone="error" title="Could not grant this role">
-          {errorMessage}
-        </Alert>
-      )}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Role">
-          <Select
-            aria-label="Role"
-            value={roleId}
-            onChange={(e) => {
-              setRoleId(e.target.value);
-              setScopeId('');
-            }}
-            placeholder="Choose a role…"
-            options={roleOptions}
-          />
-        </Field>
-        {scopeType === 'club' && (
-          <Field label="Club">
-            <Select
-              aria-label="Club"
-              value={scopeId}
-              onChange={(e) => setScopeId(e.target.value)}
-              placeholder="Choose a club…"
-              options={clubOptions}
-            />
-          </Field>
-        )}
-        {scopeType === 'zone' && (
-          <Field label="Zone">
-            <Select
-              aria-label="Zone"
-              value={scopeId}
-              onChange={(e) => setScopeId(e.target.value)}
-              placeholder="Choose a zone…"
-              options={zoneOptions}
-            />
-          </Field>
-        )}
-        {scopeType === 'project' && (
-          <Field label="Project ID">
-            <Input aria-label="Project ID" value={scopeId} onChange={(e) => setScopeId(e.target.value)} placeholder="proj_..." />
-          </Field>
-        )}
-      </div>
-      <div>
-        <Button disabled={!canSubmit || saving} loading={saving} onClick={submit}>
-          Grant role
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 export function AdminUsersPage() {
-  useDocumentMeta({ title: 'User role grants' });
+  useDocumentMeta({ title: 'Access Control & Role Granter' });
   const qc = useQueryClient();
 
+  // Search & Filter state
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
-  const [pastedId, setPastedId] = useState('');
-  const [selected, setSelected] = useState<SelectedUser | null>(null);
-  const [revoking, setRevoking] = useState<UserRole | null>(null);
-  const [grantResetKey, setGrantResetKey] = useState(0);
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('ALL');
+  const [selectedClubFilter, setSelectedClubFilter] = useState('ALL');
 
-  const membersQuery = useQuery({
-    queryKey: ['members-search', debouncedSearch],
-    queryFn: () => fetchMembers({ q: debouncedSearch, pageSize: 20 }),
-    enabled: debouncedSearch.trim() !== '',
+  // Modal states
+  const [managingUser, setManagingUser] = useState<UserDirectoryItem | null>(null);
+  const [isMatrixOpen, setIsMatrixOpen] = useState(false);
+  const [revokingGrantId, setRevokingGrantId] = useState<string | null>(null);
+
+  // New grant form state
+  const [grantRoleId, setGrantRoleId] = useState('');
+  const [grantScopeId, setGrantScopeId] = useState('');
+  const [grantError, setGrantError] = useState<string | null>(null);
+
+  // Data Queries
+  const directoryQuery = useQuery({
+    queryKey: ['user-directory', debouncedSearch],
+    queryFn: () => fetchUserDirectory(debouncedSearch),
   });
 
-  const membersForbidden = membersQuery.error instanceof ApiError && membersQuery.error.status === 403;
-
   const rolesQuery = useQuery({ queryKey: ['roles'], queryFn: fetchRoles });
+  const permissionsQuery = useQuery({ queryKey: ['permissions'], queryFn: fetchPermissions });
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
 
-  const grantsQuery = useQuery({
-    queryKey: ['user-roles', selected?.id],
-    queryFn: () => fetchUserRoles(selected!.id),
-    enabled: Boolean(selected),
-  });
+  const roles = rolesQuery.data ?? [];
+  const clubs = clubsQuery.data ?? [];
+  const zones = zonesQuery.data ?? [];
 
-  // The API's filter[userId] can't be trusted (some deployments ignore it and return
-  // every grant in the district), so the selected user is re-applied here as well.
-  const grants = useMemo(
-    () => (grantsQuery.data ?? []).filter((g) => g.userId === selected?.id),
-    [grantsQuery.data, selected],
-  );
+  const clubsById = useMemo(() => new Map(clubs.map((c) => [c.id, c.name])), [clubs]);
+  const zonesById = useMemo(() => new Map(zones.map((z) => [z.id, z.name])), [zones]);
+  const rolesById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
 
-  const invalidateGrants = () => void qc.invalidateQueries({ queryKey: ['user-roles', selected?.id] });
+  // Selected role for grant
+  const selectedRole = roles.find((r) => r.id === grantRoleId) ?? null;
+  const grantScopeType = selectedRole?.scopeType ?? 'none';
 
+  // Mutations
   const grantMutation = useMutation({
-    mutationFn: (input: GrantInput) => grantUserRole({ userId: selected!.id, ...input }),
+    mutationFn: (input: GrantInput) =>
+      grantUserRole({
+        userId: managingUser!.id,
+        roleId: input.roleId,
+        scopeType: input.scopeType,
+        scopeId: input.scopeType === 'none' ? undefined : input.scopeId,
+      }),
     onSuccess: () => {
-      invalidateGrants();
-      setGrantResetKey((k) => k + 1);
+      setGrantRoleId('');
+      setGrantScopeId('');
+      setGrantError(null);
+      void qc.invalidateQueries({ queryKey: ['user-directory'] });
     },
+    onError: (err) => setGrantError(errorMessageOf(err)),
   });
 
   const revokeMutation = useMutation({
-    mutationFn: (id: string) => revokeUserRole(id),
+    mutationFn: (grantId: string) => revokeUserRole(grantId),
     onSuccess: () => {
-      setRevoking(null);
-      invalidateGrants();
+      setRevokingGrantId(null);
+      void qc.invalidateQueries({ queryKey: ['user-directory'] });
     },
   });
 
-  function selectMember(member: Member) {
-    grantMutation.reset();
-    setSelected({ id: member.userId, label: member.fullName });
+  // Client-side filtering of user directory
+  const filteredUsers = useMemo(() => {
+    let list = directoryQuery.data ?? [];
+
+    if (selectedRoleFilter !== 'ALL') {
+      list = list.filter((u) => u.roles.some((r) => r.roleKey === selectedRoleFilter));
+    }
+
+    if (selectedClubFilter !== 'ALL') {
+      list = list.filter((u) => u.profile?.clubId === selectedClubFilter);
+    }
+
+    return list;
+  }, [directoryQuery.data, selectedRoleFilter, selectedClubFilter]);
+
+  // Scope label helper
+  function formatScope(scopeType: ScopeType, scopeId: string | null): string {
+    if (scopeType === 'none' || !scopeId) return 'District-wide';
+    if (scopeType === 'club') return clubsById.get(scopeId) ?? scopeId;
+    if (scopeType === 'zone') return zonesById.get(scopeId) ?? scopeId;
+    return scopeId;
   }
 
-  function selectPastedId() {
-    const id = pastedId.trim();
-    if (!id) return;
-    grantMutation.reset();
-    setSelected({ id, label: id });
-  }
+  // Active user being managed updated from live query
+  const liveManagingUser = useMemo(() => {
+    if (!managingUser) return null;
+    return (directoryQuery.data ?? []).find((u) => u.id === managingUser.id) ?? managingUser;
+  }, [directoryQuery.data, managingUser]);
 
-  const clubsById = useMemo(() => new Map((clubsQuery.data ?? []).map((c) => [c.id, c.name])), [clubsQuery.data]);
-  const zonesById = useMemo(() => new Map((zonesQuery.data ?? []).map((z) => [z.id, z.name])), [zonesQuery.data]);
-  const rolesById = useMemo(() => new Map((rolesQuery.data ?? []).map((r) => [r.id, r])), [rolesQuery.data]);
-
-  function scopeValueLabel(grant: UserRole): string {
-    if (grant.scopeType === 'none' || !grant.scopeId) return 'None';
-    if (grant.scopeType === 'club') return clubsById.get(grant.scopeId) ?? grant.scopeId;
-    if (grant.scopeType === 'zone') return zonesById.get(grant.scopeId) ?? grant.scopeId;
-    return grant.scopeId;
-  }
-
-  const columns: Column<UserRole>[] = [
+  // Table columns
+  const columns: Column<UserDirectoryItem>[] = [
     {
-      key: 'role',
-      header: 'Role',
-      cell: (g) => (
-        <span>
-          <span className="font-bold text-fg">{rolesById.get(g.roleId)?.name ?? g.roleKey}</span>{' '}
-          <span className="font-mono text-[11.5px] text-fg-3">{g.roleKey}</span>
-        </span>
+      key: 'user',
+      header: 'Member / User',
+      cell: (u) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 font-bold text-accent">
+            {u.name.slice(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <p className="m-0 font-bold text-fg">{u.name}</p>
+            <p className="m-0 text-[12px] text-fg-3">{u.email}</p>
+          </div>
+        </div>
       ),
     },
-    { key: 'scope', header: 'Scope', cell: (g) => SCOPE_LABEL[g.scopeType] },
-    { key: 'scopeValue', header: 'Where', cell: (g) => scopeValueLabel(g) },
+    {
+      key: 'club',
+      header: 'Club Affiliation',
+      cell: (u) =>
+        u.profile ? (
+          <div>
+            <p className="m-0 font-medium text-fg">{u.profile.clubShortName || u.profile.clubName}</p>
+            <span
+              className={cn(
+                'inline-block rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider',
+                u.profile.status === 'approved'
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : u.profile.status === 'pending'
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+              )}
+            >
+              {u.profile.status}
+            </span>
+          </div>
+        ) : (
+          <span className="text-[12px] text-fg-4">Direct User Account</span>
+        ),
+    },
+    {
+      key: 'roles',
+      header: 'Active Roles & Scope',
+      cell: (u) =>
+        u.roles.length === 0 ? (
+          <span className="rounded bg-fg-4/15 px-2 py-0.5 text-[11px] text-fg-3">No roles assigned</span>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {u.roles.map((r) => {
+              const isSuper = r.roleKey === 'super_admin';
+              const isDsc = r.roleKey === 'dsc' || r.roleKey === 'drr';
+              return (
+                <span
+                  key={r.id}
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11.5px] font-semibold',
+                    isSuper
+                      ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                      : isDsc
+                        ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                        : 'bg-accent/10 text-accent border border-accent/20',
+                  )}
+                >
+                  <Shield size={11} aria-hidden />
+                  {r.roleName}
+                  {r.scopeType !== 'none' && (
+                    <span className="text-[10px] opacity-80">({formatScope(r.scopeType, r.scopeId)})</span>
+                  )}
+                </span>
+              );
+            })}
+          </div>
+        ),
+    },
     {
       key: '__actions',
       header: '',
       align: 'right',
-      cell: (g) => (
-        <Button variant="link" size="sm" onClick={() => setRevoking(g)}>
-          Revoke
+      cell: (u) => (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => {
+            setManagingUser(u);
+            setGrantRoleId('');
+            setGrantScopeId('');
+            setGrantError(null);
+          }}
+        >
+          Grant / Manage Access
         </Button>
       ),
     },
   ];
 
-  const revokingRoleName = revoking ? (rolesById.get(revoking.roleId)?.name ?? revoking.roleKey) : '';
-
   return (
     <Container width="wide">
       <Section
-        eyebrow="RBAC"
-        title="User role grants"
-        description="Find a user, then grant or revoke scoped roles. The API enforces every permission; this screen only manages the grants."
+        eyebrow="District 3011 Security & RBAC"
+        title="Access Control & Role Granter"
+        description="Comprehensive governance over every user ID, active roles, club scopes, and specific capability permissions across District 3011."
       >
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
-          <div className="flex flex-col gap-4">
-            <Field label="Search members" hint="By name or email">
-              <Input
-                aria-label="Search members"
-                placeholder="Search members…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </Field>
+        {/* Top Actions & Quick Stats */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-1.5 text-[13px] font-semibold text-fg">
+              <Users size={15} className="text-accent" />
+              {directoryQuery.data?.length ?? 0} Total IDs in District
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => setIsMatrixOpen(true)}
+          >
+            <Key size={14} className="text-accent" />
+            Explore Extensive Permissions Matrix (All 39 Capabilities)
+          </Button>
+        </div>
 
-            {membersForbidden && (
-              <Alert tone="warning" title="Member search is unavailable">
-                Your role has roles:manage but not members:view, so members can't be searched here. Paste a user id
-                below instead.
-              </Alert>
-            )}
-
-            {!membersForbidden && debouncedSearch.trim() !== '' && (
-              <>
-                {membersQuery.isPending ? (
-                  <Skeleton shape="rect" className="h-40" />
-                ) : membersQuery.isError ? (
-                  <ErrorState title="Couldn't search members" onRetry={() => void membersQuery.refetch()} />
-                ) : membersQuery.data.items.length === 0 ? (
-                  <EmptyState title="No members match this search" />
-                ) : (
-                  <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
-                    {membersQuery.data.items.map((m) => (
-                      <li key={m.id}>
-                        <button
-                          type="button"
-                          onClick={() => selectMember(m)}
-                          className={cn(
-                            'w-full rounded-[8px] border px-3 py-2 text-left',
-                            selected?.id === m.userId ? 'border-accent bg-accent-soft' : 'border-line-accent',
-                          )}
-                        >
-                          <p className="m-0 text-[13px] font-bold text-fg">{m.fullName}</p>
-                          <p className="m-0 text-[11.5px] text-fg-3">
-                            {m.email} &middot; {m.club.name}
-                          </p>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            )}
-
-            <Field label="Or paste a user id" hint="For a user with no member record">
-              <div className="flex gap-2">
+        {/* Filter Bar */}
+        <Card className="mb-6 p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="Search Users" hint="By name, email, or rotary ID">
+              <div className="relative">
                 <Input
-                  aria-label="User id"
-                  placeholder="usr_..."
-                  value={pastedId}
-                  onChange={(e) => setPastedId(e.target.value)}
+                  placeholder="Search members or officers…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
-                <Button variant="secondary" onClick={selectPastedId} disabled={!pastedId.trim()}>
-                  Use
-                </Button>
+                <Search size={14} className="pointer-events-none absolute right-3 top-3 text-fg-3" />
               </div>
             </Field>
-          </div>
 
-          <div className="flex flex-col gap-4">
-            {!selected ? (
-              <EmptyState
-                title="Pick a user"
-                body="Search for a member or paste a user id to see and manage their role grants."
+            <Field label="Filter by Role">
+              <Select
+                value={selectedRoleFilter}
+                onChange={(e) => setSelectedRoleFilter(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'All Roles' },
+                  { value: 'super_admin', label: 'Super Admin' },
+                  { value: 'dsc', label: 'District Secretariat / Council (DSC)' },
+                  { value: 'drr', label: 'District Rotaract Representative (DRR)' },
+                  { value: 'zrr', label: 'Zonal Representative (ZRR)' },
+                  { value: 'president', label: 'Club President' },
+                  { value: 'secretary', label: 'Club Secretary' },
+                  { value: 'member', label: 'Club Member' },
+                  { value: 'editing_team', label: 'Website Editing Team' },
+                ]}
               />
-            ) : (
-              <>
-                <Card title={selected.label}>
-                  <p className="m-0 font-mono text-[11.5px] text-fg-3">{selected.id}</p>
-                </Card>
+            </Field>
 
-                {rolesQuery.isPending ? (
-                  <Skeleton shape="rect" className="h-24" />
-                ) : rolesQuery.isError ? (
-                  <ErrorState title="Couldn't load roles" onRetry={() => void rolesQuery.refetch()} />
-                ) : (
-                  <GrantForm
-                    key={`${selected.id}:${grantResetKey}`}
-                    roles={rolesQuery.data ?? []}
-                    clubs={clubsQuery.data ?? []}
-                    zones={zonesQuery.data ?? []}
-                    onSave={(input) => grantMutation.mutate(input)}
-                    saving={grantMutation.isPending}
-                    errorMessage={errorMessageOf(grantMutation.error)}
-                  />
-                )}
-
-                {grantsQuery.isPending ? (
-                  <Skeleton shape="rect" className="h-64" />
-                ) : grantsQuery.isError ? (
-                  <ErrorState title="Couldn't load this user's grants" onRetry={() => void grantsQuery.refetch()} />
-                ) : grants.length === 0 ? (
-                  <EmptyState title="No roles granted to this user yet" />
-                ) : (
-                  <Table columns={columns} rows={grants} rowKey={(g) => g.id} />
-                )}
-              </>
-            )}
+            <Field label="Filter by Club">
+              <Select
+                value={selectedClubFilter}
+                onChange={(e) => setSelectedClubFilter(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'All Clubs' },
+                  ...clubs.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
+            </Field>
           </div>
-        </div>
-      </Section>
+        </Card>
 
-      <Modal
-        open={Boolean(revoking)}
-        onClose={() => {
-          setRevoking(null);
-          revokeMutation.reset();
-        }}
-        title={`Revoke ${revokingRoleName}?`}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setRevoking(null);
-                revokeMutation.reset();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              loading={revokeMutation.isPending}
-              onClick={() => revoking && revokeMutation.mutate(revoking.id)}
-            >
-              Revoke
-            </Button>
-          </>
-        }
-      >
-        {revokeMutation.isError ? (
-          <Alert tone="error" title="Could not revoke this grant">
-            {errorMessageOf(revokeMutation.error)}
-          </Alert>
+        {/* Directory Table */}
+        {directoryQuery.isPending ? (
+          <Skeleton className="h-64 w-full" />
+        ) : directoryQuery.isError ? (
+          <ErrorState message="Could not load users directory." />
+        ) : filteredUsers.length === 0 ? (
+          <EmptyState
+            title="No users match your filter"
+            description="Try loosening your search query or role filter."
+          />
         ) : (
-          'This cannot be undone.'
+          <Table columns={columns} data={filteredUsers} rowKey={(u) => u.id} />
         )}
-      </Modal>
+
+        {/* User Role Management Modal */}
+        {liveManagingUser && (
+          <Modal
+            open={Boolean(managingUser)}
+            onClose={() => setManagingUser(null)}
+            title={`Manage Access: ${liveManagingUser.name}`}
+            size="large"
+          >
+            <div className="flex flex-col gap-6">
+              {/* User summary card */}
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-surface-2 p-4">
+                <div>
+                  <h3 className="m-0 text-[15px] font-bold text-fg">{liveManagingUser.name}</h3>
+                  <p className="m-0 text-[12.5px] text-fg-3">{liveManagingUser.email}</p>
+                  {liveManagingUser.profile && (
+                    <p className="m-0 mt-1 text-[12px] text-accent font-medium">
+                      Club: {liveManagingUser.profile.clubName} (Status: {liveManagingUser.profile.status})
+                    </p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-[11px] text-fg-4">User ID: {liveManagingUser.id}</span>
+                </div>
+              </div>
+
+              {/* Current Role Grants */}
+              <div>
+                <h4 className="m-0 mb-3 text-[14px] font-bold tracking-tight text-fg flex items-center gap-2">
+                  <Shield size={16} className="text-accent" /> Active Role Grants
+                </h4>
+                {liveManagingUser.roles.length === 0 ? (
+                  <p className="m-0 rounded border border-dashed border-border p-4 text-[13px] text-fg-3 text-center">
+                    This user does not currently hold any assigned roles.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {liveManagingUser.roles.map((grant) => (
+                      <div
+                        key={grant.id}
+                        className="flex items-center justify-between rounded-lg border border-border/60 bg-surface-1 p-3 transition hover:border-border"
+                      >
+                        <div>
+                          <p className="m-0 font-bold text-fg text-[13.5px] flex items-center gap-2">
+                            {grant.roleName}
+                            <span className="font-mono text-[11px] font-normal text-fg-3">({grant.roleKey})</span>
+                          </p>
+                          <p className="m-0 text-[12px] text-fg-2">
+                            Scope: <span className="font-semibold">{formatScope(grant.scopeType, grant.scopeId)}</span>
+                          </p>
+                          <p className="m-0 mt-1 text-[11px] text-fg-4">
+                            Grants {grant.permissions.length} capabilities
+                          </p>
+                        </div>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          loading={revokeMutation.isPending && revokingGrantId === grant.id}
+                          onClick={() => {
+                            setRevokingGrantId(grant.id);
+                            revokeMutation.mutate(grant.id);
+                          }}
+                        >
+                          Revoke
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Grant New Role Section */}
+              <div className="rounded-xl border border-accent/25 bg-accent/5 p-4">
+                <h4 className="m-0 mb-3 text-[14px] font-bold text-fg flex items-center gap-2">
+                  <Key size={15} className="text-accent" /> Grant New Role to {liveManagingUser.name}
+                </h4>
+
+                {grantError && (
+                  <div className="mb-4">
+                    <Alert tone="error" title="Could not grant role">
+                      {grantError}
+                    </Alert>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Choose Role">
+                    <Select
+                      value={grantRoleId}
+                      onChange={(e) => {
+                        setGrantRoleId(e.target.value);
+                        setGrantScopeId('');
+                      }}
+                      placeholder="Select a role…"
+                      options={roles.map((r) => ({
+                        value: r.id,
+                        label: `${r.name} (${r.key})`,
+                      }))}
+                    />
+                  </Field>
+
+                  {grantScopeType === 'club' && (
+                    <Field label="Target Club Scope" hint="Role applies only to this club">
+                      <Select
+                        value={grantScopeId}
+                        onChange={(e) => setGrantScopeId(e.target.value)}
+                        placeholder="Choose club…"
+                        options={clubs.map((c) => ({ value: c.id, label: c.name }))}
+                      />
+                    </Field>
+                  )}
+
+                  {grantScopeType === 'zone' && (
+                    <Field label="Target Zone Scope" hint="Role applies to all clubs in this zone">
+                      <Select
+                        value={grantScopeId}
+                        onChange={(e) => setGrantScopeId(e.target.value)}
+                        placeholder="Choose zone…"
+                        options={zones.map((z) => ({ value: z.id, label: z.name }))}
+                      />
+                    </Field>
+                  )}
+
+                  {grantScopeType === 'project' && (
+                    <Field label="Target Project Key">
+                      <Input
+                        placeholder="e.g. mission3011, drishti, rcl"
+                        value={grantScopeId}
+                        onChange={(e) => setGrantScopeId(e.target.value)}
+                      />
+                    </Field>
+                  )}
+
+                  {grantScopeType === 'none' && selectedRole && (
+                    <div className="flex items-center">
+                      <p className="m-0 rounded bg-surface-2 p-2.5 text-[12px] text-fg-2">
+                        Scope: <span className="font-semibold text-fg">District-wide</span> (Unscoped access across all clubs).
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Capabilities preview */}
+                {selectedRole && (
+                  <div className="mt-3 rounded-lg bg-surface-1 p-3">
+                    <p className="m-0 text-[12px] font-bold text-fg mb-1.5">
+                      Permissions included in {selectedRole.name}:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedRole.permissionKeys.map((k) => (
+                        <span key={k} className="rounded bg-accent/10 px-2 py-0.5 font-mono text-[10.5px] text-accent">
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    disabled={
+                      !selectedRole ||
+                      (grantScopeType !== 'none' && !grantScopeId.trim()) ||
+                      grantMutation.isPending
+                    }
+                    loading={grantMutation.isPending}
+                    onClick={() => {
+                      if (!selectedRole) return;
+                      grantMutation.mutate({
+                        roleId: selectedRole.id,
+                        scopeType: selectedRole.scopeType,
+                        scopeId: grantScopeId,
+                      });
+                    }}
+                  >
+                    Confirm & Grant Role
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Extensive Permissions Matrix Modal */}
+        <Modal
+          open={isMatrixOpen}
+          onClose={() => setIsMatrixOpen(false)}
+          title="District 3011 — Complete Permissions & Capabilities Matrix"
+          size="large"
+        >
+          <div className="flex flex-col gap-6">
+            <p className="m-0 text-[13.5px] text-fg-2">
+              District 3011 employs a granular role-based access control (RBAC) architecture. Every API route and
+              portal capability is guarded by one of these 39 specific permission keys.
+            </p>
+
+            <div className="flex flex-col gap-6">
+              {PERMISSION_DOMAINS.map((domain) => (
+                <div key={domain.name} className="rounded-xl border border-border bg-surface-1 p-4">
+                  <h3 className="m-0 text-[15px] font-bold text-fg flex items-center gap-2">
+                    <Shield size={16} className="text-accent" /> {domain.name}
+                  </h3>
+                  <p className="m-0 mb-3 text-[12px] text-fg-3">{domain.description}</p>
+
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                    {domain.permissions.map((p) => {
+                      const grantingRoles = roles.filter((r) => r.permissionKeys.includes(p.key));
+                      return (
+                        <div
+                          key={p.key}
+                          className="rounded-lg border border-border/50 bg-surface-2 p-3 transition hover:border-accent/40"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-[13px] text-fg">{p.name}</span>
+                            <span className="rounded bg-accent/15 px-1.5 py-0.5 font-mono text-[10px] text-accent">
+                              {p.key}
+                            </span>
+                          </div>
+                          <p className="m-0 mt-1 text-[12px] text-fg-2">{p.desc}</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-1">
+                            <span className="text-[10px] text-fg-4 uppercase font-semibold">Granted by:</span>
+                            {grantingRoles.map((r) => (
+                              <span
+                                key={r.id}
+                                className="rounded bg-fg-4/15 px-1.5 py-0.2 font-medium text-[10.5px] text-fg-2"
+                              >
+                                {r.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      </Section>
     </Container>
   );
 }

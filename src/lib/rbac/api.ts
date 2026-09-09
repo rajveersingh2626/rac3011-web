@@ -44,3 +44,8 @@ export async function grantUserRole(input: CreateUserRoleInput): Promise<UserRol
 export async function revokeUserRole(id: string): Promise<void> {
   await apiFetch(`/user-roles/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
+
+export async function fetchUserDirectory(q?: string): Promise<import('./types').UserDirectoryItem[]> {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : '';
+  return apiFetch(`/user-roles/directory${qs}`, { schema: z.array(z.custom<import('./types').UserDirectoryItem>()) });
+}

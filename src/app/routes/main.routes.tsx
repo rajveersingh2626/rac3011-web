@@ -5,6 +5,8 @@ import { AuthLayout } from '@/components/layout/AuthLayout';
 import { LoginPage } from '@/pages/portal/LoginPage';
 import { RegisterPage } from '@/pages/portal/RegisterPage';
 import { PendingPage } from '@/pages/portal/PendingPage';
+import { ForgotPasswordPage } from '@/pages/portal/ForgotPasswordPage';
+import { ResetPasswordPage } from '@/pages/portal/ResetPasswordPage';
 import { UiKitPage } from '@/pages/UiKitPage';
 import { publicMainRouteObjects } from './publicMain.routes';
 import { portalMemberRouteObjects } from './portalMember.routes';
@@ -34,6 +36,8 @@ const routes: RouteObject[] = [
       { path: '/portal/login', element: <LoginPage /> },
       { path: '/portal/register', element: <RegisterPage /> },
       { path: '/portal/pending', element: <PendingPage /> },
+      { path: '/portal/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/portal/reset-password', element: <ResetPasswordPage /> },
     ],
   },
   {

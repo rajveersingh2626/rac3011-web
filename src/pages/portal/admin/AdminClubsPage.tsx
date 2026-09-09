@@ -13,8 +13,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { fetchReports, addReportQuery } from '@/lib/reports/api';
+import { fetchReports, addReportQuery, downloadZoneReportsCsv, downloadDistrictReportsCsv } from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
 import { fetchPublicClubs, fetchZones } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
@@ -36,6 +35,8 @@ export function AdminClubsPage() {
   const [zoneId, setZoneId] = useState(zrrZoneId);
   const [queryingId, setQueryingId] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
+  const [exportingZone, setExportingZone] = useState(false);
+  const [exportingDistrict, setExportingDistrict] = useState(false);
 
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
   const clubsQuery = useQuery({ queryKey: ['public-clubs', zoneId], queryFn: () => fetchPublicClubs(zoneId || undefined) });
@@ -119,14 +120,48 @@ export function AdminClubsPage() {
           <Stat label="Scored" value={scored} />
         </div>
 
-        <div className="mb-5 max-w-[220px]">
-          <Select
-            aria-label="Filter by zone"
-            value={zoneId}
-            onChange={(e) => setZoneId(e.target.value)}
-            placeholder="All zones"
-            options={(zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
-          />
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div className="w-full sm:max-w-[220px]">
+            <Select
+              aria-label="Filter by zone"
+              value={zoneId}
+              onChange={(e) => setZoneId(e.target.value)}
+              placeholder="All zones"
+              options={(zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              loading={exportingZone}
+              onClick={async () => {
+                setExportingZone(true);
+                try {
+                  await downloadZoneReportsCsv(month);
+                } finally {
+                  setExportingZone(false);
+                }
+              }}
+            >
+              Export Zone CSV
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={exportingDistrict}
+              onClick={async () => {
+                setExportingDistrict(true);
+                try {
+                  await downloadDistrictReportsCsv(month);
+                } finally {
+                  setExportingDistrict(false);
+                }
+              }}
+            >
+              Export District CSV
+            </Button>
+          </div>
         </div>
 
         {reportsQuery.isPending || clubsQuery.isPending ? (

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, API_ORIGIN } from '@/lib/api';
 import {
   assistResultSchema,
   paginatedSchema,
@@ -174,4 +174,58 @@ export async function putReportRequestResponse(
     body: { answers },
     schema: reportRequestResponseSchema,
   });
+}
+
+export async function downloadReportPdf(id: string, filename = 'report.pdf') {
+  const res = await fetch(`${API_ORIGIN}/reports/${encodeURIComponent(id)}/export/pdf`, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to download PDF');
+  const blob = await res.blob();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+export async function downloadReportCsv(id: string, filename = 'report.csv') {
+  const res = await fetch(`${API_ORIGIN}/reports/${encodeURIComponent(id)}/export/csv`, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to download CSV');
+  const blob = await res.blob();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+export async function downloadZoneReportsCsv(month?: string) {
+  const qs = month ? `?month=${encodeURIComponent(month)}` : '';
+  const res = await fetch(`${API_ORIGIN}/reports/export/zone-csv${qs}`, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to download Zone reports');
+  const blob = await res.blob();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `zone-reports-${month || 'all'}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+export async function downloadDistrictReportsCsv(month?: string) {
+  const qs = month ? `?month=${encodeURIComponent(month)}` : '';
+  const res = await fetch(`${API_ORIGIN}/reports/export/district-csv${qs}`, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to download District reports');
+  const blob = await res.blob();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `district-reports-${month || 'all'}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 }

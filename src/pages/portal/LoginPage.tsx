@@ -140,7 +140,18 @@ export function LoginPage() {
                 onChange={(e) => credentials.setValue('email', e.target.value)}
               />
             </Field>
-            <Field label="Password" error={credentials.errors.password} required>
+            <Field
+              label={
+                <span className="flex w-full items-center justify-between">
+                  <span>Password</span>
+                  <Link to="/portal/forgot-password" className="font-normal text-[12px] text-accent hover:underline">
+                    Forgot password?
+                  </Link>
+                </span>
+              }
+              error={credentials.errors.password}
+              required
+            >
               <Input
                 type="password"
                 autoComplete="current-password"

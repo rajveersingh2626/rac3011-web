@@ -56,3 +56,35 @@ export interface CreateUserRoleInput {
   scopeType: ScopeType;
   scopeId?: string;
 }
+
+export interface UserDirectoryProfile {
+  id: string;
+  fullName: string;
+  status: string;
+  clubId: string;
+  clubName: string;
+  clubShortName: string | null;
+  phone: string | null;
+  rotaryId: string | null;
+  photoUrl: string | null;
+}
+
+export interface UserDirectoryRole {
+  id: string;
+  roleId: string;
+  roleKey: string;
+  roleName: string;
+  scopeType: ScopeType;
+  scopeId: string | null;
+  grantedById: string | null;
+  permissions: string[];
+}
+
+export interface UserDirectoryItem {
+  id: string;
+  name: string;
+  email: string;
+  profile: UserDirectoryProfile | null;
+  roles: UserDirectoryRole[];
+  createdAt: string;
+}

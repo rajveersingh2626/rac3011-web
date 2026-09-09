@@ -13,7 +13,8 @@ import {
   Send, 
   Info, 
   X, 
-  CalendarCheck
+  CalendarCheck,
+  Download
 } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
 import { format } from 'date-fns';
@@ -772,6 +773,53 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             <p style={{ fontSize: '0.94rem', color: '#4B5563', lineHeight: 1.6, marginBottom: '20px' }}>
               {selectedEvent.description}
             </p>
+
+            {/* Action buttons: Add to Google Calendar and Download ICS */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+              <a
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(selectedEvent.title)}&details=${encodeURIComponent(selectedEvent.description)}&location=${encodeURIComponent(selectedEvent.venue || 'District 3011')}&dates=${selectedEvent.dateStr.replace(/-/g, '')}T090000Z/${selectedEvent.dateStr.replace(/-/g, '')}T180000Z`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#FFFFFF',
+                  color: '#1F2937',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '10px',
+                  padding: '9px 16px',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                  cursor: 'pointer'
+                }}
+              >
+                <CalendarIcon size={14} style={{ color: 'var(--rotaract-pink)' }} /> Add to Google Calendar
+              </a>
+
+              <a
+                href={`data:text/calendar;charset=utf8,BEGIN:VCALENDAR%0AVERSION:2.0%0ABEGIN:VEVENT%0ASUMMARY:${encodeURIComponent(selectedEvent.title)}%0ADESCRIPTION:${encodeURIComponent(selectedEvent.description)}%0ALOCATION:${encodeURIComponent(selectedEvent.venue || 'District 3011')}%0ADTSTART:${selectedEvent.dateStr.replace(/-/g, '')}T090000Z%0ADTEND:${selectedEvent.dateStr.replace(/-/g, '')}T180000Z%0AEND:VEVENT%0AEND:VCALENDAR`}
+                download={`${selectedEvent.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: '#F3F4F6',
+                  color: '#1F2937',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '10px',
+                  padding: '9px 16px',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <Download size={14} /> Download .ICS
+              </a>
+            </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid #E5E7EB' }}>
               <span style={{ fontSize: '0.82rem', color: '#6B7280', fontWeight: 600 }}>
