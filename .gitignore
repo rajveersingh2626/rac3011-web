@@ -31,6 +31,8 @@ playwright/.cache/
 outputs/
 .env
 .env.*
+!.env.example
+
 *.bat
 *.cmd
 *.key

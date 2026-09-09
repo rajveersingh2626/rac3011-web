@@ -21,10 +21,20 @@ const servePrerenderedRoot: Plugin = {
   },
 };
 
+const apiProxyTarget = process.env.VITE_API_TARGET || process.env.VITE_API_ORIGIN || 'https://api.rotaract3011.org';
+const apiProxy = {
+  '^/(auth|second-factor|trusted-devices|me|members|clubs|club-facts|announcements|reports|points|settings|public|health|sister-club-requests|drr-bookings|feedback|link-health|mission3011|drishti|ride|careerbridge|rcl|audit|rbac)': {
+    target: apiProxyTarget,
+    changeOrigin: true,
+    secure: false,
+  },
+};
+
 export default defineConfig({
   plugins: [react(), tailwindcss(), servePrerenderedRoot],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  server: { host: true, allowedHosts: ['.localhost'] },
+  server: { host: true, allowedHosts: ['.localhost'], proxy: apiProxy },
+  preview: { proxy: apiProxy },
   test: {
     environment: 'jsdom',
     globals: true,
