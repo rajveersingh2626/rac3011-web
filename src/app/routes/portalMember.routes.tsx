@@ -27,6 +27,9 @@ const PortalResourcesPage = lazy(() =>
 const PortalFeedbackPage = lazy(() =>
   import('@/pages/portal/PortalFeedbackPage').then((m) => ({ default: m.PortalFeedbackPage })),
 );
+const PortalEventsPage = lazy(() =>
+  import('@/pages/portal/PortalEventsPage').then((m) => ({ default: m.PortalEventsPage })),
+);
 
 export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/dashboard', element: <DashboardPage /> },
@@ -37,7 +40,7 @@ export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/announcements', element: <AnnouncementsFeedPage /> },
   { path: '/portal/resources', element: <PortalResourcesPage /> },
   { path: '/portal/my-club', element: <MyClubPage /> },
-  { path: '/portal/events', element: <ComingSoon title="Events" /> },
+  { path: '/portal/events', element: <PortalEventsPage /> },
   { path: '/portal/showcase/submit', element: <SubmitShowcasePage /> },
   { path: '/portal/showcase/mine', element: <MyShowcasePage /> },
   { path: '/portal/me', element: <MeOverviewPage /> },
