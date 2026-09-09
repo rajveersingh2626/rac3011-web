@@ -21,6 +21,12 @@ const MyShowcasePage = lazy(() =>
 const AnnouncementsFeedPage = lazy(() =>
   import('@/pages/portal/AnnouncementsFeedPage').then((m) => ({ default: m.AnnouncementsFeedPage })),
 );
+const PortalResourcesPage = lazy(() =>
+  import('@/pages/portal/PortalResourcesPage').then((m) => ({ default: m.PortalResourcesPage })),
+);
+const PortalFeedbackPage = lazy(() =>
+  import('@/pages/portal/PortalFeedbackPage').then((m) => ({ default: m.PortalFeedbackPage })),
+);
 
 export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/dashboard', element: <DashboardPage /> },
@@ -29,7 +35,7 @@ export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/reports/history', element: <ReportHistoryPage /> },
   { path: '/portal/reports/:id', element: <ReportDetailPage /> },
   { path: '/portal/announcements', element: <AnnouncementsFeedPage /> },
-  { path: '/portal/resources', element: <ComingSoon title="Resources" /> },
+  { path: '/portal/resources', element: <PortalResourcesPage /> },
   { path: '/portal/my-club', element: <MyClubPage /> },
   { path: '/portal/events', element: <ComingSoon title="Events" /> },
   { path: '/portal/showcase/submit', element: <SubmitShowcasePage /> },
@@ -40,5 +46,5 @@ export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/me/contributions', element: <ComingSoon title="Contributions" /> },
   { path: '/portal/me/certificates', element: <ComingSoon title="Certificates" /> },
   { path: '/portal/directory', element: <DirectoryPage /> },
-  { path: '/portal/feedback', element: <ComingSoon title="Feedback" /> },
+  { path: '/portal/feedback', element: <PortalFeedbackPage /> },
 ];

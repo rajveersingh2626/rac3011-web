@@ -23,7 +23,7 @@ const servePrerenderedRoot: Plugin = {
 
 const apiProxyTarget = process.env.VITE_API_TARGET || process.env.VITE_API_ORIGIN || 'https://api.rotaract3011.org';
 const apiProxy = {
-  '^/(auth|second-factor|trusted-devices|me|members|clubs|club-facts|announcements|reports|points|settings|public|health|sister-club-requests|drr-bookings|feedback|link-health|mission3011|drishti|ride|careerbridge|rcl|audit|rbac)': {
+  '^/(auth|second-factor|trusted-devices|me|members|clubs|club-facts|zones|directory|skill-tags|district-team|past-drrs|announcements|reports|report-schemas|report-requests|points|point-categories|point-rules|settings|public|health|sister-club-requests|drr-bookings|feedback|link-health|asset-links|mission3011|drishti|ride|careerbridge|rcl|audit|rbac|roles|user-roles|permissions|files|projects|resources|events|achievements|publications|partners|enquiries|content-blocks)': {
     target: apiProxyTarget,
     changeOrigin: true,
     secure: false,

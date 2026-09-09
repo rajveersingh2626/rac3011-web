@@ -32,6 +32,9 @@ const PublicContentPage = lazy(() =>
 const AdminAuditPage = lazy(() => import('@/pages/portal/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
 const AdminRolesPage = lazy(() => import('@/pages/portal/admin/AdminRolesPage').then((m) => ({ default: m.AdminRolesPage })));
 const AdminUsersPage = lazy(() => import('@/pages/portal/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })));
+const AdminFeedbackPage = lazy(() =>
+  import('@/pages/portal/admin/AdminFeedbackPage').then((m) => ({ default: m.AdminFeedbackPage })),
+);
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
@@ -53,7 +56,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('announcements:send', '/portal/admin/announcements', <AdminAnnouncementsPage />),
   guarded('announcements:send', '/portal/admin/announcements/audience', <AnnouncementAudiencePage />),
   guarded('settings:manage', '/portal/admin/settings', <SettingsPage />),
-  guarded('feedback:review', '/portal/admin/feedback', <ComingSoon title="Feedback" />),
+  guarded('feedback:review', '/portal/admin/feedback', <AdminFeedbackPage />),
   guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
   guarded('roles:manage', '/portal/admin/users', <AdminUsersPage />),
   guarded('events:manage', '/portal/admin/events', <ComingSoon title="Events" />),
