@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import {
   FileText,
-  Download,
   ExternalLink,
   Search,
   Lock,
@@ -20,9 +19,8 @@ import { useDocumentMeta } from '@/lib/meta';
 import { useAuth } from '@/app/auth';
 import { fetchResources, type Resource } from '@/lib/publicApi/resources';
 import { Container } from '@/components/ui/Container';
-import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -39,23 +37,23 @@ const CATEGORIES = [
   { id: 'templates', label: 'Letterheads & Templates', icon: FileCode },
 ] as const;
 
-function getFileFormat(url: string | null): { label: string; tone: 'neutral' | 'accent' | 'emerald' | 'amber' | 'crimson' } {
+function getFileFormat(url: string | null): { label: string; tone: BadgeTone } {
   if (!url) return { label: 'Link', tone: 'neutral' };
   const cleanUrl = url.toLowerCase().split('?')[0];
-  if (cleanUrl.endsWith('.pdf')) return { label: 'PDF', tone: 'crimson' };
-  if (cleanUrl.endsWith('.docx') || cleanUrl.endsWith('.doc')) return { label: 'DOCX', tone: 'accent' };
-  if (cleanUrl.endsWith('.xlsx') || cleanUrl.endsWith('.xls')) return { label: 'XLSX', tone: 'emerald' };
+  if (cleanUrl.endsWith('.pdf')) return { label: 'PDF', tone: 'red' };
+  if (cleanUrl.endsWith('.docx') || cleanUrl.endsWith('.doc')) return { label: 'DOCX', tone: 'blue' };
+  if (cleanUrl.endsWith('.xlsx') || cleanUrl.endsWith('.xls')) return { label: 'XLSX', tone: 'green' };
   if (cleanUrl.endsWith('.pptx') || cleanUrl.endsWith('.ppt')) return { label: 'PPTX', tone: 'amber' };
   if (cleanUrl.endsWith('.png') || cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.svg') || cleanUrl.endsWith('.webp'))
-    return { label: 'IMAGE', tone: 'accent' };
-  if (cleanUrl.includes('drive.google.com')) return { label: 'DRIVE', tone: 'emerald' };
+    return { label: 'IMAGE', tone: 'pink' };
+  if (cleanUrl.includes('drive.google.com')) return { label: 'DRIVE', tone: 'green' };
   return { label: 'DOCUMENT', tone: 'neutral' };
 }
 
 export function PortalResourcesPage() {
   useDocumentMeta({ title: 'District Resource Center' });
-  const { me } = useAuth();
-  const canManage = Boolean(me?.access?.grants['public_content:manage'] || me?.access?.isSuperAdmin);
+  const { can } = useAuth();
+  const canManage = can('public_content:manage');
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,7 +86,7 @@ export function PortalResourcesPage() {
   }, [allItems]);
 
   return (
-    <Container className="py-8" width="normal">
+    <Container className="py-8" width="default">
       {/* Header Banner */}
       <div className="relative mb-8 overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-br from-[#181B2A]/90 to-[#10121C]/90 p-6 md:p-8 backdrop-blur-xl shadow-2xl">
         <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
@@ -173,15 +171,15 @@ export function PortalResourcesPage() {
         <Card rule="accent" className="p-8 text-center">
           <ErrorState
             title="Couldn't load district resources"
-            description="Please check your connection and retry loading the repository."
+            body="Please check your connection and retry loading the repository."
             onRetry={() => void refetch()}
           />
         </Card>
       ) : filteredItems.length === 0 ? (
-        <Card rule="default" className="p-12 text-center border-dashed border-white/10 bg-white/[0.02]">
+        <Card rule="none" className="p-12 text-center border-dashed border-white/10 bg-white/[0.02]">
           <EmptyState
             title="No matching resources found"
-            description={
+            body={
               searchQuery
                 ? `No documents matching "${searchQuery}". Try adjusting your query.`
                 : 'District administrators have not uploaded files to this category yet. Check back soon.'
@@ -190,7 +188,7 @@ export function PortalResourcesPage() {
           {canManage && (
             <div className="mt-4">
               <Link to="/portal/admin/public-content/resources">
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button variant="secondary" size="sm" className="gap-2">
                   <PlusCircle className="size-4" />
                   Add First Resource
                 </Button>
@@ -254,7 +252,7 @@ export function PortalResourcesPage() {
                     </span>
                   ) : (
                     <a
-                      href={item.url}
+                      href={item.url ?? undefined}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold text-accent-light transition-all hover:bg-accent hover:text-white"

@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, Check, X, Clock, Reply, Filter, Shield } from 'lucide-react';
+import { Check, Clock, Reply, Shield } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { apiFetch } from '@/lib/api';
 import { Container } from '@/components/ui/Container';
-import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -30,7 +29,7 @@ export function AdminFeedbackPage() {
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState<string>('');
 
-  const { data, isPending, refetch } = useQuery<{ items: FeedbackRow[]; total: number }>({
+  const { data, isPending } = useQuery<{ items: FeedbackRow[]; total: number }>({
     queryKey: ['admin-feedback', statusFilter],
     queryFn: () => {
       const url = statusFilter === 'all' ? '/feedback' : `/feedback?status=${statusFilter}`;
@@ -51,7 +50,7 @@ export function AdminFeedbackPage() {
   const items = data?.items ?? [];
 
   return (
-    <Container className="py-8" width="normal">
+    <Container className="py-8" width="default">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent-light mb-3">
@@ -88,10 +87,10 @@ export function AdminFeedbackPage() {
           <Skeleton shape="rect" className="h-28 rounded-2xl" />
         </div>
       ) : items.length === 0 ? (
-        <Card rule="default" className="p-12 text-center border border-white/10 bg-white/[0.02]">
+        <Card rule="none" className="p-12 text-center border border-white/10 bg-white/[0.02]">
           <EmptyState
             title="No feedback found"
-            description={
+            body={
               statusFilter !== 'all'
                 ? `No submissions currently marked as "${statusFilter}".`
                 : 'All member inquiries and feedback have been addressed or none have been submitted.'
@@ -101,10 +100,10 @@ export function AdminFeedbackPage() {
       ) : (
         <div className="space-y-4">
           {items.map((fb) => (
-            <Card key={fb.id} rule="default" className="p-6 bg-[#161826]/80 border border-white/10 rounded-2xl">
+            <Card key={fb.id} rule="none" className="p-6 bg-[#161826]/80 border border-white/10 rounded-2xl">
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
-                  <Badge tone={fb.status === 'reviewed' ? 'emerald' : fb.status === 'closed' ? 'neutral' : 'accent'}>
+                  <Badge tone={fb.status === 'reviewed' ? 'green' : fb.status === 'closed' ? 'neutral' : 'pink'}>
                     {fb.status.toUpperCase()}
                   </Badge>
                   <span className="text-xs font-semibold text-accent-light uppercase tracking-wider">
@@ -162,7 +161,7 @@ export function AdminFeedbackPage() {
                       Send & Mark Reviewed
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => {
                         setReplyingId(null);
@@ -177,7 +176,7 @@ export function AdminFeedbackPage() {
                 <div className="pt-3 border-t border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => {
                         setReplyingId(fb.id);

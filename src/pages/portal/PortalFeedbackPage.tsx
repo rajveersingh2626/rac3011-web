@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, CheckCircle2, ShieldCheck, Clock, MessageCircleQuestion } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
@@ -90,15 +90,16 @@ export function PortalFeedbackPage() {
         </h2>
 
         {formSuccess && (
-          <Alert
-            tone="emerald"
-            className="mb-4"
-            title="Feedback Submitted Successfully"
-            description="Your message has been received by the District Council. Thank you for contributing to District 3011."
-          />
+          <Alert tone="action" className="mb-4" title="Feedback Submitted Successfully">
+            Your message has been received by the District Council. Thank you for contributing to District 3011.
+          </Alert>
         )}
 
-        {formError && <Alert tone="crimson" className="mb-4" title="Error" description={formError} />}
+        {formError && (
+          <Alert tone="error" className="mb-4" title="Error">
+            {formError}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -132,7 +133,7 @@ export function PortalFeedbackPage() {
           <div className="flex items-center justify-between pt-2">
             <Checkbox
               checked={anonymous}
-              onChange={setAnonymous}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setAnonymous(e.target.checked)}
               label={
                 <span className="text-xs text-fg-muted flex items-center gap-1.5">
                   <ShieldCheck className="size-3.5 text-accent-light" />
@@ -156,7 +157,7 @@ export function PortalFeedbackPage() {
       </Card>
 
       {/* History Card */}
-      <Card rule="default" className="p-6 bg-surface/50 border border-white/5">
+      <Card rule="none" className="p-6 bg-surface/50 border border-white/5">
         <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
           <MessageSquare className="size-4 text-white/50" />
           Your Submitted Feedback
@@ -170,14 +171,14 @@ export function PortalFeedbackPage() {
         ) : (mineQuery.data?.items ?? []).length === 0 ? (
           <EmptyState
             title="No feedback submitted yet"
-            description="When you submit feedback or questions to District Leadership, track their status and responses here."
+            body="When you submit feedback or questions to District Leadership, track their status and responses here."
           />
         ) : (
           <div className="space-y-3">
             {mineQuery.data?.items.map((fb) => (
               <div key={fb.id} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <Badge tone={fb.status === 'reviewed' ? 'emerald' : fb.status === 'closed' ? 'neutral' : 'accent'}>
+                  <Badge tone={fb.status === 'reviewed' ? 'green' : fb.status === 'closed' ? 'neutral' : 'pink'}>
                     {fb.status.toUpperCase()}
                   </Badge>
                   <span className="text-[11px] text-white/40 flex items-center gap-1">
