@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
 import { PublicLayout, PortalLayout, AdminLayout } from './layouts';
 import { RequireAuth } from './guards';
 import { AuthLayout } from '@/components/layout/AuthLayout';
@@ -30,6 +30,9 @@ const districtSitePaths = [
 const routes: RouteObject[] = [
   ...districtSitePaths.map((path) => ({ path, element: <DistrictApp /> })),
   { element: <PublicLayout />, children: publicMainRouteObjects },
+  { path: '/login', element: <Navigate to="/portal/login" replace /> },
+  { path: '/forgot-password', element: <Navigate to="/portal/forgot-password" replace /> },
+  { path: '/reset-password', element: <Navigate to="/portal/reset-password" replace /> },
   {
     element: <AuthLayout />,
     children: [

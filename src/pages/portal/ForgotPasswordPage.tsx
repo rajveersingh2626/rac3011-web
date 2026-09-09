@@ -24,7 +24,7 @@ export function ForgotPasswordPage() {
   const submit = form.handleSubmit(async (values) => {
     setFormError(null);
     try {
-      await apiFetch('/auth/forget-password', {
+      await apiFetch('/auth/request-password-reset', {
         method: 'POST',
         body: {
           email: values.email,
