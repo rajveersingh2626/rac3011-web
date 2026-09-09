@@ -62,7 +62,7 @@ export function createEvent(dto: {
 }): Promise<EventAdmin> {
   return apiFetch('/events', {
     method: 'POST',
-    body: JSON.stringify(dto),
+    body: dto,
     schema: eventAdminSchema,
   });
 }
@@ -80,7 +80,7 @@ export function updateEvent(id: string, dto: Partial<{
 }>): Promise<EventAdmin> {
   return apiFetch(`/events/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(dto),
+    body: dto,
     schema: eventAdminSchema,
   });
 }
@@ -92,7 +92,7 @@ export function deleteEvent(id: string): Promise<void> {
 export function rsvpEvent(id: string, status: 'going' | 'maybe' | 'not_going'): Promise<unknown> {
   return apiFetch(`/events/${id}/rsvp`, {
     method: 'PUT',
-    body: JSON.stringify({ status }),
+    body: { status },
     schema: z.unknown(),
   });
 }
