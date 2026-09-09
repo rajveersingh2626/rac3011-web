@@ -62,3 +62,17 @@ export interface CreateAdminUserInput {
 export async function createAdminUser(input: CreateAdminUserInput): Promise<void> {
   await apiFetch('/user-roles/create-user', { method: 'POST', body: input });
 }
+
+export interface UpdateAdminUserInput {
+  name?: string;
+  email?: string;
+  rotaryId?: string | null;
+  clubId?: string;
+  phone?: string | null;
+  password?: string;
+}
+
+export async function updateAdminUser(userId: string, input: UpdateAdminUserInput): Promise<void> {
+  await apiFetch(`/user-roles/users/${encodeURIComponent(userId)}`, { method: 'PATCH', body: input });
+}
+

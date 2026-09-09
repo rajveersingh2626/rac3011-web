@@ -65,13 +65,31 @@ export function LoginPage() {
   const submitCredentials = credentials.handleSubmit(async (values) => {
     setFormError(null);
     try {
+      let emailToUse = values.email.trim();
+      if (!emailToUse.includes('@')) {
+        try {
+          const resolved = await apiFetch<{ email: string }>(
+            `/auth-lookup/resolve?identifier=${encodeURIComponent(emailToUse)}`,
+          );
+          if (resolved?.email) {
+            emailToUse = resolved.email;
+          } else {
+            setFormError(`No account found matching Rotary ID "${emailToUse}". Please verify your ID or log in with your email address.`);
+            return;
+          }
+        } catch {
+          setFormError(`No account found matching Rotary ID "${emailToUse}". Please verify your ID or log in with your email address.`);
+          return;
+        }
+      }
+
       // Better-Auth swaps the response shape entirely once an authenticator app is enrolled.
       const res = await apiFetch<{ twoFactorRedirect?: boolean; twoFactorMethods?: string[] }>('/auth/sign-in/email', {
         method: 'POST',
-        body: values,
+        body: { email: emailToUse, password: values.password },
       });
       const nextMethod: SecondFactorMethod = res.twoFactorRedirect && res.twoFactorMethods?.includes('totp') ? 'totp' : 'email';
-      setEmail(values.email);
+      setEmail(emailToUse);
       setMethod(nextMethod);
       setStep('second-factor');
       if (nextMethod === 'email') {

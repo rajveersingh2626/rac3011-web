@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Shield, Key, Search, Users, UserPlus } from 'lucide-react';
+import { Shield, Key, Search, Users, UserPlus, Edit3, Crown } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
@@ -11,6 +11,7 @@ import {
   grantUserRole,
   revokeUserRole,
   createAdminUser,
+  updateAdminUser,
 } from '@/lib/rbac/api';
 import type { ScopeType, UserDirectoryItem } from '@/lib/rbac/types';
 import { errorMessageOf } from '@/lib/rbac/ui';
@@ -226,6 +227,37 @@ export function AdminUsersPage() {
     onError: (err) => setNewUserError(errorMessageOf(err)),
   });
 
+  // Edit User modal state
+  const [editingUser, setEditingUser] = useState<UserDirectoryItem | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRotaryId, setEditRotaryId] = useState('');
+  const [editClubId, setEditClubId] = useState('DISTRICT');
+  const [editPhone, setEditPhone] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const editUserMutation = useMutation({
+    mutationFn: () =>
+      updateAdminUser(editingUser!.id, {
+        name: editName.trim() || undefined,
+        email: editEmail.trim() || undefined,
+        rotaryId: editRotaryId.trim() || null,
+        clubId: editClubId || undefined,
+        phone: editPhone.trim() || null,
+        password: editPassword.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setEditingUser(null);
+      setEditError(null);
+      toast({ title: 'User ID and profile updated successfully', tone: 'success' });
+      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+    },
+    onError: (err) => setEditError(errorMessageOf(err)),
+  });
+
+  const superAdminRole = roles.find((r) => r.key === 'super_admin');
+
   // Client-side filtering of user directory
   const filteredUsers = useMemo(() => {
     let list = directoryQuery.data ?? [];
@@ -266,7 +298,18 @@ export function AdminUsersPage() {
             {u.name.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <p className="m-0 font-bold text-fg">{u.name}</p>
+            <div className="flex items-center gap-2">
+              <p className="m-0 font-bold text-fg">{u.name}</p>
+              {u.profile?.rotaryId ? (
+                <span className="inline-flex items-center rounded bg-accent/15 px-1.5 py-0.5 text-[10.5px] font-mono font-bold text-accent">
+                  ID: {u.profile.rotaryId}
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded bg-fg-4/15 px-1.5 py-0.5 text-[10px] text-fg-3">
+                  No Rotary ID
+                </span>
+              )}
+            </div>
             <p className="m-0 text-[12px] text-fg-3">{u.email}</p>
           </div>
         </div>
@@ -335,18 +378,37 @@ export function AdminUsersPage() {
       header: '',
       align: 'right',
       cell: (u) => (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setManagingUser(u);
-            setGrantRoleId('');
-            setGrantScopeId('');
-            setGrantError(null);
-          }}
-        >
-          Grant / Manage Access
-        </Button>
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="soft"
+            size="sm"
+            onClick={() => {
+              setEditingUser(u);
+              setEditName(u.name);
+              setEditEmail(u.email);
+              setEditRotaryId(u.profile?.rotaryId || '');
+              setEditClubId(u.profile?.clubId || 'DISTRICT');
+              setEditPhone(u.profile?.phone || '');
+              setEditPassword('');
+              setEditError(null);
+            }}
+          >
+            <Edit3 size={13} className="mr-1" />
+            Edit ID
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setManagingUser(u);
+              setGrantRoleId('');
+              setGrantScopeId('');
+              setGrantError(null);
+            }}
+          >
+            Manage Access
+          </Button>
+        </div>
       ),
     },
   ];
@@ -514,6 +576,37 @@ export function AdminUsersPage() {
                   </div>
                 )}
               </div>
+
+              {/* Super Admin Quick Promotion Card */}
+              {!liveManagingUser.roles.some((r) => r.roleKey === 'super_admin') && (
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4">
+                  <div>
+                    <h4 className="m-0 text-[14px] font-bold text-fg flex items-center gap-2">
+                      <Crown size={16} className="text-rose-500" /> Super Admin Access
+                    </h4>
+                    <p className="m-0 text-[12px] text-fg-3 mt-0.5">
+                      Promote {liveManagingUser.name} to District Super Admin with unscoped access across all 39 capabilities.
+                    </p>
+                  </div>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    disabled={!superAdminRole || grantMutation.isPending}
+                    loading={grantMutation.isPending && grantRoleId === superAdminRole?.id}
+                    onClick={() => {
+                      if (!superAdminRole) return;
+                      setGrantRoleId(superAdminRole.id);
+                      grantMutation.mutate({
+                        roleId: superAdminRole.id,
+                        scopeType: 'none',
+                      });
+                    }}
+                  >
+                    <Crown size={13} className="mr-1.5" />
+                    Assign Super Admin
+                  </Button>
+                </div>
+              )}
 
               {/* Grant New Role Section */}
               <div className="rounded-xl border border-accent/25 bg-accent/5 p-4">
@@ -773,6 +866,93 @@ export function AdminUsersPage() {
             </div>
           </div>
         </Modal>
+
+        {/* Edit User ID & Profile Modal */}
+        {editingUser && (
+          <Modal
+            open={Boolean(editingUser)}
+            onClose={() => setEditingUser(null)}
+            title={`Edit User ID & Profile: ${editingUser.name}`}
+            description="Super Admin capability to update user name, Rotary ID, email, club affiliation, or reset their password."
+            size="md"
+          >
+            <div className="flex flex-col gap-4">
+              {editError && (
+                <Alert tone="error" title="Could not update user">
+                  {editError}
+                </Alert>
+              )}
+
+              <Field label="Full Name" required hint="Official name as recorded in Rotary/Rotaract">
+                <Input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. Divyanshu Katiyar"
+                />
+              </Field>
+
+              <Field label="Rotary ID" hint="Used for 1-click Rotary ID login (e.g. 11545987)">
+                <Input
+                  value={editRotaryId}
+                  onChange={(e) => setEditRotaryId(e.target.value)}
+                  placeholder="e.g. 11545987"
+                />
+              </Field>
+
+              <Field label="Email Address" required hint="Primary login email address">
+                <Input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  placeholder="e.g. member@rac3011.org"
+                />
+              </Field>
+
+              <Field label="Phone / Mobile Number" hint="Optional mobile contact">
+                <Input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                />
+              </Field>
+
+              <Field label="Club Affiliation" required hint="Select club or District Secretariat">
+                <Select
+                  value={editClubId}
+                  onChange={(e) => setEditClubId(e.target.value)}
+                  options={[
+                    { value: 'DISTRICT', label: 'District 3011 (Secretariat & Council)' },
+                    ...clubs.map((c) => ({ value: c.id, label: c.name })),
+                  ]}
+                />
+              </Field>
+
+              <Field label="Reset Password (Optional)" hint="Leave blank to keep current password">
+                <Input
+                  type="password"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Enter new password (min. 8 characters)"
+                />
+              </Field>
+
+              <div className="mt-4 flex justify-end gap-3 border-t border-line pt-4">
+                <Button variant="secondary" onClick={() => setEditingUser(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  loading={editUserMutation.isPending}
+                  disabled={!editName.trim() || !editEmail.trim() || editUserMutation.isPending}
+                  onClick={() => editUserMutation.mutate()}
+                >
+                  Save ID & Profile Changes
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
       </Section>
     </Container>
   );
