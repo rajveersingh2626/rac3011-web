@@ -84,7 +84,9 @@ export function ProfilePage() {
     onSuccess: async () => {
       await refresh();
       await qc.invalidateQueries({ queryKey: ['me'] });
-      toast({ title: 'Profile saved', tone: 'success' });
+      await qc.invalidateQueries({ queryKey: ['directory'] });
+      await qc.invalidateQueries({ queryKey: ['members'] });
+      toast({ title: 'Profile saved and directory updated', tone: 'success' });
     },
     onError: (e) => {
       if (e instanceof ApiError && e.details) form.setServerErrors(e.details);

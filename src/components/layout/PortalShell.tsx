@@ -218,7 +218,7 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
 
       {/* Main Container with Restored Sidebar & Content */}
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 gap-8 px-4 py-6 lg:px-7">
-        <aside className="hidden w-[220px] shrink-0 lg:block">
+        <aside className="hidden w-[230px] shrink-0 lg:block sticky top-6 max-h-[calc(100vh-4rem)] overflow-y-auto pr-2 pb-6 scrollbar-thin">
           <GroupList groups={groups} adminOpenDefault={shouldOpenAdmin} />
         </aside>
         <main className="min-w-0 flex-1">{children}</main>

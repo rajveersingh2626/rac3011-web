@@ -49,3 +49,16 @@ export async function fetchUserDirectory(q?: string): Promise<import('./types').
   const qs = q ? `?q=${encodeURIComponent(q)}` : '';
   return apiFetch(`/user-roles/directory${qs}`, { schema: z.array(z.custom<import('./types').UserDirectoryItem>()) });
 }
+
+export interface CreateAdminUserInput {
+  name: string;
+  email: string;
+  password?: string;
+  clubId: string;
+  phone?: string;
+  roleKey: string;
+}
+
+export async function createAdminUser(input: CreateAdminUserInput): Promise<void> {
+  await apiFetch('/user-roles/create-user', { method: 'POST', body: input });
+}

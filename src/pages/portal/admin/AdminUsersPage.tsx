@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Shield, Key, Search, Users } from 'lucide-react';
+import { Shield, Key, Search, Users, UserPlus } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
@@ -10,6 +10,7 @@ import {
   fetchUserDirectory,
   grantUserRole,
   revokeUserRole,
+  createAdminUser,
 } from '@/lib/rbac/api';
 import type { ScopeType, UserDirectoryItem } from '@/lib/rbac/types';
 import { errorMessageOf } from '@/lib/rbac/ui';
@@ -22,6 +23,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 import { Table, type Column } from '@/components/ui/Table';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -135,6 +137,17 @@ export function AdminUsersPage() {
   const [managingUser, setManagingUser] = useState<UserDirectoryItem | null>(null);
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
   const [revokingGrantId, setRevokingGrantId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  // Create User modal state
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('Rac3011#2026');
+  const [newUserClubId, setNewUserClubId] = useState('DISTRICT');
+  const [newUserRoleKey, setNewUserRoleKey] = useState('member');
+  const [newUserPhone, setNewUserPhone] = useState('');
+  const [newUserError, setNewUserError] = useState<string | null>(null);
 
   // New grant form state
   const [grantRoleId, setGrantRoleId] = useState('');
@@ -186,6 +199,31 @@ export function AdminUsersPage() {
       setRevokingGrantId(null);
       void qc.invalidateQueries({ queryKey: ['user-directory'] });
     },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: () =>
+      createAdminUser({
+        name: newUserName.trim(),
+        email: newUserEmail.trim(),
+        password: newUserPassword.trim() || undefined,
+        clubId: newUserClubId,
+        roleKey: newUserRoleKey,
+        phone: newUserPhone.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setIsAddUserOpen(false);
+      setNewUserName('');
+      setNewUserEmail('');
+      setNewUserPassword('Rac3011#2026');
+      setNewUserClubId('DISTRICT');
+      setNewUserRoleKey('member');
+      setNewUserPhone('');
+      setNewUserError(null);
+      toast({ title: 'User ID created and configured successfully', tone: 'success' });
+      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+    },
+    onError: (err) => setNewUserError(errorMessageOf(err)),
   });
 
   // Client-side filtering of user directory
@@ -328,14 +366,24 @@ export function AdminUsersPage() {
               {directoryQuery.data?.length ?? 0} Total IDs in District
             </span>
           </div>
-          <Button
-            variant="secondary"
-            className="flex items-center gap-2"
-            onClick={() => setIsMatrixOpen(true)}
-          >
-            <Key size={14} className="text-accent" />
-            Explore Extensive Permissions Matrix (All 39 Capabilities)
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="primary"
+              className="flex items-center gap-2"
+              onClick={() => setIsAddUserOpen(true)}
+            >
+              <UserPlus size={15} />
+              Add User / Create ID
+            </Button>
+            <Button
+              variant="secondary"
+              className="flex items-center gap-2"
+              onClick={() => setIsMatrixOpen(true)}
+            >
+              <Key size={14} className="text-accent" />
+              Explore Extensive Permissions Matrix (All 39 Capabilities)
+            </Button>
+          </div>
         </div>
 
         {/* Filter Bar */}
@@ -584,7 +632,7 @@ export function AdminUsersPage() {
           open={isMatrixOpen}
           onClose={() => setIsMatrixOpen(false)}
           title="District 3011 — Complete Permissions & Capabilities Matrix"
-          size="lg"
+          size="xl"
         >
           <div className="flex flex-col gap-6">
             <p className="m-0 text-[13.5px] text-fg-2">
@@ -632,6 +680,96 @@ export function AdminUsersPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </Modal>
+
+        {/* Create User ID Modal for Super Admin */}
+        <Modal
+          open={isAddUserOpen}
+          onClose={() => setIsAddUserOpen(false)}
+          title="Create New User ID & Assign System Roles"
+          description="Provision a new member or district leader with credentials, club affiliation, and system access."
+          size="md"
+        >
+          <div className="flex flex-col gap-4">
+            {newUserError && (
+              <Alert tone="danger" title="Could not create user">
+                {newUserError}
+              </Alert>
+            )}
+
+            <Field label="Full Name" required hint="e.g. Rtr. Divyanshu Katiyar">
+              <Input
+                placeholder="Enter full name…"
+                value={newUserName}
+                onChange={(e) => setNewUserName(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Email Address" required hint="Must be valid for sign-in & OTP delivery">
+              <Input
+                type="email"
+                placeholder="user@example.com"
+                value={newUserEmail}
+                onChange={(e) => setNewUserEmail(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Club Affiliation" required hint="Select club or District Secretariat">
+              <Select
+                value={newUserClubId}
+                onChange={(e) => setNewUserClubId(e.target.value)}
+                options={[
+                  { value: 'DISTRICT', label: 'District 3011 (Secretariat & Council)' },
+                  ...clubs.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
+            </Field>
+
+            <Field label="System Role" required hint="Determines administrative permissions">
+              <Select
+                value={newUserRoleKey}
+                onChange={(e) => setNewUserRoleKey(e.target.value)}
+                options={[
+                  { value: 'member', label: 'Rotaract Member (Club Scope)' },
+                  { value: 'club_admin', label: 'Club Admin (President / Secretary)' },
+                  { value: 'dsc', label: 'District Secretariat / Council (DSC - District-wide)' },
+                  { value: 'super_admin', label: 'District Super Admin (Full Governance)' },
+                ]}
+              />
+            </Field>
+
+            <Field label="Temporary Password" hint="Defaults to Rac3011#2026">
+              <Input
+                type="text"
+                placeholder="Rac3011#2026"
+                value={newUserPassword}
+                onChange={(e) => setNewUserPassword(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Phone Number" hint="Optional mobile number">
+              <Input
+                type="tel"
+                placeholder="9876543210"
+                value={newUserPhone}
+                onChange={(e) => setNewUserPhone(e.target.value)}
+              />
+            </Field>
+
+            <div className="mt-4 flex justify-end gap-3 border-t border-line pt-4">
+              <Button variant="secondary" onClick={() => setIsAddUserOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={!newUserName.trim() || !newUserEmail.trim() || createUserMutation.isPending}
+                loading={createUserMutation.isPending}
+                onClick={() => createUserMutation.mutate()}
+              >
+                Create Account & Grant Access
+              </Button>
             </div>
           </div>
         </Modal>
