@@ -111,21 +111,65 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const { me, can } = useAuth();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? null;
-  const canReport = Boolean(clubId) && can('reports:submit', { type: 'club', id: clubId ?? undefined });
-  const canViewPoints = Boolean(clubId) && can('clubs:view', { type: 'club', id: clubId ?? undefined });
+  const isDistrictOffice = clubId === 'DISTRICT';
+  const canManageAccess = can('roles:manage');
+  const canReport = Boolean(clubId) && !isDistrictOffice && can('reports:submit', { type: 'club', id: clubId ?? undefined });
+  const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
 
   return (
     <Container>
       <Section eyebrow="Overview" title={`Welcome, ${me?.user.name ?? ''}`}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {canManageAccess && (
+            <div className="lg:col-span-2">
+              <Card
+                eyebrow="Super Admin Command Hub"
+                title="Master Access Granter & Role Control"
+                rule="accent"
+                className="bg-gradient-to-r from-accent/10 via-surface to-accent/5 border-accent/30 shadow-md"
+              >
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                  <div className="max-w-2xl">
+                    <p className="text-sm text-fg leading-relaxed m-0 font-medium">
+                      You have full root oversight across all <strong>39 District capabilities</strong>.
+                      Grant, inspect, or revoke permissions across all <strong>145+ official leader accounts</strong> (Presidents, Secretaries, Council, ZRR, DRR, and Project Admins).
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate('/portal/admin/users')}
+                      className="shadow-md shadow-accent/25 font-bold"
+                    >
+                      🛡️ Give / Revoke Access
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate('/portal/admin/roles')}
+                    >
+                      Role Capabilities (39)
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/portal/admin/audit')}
+                    >
+                      Audit Trail
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          )}
+
           {canReport && clubId ? (
             <ReportStatusWidget clubId={clubId} />
-          ) : !canViewPoints ? (
+          ) : !canViewPoints && !canManageAccess ? (
             <EmptyState
               title="No monthly report for this account"
               body="Reporting applies to club presidents and secretaries."
             />
           ) : null}
+
           {canViewPoints && clubId && <ClubPointsWidget clubId={clubId} />}
           <AnnouncementsWidget />
 

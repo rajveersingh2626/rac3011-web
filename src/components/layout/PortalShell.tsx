@@ -82,6 +82,28 @@ function GroupList({ groups, adminOpenDefault, onNavigate }: { groups: NavGroup[
 function ScopeSwitcher() {
   const { me } = useAuth();
   if (!me || me.clubs.length === 0) return null;
+  const isSuperAdmin = me.roles.some((r) => r.roleKey === 'super_admin');
+  const isDistrict = me.profile?.clubId === 'DISTRICT' || isSuperAdmin;
+
+  if (isSuperAdmin) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11.5px] font-bold text-white shadow-xs">
+        <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
+        District 3011 · Super Admin
+      </span>
+    );
+  }
+
+  if (isDistrict) {
+    const roleKey = me.roles[0]?.roleKey ?? 'council';
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11.5px] font-bold text-white shadow-xs">
+        <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
+        District Secretariat · {roleKey.toUpperCase()}
+      </span>
+    );
+  }
+
   if (me.clubs.length === 1) {
     const club = me.clubs[0];
     const role = me.roles[0]?.roleKey ?? 'member';
@@ -103,10 +125,14 @@ function ScopeSwitcher() {
 }
 
 function UserMenu() {
-  const { me, signOut } = useAuth();
+  const { me, signOut, can } = useAuth();
   const { theme, toggle } = useTheme();
   if (!me) return null;
+  const canManageRoles = can('roles:manage');
   const items: MenuItem[] = [
+    ...(canManageRoles
+      ? [{ id: 'access', label: 'Give / Revoke Access (Admin)', onSelect: () => { window.location.href = '/portal/admin/users'; } }]
+      : []),
     { id: 'website', label: 'Return to District Website', onSelect: () => { window.location.href = '/'; } },
     { id: 'theme', label: theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode', onSelect: toggle },
     { id: 'sep', type: 'separator' },
@@ -132,10 +158,12 @@ export interface PortalShellProps {
   adminOpenDefault?: boolean;
 }
 
-export function PortalShell({ children, adminOpenDefault = false }: PortalShellProps) {
+export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
   const { me, can } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const groups = useMemo(() => visibleGroups(PORTAL_NAV_GROUPS, (perm) => can(perm)), [me, can]);
+  const hasAdminPerm = can('roles:manage') || can('reports:review') || can('settings:manage');
+  const shouldOpenAdmin = adminOpenDefault ?? hasAdminPerm;
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
@@ -148,7 +176,7 @@ export function PortalShell({ children, adminOpenDefault = false }: PortalShellP
 
       <header className="relative flex h-[62px] shrink-0 items-center justify-between bg-[#0F1218] px-4 lg:px-7 shadow-sm">
         <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#D81B60] via-[#123499] to-[#880E4F]" />
-        
+
         {/* Left: Mobile Menu Trigger + District Logo */}
         <div className="flex items-center gap-3.5 lg:gap-6">
           <MenuPillButton
@@ -191,14 +219,14 @@ export function PortalShell({ children, adminOpenDefault = false }: PortalShellP
       {/* Main Container with Restored Sidebar & Content */}
       <div className="mx-auto flex w-full max-w-[1440px] flex-1 gap-8 px-4 py-6 lg:px-7">
         <aside className="hidden w-[220px] shrink-0 lg:block">
-          <GroupList groups={groups} adminOpenDefault={adminOpenDefault} />
+          <GroupList groups={groups} adminOpenDefault={shouldOpenAdmin} />
         </aside>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
 
       {/* Mobile Drawer */}
       <Drawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} title="District Portal Navigation" side="left">
-        <GroupList groups={groups} adminOpenDefault={adminOpenDefault} onNavigate={() => setMobileNavOpen(false)} />
+        <GroupList groups={groups} adminOpenDefault={shouldOpenAdmin} onNavigate={() => setMobileNavOpen(false)} />
       </Drawer>
     </div>
   );
