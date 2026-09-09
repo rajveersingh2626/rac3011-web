@@ -90,15 +90,19 @@ export function PortalFeedbackPage() {
         </h2>
 
         {formSuccess && (
-          <Alert tone="action" className="mb-4" title="Feedback Submitted Successfully">
-            Your message has been received by the District Council. Thank you for contributing to District 3011.
-          </Alert>
+          <div className="mb-4">
+            <Alert tone="action" title="Feedback Submitted Successfully">
+              Your message has been received by the District Council. Thank you for contributing to District 3011.
+            </Alert>
+          </div>
         )}
 
         {formError && (
-          <Alert tone="error" className="mb-4" title="Error">
-            {formError}
-          </Alert>
+          <div className="mb-4">
+            <Alert tone="error" title="Error">
+              {formError}
+            </Alert>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
