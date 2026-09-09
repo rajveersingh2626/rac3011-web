@@ -694,7 +694,7 @@ export function AdminUsersPage() {
         >
           <div className="flex flex-col gap-4">
             {newUserError && (
-              <Alert tone="danger" title="Could not create user">
+              <Alert tone="error" title="Could not create user">
                 {newUserError}
               </Alert>
             )}
