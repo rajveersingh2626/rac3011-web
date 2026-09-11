@@ -178,23 +178,25 @@ export default function DistrictResourcesView() {
             key={folder.id}
             className="rotaract-card"
             style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '18px',
+              backgroundColor: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              borderRadius: '20px',
               padding: '24px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              boxShadow: '0 6px 25px rgba(0,0,0,0.06)',
-              border: '1px solid rgba(18, 52, 153, 0.14)',
+              boxShadow: '0 12px 32px rgba(12, 36, 112, 0.16)',
+              border: '1.5px solid rgba(255, 255, 255, 0.75)',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(18, 52, 153, 0.18)';
+              e.currentTarget.style.boxShadow = '0 18px 40px rgba(12, 36, 112, 0.24)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.06)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(12, 36, 112, 0.16)';
             }}
           >
             <div>

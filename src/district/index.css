@@ -301,7 +301,7 @@ label {
 }
 
 .snap-section {
-  min-height: 100vh;
+  min-height: auto;
   height: auto;
   width: 100%;
   display: flex;
@@ -310,8 +310,12 @@ label {
   align-items: center;
   position: relative;
   box-sizing: border-box;
-  padding: clamp(56px, 7vh, 88px) clamp(16px, 4vw, 48px);
+  padding: clamp(48px, 6vw, 84px) clamp(16px, 4vw, 48px);
   overflow: visible;
+}
+
+.snap-section.hero-section {
+  min-height: 100vh;
 }
 
 .snap-section-footer {

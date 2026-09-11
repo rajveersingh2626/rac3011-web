@@ -357,7 +357,9 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
               key={tile.id}
               onClick={() => handleJumpToMonth(tile.monthIndex, tile.year)}
               style={{
-                backgroundColor: '#FFFFFF',
+                backgroundColor: 'rgba(255, 255, 255, 0.88)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
                 borderRadius: '18px',
                 padding: '20px',
                 cursor: 'pointer',
@@ -365,7 +367,8 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 flexDirection: 'column',
                 justifyContent: 'space-between',
                 minHeight: '190px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                boxShadow: '0 8px 24px rgba(18, 52, 153, 0.08)',
+                border: `1.5px solid ${tile.accentColor}40`,
                 borderTop: `5px solid ${tile.accentColor}`,
                 transition: 'all 0.25s ease'
               }}

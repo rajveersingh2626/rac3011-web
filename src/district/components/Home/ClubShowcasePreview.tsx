@@ -39,11 +39,11 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
   };
 
   return (
-    <section className="snap-section" style={{ background: 'linear-gradient(180deg, #FDF8FA 0%, #FFFFFF 100%)', padding: '40px 24px' }}>
+    <section className="snap-section" style={{ background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)', padding: '40px 24px' }}>
       <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
 
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <span className="pill-pink" style={{ marginBottom: '8px', fontSize: '0.88rem', padding: '6px 18px' }}>
+          <span className="pill-gold" style={{ marginBottom: '8px', fontSize: '0.88rem', padding: '6px 18px', background: '#EEF1FA', color: '#123499', border: '1px solid rgba(18, 52, 153, 0.2)' }}>
             <Sparkles size={15} /> CLUB PROJECT SHOWCASE
           </span>
           <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
@@ -60,7 +60,7 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
               <>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#123499', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       {proj.categoryLabel}
                     </span>
                     <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -73,8 +73,8 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
                   </h3>
 
                   {proj.clubName && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#123499', marginBottom: '10px' }}>
-                      <Award size={15} style={{ flexShrink: 0 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#0C2470', marginBottom: '10px' }}>
+                      <Award size={15} style={{ flexShrink: 0, color: '#123499' }} />
                       <span>{proj.clubName}</span>
                     </div>
                   )}
@@ -88,7 +88,7 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
 
                 {proj.slug && (
                   <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '0.80rem', fontWeight: 800, color: 'var(--rotaract-pink)' }}>
+                    <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#123499' }}>
                       Read Project Story →
                     </span>
                   </div>
@@ -101,10 +101,11 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
               display: 'flex',
               flexDirection: 'column' as const,
               justifyContent: 'space-between',
-              borderTop: '4px solid var(--rotaract-pink)',
+              borderTop: '4px solid #123499',
               background: '#FFFFFF',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+              boxShadow: '0 4px 20px rgba(18, 52, 153, 0.06)',
+              border: '1px solid rgba(18, 52, 153, 0.12)',
               textDecoration: 'none',
               color: 'inherit',
             };
