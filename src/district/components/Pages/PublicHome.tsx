@@ -53,30 +53,14 @@ function SectionDivider() {
     <div
       style={{
         width: '100%',
-        maxWidth: '1280px',
-        margin: '0 auto',
-        padding: '0 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '16px',
+        maxWidth: '1200px',
+        margin: '24px auto',
+        height: '1px',
+        background: 'linear-gradient(90deg, transparent, rgba(18, 52, 153, 0.08) 15%, rgba(18, 52, 153, 0.08) 85%, transparent)',
         position: 'relative',
         zIndex: 5
       }}
-    >
-      <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(18, 52, 153, 0.14) 70%, rgba(18, 52, 153, 0.24))' }} />
-      <div
-        style={{
-          width: '7px',
-          height: '7px',
-          borderRadius: '50%',
-          backgroundColor: '#123499',
-          boxShadow: '0 0 8px rgba(18, 52, 153, 0.35)',
-          opacity: 0.7
-        }}
-      />
-      <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(18, 52, 153, 0.24), rgba(18, 52, 153, 0.14) 30%, transparent)' }} />
-    </div>
+    />
   );
 }
 
@@ -714,17 +698,16 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center 32%',
-              opacity: 0.88,
-              filter: 'saturate(1.05) contrast(1.04)',
-              transform: 'scale(1.01)'
+              opacity: 0.50,
+              filter: 'saturate(1.05) contrast(1.02)'
             }}
           />
-          {/* Gradient mask for text contrast only on the left - NO bottom white haze */}
+          {/* Subtle natural fade to blend smoothly into the white page background */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.76) 42%, rgba(255, 255, 255, 0.16) 75%, transparent 100%)'
+              background: 'linear-gradient(180deg, transparent 65%, #FFFFFF 100%), linear-gradient(90deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 45%, transparent 100%)'
             }}
           />
         </div>
@@ -799,7 +782,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
 
       <SectionDivider />
 
-      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '36px 14px' : '56px 24px' }}>
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: 'transparent', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '36px 14px' : '56px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative', zIndex: 10 }}>
           <span className="pill-gold" style={{ marginBottom: '6px', fontSize: '0.85rem', padding: '5px 16px', borderRadius: '6px', background: '#EEF1FA', color: '#123499', border: '1px solid rgba(18, 52, 153, 0.2)' }}>
             <Layers size={14} /> UPCOMING DISTRICT PROJECTS (RY 2026-27)
@@ -817,7 +800,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
 
       <SectionDivider />
 
-      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#F8FAFC', padding: isMobile ? '40px 16px' : '64px 24px' }}>
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: 'transparent', padding: isMobile ? '40px 16px' : '64px 24px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
           <DistrictRoadmap achievements={achievements} />
         </div>
@@ -825,7 +808,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
 
       <SectionDivider />
 
-      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', padding: isMobile ? '40px 16px' : '64px 24px' }}>
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: 'transparent', padding: isMobile ? '40px 16px' : '64px 24px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
           <DistrictImpactStats metrics={impactMetrics} />
         </div>
@@ -841,7 +824,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
 
       <SectionDivider />
 
-      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', padding: '44px 24px' }}>
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: 'transparent', padding: '44px 24px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1280px', position: 'relative', zIndex: 10 }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
             <span className="pill-gold" style={{ marginBottom: '8px', fontSize: '0.85rem', padding: '5px 18px', background: '#EEF1FA', color: '#123499', border: '1px solid rgba(18, 52, 153, 0.2)' }}>

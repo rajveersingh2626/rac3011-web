@@ -315,9 +315,9 @@ label {
 }
 
 .snap-section.hero-section {
-  min-height: auto;
+  min-height: 100vh;
   padding-top: clamp(60px, 9vh, 100px);
-  padding-bottom: clamp(30px, 4vh, 48px);
+  padding-bottom: clamp(40px, 5vh, 60px);
 }
 
 .snap-section-footer {
@@ -332,9 +332,9 @@ label {
   }
 
   .snap-section.hero-section {
-    min-height: auto !important;
-    padding-top: clamp(48px, 6vh, 80px) !important;
-    padding-bottom: clamp(24px, 3vh, 36px) !important;
+    min-height: 100vh !important;
+    padding-top: clamp(60px, 8vh, 90px) !important;
+    padding-bottom: clamp(32px, 4vh, 48px) !important;
   }
 
   .hero-main-title {
