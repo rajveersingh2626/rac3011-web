@@ -82,7 +82,7 @@ export default function DistrictResourcesView() {
               padding: '14px 28px',
               fontSize: '0.96rem',
               backgroundColor: '#FFFFFF',
-              color: 'var(--rotaract-pink)',
+              color: '#123499',
               fontWeight: 800,
               border: 'none',
               boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
@@ -100,7 +100,9 @@ export default function DistrictResourcesView() {
       {/* Master Drive Banner */}
       <div
         style={{
-          background: '#FFFFFF',
+          background: 'rgba(255, 255, 255, 0.86)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
           borderRadius: '20px',
           padding: '24px 28px',
           marginBottom: '32px',
@@ -110,7 +112,7 @@ export default function DistrictResourcesView() {
           justifyContent: 'space-between',
           gap: '20px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-          border: '2px solid rgba(216, 27, 96, 0.2)'
+          border: '1px solid rgba(255, 255, 255, 0.72)'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
@@ -119,12 +121,12 @@ export default function DistrictResourcesView() {
               width: '56px',
               height: '56px',
               borderRadius: '16px',
-              backgroundColor: 'var(--rotaract-pink)',
+              backgroundColor: '#123499',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 6px 18px rgba(216, 27, 96, 0.35)',
+              boxShadow: '0 6px 18px rgba(18, 52, 153, 0.32)',
               flexShrink: 0
             }}
           >
@@ -149,7 +151,7 @@ export default function DistrictResourcesView() {
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            backgroundColor: 'var(--rotaract-pink)',
+            backgroundColor: '#123499',
             color: '#FFFFFF',
             padding: '10px 20px',
             borderRadius: '10px',
@@ -183,12 +185,12 @@ export default function DistrictResourcesView() {
               flexDirection: 'column',
               justifyContent: 'space-between',
               boxShadow: '0 6px 25px rgba(0,0,0,0.06)',
-              border: '1px solid rgba(216, 27, 96, 0.12)',
+              border: '1px solid rgba(18, 52, 153, 0.14)',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 15px 35px rgba(216, 27, 96, 0.16)';
+              e.currentTarget.style.boxShadow = '0 15px 35px rgba(18, 52, 153, 0.18)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
@@ -197,7 +199,7 @@ export default function DistrictResourcesView() {
           >
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <span className="pill-pink" style={{ fontSize: '0.74rem', padding: '3px 10px' }}>
+                <span className="pill-pink" style={{ fontSize: '0.74rem', padding: '3px 10px', background: '#EEF1FA', color: '#123499' }}>
                   {folder.badge || folder.category}
                 </span>
                 {folder.driveUrl ? (
@@ -205,7 +207,7 @@ export default function DistrictResourcesView() {
                     href={folder.driveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: 'var(--rotaract-pink)' }}
+                    style={{ color: '#123499' }}
                     title="Open in Google Drive"
                   >
                     <ExternalLink size={16} />
@@ -237,8 +239,8 @@ export default function DistrictResourcesView() {
 
               {/* Nested Subfolders (e.g. Logos) */}
               {folder.subfolders && folder.subfolders.length > 0 && (
-                <div style={{ marginTop: '14px', backgroundColor: '#FDF8FA', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase' }}>
+                <div style={{ marginTop: '14px', backgroundColor: '#EEF1FA', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#123499', textTransform: 'uppercase' }}>
                     Subfolders Hyperlinked:
                   </span>
                   {folder.subfolders.map((sf, idx) => (
@@ -267,13 +269,13 @@ export default function DistrictResourcesView() {
 
               {/* Sublinks (e.g. Databases / Points) */}
               {folder.sublinks && folder.sublinks.length > 0 && (
-                <div style={{ marginTop: '14px', backgroundColor: '#FDF8FA', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase' }}>
+                <div style={{ marginTop: '14px', backgroundColor: '#EEF1FA', borderRadius: '12px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#123499', textTransform: 'uppercase' }}>
                     Key Included Files:
                   </span>
                   {folder.sublinks.map((sl, idx) => (
                     <div key={idx} style={{ fontSize: '0.82rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <FileText size={13} style={{ color: 'var(--rotaract-pink)' }} />
+                      <FileText size={13} style={{ color: '#123499' }} />
                       <span>{sl.name}</span>
                     </div>
                   ))}
@@ -291,7 +293,7 @@ export default function DistrictResourcesView() {
                 style={{
                   fontSize: '0.82rem',
                   fontWeight: 800,
-                  color: 'var(--rotaract-pink)',
+                  color: '#123499',
                   textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',

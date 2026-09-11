@@ -106,7 +106,21 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
     <div style={{ marginTop: '40px' }}>
 
       {/* Header Banner */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', marginBottom: '28px' }}>
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: '20px',
+        marginBottom: '18px',
+        background: 'linear-gradient(135deg, #123499 0%, #0C2470 100%)',
+        borderRadius: '22px',
+        padding: '30px',
+        boxShadow: '0 18px 45px rgba(18, 52, 153, 0.26)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 92% 18%, rgba(255,255,255,0.18), transparent 28%)', pointerEvents: 'none' }} />
         <div>
           <span className="pill-gold" style={{ marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} /> ROTARACT DISTRICT SHOWCASE (RY 2026-27)
@@ -119,7 +133,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
           <span style={{ backgroundColor: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)', color: '#FFFFFF', padding: '8px 18px', borderRadius: '100px', fontSize: '0.86rem', fontWeight: 800 }}>
             {filteredProjects.length} Projects Displayed
           </span>
@@ -129,21 +143,23 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
       {/* Controls: Search & Zone Filter */}
       <div
         style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid rgba(216, 27, 96, 0.15)',
+          background: 'rgba(255, 255, 255, 0.82)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.68)',
           borderRadius: '16px',
           padding: '16px 20px',
-          marginBottom: '20px',
+          margin: '-8px 16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
           gap: '16px',
           alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)'
+          boxShadow: '0 14px 35px rgba(18, 52, 153, 0.16)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 320px', background: '#FDF5F8', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(216, 27, 96, 0.12)' }}>
-          <Search size={18} style={{ color: 'var(--rotaract-pink)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 320px', background: 'rgba(255,255,255,0.72)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(18, 52, 153, 0.14)' }}>
+          <Search size={18} style={{ color: '#123499' }} />
           <input
             type="text"
             placeholder="Search by project name, club, cause, or keywords..."
@@ -169,9 +185,9 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
             style={{
               padding: '10px 16px',
               borderRadius: '10px',
-              border: '1px solid rgba(216, 27, 96, 0.2)',
+              border: '1px solid rgba(18, 52, 153, 0.2)',
               backgroundColor: '#FFFFFF',
-              color: 'var(--rotaract-pink)',
+              color: '#123499',
               fontWeight: 700,
               fontSize: '0.88rem',
               outline: 'none',
@@ -186,7 +202,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
       </div>
 
       {/* Category Chips Bar */}
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '14px', marginBottom: '24px', scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '0 16px 14px', marginBottom: '24px', scrollbarWidth: 'none' }}>
         {categories.map(([cat, label]) => {
           const isSelected = selectedCategory === cat;
           return (
@@ -200,9 +216,9 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
                 cursor: 'pointer',
-                border: isSelected ? '1px solid #FFFFFF' : '1px solid rgba(255,255,255,0.25)',
-                backgroundColor: isSelected ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
-                color: isSelected ? 'var(--rotaract-pink)' : '#FFFFFF',
+                border: isSelected ? '1px solid #123499' : '1px solid rgba(18, 52, 153, 0.16)',
+                backgroundColor: isSelected ? '#123499' : '#FFFFFF',
+                color: isSelected ? '#FFFFFF' : '#123499',
                 transition: 'all 0.2s ease',
                 backdropFilter: 'blur(8px)',
                 boxShadow: isSelected ? '0 4px 14px rgba(0,0,0,0.15)' : 'none'

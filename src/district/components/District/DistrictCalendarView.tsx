@@ -252,7 +252,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
   };
 
   return (
-    <div style={{ marginTop: '32px', color: '#FFFFFF' }}>
+    <div style={{ marginTop: '32px', color: '#123499' }}>
 
       {/* Header Banner */}
       <div style={{ 
@@ -261,21 +261,28 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         justifyContent: 'space-between', 
         alignItems: 'flex-start', 
         gap: '24px', 
-        marginBottom: '32px' 
+        marginBottom: '24px',
+        background: 'linear-gradient(135deg, #123499 0%, #0C2470 100%)',
+        borderRadius: '22px',
+        padding: '30px',
+        boxShadow: '0 18px 45px rgba(18, 52, 153, 0.26)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <div style={{ maxWidth: '820px' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 90% 18%, rgba(255,255,255,0.18), transparent 28%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: '820px', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
             <span className="pill-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}>
               <CalendarIcon size={14} /> DISTRICT CALENDAR (RY 2026-27)
             </span>
             <span style={{ 
-              backgroundColor: 'rgba(216, 27, 96, 0.25)', 
-              color: '#FFB8D2', 
+              backgroundColor: 'rgba(255, 255, 255, 0.16)', 
+              color: '#FFFFFF', 
               fontSize: '0.78rem', 
               fontWeight: 800, 
               padding: '4px 12px', 
               borderRadius: '100px',
-              border: '1px solid rgba(216, 27, 96, 0.4)'
+              border: '1px solid rgba(255, 255, 255, 0.3)'
             }}>
               Official Assemblies &amp; DRR Official Visits
             </span>
@@ -290,31 +297,31 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         </div>
 
         {/* DRR Appointment Request Button */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
           <button
             onClick={() => handleOpenRequestModal()}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '10px',
-              backgroundColor: 'var(--rotaract-pink)',
-              color: '#FFFFFF',
+              backgroundColor: '#FFFFFF',
+              color: '#123499',
               border: 'none',
               borderRadius: '16px',
               padding: '14px 24px',
               fontSize: '0.96rem',
               fontWeight: 800,
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(216, 27, 96, 0.45)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.22)',
               transition: 'all 0.25s ease'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 12px 30px rgba(216, 27, 96, 0.6)';
+              e.currentTarget.style.boxShadow = '0 12px 30px rgba(0, 0, 0, 0.28)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(216, 27, 96, 0.45)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.22)';
             }}
           >
             <CalendarCheck size={20} />
@@ -329,13 +336,13 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
 
       {/* 1. UPCOMING EVENTS SQUARE TILES (Top Section) */}
       {signatureTiles.length > 0 && (
-      <div style={{ marginBottom: '40px' }}>
+      <div style={{ marginBottom: '40px', background: '#FFFFFF', borderRadius: '22px', padding: '24px', boxShadow: '0 12px 32px rgba(18, 52, 153, 0.10)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#FFFFFF', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={18} style={{ color: '#FFD700' }} />
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#123499', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={18} style={{ color: '#123499' }} />
             <span>Signature Upcoming Milestones (RY 2026-27)</span>
           </h3>
-          <span style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+          <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
             Scroll or click tile to view in calendar
           </span>
         </div>

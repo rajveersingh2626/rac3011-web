@@ -109,8 +109,17 @@ export default function DistrictAccess({
     });
   }, [leadersList, leadershipCategory, leadershipSearch]);
 
+  const districtTabBackground =
+    activeDistrictTab === 'map-clubs' || !activeDistrictTab
+      ? '#FDF8FA'
+      : activeDistrictTab === 'resources'
+        ? 'linear-gradient(180deg, #123499 0%, #0C2470 100%)'
+        : activeDistrictTab === 'leadership'
+          ? 'linear-gradient(180deg, #123499 0%, #0C2470 100%)'
+          : '#FFFFFF';
+
   return (
-    <div style={{ background: (activeDistrictTab === 'map-clubs' || !activeDistrictTab) ? '#FDF8FA' : 'linear-gradient(180deg, #D81B60 0%, #AD1457 100%)', minHeight: '100vh', padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab) ? '0px' : '40px 24px 80px 24px', color: 'var(--text-primary)' }}>
+    <div style={{ background: districtTabBackground, minHeight: '100vh', padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab) ? '0px' : '40px 24px 80px 24px', color: 'var(--text-primary)' }}>
       {(!activeDistrictTab || activeDistrictTab === 'map-clubs') ? (
         <div style={{ width: '100%', minHeight: 'calc(100vh - 70px)' }}>
           <DistrictMap
