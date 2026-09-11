@@ -82,7 +82,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
     <section
       className="snap-section"
       style={{
-        padding: isMobile ? '16px 12px' : '24px 32px',
+        padding: isMobile ? '8px 12px 36px' : '16px 32px 52px',
         backgroundColor: '#FFFFFF',
         display: 'flex',
         flexDirection: 'column',
@@ -90,7 +90,8 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
         alignItems: 'center',
         width: '100%',
         boxSizing: 'border-box',
-        position: 'relative'
+        position: 'relative',
+        zIndex: 5
       }}
     >
       <div
@@ -147,41 +148,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
           );
         })}
 
-        {/* TOP LEFT OVERLAY: Transparent White Dove + Cursive Quote */}
-        <div
-          style={{
-            position: 'absolute',
-            top: isMobile ? '16px' : '28px',
-            left: isMobile ? '16px' : '28px',
-            zIndex: 10,
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '10px' : '14px',
-            padding: isMobile ? '8px 14px' : '10px 22px',
-            borderRadius: '999px',
-            background: 'rgba(15, 18, 24, 0.45)',
-            backdropFilter: 'blur(16px)',
-            WebkitBackdropFilter: 'blur(16px)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
-          }}
-        >
-          {/* Cursive Quote always in quotation marks */}
-          <div
-            style={{
-              fontFamily: "'Dancing Script', 'Great Vibes', 'Alex Brush', cursive",
-              fontSize: isMobile ? '1.15rem' : '1.75rem',
-              fontWeight: 700,
-              color: '#FFFFFF',
-              letterSpacing: '0.4px',
-              textShadow: '0 2px 12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(216, 27, 96, 0.4)',
-              lineHeight: 1.15,
-              userSelect: 'none'
-            }}
-          >
-            “Start with rotaract and good things happen”
-          </div>
-        </div>
+
 
         {/* BOTTOM CAPTION BAR */}
         <div

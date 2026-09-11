@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
 import type { FocusArea, ImpactMetric, Achievement } from '../../data/districtData';
 import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers } from 'lucide-react';
-import InteractiveDotGrid from '../Layout/InteractiveDotGrid';
 const rotaryWheelImg = '/images.png';
 import Footer from '../Layout/Footer';
 import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
@@ -48,6 +47,38 @@ const ACHIEVEMENT_BADGE_BY_TYPE: Record<ApiAchievement['type'], string> = {
   award: 'Award & Recognition',
   milestone: 'District Milestone',
 };
+
+function SectionDivider() {
+  return (
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '1280px',
+        margin: '0 auto',
+        padding: '0 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px',
+        position: 'relative',
+        zIndex: 5
+      }}
+    >
+      <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(18, 52, 153, 0.14) 70%, rgba(18, 52, 153, 0.24))' }} />
+      <div
+        style={{
+          width: '7px',
+          height: '7px',
+          borderRadius: '50%',
+          backgroundColor: '#123499',
+          boxShadow: '0 0 8px rgba(18, 52, 153, 0.35)',
+          opacity: 0.7
+        }}
+      />
+      <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(18, 52, 153, 0.24), rgba(18, 52, 153, 0.14) 30%, transparent)' }} />
+    </div>
+  );
+}
 
 type ScreenSize = 'mobile' | 'tablet' | 'laptop' | 'desktop';
 
@@ -178,13 +209,13 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: 1,
+        zIndex: 0,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transformOrigin: 'center center',
-        opacity: 0.80,
+        opacity: 1.0,
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}
@@ -683,22 +714,20 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center 32%',
-              opacity: 0.42,
-              filter: 'saturate(0.95) contrast(1.06)',
-              transform: 'scale(1.02)'
+              opacity: 0.88,
+              filter: 'saturate(1.05) contrast(1.04)',
+              transform: 'scale(1.01)'
             }}
           />
-          {/* Multi-layer gradient mask for high contrast text legibility */}
+          {/* Gradient mask for text contrast only on the left - NO bottom white haze */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.84) 45%, rgba(255, 255, 255, 0.38) 80%, rgba(255, 255, 255, 0.62) 100%), linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 40%, rgba(255, 255, 255, 0.62) 100%)'
+              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.76) 42%, rgba(255, 255, 255, 0.16) 75%, transparent 100%)'
             }}
           />
         </div>
-
-        <InteractiveDotGrid />
 
         <div
           className="section-content-animate"
@@ -765,12 +794,14 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         </div>
       </section>
 
-      {/* Automated Full-Screen Slideshow with White Dove & Cursive Quote */}
+      {/* Automated Full-Screen Slideshow */}
       <DistrictHeroSlideshow />
 
-      <section className="snap-section" style={{ backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '36px 14px' : '56px 24px' }}>
+      <SectionDivider />
+
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: isMobile ? '36px 14px' : '56px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '24px', position: 'relative', zIndex: 10 }}>
-          <span className="pill-pink" style={{ marginBottom: '6px', fontSize: '0.85rem', padding: '5px 16px', borderRadius: '6px' }}>
+          <span className="pill-gold" style={{ marginBottom: '6px', fontSize: '0.85rem', padding: '5px 16px', borderRadius: '6px', background: '#EEF1FA', color: '#123499', border: '1px solid rgba(18, 52, 153, 0.2)' }}>
             <Layers size={14} /> UPCOMING DISTRICT PROJECTS (RY 2026-27)
           </span>
           <h2 style={{ fontSize: 'clamp(2rem, 3.8vw, 3rem)', fontWeight: 900, color: 'var(--text-primary)', letterSpacing: '-1px' }}>
@@ -784,9 +815,23 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         <ExpandingCarousel />
       </section>
 
-      <DistrictRoadmap achievements={achievements} />
+      <SectionDivider />
 
-      <DistrictImpactStats metrics={impactMetrics} />
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#F8FAFC', padding: isMobile ? '40px 16px' : '64px 24px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
+          <DistrictRoadmap achievements={achievements} />
+        </div>
+      </section>
+
+      <SectionDivider />
+
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', padding: isMobile ? '40px 16px' : '64px 24px' }}>
+        <div className="section-content-animate" style={{ maxWidth: '1280px', width: '100%', position: 'relative', zIndex: 10 }}>
+          <DistrictImpactStats metrics={impactMetrics} />
+        </div>
+      </section>
+
+      <SectionDivider />
 
       <ClubShowcasePreview
         onOpenShowcase={() =>
@@ -794,7 +839,9 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         }
       />
 
-      <section className="snap-section" style={{ backgroundColor: '#FFFFFF', padding: '36px 24px' }}>
+      <SectionDivider />
+
+      <section className="snap-section" style={{ position: 'relative', zIndex: 5, backgroundColor: '#FFFFFF', padding: '44px 24px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1280px', position: 'relative', zIndex: 10 }}>
           <div style={{ textAlign: 'center', marginBottom: '28px' }}>
             <span className="pill-gold" style={{ marginBottom: '8px', fontSize: '0.85rem', padding: '5px 18px', background: '#EEF1FA', color: '#123499', border: '1px solid rgba(18, 52, 153, 0.2)' }}>
@@ -852,6 +899,8 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           </div>
         </div>
       </section>
+
+      <SectionDivider />
 
       <section className="snap-section" style={{ background: 'linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)', padding: '44px 32px' }}>
         <div className="section-content-animate" style={{ maxWidth: '1320px', width: '100%', position: 'relative', zIndex: 10 }}>
