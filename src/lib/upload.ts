@@ -148,8 +148,50 @@ export interface UploadFileInput {
   signal?: AbortSignal;
 }
 
+export async function compressImageToWebP(file: File, maxDimension = 1600, quality = 0.82): Promise<File> {
+  // Only process standard raster images (skip SVG, animated GIF, PDFs, etc.)
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+    return file;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    let { width, height } = bitmap;
+
+    if (width > maxDimension || height > maxDimension) {
+      if (width > height) {
+        height = Math.round((height * maxDimension) / width);
+        width = maxDimension;
+      } else {
+        width = Math.round((width * maxDimension) / height);
+        height = maxDimension;
+      }
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((b) => resolve(b), 'image/webp', quality);
+    });
+
+    if (!blob) return file;
+
+    const newName = file.name.replace(/\.[^/.]+$/, '') + '.webp';
+    return new File([blob], newName, { type: 'image/webp', lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+}
+
 export async function uploadFile(input: UploadFileInput): Promise<StoredFile> {
-  const { file, tier, resourceType, resourceId, onProgress, signal } = input;
+  const file = await compressImageToWebP(input.file);
+  const { tier, resourceType, resourceId, onProgress, signal } = input;
   const problem = validateFile(file, tier);
   if (problem) throw new ApiError(400, problem);
 

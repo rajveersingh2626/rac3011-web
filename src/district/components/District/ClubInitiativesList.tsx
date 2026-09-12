@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FunctionComponent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Sparkles, Award, X } from 'lucide-react';
+import { Search, Sparkles, Award, X, ChevronDown } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
 import { categoryLabelOf, fetchProject, fetchProjects } from '@/lib/publicApi/showcase';
 
@@ -32,15 +32,22 @@ interface ClubInitiativesListProps {
   onOpenPostInitiativeModal?: unknown;
 }
 
+const PAGE_SIZE = 12;
+
 const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ clubs = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedZone, setSelectedZone] = useState('All');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [activeProjectModal, setActiveProjectModal] = useState<DisplayProject | null>(null);
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [searchTerm, selectedCategory, selectedZone]);
 
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects'],
-    queryFn: () => fetchProjects({ pageSize: 50 }),
+    queryFn: () => fetchProjects({ pageSize: 100 }),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -87,20 +94,26 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
 
   const zones = ['All', 'Zone Prithvi', 'Zone Agni', 'Zone Vayu', 'Zone Akash'];
 
-  const filteredProjects = allProjects.filter((proj) => {
+  const filteredProjects = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    const matchesSearch = !q ||
-      proj.title.toLowerCase().includes(q) ||
-      (proj.clubName ?? '').toLowerCase().includes(q) ||
-      proj.summary.toLowerCase().includes(q) ||
-      proj.categoryLabel.toLowerCase().includes(q) ||
-      proj.tags.some(t => t.toLowerCase().includes(q));
+    return allProjects.filter((proj) => {
+      const matchesSearch = !q ||
+        proj.title.toLowerCase().includes(q) ||
+        (proj.clubName ?? '').toLowerCase().includes(q) ||
+        proj.summary.toLowerCase().includes(q) ||
+        proj.categoryLabel.toLowerCase().includes(q) ||
+        proj.tags.some((t) => t.toLowerCase().includes(q));
 
-    const matchesCategory = selectedCategory === 'All' || proj.category === selectedCategory;
-    const matchesZone = selectedZone === 'All' || proj.zone === selectedZone;
+      const matchesCategory = selectedCategory === 'All' || proj.category === selectedCategory;
+      const matchesZone = selectedZone === 'All' || proj.zone === selectedZone;
 
-    return matchesSearch && matchesCategory && matchesZone;
-  });
+      return matchesSearch && matchesCategory && matchesZone;
+    });
+  }, [allProjects, searchTerm, selectedCategory, selectedZone]);
+
+  const visibleProjects = useMemo(() => {
+    return filteredProjects.slice(0, visibleCount);
+  }, [filteredProjects, visibleCount]);
 
   return (
     <div style={{ marginTop: '40px' }}>
@@ -135,7 +148,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 1 }}>
           <span style={{ backgroundColor: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)', color: '#FFFFFF', padding: '8px 18px', borderRadius: '100px', fontSize: '0.86rem', fontWeight: 800 }}>
-            {filteredProjects.length} Projects Displayed
+            {filteredProjects.length} Projects Available
           </span>
         </div>
       </div>
@@ -230,7 +243,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         })}
       </div>
 
-      {/* Projects Grid (12 Projects) */}
+      {/* Projects Grid */}
       {filteredProjects.length === 0 ? (
         <div style={{ background: '#FFFFFF', borderRadius: '18px', padding: '60px 24px', textAlign: 'center', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
           <Sparkles size={48} style={{ color: 'var(--rotaract-pink)', margin: '0 auto 16px' }} />
@@ -253,104 +266,129 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           )}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '28px' }}>
-          {filteredProjects.map((proj) => (
-            <div
-              key={proj.id}
-              className="rotaract-card"
-              onClick={() => setActiveProjectModal(proj)}
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '20px',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-                cursor: 'pointer',
-                transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease',
-                border: '1px solid rgba(216, 27, 96, 0.12)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-6px)';
-                e.currentTarget.style.boxShadow = '0 20px 45px rgba(216, 27, 96, 0.18)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
-              }}
-            >
-              {/* Project Image */}
-              <div style={{ position: 'relative', height: '220px', overflow: 'hidden', backgroundColor: '#1A1D24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {proj.photo ? (
-                  <img
-                    src={proj.photo}
-                    alt={proj.title}
-                    loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
-                  />
-                ) : (
-                  <Sparkles size={40} style={{ color: 'rgba(255,255,255,0.35)' }} />
-                )}
-                {proj.zone && (
-                  <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '8px' }}>
-                    <span className="pill-pink" style={{ fontSize: '0.74rem', padding: '4px 12px', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(216, 27, 96, 0.92)' }}>
-                      {proj.zone}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Card Body */}
-              <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {proj.categoryLabel}
-                    </span>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                      {proj.date}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.28rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1.25, marginBottom: '8px' }}>
-                    {proj.title}
-                  </h3>
-
-                  {proj.clubName && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#123499', marginBottom: '12px' }}>
-                      <Award size={15} />
-                      <span>{proj.clubName}</span>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '28px' }}>
+            {visibleProjects.map((proj) => (
+              <div
+                key={proj.id}
+                className="rotaract-card"
+                onClick={() => setActiveProjectModal(proj)}
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
+                  cursor: 'pointer',
+                  transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease',
+                  border: '1px solid rgba(216, 27, 96, 0.12)',
+                  contain: 'content'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-6px)';
+                  e.currentTarget.style.boxShadow = '0 20px 45px rgba(216, 27, 96, 0.18)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(0,0,0,0.08)';
+                }}
+              >
+                {/* Project Image */}
+                <div style={{ position: 'relative', height: '220px', overflow: 'hidden', backgroundColor: '#1A1D24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {proj.photo ? (
+                    <img
+                      src={proj.photo}
+                      alt={proj.title}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
+                    />
+                  ) : (
+                    <Sparkles size={40} style={{ color: 'rgba(255,255,255,0.35)' }} />
+                  )}
+                  {proj.zone && (
+                    <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '8px' }}>
+                      <span className="pill-pink" style={{ fontSize: '0.74rem', padding: '4px 12px', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(216, 27, 96, 0.92)' }}>
+                        {proj.zone}
+                      </span>
                     </div>
                   )}
-
-                  <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0 }}>
-                    {proj.summary}
-                  </p>
                 </div>
 
-                {/* Tags & Action */}
-                <div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
-                    {proj.tags.map((t, idx) => (
-                      <span key={idx} style={{ fontSize: '0.72rem', backgroundColor: '#FDF5F8', color: 'var(--rotaract-pink)', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
-                        #{t}
+                {/* Card Body */}
+                <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '16px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--rotaract-pink)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {proj.categoryLabel}
                       </span>
-                    ))}
+                      <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                        {proj.date}
+                      </span>
+                    </div>
+
+                    <h3 style={{ fontSize: '1.28rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1.25, marginBottom: '8px' }}>
+                      {proj.title}
+                    </h3>
+
+                    {proj.clubName && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#123499', marginBottom: '12px' }}>
+                        <Award size={15} />
+                        <span>{proj.clubName}</span>
+                      </div>
+                    )}
+
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0 }}>
+                      {proj.summary}
+                    </p>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '12px' }}>
-                    <span style={{ fontSize: '0.80rem', fontWeight: 800, color: 'var(--rotaract-pink)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      Read Project Story →
-                    </span>
+                  {/* Tags & Action */}
+                  <div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                      {proj.tags.map((t, idx) => (
+                        <span key={idx} style={{ fontSize: '0.72rem', backgroundColor: '#FDF5F8', color: 'var(--rotaract-pink)', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '12px' }}>
+                      <span style={{ fontSize: '0.80rem', fontWeight: 800, color: 'var(--rotaract-pink)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Read Project Story →
+                      </span>
+                    </div>
                   </div>
+
                 </div>
-
               </div>
+            ))}
+          </div>
+
+          {/* Progressive Load More */}
+          {filteredProjects.length > visibleCount && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '36px' }}>
+              <button
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="btn-rotaract"
+                style={{
+                  padding: '14px 32px',
+                  fontSize: '0.94rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 8px 24px rgba(216, 27, 96, 0.28)'
+                }}
+              >
+                <span>Load More Initiatives ({filteredProjects.length - visibleCount} remaining)</span>
+                <ChevronDown size={18} />
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {/* Project Detail Modal */}
@@ -388,6 +426,8 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
                 <img
                   src={activeProjectModal.photo}
                   alt={activeProjectModal.title}
+                  loading="lazy"
+                  decoding="async"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               )}

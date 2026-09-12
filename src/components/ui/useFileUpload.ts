@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { ApiError } from '@/lib/api';
-import { uploadFile, validateFile, type StorageTier, type StoredFile } from '@/lib/upload';
+import { compressImageToWebP, uploadFile, validateFile, type StorageTier, type StoredFile } from '@/lib/upload';
 
 export type FileUploadValue = { kind: 'file'; file: StoredFile } | { kind: 'link'; url: string };
 
@@ -25,8 +25,9 @@ export function useFileUpload({ tier, resourceType, resourceId, onChange }: UseF
   const abortRef = useRef<AbortController | null>(null);
 
   const runUpload = useCallback(
-    async (file: File) => {
-      lastFileRef.current = file;
+    async (rawFile: File) => {
+      lastFileRef.current = rawFile;
+      const file = await compressImageToWebP(rawFile);
       const problem = validateFile(file, tier);
       if (problem) {
         setState({ uploading: false, progress: 0, error: problem });

@@ -38,6 +38,8 @@ outputs/
 *.key
 *.pem
 *HANDOFF*
+*.tar.gz
+public/showcase_images/
 *handoff*
 *CONTEXT*
 *context*
