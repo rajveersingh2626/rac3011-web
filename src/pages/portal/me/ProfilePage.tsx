@@ -50,7 +50,7 @@ export function ProfilePage() {
     photoUrl: me?.profile?.photoUrl ?? '',
     skills: me?.profile?.skills ?? [],
     interests: me?.profile?.interests ?? [],
-    directoryOptIn: me?.profile?.directoryOptIn ?? false,
+    directoryOptIn: me?.profile?.directoryOptIn ?? true,
   };
   const form = useZodForm(profileSchema, initial);
 

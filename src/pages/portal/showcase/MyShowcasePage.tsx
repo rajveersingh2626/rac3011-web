@@ -84,15 +84,13 @@ export function MyShowcasePage() {
               Edit
             </button>
           )}
-          {p.status === 'draft' && (
-            <button
-              type="button"
-              className="font-bold text-danger-fg"
-              onClick={() => window.confirm(`Delete "${p.title}"?`) && deleteMutation.mutate(p.id)}
-            >
-              Delete
-            </button>
-          )}
+          <button
+            type="button"
+            className="font-bold text-danger-fg hover:underline"
+            onClick={() => window.confirm(`Are you sure you want to delete "${p.title}"?`) && deleteMutation.mutate(p.id)}
+          >
+            Delete
+          </button>
         </div>
       ),
     },

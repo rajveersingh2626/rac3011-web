@@ -1,27 +1,24 @@
-import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
-import { Trophy, CalendarDays, UserPlus } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { RequireSubdomainAuth } from './subdomainGuards';
-import { SurfaceLoading } from './SurfaceLoading';
+import { UpcomingSubdomainPage } from '@/pages/subdomains/UpcomingSubdomainPage';
 
-const StandingsPage = lazy(() => import('@/pages/rcl/StandingsPage').then((m) => ({ default: m.StandingsPage })));
-const FixturesPage = lazy(() => import('@/pages/rcl/FixturesPage').then((m) => ({ default: m.FixturesPage })));
-const RegisterPage = lazy(() => import('@/pages/rcl/RegisterPage').then((m) => ({ default: m.RegisterPage })));
-
-const NAV = [
-  { label: 'Standings', to: '/standings', icon: <Trophy size={18} /> },
-  { label: 'Fixtures', to: '/fixtures', icon: <CalendarDays size={18} /> },
-  { label: 'Register', to: '/register', icon: <UserPlus size={18} /> },
-];
+function RclUpcoming() {
+  return (
+    <UpcomingSubdomainPage
+      title="Rotaract Cricket League (RCL)"
+      category="District Sports Championship & Fellowship"
+      tagline="Inter-Club Cricket Championship & Youth Sports Festival"
+      description="District 3011’s marquee sports tournament fostering athletic grit, sportsmanship, and inter-club camaraderie on the cricket pitch."
+      accentColor="#0044FF"
+    />
+  );
+}
 
 function Layout() {
   return (
-    <SubdomainShell surface="rcl" title="Rotaract Champions League" nav={NAV}>
-      <Suspense fallback={<SurfaceLoading />}>
-        <Outlet />
-      </Suspense>
+    <SubdomainShell surface="rcl" title="Rotaract Cricket League" nav={[]}>
+      <RclUpcoming />
     </SubdomainShell>
   );
 }
@@ -30,10 +27,7 @@ const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
-      { index: true, element: <StandingsPage /> },
-      { path: '/standings', element: <StandingsPage /> },
-      { path: '/fixtures', element: <FixturesPage /> },
-      { element: <RequireSubdomainAuth />, children: [{ path: '/register', element: <RegisterPage /> }] },
+      { index: true, element: <RclUpcoming /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

@@ -54,6 +54,8 @@ const routes: RouteObject[] = [
   { path: '*', element: <DistrictApp /> },
 ];
 
+import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
+
 export function createMainRouter() {
   return createBrowserRouter([
     {
@@ -63,6 +65,7 @@ export function createMainRouter() {
           <Outlet />
         </>
       ),
+      errorElement: <RootErrorBoundary />,
       children: routes,
     },
   ]);
