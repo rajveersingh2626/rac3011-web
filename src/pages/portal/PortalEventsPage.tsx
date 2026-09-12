@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchEvents, type PublicEvent, CALENDAR_ICS_PATH } from '@/lib/publicApi/events';
-import { fetchAdminEvents, createEvent, deleteEvent, rsvpEvent, type EventAdmin } from '@/lib/events/api';
+import { fetchAdminEvents, createEvent, updateEvent, deleteEvent, rsvpEvent, type EventAdmin } from '@/lib/events/api';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
@@ -51,16 +51,130 @@ function slugify(title: string): string {
     .slice(0, 60);
 }
 
+// ---- Edit Event Modal ----
+function EditEventModal({ event, onClose }: { event: PublicEvent | EventAdmin; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [title, setTitle] = useState(event.title);
+  const [startsAt, setStartsAt] = useState(() => toDateInputValue(new Date(event.startsAt)));
+  const [endsAt, setEndsAt] = useState(() => (event.endsAt ? toDateInputValue(new Date(event.endsAt)) : ''));
+  const [location, setLocation] = useState(event.location || '');
+  const [description, setDescription] = useState(event.description || '');
+  const [isDistrictEvent, setIsDistrictEvent] = useState(() => ('isDistrictEvent' in event ? event.isDistrictEvent : true));
+  const [rsvpOpen, setRsvpOpen] = useState(Boolean(event.rsvpOpen));
+
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['events-admin'] });
+    void qc.invalidateQueries({ queryKey: ['events-public'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events-upcoming'] });
+    void qc.invalidateQueries({ queryKey: ['events'] });
+  };
+
+  const updateMut = useMutation({
+    mutationFn: () =>
+      updateEvent(event.id, {
+        title,
+        startsAt: new Date(startsAt).toISOString(),
+        endsAt: endsAt ? new Date(endsAt).toISOString() : null,
+        location: location || null,
+        description: description || null,
+        isDistrictEvent,
+        rsvpOpen,
+      }),
+    onSuccess: () => {
+      invalidateAll();
+      onClose();
+    },
+  });
+
+  return (
+    <Modal open title={`Edit: ${event.title}`} onClose={onClose}>
+      <div className="flex flex-col gap-4">
+        <Field label="Event title" required>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Starts at" required>
+            <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+          </Field>
+          <Field label="Ends at (optional)">
+            <Input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+          </Field>
+        </div>
+
+        <Field label="Location (optional)">
+          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Venue name or city" />
+        </Field>
+
+        <Field label="Description (optional)">
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+          />
+        </Field>
+
+        <div className="flex flex-col gap-2">
+          <label className="flex cursor-pointer items-center gap-2 text-[13.5px]">
+            <input
+              type="checkbox"
+              checked={isDistrictEvent}
+              onChange={(e) => setIsDistrictEvent(e.target.checked)}
+              className="h-4 w-4 rounded border-line accent-accent"
+            />
+            District event (shows on public calendar)
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 text-[13.5px]">
+            <input
+              type="checkbox"
+              checked={rsvpOpen}
+              onChange={(e) => setRsvpOpen(e.target.checked)}
+              className="h-4 w-4 rounded border-line accent-accent"
+            />
+            Allow members to RSVP
+          </label>
+        </div>
+
+        {updateMut.isError && (
+          <Alert tone="error" title="Failed to update event. Please try again." />
+        )}
+
+        <div className="flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={() => updateMut.mutate()}
+            disabled={!title.trim() || !startsAt || updateMut.isPending}
+            loading={updateMut.isPending}
+          >
+            Save changes
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 // ---- Event Card ----
 function EventCard({ event, canManage }: { event: PublicEvent | EventAdmin; canManage: boolean }) {
   const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['events-admin'] });
+    void qc.invalidateQueries({ queryKey: ['events-public'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events-upcoming'] });
+    void qc.invalidateQueries({ queryKey: ['events'] });
+  };
+
   const deleteMut = useMutation({
     mutationFn: () => deleteEvent(event.id),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['events-admin'] });
-      void qc.invalidateQueries({ queryKey: ['events-public'] });
+      invalidateAll();
     },
   });
+
   const rsvpMut = useMutation({
     mutationFn: (status: 'going' | 'maybe' | 'not_going') => rsvpEvent(event.id, status),
   });
@@ -68,87 +182,103 @@ function EventCard({ event, canManage }: { event: PublicEvent | EventAdmin; canM
   const upcoming = isUpcoming(event.startsAt);
 
   return (
-    <Card rule={upcoming ? 'pink' : 'none'} tone="plain" className="flex flex-col gap-2">
-      {event.coverUrl && (
-        <div className="relative -mx-5 -mt-5 mb-3 overflow-hidden rounded-t-[12px]">
-          <img
-            src={event.coverUrl}
-            alt={event.title}
-            className="h-40 w-full object-cover"
-            loading="lazy"
-          />
-          {upcoming && (
-            <span className="absolute right-3 top-3 rounded-full bg-[#e7004c] px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
-              Upcoming
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="m-0 text-[11px] font-extrabold uppercase tracking-[1px] text-[#123499]">
-            {formatDateRange(event.startsAt, event.endsAt)} · {formatTime(event.startsAt)}
-          </p>
-          <h3 className="m-0 mt-1 text-[15.5px] font-extrabold text-fg">{event.title}</h3>
-          {event.location && (
-            <p className="m-0 mt-1 flex items-center gap-1 text-[12.5px] text-fg-3">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-              </svg>
-              {event.location}
-            </p>
-          )}
-        </div>
-        {'isDistrictEvent' in event && event.isDistrictEvent && (
-          <Badge tone="blue">District</Badge>
-        )}
-      </div>
-
-      {event.description && (
-        <p className="m-0 line-clamp-3 text-[13px] text-fg-2">{event.description}</p>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        {event.rsvpOpen && upcoming && (
-          <div className="flex gap-1.5">
-            {(['going', 'maybe', 'not_going'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => rsvpMut.mutate(s)}
-                className={cn(
-                  'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors',
-                  'border-line text-fg-2 hover:border-accent hover:text-accent',
-                )}
-              >
-                {s === 'going' ? 'Going' : s === 'maybe' ? 'Maybe' : 'Not going'}
-              </button>
-            ))}
+    <>
+      <Card rule={upcoming ? 'pink' : 'none'} tone="plain" className="flex flex-col gap-2">
+        {event.coverUrl && (
+          <div className="relative -mx-5 -mt-5 mb-3 overflow-hidden rounded-t-[12px]">
+            <img
+              src={event.coverUrl}
+              alt={event.title}
+              className="h-40 w-full object-cover"
+              loading="lazy"
+            />
+            {upcoming && (
+              <span className="absolute right-3 top-3 rounded-full bg-[#e7004c] px-2.5 py-0.5 text-[11px] font-bold text-white shadow">
+                Upcoming
+              </span>
+            )}
           </div>
         )}
-        <a
-          href={`/public/calendar.ics`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-auto flex items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold text-fg-2 no-underline transition-colors hover:border-accent hover:text-accent"
-        >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
-          </svg>
-          Add to calendar
-        </a>
-        {canManage && (
-          <button
-            onClick={() => {
-              if (confirm(`Delete "${event.title}"?`)) deleteMut.mutate();
-            }}
-            className="rounded-full border border-red-200 px-2.5 py-0.5 text-[11px] font-semibold text-red-500 transition-colors hover:bg-red-50"
-          >
-            {deleteMut.isPending ? 'Deleting…' : 'Delete'}
-          </button>
+
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="m-0 text-[11px] font-extrabold uppercase tracking-[1px] text-[#123499]">
+              {formatDateRange(event.startsAt, event.endsAt)} · {formatTime(event.startsAt)}
+            </p>
+            <h3 className="m-0 mt-1 text-[15.5px] font-extrabold text-fg">{event.title}</h3>
+            {event.location && (
+              <p className="m-0 mt-1 flex items-center gap-1 text-[12.5px] text-fg-3">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                {event.location}
+              </p>
+            )}
+          </div>
+          {'isDistrictEvent' in event && event.isDistrictEvent && (
+            <Badge tone="blue">District</Badge>
+          )}
+        </div>
+
+        {event.description && (
+          <p className="m-0 line-clamp-3 text-[13px] text-fg-2">{event.description}</p>
         )}
-      </div>
-    </Card>
+
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {event.rsvpOpen && upcoming && (
+            <div className="flex gap-1.5">
+              {(['going', 'maybe', 'not_going'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => rsvpMut.mutate(s)}
+                  className={cn(
+                    'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-colors',
+                    'border-line text-fg-2 hover:border-accent hover:text-accent',
+                  )}
+                >
+                  {s === 'going' ? 'Going' : s === 'maybe' ? 'Maybe' : 'Not going'}
+                </button>
+              ))}
+            </div>
+          )}
+          <a
+            href={`/public/calendar.ics`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto flex items-center gap-1 rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold text-fg-2 no-underline transition-colors hover:border-accent hover:text-accent"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/>
+            </svg>
+            Add to calendar
+          </a>
+          {canManage && (
+            <>
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold text-fg-2 transition-colors hover:border-accent hover:text-accent"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm(`Are you sure you want to delete "${event.title}"? It will be permanently removed from both the portal and public calendar.`)) {
+                    deleteMut.mutate();
+                  }
+                }}
+                className="rounded-full border border-red-200 px-2.5 py-0.5 text-[11px] font-semibold text-red-500 transition-colors hover:bg-red-50"
+              >
+                {deleteMut.isPending ? 'Deleting…' : 'Delete'}
+              </button>
+            </>
+          )}
+        </div>
+      </Card>
+
+      {editing && <EditEventModal event={event} onClose={() => setEditing(false)} />}
+    </>
   );
 }
 
@@ -163,6 +293,14 @@ function CreateEventModal({ onClose }: { onClose: () => void }) {
   const [isDistrictEvent, setIsDistrictEvent] = useState(true);
   const [rsvpOpen, setRsvpOpen] = useState(false);
 
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['events-admin'] });
+    void qc.invalidateQueries({ queryKey: ['events-public'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'events-upcoming'] });
+    void qc.invalidateQueries({ queryKey: ['events'] });
+  };
+
   const mut = useMutation({
     mutationFn: () =>
       createEvent({
@@ -176,8 +314,7 @@ function CreateEventModal({ onClose }: { onClose: () => void }) {
         rsvpOpen,
       }),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['events-admin'] });
-      void qc.invalidateQueries({ queryKey: ['events-public'] });
+      invalidateAll();
       onClose();
     },
   });
@@ -241,6 +378,7 @@ function CreateEventModal({ onClose }: { onClose: () => void }) {
           <Button
             onClick={() => mut.mutate()}
             disabled={!title.trim() || !startsAt || mut.isPending}
+            loading={mut.isPending}
           >
             {mut.isPending ? 'Creating…' : 'Create event'}
           </Button>
