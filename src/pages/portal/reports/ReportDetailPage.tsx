@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/ui/Toast';
 import { createProject } from '@/lib/showcase/api';
-import { Sparkles, Share2, Plus, Trash2 } from 'lucide-react';
+import { Sparkles, Plus, Trash2 } from 'lucide-react';
 import { fetchReport, fetchReportSchemaVersion, addReportQuery, replyReportQuery, fetchReportAssist, downloadReportPdf, downloadReportCsv } from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
 import { formatMonthLabel } from '@/lib/reports/month';

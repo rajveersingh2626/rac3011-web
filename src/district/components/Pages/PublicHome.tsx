@@ -14,7 +14,7 @@ import ClubShowcasePreview from '../Home/ClubShowcasePreview';
 import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
-import { fetchAchievements, type Achievement as ApiAchievement } from '@/lib/publicApi/achievements';
+import { fetchAchievements } from '@/lib/publicApi/achievements';
 import { useSurfaceHref } from '@/app/host';
 
 const impactStatsSchema = z.array(

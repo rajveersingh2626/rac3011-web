@@ -100,6 +100,16 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
                 </button>
               </li>
               <li>
+                <button
+                  onClick={() => (window.location.href = '/portal/feedback')}
+                  style={navLinkStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
+                >
+                  District Feedback &amp; Grievances
+                </button>
+              </li>
+              <li>
                 <a
                   href="https://www.instagram.com/rotaractdistrict.3011/"
                   target="_blank"

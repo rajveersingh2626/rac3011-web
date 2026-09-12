@@ -28,6 +28,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'dashboard', label: 'Dashboard', to: '/portal/dashboard' },
       { key: 'announcements', label: 'Announcements', to: '/portal/announcements' },
       { key: 'resources', label: 'Resources', to: '/portal/resources' },
+      { key: 'feedback', label: 'Feedback & Grievances', to: '/portal/feedback' },
     ],
   },
   {
