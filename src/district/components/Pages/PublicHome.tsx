@@ -67,14 +67,10 @@ function SectionDivider() {
 type ScreenSize = 'mobile' | 'tablet' | 'laptop' | 'desktop';
 
 interface BigRotaryWheelProps {
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef?: RefObject<HTMLDivElement | null>;
 }
 
-function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
-  const wheelRef = useRef<HTMLDivElement | null>(null);
-  const targetScrollYRef = useRef(0);
-  const smoothScrollYRef = useRef(0);
-  const ambientRotationRef = useRef(0);
+function BigRotaryWheel({}: BigRotaryWheelProps) {
   const [screenSize, setScreenSize] = useState<ScreenSize>(() => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -97,78 +93,6 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (screenSize === 'mobile') return;
-
-    let animFrameId: number;
-    let lastTime = performance.now();
-
-    const getScrollTop = () => {
-      const windowScroll = window.scrollY || document.documentElement.scrollTop || 0;
-      const containerScroll = containerRef && containerRef.current ? containerRef.current.scrollTop : 0;
-      return Math.max(windowScroll, containerScroll);
-    };
-
-    // Initialize to current scroll position immediately to prevent initial jump
-    const initialScroll = getScrollTop();
-    targetScrollYRef.current = initialScroll;
-    smoothScrollYRef.current = initialScroll;
-
-    const handleScroll = () => {
-      targetScrollYRef.current = getScrollTop();
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    const containerEl = containerRef?.current;
-    if (containerEl) {
-      containerEl.addEventListener('scroll', handleScroll, { passive: true });
-    }
-
-    const updateFrame = (now: number) => {
-      const dt = Math.min((now - lastTime) / 1000, 0.1);
-      lastTime = now;
-
-      // Frame-rate independent exponential smoothing (~15% smoother damping)
-      const smoothingFactor = 1 - Math.exp(-4.8 * dt);
-      const targetY = targetScrollYRef.current;
-      smoothScrollYRef.current += (targetY - smoothScrollYRef.current) * smoothingFactor;
-
-      // Ambient gentle continuous rotation (3.0 degrees/sec)
-      ambientRotationRef.current += dt * 3.0;
-
-      const smoothY = smoothScrollYRef.current;
-
-      // Smoothstep easing for scaling & offset across viewport transitions
-      const progress = Math.min(1, Math.max(0, smoothY / 1000));
-      const smoothProgress = progress * progress * (3 - 2 * progress);
-
-      const scale = 1.0 - smoothProgress * 0.20;
-      const offsetX = smoothProgress * 42;
-      const totalRotation = ambientRotationRef.current + smoothY * 0.075;
-
-      if (wheelRef.current) {
-        // High-precision GPU transform without string rounding truncations
-        wheelRef.current.style.transform = `translate3d(calc(-50% + ${offsetX}px), -50%, 0) scale(${scale}) rotate(${totalRotation}deg)`;
-      }
-
-      animFrameId = requestAnimationFrame(updateFrame);
-    };
-
-    animFrameId = requestAnimationFrame(updateFrame);
-
-    return () => {
-      cancelAnimationFrame(animFrameId);
-      window.removeEventListener('scroll', handleScroll);
-      if (containerEl) {
-        containerEl.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [containerRef, screenSize]);
-
-  // Hidden with CSS rather than skipped, so mobile hydrates the same markup the desktop crawl
-  // prerendered; the animation effect above still no-ops on mobile, and the lazy image is never
-  // fetched inside a display:none subtree.
-
   let wheelSize = '1080px';
   let leftPos = '92%';
   if (screenSize === 'tablet') {
@@ -181,13 +105,11 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
 
   return (
     <div
-      ref={wheelRef}
-      className="wide-only"
+      className="wide-only rotary-wheel-hw-accelerated"
       style={{
         position: 'fixed',
         top: '50%',
         left: leftPos,
-        transform: 'translate3d(-50%, -50%, 0) scale(1) rotate(0deg)',
         width: wheelSize,
         height: wheelSize,
         maxWidth: '95vw',

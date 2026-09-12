@@ -218,6 +218,20 @@ label {
   }
 }
 
+@keyframes rotaractWheelSpin {
+  0% {
+    transform: translate3d(-50%, -50%, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) rotate(360deg);
+  }
+}
+
+.rotary-wheel-hw-accelerated {
+  animation: rotaractWheelSpin 40s linear infinite;
+  will-change: transform;
+}
+
 .rotaract-wheel-spin {
   animation: spinWheel 20s linear infinite;
 }
@@ -396,58 +410,7 @@ label {
   transition: transform 0.1s linear;
 }
 
-/* ==========================================================================
-   CONTEXTUAL MORPHING CURSOR
-   ========================================================================== */
-@media (hover: hover) and (pointer: fine) {
-  body {
-    cursor: default;
-  }
-}
 
-.custom-cursor-dot {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 10px;
-  height: 10px;
-  background-color: var(--rotaract-pink);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease;
-}
-
-.custom-cursor-follower {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 38px;
-  height: 38px;
-  border: 2px solid rgba(216, 27, 96, 0.4);
-  background: rgba(216, 27, 96, 0.05);
-  backdrop-filter: blur(2px);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9998;
-  transform: translate(-50%, -50%);
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s ease, height 0.25s ease, border-radius 0.25s ease, background-color 0.25s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.custom-cursor-follower.hovered {
-  width: 64px;
-  height: 64px;
-  background: var(--rotaract-pink);
-  border-color: var(--rotaract-pink);
-  box-shadow: 0 8px 24px rgba(216, 27, 96, 0.35);
-}
 
 /* ==========================================================================
    LIQUID PAGE WAVE TRANSITION
@@ -958,11 +921,7 @@ button,
     display: none !important;
   }
 
-  /* Custom cursor: disable on touch devices */
-  .custom-cursor-dot,
-  .custom-cursor-follower {
-    display: none !important;
-  }
+
 
   /* Glass hover tooltip: not useful on touch */
   .glass-hover-tooltip {

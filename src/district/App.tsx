@@ -191,10 +191,6 @@ export default function DistrictApp() {
   const [uploaderModalMode, setUploaderModalMode] = useState<string | null>(null);
   const [preselectedClubForModal] = useState<DistrictClubLive | null>(null);
 
-  const cursorDotRef = useRef<HTMLDivElement | null>(null);
-  const cursorFollowerRef = useRef<HTMLDivElement | null>(null);
-  const [cursorHovered, setCursorHovered] = useState(false);
-
   // A prerendered page already paints the finished content, and its HTML is snapshotted after the
   // curtain is gone, so replaying the intro would both flash and break hydration.
   const curtainEnabled = !isPrerendered();
@@ -210,37 +206,6 @@ export default function DistrictApp() {
       clearTimeout(timer2);
     };
   }, [curtainEnabled]);
-
-  useEffect(() => {
-    let rAFId: number | null = null;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = e.clientX;
-      const y = e.clientY;
-
-      if (rAFId) cancelAnimationFrame(rAFId);
-      rAFId = requestAnimationFrame(() => {
-        if (cursorDotRef.current) {
-          cursorDotRef.current.style.left = `${x}px`;
-          cursorDotRef.current.style.top = `${y}px`;
-        }
-        if (cursorFollowerRef.current) {
-          cursorFollowerRef.current.style.left = `${x}px`;
-          cursorFollowerRef.current.style.top = `${y}px`;
-        }
-      });
-
-      const target = e.target instanceof Element ? e.target.closest('[data-cursor]') : null;
-      const isHovering = Boolean(target);
-      setCursorHovered((prev) => (prev !== isHovering ? isHovering : prev));
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (rAFId) cancelAnimationFrame(rAFId);
-    };
-  }, []);
 
   const handleAddInitiative = (targetClubId: string, newInitiative: ClubInitiative) => {
     setPostedInitiatives((prev) => ({ ...prev, [targetClubId]: [newInitiative, ...(prev[targetClubId] || [])] }));
@@ -258,13 +223,6 @@ export default function DistrictApp() {
           <div className="curtain-strip" />
         </div>
       )}
-
-      <div ref={cursorDotRef} className="custom-cursor-dot" style={{ left: '-100px', top: '-100px' }} />
-      <div
-        ref={cursorFollowerRef}
-        className={`custom-cursor-follower ${cursorHovered ? 'hovered' : ''}`}
-        style={{ left: '-100px', top: '-100px' }}
-      />
 
       <div
         className="top-left-global-visitors-badge"
