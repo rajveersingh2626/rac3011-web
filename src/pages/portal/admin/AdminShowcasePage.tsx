@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
-import { fetchMyProjects } from '@/lib/showcase/api';
+import { fetchMyProjects, deleteProject } from '@/lib/showcase/api';
 import type { ProjectStatus } from '@/lib/showcase/types';
 import { ShowcaseQueueCard } from './ShowcaseQueueCard';
 
@@ -31,6 +31,7 @@ function useQueueCount(status: ProjectStatus) {
 
 export function AdminShowcasePage() {
   useDocumentMeta({ title: 'Showcase moderation queue' });
+  const qc = useQueryClient();
   const [status, setStatus] = useState<ProjectStatus>('submitted');
 
   const waitingCount = useQueueCount('submitted');
