@@ -16,9 +16,6 @@ import {
   Layers,
   Phone,
   Mail,
-  MessageSquare,
-  Copy,
-  Check,
   UserCheck
 } from 'lucide-react';
 import { useDistrictClubs, useZoneNames, type DistrictClubLive } from '../../hooks/useDistrictClubs';
@@ -172,7 +169,6 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const updateTooltipPos = (clientX: number, clientY: number) => {
     const tooltipWidth = 320;
@@ -201,13 +197,6 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
 
   const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     updateTooltipPos(e.clientX, e.clientY);
-  };
-
-  const handleCopy = (text: string | undefined, fieldKey: string) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldKey);
-    setTimeout(() => setCopiedField(null), 1800);
   };
 
   useEffect(() => {
