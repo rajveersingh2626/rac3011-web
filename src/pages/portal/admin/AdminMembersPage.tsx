@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { ApiError } from '@/lib/api';
 import {
+  changeMemberPassword,
   commitMemberImport,
   fetchMembers,
   previewMemberImport,
+  resetMemberPassword,
   updateMemberStatus,
 } from '@/lib/members/api';
 import type { ImportPreviewRow, Member } from '@/lib/members/types';
@@ -24,6 +26,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
+import { KeyRound, ShieldAlert, Users, UserCheck, Clock } from 'lucide-react';
 
 const STATUS_TONE: Record<string, BadgeTone> = { pending: 'amber', approved: 'green', suspended: 'red' };
 
@@ -33,6 +36,124 @@ function timeAgo(iso: string): string {
   if (days <= 0) return 'today';
   if (days === 1) return 'yesterday';
   return `${days} days ago`;
+}
+
+function MemberPasswordModal({
+  member,
+  onClose,
+}: {
+  member: Member | null;
+  onClose: () => void;
+}) {
+  const { toast } = useToast();
+  const [customPassword, setCustomPassword] = useState('');
+  const [temporaryPassword, setTemporaryPassword] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const resetMutation = useMutation({
+    mutationFn: () => resetMemberPassword(member!.id),
+    onSuccess: (data) => {
+      if (data.temporaryPassword) {
+        setTemporaryPassword(data.temporaryPassword);
+      }
+      toast({ title: 'Password reset generated', tone: 'success' });
+    },
+    onError: (e) => toast({ title: e instanceof ApiError ? e.message : 'Reset failed', tone: 'error' }),
+  });
+
+  const changeMutation = useMutation({
+    mutationFn: () => changeMemberPassword(member!.id, customPassword),
+    onSuccess: () => {
+      toast({ title: 'Password updated successfully', tone: 'success' });
+      setCustomPassword('');
+      onClose();
+    },
+    onError: (e) => toast({ title: e instanceof ApiError ? e.message : 'Change password failed', tone: 'error' }),
+  });
+
+  const handleCopy = () => {
+    if (temporaryPassword) {
+      navigator.clipboard.writeText(temporaryPassword);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+      toast({ title: 'Copied to clipboard!', tone: 'success' });
+    }
+  };
+
+  return (
+    <Modal
+      open={Boolean(member)}
+      onClose={() => {
+        setTemporaryPassword(null);
+        setCustomPassword('');
+        onClose();
+      }}
+      title={`Password Controls · ${member?.fullName}`}
+      footer={
+        <Button variant="ghost" onClick={onClose}>
+          Close
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <div className="rounded-lg bg-surface-2 p-3 text-[13px] text-fg-2">
+          Manage login credentials for <strong>{member?.email}</strong>.
+        </div>
+
+        {temporaryPassword ? (
+          <div className="flex flex-col gap-2 rounded-lg border border-accent/30 bg-accent/5 p-4">
+            <p className="m-0 text-[12px] font-bold text-accent">TEMPORARY PASSWORD GENERATED</p>
+            <div className="flex items-center justify-between rounded bg-surface p-2 font-mono text-[14px] font-bold text-fg border border-line">
+              <span>{temporaryPassword}</span>
+              <Button size="sm" variant="secondary" onClick={handleCopy}>
+                {copied ? 'Copied!' : 'Copy'}
+              </Button>
+            </div>
+            <p className="m-0 text-[11px] text-fg-3">
+              Share this temporary password securely with the member so they can log in and update their profile.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <div className="rounded-lg border border-line p-3">
+              <p className="m-0 mb-1 text-[12px] font-bold text-fg">Option 1: Quick Temporary Password</p>
+              <p className="m-0 mb-3 text-[11.5px] text-fg-3">
+                Instantly generate and view a temporary reset password for this member.
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                loading={resetMutation.isPending}
+                onClick={() => resetMutation.mutate()}
+              >
+                Generate &amp; View Password
+              </Button>
+            </div>
+
+            <div className="rounded-lg border border-line p-3">
+              <p className="m-0 mb-1 text-[12px] font-bold text-fg">Option 2: Set Custom Password</p>
+              <div className="flex flex-col gap-2 mt-2">
+                <Input
+                  type="password"
+                  placeholder="Enter new password (min 8 chars)"
+                  value={customPassword}
+                  onChange={(e) => setCustomPassword(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  disabled={customPassword.length < 8}
+                  loading={changeMutation.isPending}
+                  onClick={() => changeMutation.mutate()}
+                >
+                  Save New Password
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
 }
 
 function RejectModal({
@@ -181,6 +302,7 @@ export function AdminMembersPage() {
   const [q, setQ] = useState('');
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [passwordMember, setPasswordMember] = useState<Member | null>(null);
 
   const effectiveClubId = clubId || clubs[0]?.id || '';
   const membersQuery = useQuery({
@@ -210,6 +332,9 @@ export function AdminMembersPage() {
   const items = useMemo(() => membersQuery.data?.items ?? [], [membersQuery.data]);
   const pending = useMemo(() => items.filter((m) => m.status === 'pending'), [items]);
   const roster = useMemo(() => items.filter((m) => m.status !== 'pending'), [items]);
+  const approved = useMemo(() => items.filter((m) => m.status === 'approved'), [items]);
+  const suspended = useMemo(() => items.filter((m) => m.status === 'suspended'), [items]);
+  const totalCount = membersQuery.data?.total ?? items.length;
 
   if (membersQuery.isError) {
     return (
@@ -222,10 +347,53 @@ export function AdminMembersPage() {
   return (
     <Container width="wide">
       <Section
-        eyebrow="An account is worth approving quickly"
+        eyebrow="Club & District Membership Management"
         title="Members"
-        description={`${roster.length} on the roster, ${pending.length} waiting for you.`}
+        description={`Manage roster, login credentials, and approval queue (${totalCount} total members recorded).`}
       >
+        {/* Stat Overview Cards */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">
+              <Users size={20} />
+            </div>
+            <div>
+              <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3">Total Members</p>
+              <p className="m-0 text-[20px] font-black text-fg">{totalCount}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10 text-green-600">
+              <UserCheck size={20} />
+            </div>
+            <div>
+              <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3">Active Roster</p>
+              <p className="m-0 text-[20px] font-black text-fg">{approved.length}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
+              <Clock size={20} />
+            </div>
+            <div>
+              <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3">Pending Approval</p>
+              <p className="m-0 text-[20px] font-black text-fg">{pending.length}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-4 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10 text-red-600">
+              <ShieldAlert size={20} />
+            </div>
+            <div>
+              <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3">Suspended</p>
+              <p className="m-0 text-[20px] font-black text-fg">{suspended.length}</p>
+            </div>
+          </div>
+        </div>
+
         {clubs.length > 1 && (
           <div className="mb-5 max-w-[260px]">
             <Select
@@ -294,16 +462,25 @@ export function AdminMembersPage() {
             ) : (
               <ul className="m-0 flex list-none flex-col gap-2 p-0">
                 {roster.map((m) => (
-                  <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-line-accent px-3 py-2.5">
+                  <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 rounded-[8px] border border-line-accent px-3 py-2.5 bg-surface">
                     <div className="flex items-center gap-3">
                       <Avatar name={m.fullName} src={m.photoUrl ?? undefined} size="md" />
                       <div>
                         <p className="m-0 text-[13px] font-bold text-fg">{m.fullName}</p>
-                        <p className="m-0 text-[11.5px] text-fg-3">{[m.email, ...m.skills].join(' · ')}</p>
+                        <p className="m-0 text-[11.5px] text-fg-3">{[m.email, ...m.skills].filter(Boolean).join(' · ')}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge tone={STATUS_TONE[m.status]}>{m.status.toUpperCase()}</Badge>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex items-center gap-1.5"
+                        onClick={() => setPasswordMember(m)}
+                      >
+                        <KeyRound size={13} />
+                        <span>Password</span>
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -317,7 +494,7 @@ export function AdminMembersPage() {
                 ))}
               </ul>
             )}
-            <p className="mt-3 text-[11px] text-fg-3">Showing {roster.length} of {membersQuery.data?.total ?? roster.length}</p>
+            <p className="mt-3 text-[11px] text-fg-3">Showing {roster.length} of {totalCount}</p>
           </>
         )}
       </Section>
@@ -331,6 +508,8 @@ export function AdminMembersPage() {
         }}
       />
       <ImportModal clubId={effectiveClubId} open={importOpen} onClose={() => setImportOpen(false)} />
+      <MemberPasswordModal member={passwordMember} onClose={() => setPasswordMember(null)} />
     </Container>
   );
 }
+

@@ -42,11 +42,23 @@ function listBlockOf<T>(blocks: ContentBlocks | undefined, sectionKey: string, s
   return parsed.success ? parsed.data : null;
 }
 
-const ACHIEVEMENT_BADGE_BY_TYPE: Record<ApiAchievement['type'], string> = {
+const ACHIEVEMENT_BADGE_BY_TYPE: Record<string, string> = {
   chartered_club: 'Charter Expansion',
   award: 'Award & Recognition',
   milestone: 'District Milestone',
+  event: 'Flagship Event',
+  training: 'Leadership Training',
+  community: 'Community Service',
+  sports: 'Sports & Fellowship',
+  international: 'International Service',
+  professional: 'Professional Dev',
 };
+
+function formatAchievementBadge(type: string | undefined): string {
+  if (!type) return 'District Milestone';
+  if (ACHIEVEMENT_BADGE_BY_TYPE[type]) return ACHIEVEMENT_BADGE_BY_TYPE[type];
+  return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 function SectionDivider() {
   return (
@@ -594,21 +606,20 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
     const items = achievementsQuery.data?.items;
     if (!items || items.length === 0) return DISTRICT_ACHIEVEMENTS;
     return items.map((item, idx) => {
-      // Match by title, not index: the DB has no badge/value/colour, and index-joining a
-      // reordered or partial API list would hand each row someone else's presentation fields.
       const base =
-        DISTRICT_ACHIEVEMENTS.find((a) => a.title.toLowerCase() === item.title.toLowerCase()) ??
+        DISTRICT_ACHIEVEMENTS.find((a) => a.title.toLowerCase() === (item.title || '').toLowerCase()) ??
         DISTRICT_ACHIEVEMENTS[idx % DISTRICT_ACHIEVEMENTS.length];
-      const matched = base.title.toLowerCase() === item.title.toLowerCase();
+      const matched = Boolean(base && base.title.toLowerCase() === (item.title || '').toLowerCase());
+      const badge = matched ? base.badge : formatAchievementBadge(item.type);
       return {
-        id: item.id,
-        title: item.title || base.title,
-        value: base.value,
-        badge: matched ? base.badge : (ACHIEVEMENT_BADGE_BY_TYPE[item.type] ?? base.badge),
-        metric: base.metric,
-        description: item.description || base.description,
-        highlight: item.title || base.highlight,
-        color: base.color,
+        id: item.id || `ach-${idx + 1}`,
+        title: item.title || base?.title || `District Milestone ${idx + 1}`,
+        value: base?.value || 'Milestone',
+        badge: badge,
+        metric: base?.metric || badge,
+        description: item.description || base?.description || '',
+        highlight: item.title || base?.highlight || '',
+        color: base?.color || (idx % 2 === 0 ? '#123499' : '#0284C7'),
       };
     });
   }, [achievementsQuery.data]);

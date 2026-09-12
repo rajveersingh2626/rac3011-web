@@ -132,3 +132,21 @@ export async function requestMemberContact(memberId: string, reason?: string): P
 export function qrSvgUrl(apiOrigin: string): string {
   return `${apiOrigin}/me/qr.svg`;
 }
+
+export async function changeMemberPassword(
+  id: string,
+  password?: string,
+): Promise<{ temporaryPassword?: string; message: string }> {
+  return apiFetch(`/members/${encodeURIComponent(id)}/change-password`, {
+    method: 'POST',
+    body: { password },
+  });
+}
+
+export async function resetMemberPassword(
+  id: string,
+): Promise<{ temporaryPassword?: string; message: string }> {
+  return apiFetch(`/members/${encodeURIComponent(id)}/reset-password`, {
+    method: 'POST',
+  });
+}

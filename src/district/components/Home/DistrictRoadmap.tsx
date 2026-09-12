@@ -1,71 +1,72 @@
 import { FC } from 'react';
-import { Award, CheckCircle2, Users, GraduationCap } from 'lucide-react';
+import { Award, CheckCircle2, Users, GraduationCap, Sparkles, Star, Flag, Zap } from 'lucide-react';
 import type { Achievement } from '../../data/districtData';
 
 interface DistrictRoadmapProps {
   achievements: Achievement[];
 }
 
-export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements }) => {
-  // 4 Core Milestones mapping to the Pillars
-  const steps = [
+const ICONS = [Award, CheckCircle2, Users, GraduationCap, Sparkles, Star, Flag, Zap];
+const ACCENTS = ['#123499', '#0284C7', '#4F46E5', '#0C2470', '#D81B60', '#059669', '#7C3AED', '#EA580C'];
+
+export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] }) => {
+  // Map all achievements dynamically
+  const dynamicSteps = (achievements.length > 0 ? achievements : [
     {
-      num: '01',
-      tag: 'PILLAR 01',
-      title: achievements[0]?.title || 'Charter Expansion Across NCR',
-      metric: achievements[0]?.metric || 'New Clubs Chartered',
-      desc: achievements[0]?.description || 'New community and campus Rotaract clubs chartered during the year, expanding youth leadership and service reach across Delhi NCR.',
-      badge: achievements[0]?.badge || 'Charter Expansion',
-      highlight: achievements[0]?.highlight || 'Active Charters',
-      icon: Award,
-      accent: '#123499',
-      glow: 'rgba(18, 52, 153, 0.35)',
-      posDesktop: { top: '8%', left: '16%' },
-      nodeDesktop: { top: '16%', left: '38%' }
+      id: '1',
+      title: 'Charter Expansion Across NCR',
+      metric: 'New Clubs Chartered',
+      description: 'New community and campus Rotaract clubs chartered during the year, expanding youth leadership and service reach across Delhi NCR.',
+      badge: 'Charter Expansion',
+      highlight: 'Active Charters',
+      color: '#123499'
     },
     {
-      num: '02',
-      tag: 'PILLAR 02',
-      title: achievements[1]?.title || '100% Attendance at DOLS',
-      metric: achievements[1]?.metric || 'Leadership Milestone',
-      desc: achievements[1]?.description || 'Full attendance achieved at the District Officers Leadership Seminar, demonstrating unwavering governance across all teams.',
-      badge: achievements[1]?.badge || 'Leadership Milestone',
-      highlight: achievements[1]?.highlight || '100% Attendance at DOLS',
-      icon: CheckCircle2,
-      accent: '#0284C7',
-      glow: 'rgba(2, 132, 199, 0.35)',
-      posDesktop: { top: '34%', right: '14%' },
-      nodeDesktop: { top: '42%', right: '36%' }
+      id: '2',
+      title: '100% Attendance at DOLS',
+      metric: 'Leadership Milestone',
+      description: 'Full attendance achieved at the District Officers Leadership Seminar, demonstrating unwavering governance across all teams.',
+      badge: 'Leadership Milestone',
+      highlight: '100% Attendance at DOLS',
+      color: '#0284C7'
     },
     {
-      num: '03',
-      tag: 'PILLAR 03',
-      title: achievements[2]?.title || '500+ District Installation Participation',
-      metric: achievements[2]?.metric || 'District Fellowship',
-      desc: achievements[2]?.description || 'Over 500+ delegates united at the District Installation Ceremony to inaugurate RY 2026–27 across all 4 zones.',
-      badge: achievements[2]?.badge || 'District Fellowship',
-      highlight: achievements[2]?.highlight || '500+ Delegates',
-      icon: Users,
-      accent: '#4F46E5',
-      glow: 'rgba(79, 70, 229, 0.35)',
-      posDesktop: { top: '60%', left: '16%' },
-      nodeDesktop: { top: '68%', left: '38%' }
+      id: '3',
+      title: '500+ District Installation Participation',
+      metric: 'District Fellowship',
+      description: 'Over 500+ delegates united at the District Installation Ceremony to inaugurate RY 2026–27 across all 4 zones.',
+      badge: 'District Fellowship',
+      highlight: '500+ Delegates',
+      color: '#4F46E5'
     },
     {
-      num: '04',
-      tag: 'PILLAR 04',
-      title: achievements[3]?.title || 'CLLS & PLS/SLS Leadership Seminars',
-      metric: achievements[3]?.metric || 'Training Excellence',
-      desc: achievements[3]?.description || 'Comprehensive President, Secretary, and Club Leaders Leadership Seminars conducted with full slate curriculum.',
-      badge: achievements[3]?.badge || 'Training Excellence',
-      highlight: achievements[3]?.highlight || 'Full Slate Conducted',
-      icon: GraduationCap,
-      accent: '#0C2470',
-      glow: 'rgba(12, 36, 112, 0.35)',
-      posDesktop: { top: '82%', right: '14%' },
-      nodeDesktop: { top: '90%', right: '36%' }
+      id: '4',
+      title: 'CLLS & PLS/SLS Leadership Seminars',
+      metric: 'Training Excellence',
+      description: 'Comprehensive President, Secretary, and Club Leaders Leadership Seminars conducted with full slate curriculum.',
+      badge: 'Training Excellence',
+      highlight: 'Full Slate Conducted',
+      color: '#0C2470'
     }
-  ];
+  ]).map((ach, idx) => {
+    const Icon = ICONS[idx % ICONS.length];
+    const accent = ach.color || ACCENTS[idx % ACCENTS.length];
+    return {
+      num: String(idx + 1).padStart(2, '0'),
+      tag: `PILLAR ${String(idx + 1).padStart(2, '0')}`,
+      title: ach.title || `Milestone ${idx + 1}`,
+      metric: ach.metric || ach.badge || 'District Achievement',
+      desc: ach.description || '',
+      badge: ach.badge || 'District Achievement',
+      highlight: ach.highlight || ach.title,
+      icon: Icon,
+      accent,
+      glow: `${accent}55`,
+    };
+  });
+
+  const coreSteps = dynamicSteps.slice(0, 4);
+  const extraSteps = dynamicSteps.slice(4);
 
   return (
     <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
@@ -166,130 +167,179 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements }) => {
         </svg>
 
         {/* Milestone Node 1 (Top Left) */}
-        <div style={{ position: 'absolute', top: '50px', left: '40px', width: '380px' }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(18, 52, 153, 0.12)', border: '1px solid rgba(18, 52, 153, 0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#123499', letterSpacing: '0.8px' }}>DATA 01</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
-                {steps[0].metric}
-              </span>
+        {coreSteps[0] && (
+          <>
+            <div style={{ position: 'absolute', top: '50px', left: '40px', width: '380px' }}>
+              <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(18, 52, 153, 0.12)', border: '1px solid rgba(18, 52, 153, 0.16)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#123499', letterSpacing: '0.8px' }}>{coreSteps[0].tag}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
+                    {coreSteps[0].metric}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[0].title}</h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[0].desc}</p>
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{steps[0].title}</h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{steps[0].desc}</p>
-          </div>
-        </div>
-        {/* Hexagon 1 on Road */}
-        <div style={{ position: 'absolute', top: '198px', left: '445px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #123499 0%, #1D4ED8 100%)',
-            borderRadius: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 0 30px rgba(18, 52, 153, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
-            border: '3px solid #FFFFFF'
-          }}>
-            <Award size={28} />
-          </div>
-        </div>
+            <div style={{ position: 'absolute', top: '198px', left: '445px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #123499 0%, #1D4ED8 100%)',
+                borderRadius: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                boxShadow: '0 0 30px rgba(18, 52, 153, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                border: '3px solid #FFFFFF'
+              }}>
+                <Award size={28} />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Milestone Node 2 (Upper Right) */}
-        <div style={{ position: 'absolute', top: '270px', right: '40px', width: '380px' }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0284C7', letterSpacing: '0.8px' }}>DATA 02</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', backgroundColor: '#F0F9FF', padding: '2px 8px', borderRadius: '6px' }}>
-                {steps[1].metric}
-              </span>
+        {coreSteps[1] && (
+          <>
+            <div style={{ position: 'absolute', top: '270px', right: '40px', width: '380px' }}>
+              <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.16)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0284C7', letterSpacing: '0.8px' }}>{coreSteps[1].tag}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0284C7', backgroundColor: '#F0F9FF', padding: '2px 8px', borderRadius: '6px' }}>
+                    {coreSteps[1].metric}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[1].title}</h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[1].desc}</p>
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{steps[1].title}</h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{steps[1].desc}</p>
-          </div>
-        </div>
-        {/* Hexagon 2 on Road */}
-        <div style={{ position: 'absolute', top: '422px', left: '710px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
-            borderRadius: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 0 30px rgba(2, 132, 199, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
-            border: '3px solid #FFFFFF'
-          }}>
-            <CheckCircle2 size={28} />
-          </div>
-        </div>
+            <div style={{ position: 'absolute', top: '422px', left: '710px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
+                borderRadius: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                boxShadow: '0 0 30px rgba(2, 132, 199, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                border: '3px solid #FFFFFF'
+              }}>
+                <CheckCircle2 size={28} />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Milestone Node 3 (Lower Left) */}
-        <div style={{ position: 'absolute', top: '510px', left: '40px', width: '380px' }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#4F46E5', letterSpacing: '0.8px' }}>DATA 03</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#4F46E5', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
-                {steps[2].metric}
-              </span>
+        {coreSteps[2] && (
+          <>
+            <div style={{ position: 'absolute', top: '510px', left: '40px', width: '380px' }}>
+              <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.16)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#4F46E5', letterSpacing: '0.8px' }}>{coreSteps[2].tag}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#4F46E5', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
+                    {coreSteps[2].metric}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[2].title}</h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[2].desc}</p>
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{steps[2].title}</h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{steps[2].desc}</p>
-          </div>
-        </div>
-        {/* Hexagon 3 on Road */}
-        <div style={{ position: 'absolute', top: '652px', left: '388px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-            borderRadius: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 0 30px rgba(79, 70, 229, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
-            border: '3px solid #FFFFFF'
-          }}>
-            <Users size={28} />
-          </div>
-        </div>
+            <div style={{ position: 'absolute', top: '652px', left: '388px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+                borderRadius: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                boxShadow: '0 0 30px rgba(79, 70, 229, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                border: '3px solid #FFFFFF'
+              }}>
+                <Users size={28} />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Milestone Node 4 (Bottom Right) */}
-        <div style={{ position: 'absolute', bottom: '20px', right: '40px', width: '380px' }}>
-          <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(12, 36, 112, 0.12)', border: '1px solid rgba(12, 36, 112, 0.16)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0C2470', letterSpacing: '0.8px' }}>DATA 04</span>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0C2470', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
-                {steps[3].metric}
-              </span>
+        {coreSteps[3] && (
+          <>
+            <div style={{ position: 'absolute', bottom: '20px', right: '40px', width: '380px' }}>
+              <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(12, 36, 112, 0.12)', border: '1px solid rgba(12, 36, 112, 0.16)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0C2470', letterSpacing: '0.8px' }}>{coreSteps[3].tag}</span>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0C2470', backgroundColor: '#EEF2FF', padding: '2px 8px', borderRadius: '6px' }}>
+                    {coreSteps[3].metric}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[3].title}</h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[3].desc}</p>
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{steps[3].title}</h3>
-            <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{steps[3].desc}</p>
-          </div>
-        </div>
-        {/* Hexagon 4 on Road */}
-        <div style={{ position: 'absolute', bottom: '15px', left: '810px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            background: 'linear-gradient(135deg, #0C2470 0%, #1E3A8A 100%)',
-            borderRadius: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 0 30px rgba(12, 36, 112, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
-            border: '3px solid #FFFFFF'
-          }}>
-            <GraduationCap size={28} />
-          </div>
-        </div>
+            <div style={{ position: 'absolute', bottom: '15px', left: '810px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                background: 'linear-gradient(135deg, #0C2470 0%, #1E3A8A 100%)',
+                borderRadius: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#FFFFFF',
+                boxShadow: '0 0 30px rgba(12, 36, 112, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                border: '3px solid #FFFFFF'
+              }}>
+                <GraduationCap size={28} />
+              </div>
+            </div>
+          </>
+        )}
 
       </div>
+
+      {/* Extra Milestones for Desktop if > 4 */}
+      {extraSteps.length > 0 && (
+        <div className="hidden md:grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '30px' }}>
+          {extraSteps.map((step, idx) => {
+            const Icon = step.icon;
+            return (
+              <div
+                key={idx}
+                style={{
+                  background: '#FFFFFF',
+                  borderRadius: '20px',
+                  padding: '22px 24px',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                  border: `1px solid ${step.accent}30`,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: step.accent, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon size={18} />
+                    </div>
+                    <span style={{ fontSize: '0.80rem', fontWeight: 900, color: step.accent }}>{step.tag}</span>
+                  </div>
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, color: step.accent, backgroundColor: `${step.accent}15`, padding: '3px 10px', borderRadius: '6px' }}>
+                    {step.metric}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{step.title}</h3>
+                <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Mobile Vertical Timeline Road (< 860px) */}
       <div className="block md:hidden" style={{ position: 'relative', paddingLeft: '32px', margin: '20px 0 32px' }}>
@@ -315,7 +365,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements }) => {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {steps.map((step, idx) => {
+          {dynamicSteps.map((step, idx) => {
             const Icon = step.icon;
             return (
               <div key={idx} style={{ position: 'relative', paddingLeft: '24px' }}>
