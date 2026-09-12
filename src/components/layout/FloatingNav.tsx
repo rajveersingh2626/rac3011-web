@@ -10,6 +10,7 @@ export interface FloatingNavLink {
   label: string;
   to: string;
   icon?: ReactNode;
+  badge?: string;
 }
 
 export interface FloatingNavProps {
@@ -189,8 +190,14 @@ export function FloatingNav({ links, homeHref, title }: FloatingNavProps) {
                       {({ isActive }) => (
                         <>
                           {l.icon && <span className="text-white/80">{l.icon}</span>}
-                          {l.label}
-                          {isActive && <span className="ml-auto size-1.5 rounded-full bg-[#F0407F]" />}
+                          <span>{l.label}</span>
+                          {l.badge ? (
+                            <span className="ml-auto rounded-full bg-[#D81B60]/25 px-2 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wider text-[#F0407F] border border-[#D81B60]/40">
+                              {l.badge}
+                            </span>
+                          ) : isActive ? (
+                            <span className="ml-auto size-1.5 rounded-full bg-[#F0407F]" />
+                          ) : null}
                         </>
                       )}
                     </NavLink>

@@ -746,12 +746,10 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                 <span>Secretary: {hoveredClub.secretary}</span>
               </div>
             )}
-            {hoveredClub.phone && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#166534' }}>
-                <Phone size={12} style={{ color: '#10b981' }} />
-                <span>{hoveredClub.phone}</span>
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#166534' }}>
+              <CheckCircle2 size={12} style={{ color: '#10b981' }} />
+              <span>Verified Directory Club</span>
+            </div>
             {hoveredClub.isDirector && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem' }}>
                 <Globe size={13} style={{ color: '#123499' }} />
@@ -867,69 +865,27 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
 
                   {/* President Contact Actions */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                    {currentSlideoutClub.phone && (
-                      <>
-                        <a
-                          href={`tel:${currentSlideoutClub.phone}`}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            padding: '6px 11px',
-                            borderRadius: '8px',
-                            background: '#FFFFFF',
-                            border: '1px solid #E4E4E7',
-                            color: '#0F172A',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            transition: 'all 0.2s ease'
-                          }}
-                        >
-                          <Phone size={12} style={{ color: '#10b981' }} /> {currentSlideoutClub.phone}
-                        </a>
-
-                        <a
-                          href={`https://wa.me/91${currentSlideoutClub.phone.replace(/[^0-9]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            padding: '6px 11px',
-                            borderRadius: '8px',
-                            background: '#25D366',
-                            color: '#FFFFFF',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                            boxShadow: '0 2px 6px rgba(37, 211, 102, 0.3)'
-                          }}
-                        >
-                          <MessageSquare size={12} /> WhatsApp
-                        </a>
-
-                        <button
-                          onClick={() => handleCopy(currentSlideoutClub.phone, `phone-${currentSlideoutClub.id}`)}
-                          style={{
-                            background: '#FFFFFF',
-                            border: '1px solid #E4E4E7',
-                            borderRadius: '8px',
-                            padding: '6px 8px',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '0.72rem',
-                            color: '#71717A'
-                          }}
-                          title="Copy phone"
-                        >
-                          {copiedField === `phone-${currentSlideoutClub.id}` ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
-                        </button>
-                      </>
-                    )}
+                    <a
+                      href="/portal/directory"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '7px 12px',
+                        borderRadius: '8px',
+                        background: '#FFF1F2',
+                        border: '1px solid #FECDD3',
+                        color: '#D81B60',
+                        fontSize: '0.8rem',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                      <Phone size={12} /> Get President's Contact
+                    </a>
 
                     {currentSlideoutClub.email && (
                       <a
@@ -959,7 +915,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                 </div>
 
                 {/* Club Secretary Card */}
-                {(currentSlideoutClub.secretary || currentSlideoutClub.secretaryPhone || currentSlideoutClub.secretaryEmail) && (
+                {(currentSlideoutClub.secretary || currentSlideoutClub.secretaryEmail) && (
                   <div 
                     style={{
                       background: '#F0FDF4',
@@ -979,68 +935,27 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
 
                     {/* Secretary Contact Actions */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                      {currentSlideoutClub.secretaryPhone && (
-                        <>
-                          <a
-                            href={`tel:${currentSlideoutClub.secretaryPhone}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              padding: '6px 11px',
-                              borderRadius: '8px',
-                              background: '#FFFFFF',
-                              border: '1px solid #D1FAE5',
-                              color: '#0F172A',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              textDecoration: 'none'
-                            }}
-                          >
-                            <Phone size={12} style={{ color: '#059669' }} /> {currentSlideoutClub.secretaryPhone}
-                          </a>
-
-                          <a
-                            href={`https://wa.me/91${currentSlideoutClub.secretaryPhone.replace(/[^0-9]/g, '')}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              padding: '6px 11px',
-                              borderRadius: '8px',
-                              background: '#25D366',
-                              color: '#FFFFFF',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              textDecoration: 'none',
-                              boxShadow: '0 2px 6px rgba(37, 211, 102, 0.3)'
-                            }}
-                          >
-                            <MessageSquare size={12} /> WhatsApp
-                          </a>
-
-                          <button
-                            onClick={() => handleCopy(currentSlideoutClub.secretaryPhone, `sec-phone-${currentSlideoutClub.id}`)}
-                            style={{
-                              background: '#FFFFFF',
-                              border: '1px solid #D1FAE5',
-                              borderRadius: '8px',
-                              padding: '6px 8px',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              fontSize: '0.72rem',
-                              color: '#71717A'
-                            }}
-                            title="Copy secretary phone"
-                          >
-                            {copiedField === `sec-phone-${currentSlideoutClub.id}` ? <Check size={12} style={{ color: '#10b981' }} /> : <Copy size={12} />}
-                          </button>
-                        </>
-                      )}
+                      <a
+                        href="/portal/directory"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '7px 12px',
+                          borderRadius: '8px',
+                          background: '#F0FDF4',
+                          border: '1px solid #BBF7D0',
+                          color: '#059669',
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          textDecoration: 'none',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        <Phone size={12} /> Get Secretary's Contact
+                      </a>
 
                       {currentSlideoutClub.secretaryEmail && (
                         <a

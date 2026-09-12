@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { KeyValue } from '@/components/ui/KeyValue';
 import { fetchReport, fetchReportSchemaVersion, addReportQuery, replyReportQuery, fetchReportAssist, downloadReportPdf, downloadReportCsv } from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
@@ -147,9 +148,18 @@ function QueryThread({ reportId, queries, canReply, canAsk }: {
 }
 
 export function ReportDetailPage() {
+  return (
+    <ErrorBoundary>
+      <ReportDetailPageInner />
+    </ErrorBoundary>
+  );
+}
+
+function ReportDetailPageInner() {
   const { id = '' } = useParams();
   const { can } = useAuth();
   useDocumentMeta({ title: 'Report detail' });
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
 
   const reportQuery = useQuery({ queryKey: ['reports', id], queryFn: () => fetchReport(id, ['queries', 'club']) });
   const schemaVersion = reportQuery.data?.schemaVersion;
@@ -181,7 +191,6 @@ export function ReportDetailPage() {
   const monthLabel = formatMonthLabel(report.month.slice(0, 7));
   const { topFields, activityFields } = splitFields(schemaQuery.data.fields);
   const activities = activitiesOf(report.values);
-  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null);
 
   return (
     <Container>

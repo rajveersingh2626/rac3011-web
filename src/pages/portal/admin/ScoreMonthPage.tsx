@@ -167,6 +167,13 @@ export function ScoreMonthPage() {
         eyebrow={club?.shortName ?? club?.name}
         title={`${club?.name ?? clubId} · ${monthLabel}`}
         description={`${computedTotal} points computed from the rules. One number is yours to set.`}
+        action={
+          summary.judged ? (
+            <Badge tone="green">Human Review Complete</Badge>
+          ) : (
+            <Badge tone="amber">Pending Human Review</Badge>
+          )
+        }
       >
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-accent">Computed — from the points document</p>
         <Card className="mb-6">

@@ -3,13 +3,15 @@ import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError } from '@/lib/api';
 import { fetchZones } from '@/lib/clubs';
-import { acceptPrivacyPolicy, fetchDirectory, fetchSkillTags } from '@/lib/members/api';
+import { acceptPrivacyPolicy, fetchDirectory, fetchSkillTags, requestMemberContact } from '@/lib/members/api';
+import type { DirectoryEntry } from '@/lib/members/types';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 import { Avatar } from '@/components/ui/Avatar';
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
@@ -48,12 +50,30 @@ export function DirectoryPage() {
   const [q, setQ] = useState('');
   const [skill, setSkill] = useState('');
   const [zoneId, setZoneId] = useState('');
+  const [requestTarget, setRequestTarget] = useState<DirectoryEntry | null>(null);
+  const [requestReason, setRequestReason] = useState('');
+  const [requestSuccessMessage, setRequestSuccessMessage] = useState<string | null>(null);
 
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
   const skillTagsQuery = useQuery({ queryKey: ['skill-tags'], queryFn: fetchSkillTags });
   const directoryQuery = useQuery({
     queryKey: ['directory', q, skill, zoneId],
     queryFn: () => fetchDirectory({ q: q || undefined, skill: skill || undefined, zoneId: zoneId || undefined }),
+  });
+
+  const requestMutation = useMutation({
+    mutationFn: async () => {
+      if (!requestTarget) return;
+      return requestMemberContact(requestTarget.id, requestReason.trim() || undefined);
+    },
+    onSuccess: (res) => {
+      setRequestSuccessMessage(res?.message || 'Contact request sent successfully.');
+      setTimeout(() => {
+        setRequestTarget(null);
+        setRequestReason('');
+        setRequestSuccessMessage(null);
+      }, 2500);
+    },
   });
 
   const privacyBlocked =
@@ -64,7 +84,7 @@ export function DirectoryPage() {
       <Section
         eyebrow="Searchable by what people can do"
         title="District directory"
-        description="Name, club, zone, skills and photograph &ndash; no contact details. Reach someone through their own club president."
+        description="Browse members across all clubs and zones. Respecting member privacy, direct contact details can be requested securely through the portal."
       >
         {privacyBlocked ? (
           <PrivacyGate onAccepted={() => void qc.invalidateQueries({ queryKey: ['directory'] })} />
@@ -108,27 +128,42 @@ export function DirectoryPage() {
             ) : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {(directoryQuery.data?.items ?? []).map((m) => (
-                  <Card key={m.id}>
-                    <div className="flex items-start gap-3">
-                      <Avatar name={m.fullName} src={m.photoUrl ?? undefined} size="lg" />
-                      <div className="min-w-0">
-                        <p className="m-0 text-[13.5px] font-extrabold text-fg">{m.fullName}</p>
-                        <p className="m-0 text-[11.5px] text-fg-3">
-                          {m.club.name}
-                          {m.club.zoneName ? ` · ${m.club.zoneName}` : ''}
-                        </p>
+                  <Card key={m.id} className="flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start gap-3">
+                        <Avatar name={m.fullName} src={m.photoUrl ?? undefined} size="lg" />
+                        <div className="min-w-0">
+                          <p className="m-0 text-[13.5px] font-extrabold text-fg">{m.fullName}</p>
+                          <p className="m-0 text-[11.5px] text-fg-3">
+                            {m.club.name}
+                            {m.club.zoneName ? ` · ${m.club.zoneName}` : ''}
+                          </p>
+                        </div>
                       </div>
+                      {(m.skills.length > 0 || m.interests.length > 0) && (
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {[...m.skills, ...m.interests].slice(0, 4).map((s) => (
+                            <Chip key={s} label={s} />
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {(m.skills.length > 0 || m.interests.length > 0) && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {[...m.skills, ...m.interests].slice(0, 4).map((s) => (
-                          <Chip key={s} label={s} />
-                        ))}
-                      </div>
-                    )}
-                    <p className="m-0 mt-3 text-[11.5px] font-bold text-accent">
-                      Ask their president to introduce you &rarr;
-                    </p>
+                    <div className="mt-4 pt-3 border-t border-line flex items-center justify-between">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          setRequestTarget(m);
+                          setRequestReason('');
+                          setRequestSuccessMessage(null);
+                        }}
+                      >
+                        Request Number
+                      </Button>
+                      <span className="text-[11.5px] text-fg-3">
+                        Verified Member
+                      </span>
+                    </div>
                   </Card>
                 ))}
               </div>
@@ -136,10 +171,66 @@ export function DirectoryPage() {
           </>
         )}
 
+        {/* Modal for Requesting Member Contact */}
+        {requestTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl border border-line">
+              <h3 className="m-0 text-lg font-bold text-fg">
+                Request Contact for {requestTarget.fullName}
+              </h3>
+              <p className="mt-1 text-sm text-fg-2">
+                Club: {requestTarget.club.name}
+              </p>
+
+              {requestSuccessMessage ? (
+                <div className="mt-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-4 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800">
+                  <p className="m-0 text-sm font-semibold">{requestSuccessMessage}</p>
+                </div>
+              ) : (
+                <>
+                  <p className="mt-3 text-xs text-fg-3">
+                    In accordance with district privacy guidelines, your name and email will be forwarded to {requestTarget.fullName} along with your message so they can connect with you.
+                  </p>
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-fg-2 mb-1.5">
+                      Message / Reason (optional)
+                    </label>
+                    <Textarea
+                      placeholder="e.g. Planning a joint project or would like to connect regarding blood donation initiatives..."
+                      value={requestReason}
+                      onChange={(e) => setRequestReason(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  {requestMutation.isError && (
+                    <p className="mt-2 text-xs text-danger font-semibold">
+                      Failed to send request. Please try again.
+                    </p>
+                  )}
+                  <div className="mt-6 flex justify-end gap-3">
+                    <Button
+                      variant="secondary"
+                      disabled={requestMutation.isPending}
+                      onClick={() => setRequestTarget(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      loading={requestMutation.isPending}
+                      onClick={() => requestMutation.mutate()}
+                    >
+                      Send Request
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mt-6">
-          <Alert tone="info" title="No contact details, deliberately">
-            This shows name, club, zone, skills and photograph. Reaching someone goes through their own club
-            president, not a phone number or email listed here.
+          <Alert tone="info" title="Privacy-First Contact Flow">
+            To protect our members from unsolicited calls and spam, contact numbers are requested through authenticated notifications rather than published in plain text.
           </Alert>
         </div>
       </Section>

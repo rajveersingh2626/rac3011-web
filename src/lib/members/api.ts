@@ -122,6 +122,13 @@ export async function fetchMyCard() {
   return apiFetch('/me/card', { schema: memberCardSchema });
 }
 
+export async function requestMemberContact(memberId: string, reason?: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch(`/directory/${encodeURIComponent(memberId)}/request-contact`, {
+    method: 'POST',
+    body: { reason },
+  });
+}
+
 export function qrSvgUrl(apiOrigin: string): string {
   return `${apiOrigin}/me/qr.svg`;
 }

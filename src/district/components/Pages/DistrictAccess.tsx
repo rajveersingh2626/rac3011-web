@@ -279,7 +279,6 @@ export default function DistrictAccess({
                     <div>
                       {/* Avatar with fallback */}
                       <div style={{ position: 'relative', width: '96px', height: '96px', margin: '0 auto 16px auto' }}>
-                        {/* An empty src resolves to the page URL and never fires onError, so omit the img entirely. */}
                         {leader.photo ? (
                           <img
                             src={leader.photo}
@@ -295,6 +294,7 @@ export default function DistrictAccess({
                               height: '96px',
                               borderRadius: '50%',
                               objectFit: 'cover',
+                              objectPosition: '50% 20%',
                               border: '3px solid #D81B60',
                               boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
                             }}
