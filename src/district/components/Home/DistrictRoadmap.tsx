@@ -87,10 +87,30 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements }) => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '3rem', fontWeight: 900, color: '#E2E8F0', letterSpacing: '-2px', userSelect: 'none' }}>
-            3011
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              padding: '8px 16px',
+              borderRadius: '16px',
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(12px)',
+              border: '1.5px solid rgba(18, 52, 153, 0.15)',
+              boxShadow: '0 8px 24px rgba(18, 52, 153, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <img
+              src="/district-logo.png"
+              alt="Rotaract District Organization 3011"
+              style={{
+                height: '38px',
+                width: 'auto',
+                objectFit: 'contain'
+              }}
+            />
+          </div>
         </div>
       </div>
 

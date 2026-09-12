@@ -1,12 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink } from 'react-router';
-import { Globe, ExternalLink } from 'lucide-react';
+import { Globe, ExternalLink, ArrowRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useTheme } from '@/app/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Menu, type MenuItem } from '@/components/ui/Menu';
 import { Drawer } from '@/components/ui/Drawer';
-import { MenuPillButton } from '@/components/ui/MenuPillButton';
 import { cn } from '@/lib/cn';
 import { PORTAL_NAV_GROUPS, type NavGroup } from './portalNav';
 
@@ -18,15 +17,35 @@ function visibleGroups(groups: NavGroup[], can: (perm: string) => boolean): NavG
 }
 
 function NavLinkItem({ to, label, onClick, external }: { to: string; label: string; onClick?: () => void; external?: boolean }) {
+  const [isHovered, setIsHovered] = useState(false);
+
   if (external) {
     return (
       <a
         href={to}
         onClick={onClick}
-        className="flex min-h-10 items-center justify-between rounded-[8px] px-3.5 text-[13px] font-semibold text-[#4A4A5A] transition-all hover:bg-[#FDF0F5]/70 hover:text-[#D81B60]"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className="group flex min-h-10 items-center justify-between rounded-[8px] px-3.5 text-[13px] font-semibold text-[#4A4A5A] transition-all hover:bg-[#FDF0F5]/70 hover:text-[#D81B60]"
       >
-        <span>{label}</span>
-        <ExternalLink size={12} className="opacity-50" />
+        <div className="flex items-center gap-1.5 overflow-hidden">
+          <div
+            className="flex items-center text-[#D81B60] transition-all duration-200"
+            style={{
+              width: isHovered ? '16px' : '0px',
+              opacity: isHovered ? 1 : 0,
+            }}
+          >
+            <ArrowRight size={13} />
+          </div>
+          <span
+            className="transition-transform duration-200"
+            style={{ transform: isHovered ? 'translateX(3px)' : 'translateX(0)' }}
+          >
+            {label}
+          </span>
+        </div>
+        <ExternalLink size={12} className="opacity-50 group-hover:opacity-100 group-hover:text-[#D81B60]" />
       </a>
     );
   }
@@ -35,16 +54,36 @@ function NavLinkItem({ to, label, onClick, external }: { to: string; label: stri
     <NavLink
       to={to}
       onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={({ isActive }) =>
         cn(
-          'flex min-h-10 items-center rounded-[8px] px-3.5 text-[13px] font-semibold transition-all',
+          'group flex min-h-10 items-center rounded-[8px] px-3.5 text-[13px] font-semibold transition-all',
           isActive
             ? 'bg-[#FDF0F5] text-[#D81B60] border-l-4 border-l-[#D81B60] border-y border-r border-[#F3E5EB] font-bold shadow-xs'
             : 'text-[#4A4A5A] hover:bg-[#FDF0F5]/70 hover:text-[#D81B60]',
         )
       }
     >
-      {label}
+      {({ isActive }) => (
+        <div className="flex items-center gap-1.5 overflow-hidden w-full">
+          <div
+            className="flex items-center text-[#D81B60] transition-all duration-200"
+            style={{
+              width: (isHovered || isActive) ? '16px' : '0px',
+              opacity: (isHovered || isActive) ? 1 : 0,
+            }}
+          >
+            <ArrowRight size={13} />
+          </div>
+          <span
+            className="transition-transform duration-200"
+            style={{ transform: (isHovered || isActive) ? 'translateX(3px)' : 'translateX(0)' }}
+          >
+            {label}
+          </span>
+        </div>
+      )}
     </NavLink>
   );
 }
@@ -179,11 +218,14 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
 
         {/* Left: Mobile Menu Trigger + District Logo */}
         <div className="flex items-center gap-3.5 lg:gap-6">
-          <MenuPillButton
+          <button
+            type="button"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            isOpen={mobileNavOpen}
-            className="lg:hidden"
-          />
+            aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            className="lg:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition-all hover:bg-white/20 hover:border-white/30"
+          >
+            {mobileNavOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
+          </button>
           <Link to="/portal/dashboard" className="flex items-center gap-2.5">
             <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="h-7 w-auto brightness-0 invert" />
             <span className="hidden sm:inline-block rounded-md bg-white/10 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-[#FF6B8B]">
@@ -192,21 +234,23 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
           </Link>
         </div>
 
-        {/* Center: Main Website Quick Pill Navigator */}
-        <div className="hidden md:flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[12px] font-bold shadow-xs">
+        {/* Center: Main Website Quick Navigator */}
+        <div className="hidden md:flex items-center gap-1.5 text-[12px] font-semibold text-white/80">
           <a
             href="/"
-            className="flex items-center gap-1.5 text-white/80 hover:text-white px-2 py-0.5 transition-colors"
+            className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-white/10"
           >
             <Globe size={13} className="text-[#FF4081]" />
             <span>Main Website</span>
           </a>
-          <span className="text-white/30">·</span>
-          <a href="/directory" className="text-white/60 hover:text-white px-1.5 py-0.5 text-[11.5px] transition-colors">Clubs Map</a>
-          <span className="text-white/30">·</span>
-          <a href="/initiatives" className="text-white/60 hover:text-white px-1.5 py-0.5 text-[11.5px] transition-colors">Initiatives</a>
-          <span className="text-white/30">·</span>
-          <a href="/leadership" className="text-white/60 hover:text-white px-1.5 py-0.5 text-[11.5px] transition-colors">Leadership</a>
+          <span className="text-white/25">·</span>
+          <a href="/directory" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Clubs Map</a>
+          <span className="text-white/25">·</span>
+          <a href="/showcase" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Showcase</a>
+          <span className="text-white/25">·</span>
+          <a href="/heritage" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Heritage</a>
+          <span className="text-white/25">·</span>
+          <a href="/governance" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Leadership</a>
         </div>
 
         {/* Right: User Scope & Profile Menu */}

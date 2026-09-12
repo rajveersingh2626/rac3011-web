@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import MorphedMenu, { type DistrictUserRole } from './MorphedMenu';
-import { Home, MapPin, Award, Users, FolderOpen, Calendar, ChevronDown } from 'lucide-react';
+import { Home, MapPin, Award, Users, FolderOpen, Calendar, ChevronDown, Sparkles } from 'lucide-react';
 
 export interface NavbarProps {
   activePage: string;
@@ -49,6 +49,7 @@ export default function Navbar({
 
   const districtSubTabs = [
     { id: 'map-clubs', label: 'Interactive Map & Clubs', shortLabel: 'Map & Clubs', icon: <MapPin size={18} /> },
+    { id: 'initiatives', label: 'Rotaract Showcase', shortLabel: 'Showcase', icon: <Sparkles size={18} /> },
     { id: 'heritage', label: 'Past DRR & Heritage', shortLabel: 'Heritage', icon: <Award size={18} /> },
     { id: 'leadership', label: 'District Leadership', shortLabel: 'Leadership', icon: <Users size={18} /> },
     { id: 'resources', label: 'Resources & Drive', shortLabel: 'Resources', icon: <FolderOpen size={18} /> },

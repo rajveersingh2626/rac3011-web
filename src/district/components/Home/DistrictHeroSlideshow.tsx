@@ -91,7 +91,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
         width: '100%',
         boxSizing: 'border-box',
         position: 'relative',
-        zIndex: 5
+        zIndex: 1
       }}
     >
       <div

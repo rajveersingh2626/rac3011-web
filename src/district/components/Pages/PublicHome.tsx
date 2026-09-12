@@ -193,7 +193,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: 0,
+        zIndex: 2,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
@@ -669,7 +669,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
       <section
         className="snap-section hero-section"
         style={{
-          background: '#FFFFFF',
+          background: 'transparent',
           textAlign: 'left',
           position: 'relative',
           display: 'flex',

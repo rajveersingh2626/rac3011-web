@@ -21,6 +21,9 @@ function currentEnvPrefix(hostname: string): '' | 'testing.' {
 }
 
 export function resolveSurface(hostname: string, search = ''): Surface {
+  const q = new URLSearchParams(search).get('surface');
+  if (isSurface(q)) return q;
+
   const host = hostname.toLowerCase().replace(/\.$/, '');
   const labels = host.split('.');
   const first = labels[0] ?? '';
@@ -31,10 +34,6 @@ export function resolveSurface(hostname: string, search = ''): Surface {
   if (first === 'testing') {
     const byTestingPrefix = PROJECT_SURFACES.find((s) => s === labels[1]);
     if (byTestingPrefix) return byTestingPrefix;
-  }
-  if (isLocalHost(host)) {
-    const q = new URLSearchParams(search).get('surface');
-    if (isSurface(q)) return q;
   }
   return 'main';
 }
@@ -59,7 +58,7 @@ export function portalHref(path: '/portal/login' | '/portal/dashboard' = '/porta
 
 export function surfaceHref(key: Exclude<Surface, 'main'>): string {
   const url = new URL(window.location.href);
-  if (isLocalHost(url.hostname)) {
+  if (isLocalHost(url.hostname) || url.hostname.startsWith('testing.') || url.hostname === 'preprod-origin') {
     url.searchParams.set('surface', key);
     url.pathname = '/';
     return url.toString();
