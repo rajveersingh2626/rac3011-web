@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import type { FC, FormEvent, MouseEvent, RefObject } from 'react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
@@ -456,7 +456,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
       let closestIndex = 0;
       let minDiff = Infinity;
 
-      sections.forEach((sec, idx) => {
+      sections.forEach((sec: HTMLElement, idx) => {
         const diff = Math.abs(sec.offsetTop - scrollTop);
         if (diff < minDiff) {
           minDiff = diff;
