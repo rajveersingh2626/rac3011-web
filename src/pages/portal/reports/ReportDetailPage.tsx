@@ -19,6 +19,8 @@ import { useToast } from '@/components/ui/Toast';
 import { createProject } from '@/lib/showcase/api';
 import { Sparkles, Plus, Trash2 } from 'lucide-react';
 import { fetchReport, fetchReportSchemaVersion, addReportQuery, replyReportQuery, fetchReportAssist, downloadReportPdf, downloadReportCsv } from '@/lib/reports/api';
+import { fetchClubPoints } from '@/lib/points/api';
+import type { ClubPointsEntry } from '@/lib/points/types';
 import type { Report, ReportStatus } from '@/lib/reports/types';
 import { formatMonthLabel } from '@/lib/reports/month';
 import { activitiesOf, formatFieldValue, splitFields } from '@/lib/reports/values';
@@ -232,6 +234,171 @@ function AssistPanel({ reportId }: { reportId: string }) {
             </ul>
           )}
         </>
+      )}
+    </Card>
+  );
+}
+
+function describeTrace(entry: ClubPointsEntry): string {
+  const trace = entry.trace as { inputs?: Record<string, number>; tierMatched?: { min: number; max: number | null } } | null;
+  if (!trace?.inputs) return '';
+  const { inputs } = trace;
+  if (trace.tierMatched) {
+    const { min, max } = trace.tierMatched;
+    const bracket = max === null ? `${min}+` : `${min}–${max}`;
+    if (inputs.numerator !== undefined) {
+      const ratio = inputs.denominator ? Math.round((inputs.numerator / inputs.denominator) * 100) : 0;
+      return `${ratio}% (${bracket} tier)`;
+    }
+    return `${inputs.value ?? ''} (${bracket} tier)`;
+  }
+  if (inputs.count !== undefined) return `${inputs.count} × unit(s)`;
+  if (inputs.value !== undefined) return `value: ${inputs.value}`;
+  return '';
+}
+
+function ReportPointsCard({
+  clubId,
+  month,
+  ryYear,
+  reportStatus,
+}: {
+  clubId: string;
+  month: string;
+  ryYear: number;
+  reportStatus: ReportStatus;
+}) {
+  const pointsQuery = useQuery({
+    queryKey: ['club-points', clubId, ryYear, month],
+    queryFn: () => fetchClubPoints(clubId, { ryYear, month }),
+  });
+
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+
+  if (pointsQuery.isPending) {
+    return (
+      <Card eyebrow="POINTS & SCORING RULES">
+        <Skeleton shape="rect" className="h-28" />
+      </Card>
+    );
+  }
+
+  if (pointsQuery.isError) {
+    return null;
+  }
+
+  const summary = pointsQuery.data;
+  const entries = summary.entries ?? [];
+  const total = summary.total;
+  const judged = summary.judged;
+
+  return (
+    <Card
+      eyebrow="POINTS & SCORING RULES"
+      title={
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>Monthly Points Breakdown</span>
+          <div className="flex items-center gap-2">
+            <Badge tone={reportStatus === 'scored' ? 'green' : 'blue'}>
+              {reportStatus === 'scored' ? `${total} PTS CONFIRMED` : `${total} PTS (CALCULATED)`}
+            </Badge>
+          </div>
+        </div>
+      }
+    >
+      {reportStatus !== 'scored' && (
+        <div className="mb-4 rounded-lg border border-line-accent bg-page p-3 text-[12.5px] text-fg-2">
+          <p className="m-0 font-medium text-fg">Pending Final Secretariat Scoring</p>
+          <p className="m-0 mt-0.5 text-fg-3 text-[11.5px]">
+            Points below reflect automated rule calculations from your reported activities and metrics. Final scores are verified by the District Secretariat upon review.
+          </p>
+        </div>
+      )}
+
+      {entries.length === 0 ? (
+        <p className="m-0 text-[13px] text-fg-3">
+          No automated rule points have been recorded for this report cycle yet.
+        </p>
+      ) : (
+        <div className="flex flex-col divide-y divide-line">
+          {entries.map((entry) => {
+            const isExpanded = expandedRow === entry.id;
+            const traceText = describeTrace(entry);
+            const traceObj = entry.trace as Record<string, unknown> | null;
+
+            return (
+              <div key={entry.id} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="m-0 text-[13.5px] font-semibold text-fg">{entry.ruleLabel}</p>
+                      {entry.categoryName && (
+                        <span className="rounded bg-accent/10 px-2 py-0.5 text-[10.5px] font-medium text-accent">
+                          {entry.categoryName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11.5px] text-fg-3">
+                      <span className="capitalize">{entry.ruleType} rule</span>
+                      {traceText && <span>&bull; {traceText}</span>}
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="text-[15px] font-bold text-fg">+{entry.points} pts</span>
+                    {traceObj && (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedRow(isExpanded ? null : entry.id)}
+                        className="text-[11.5px] font-semibold text-accent hover:underline"
+                      >
+                        {isExpanded ? 'Hide' : 'Trace'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isExpanded && traceObj && (
+                  <div className="mt-2.5 rounded-lg border border-line-accent bg-input p-3 text-[12px]">
+                    <div className="font-semibold text-fg-2 mb-1.5">Rule Evaluation Inputs:</div>
+                    {Object.entries((traceObj.inputs as Record<string, unknown>) || traceObj).map(([k, v]) => (
+                      <div key={k} className="flex justify-between py-0.5 text-fg-3">
+                        <span className="font-mono text-[11px]">{k}</span>
+                        <span className="font-semibold text-fg">{String(v)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {judged?.points !== null && judged?.points !== undefined && (
+        <div className="mt-4 border-t border-line pt-3 flex items-center justify-between text-[13px]">
+          <div>
+            <span className="font-semibold text-fg">Secretariat Judged Adjustment:</span>
+            {judged.reason && <p className="m-0 text-[11.5px] text-fg-3 mt-0.5">{judged.reason}</p>}
+          </div>
+          <span className="font-bold text-fg">
+            {judged.points >= 0 ? `+${judged.points}` : judged.points} pts
+          </span>
+        </div>
+      )}
+
+      {summary.byCategory && summary.byCategory.length > 0 && (
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3 mb-2">Category Summary</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {summary.byCategory.map((cat) => (
+              <div key={cat.categoryId} className="rounded-lg bg-page p-2.5 border border-line">
+                <div className="text-[11px] text-fg-3 truncate">{cat.categoryName}</div>
+                <div className="text-[14px] font-bold text-fg mt-0.5">{cat.points} pts</div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </Card>
   );
@@ -498,6 +665,13 @@ function ReportDetailPageInner() {
                 </div>
               )}
             </Card>
+
+            <ReportPointsCard
+              clubId={report.clubId}
+              month={report.month.slice(0, 7)}
+              ryYear={report.ryYear}
+              reportStatus={report.status}
+            />
 
             {report.notes && (
               <Card eyebrow="NOTES FOR THE DISTRICT">
