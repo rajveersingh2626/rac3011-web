@@ -145,7 +145,21 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
     }
 
     const rawContent = await page.content();
-    if (rawContent.includes('502: Bad gateway') || rawContent.includes('502 Bad Gateway') || rawContent.includes('cf_styles-css')) {
+    if (
+      rawContent.includes('502: Bad gateway') ||
+      rawContent.includes('502 Bad Gateway') ||
+      rawContent.includes('cf_styles-css') ||
+      rawContent.includes('"statusCode":') ||
+      rawContent.includes('"error":"Unauthorized"')
+    ) {
+      return { ok: false };
+    }
+
+    const hasRenderedRoot = await page.evaluate(() => {
+      const root = document.getElementById('root');
+      return Boolean(root && root.innerHTML.trim().length > 100);
+    });
+    if (!hasRenderedRoot) {
       return { ok: false };
     }
 
