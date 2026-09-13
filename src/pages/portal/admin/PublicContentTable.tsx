@@ -64,6 +64,11 @@ export function PublicContentTable<T extends { id: string }>({
       const isNew = editing === 'new';
       const keys = (isNew ? createKeys : updateKeys) ?? writableKeys ?? [];
       const payload = pick(values, keys);
+      for (const k of Object.keys(payload)) {
+        if ((payload as Record<string, unknown>)[k] === '') {
+          (payload as Record<string, unknown>)[k] = null;
+        }
+      }
       return !isNew && editing ? crud.update(editing.id, payload) : crud.create(payload);
     },
     onSuccess: () => {

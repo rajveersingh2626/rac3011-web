@@ -119,7 +119,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
               </li>
               <li>
                 <button onClick={() => (window.location.href = '/publications')} style={navLinkStyle}>
-                  Publications &amp; GML
+                  District Newsletters
                 </button>
               </li>
               <li>

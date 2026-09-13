@@ -17,7 +17,6 @@ export const PUBLIC_ROUTES: string[] = [
   '/contact',
   '/calendar',
   '/drr-calendar',
-  '/drr-calendar/admin',
   '/privacy-policy',
   '/terms-of-service',
 ];

@@ -29,7 +29,7 @@ export function PortalFeedbackPage() {
 
   const [category, setCategory] = useState<'general' | 'club'>('general');
   const [message, setMessage] = useState('');
-  const [anonymous, setAnonymous] = useState(false);
+  const [anonymous, setAnonymous] = useState(true);
   const [formSuccess, setFormSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 

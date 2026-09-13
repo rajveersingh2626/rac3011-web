@@ -49,7 +49,8 @@ export default function DistrictAccess({
   const teamQuery = useQuery({
     queryKey: ['public', 'district-team'],
     queryFn: fetchDistrictTeam,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const leadersList = useMemo<LeadershipEntry[]>(() => {

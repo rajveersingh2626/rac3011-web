@@ -14,25 +14,44 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { ShieldCheck } from 'lucide-react';
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, 'Enter your name'),
-  email: z.string().trim().min(1, 'Enter your email').email('Enter a valid email address'),
+  name: z.string().trim().max(200).optional(),
+  email: z.string().trim().email('Enter a valid email address').optional(),
   message: z.string().trim().min(1, 'Tell us what this is about'),
   website: z.string(),
 });
 
 export function ContactPage() {
-  useDocumentMeta({ title: 'Contact', description: 'Reach the district secretariat.' });
+  useDocumentMeta({ title: 'Contact & Grievances', description: 'Reach the district secretariat.' });
   const content = useContentQuery('contact');
   const [sent, setSent] = useState<string | null>(null);
+  const [anonymous, setAnonymous] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const form = useZodForm(contactSchema, { name: '', email: '', message: '', website: '' });
 
   const submit = form.handleSubmit(async (values) => {
     setFormError(null);
+    if (!anonymous && (!values.name || !values.name.trim())) {
+      setFormError('Please enter your name or check "Submit anonymously".');
+      return;
+    }
+    if (!anonymous && (!values.email || !values.email.trim())) {
+      setFormError('Please enter your email or check "Submit anonymously".');
+      return;
+    }
+
     try {
-      const res = await postEnquiry({ kind: 'contact', ...values });
+      const res = await postEnquiry({
+        kind: 'contact',
+        name: anonymous ? 'Anonymous' : values.name,
+        email: anonymous ? 'anonymous@rotaract3011.org' : values.email,
+        message: values.message,
+        anonymous,
+        website: values.website,
+      });
       setSent(res.routedTo ?? 'the district secretariat');
       form.reset();
     } catch (e) {
@@ -66,14 +85,31 @@ export function ContactPage() {
                 {formError}
               </Alert>
             ) : null}
-            <Field label="Your name" error={form.errors.name} required>
-              <Input value={form.values.name} onChange={(e) => form.setValue('name', e.target.value)} />
-            </Field>
-            <Field label="Email" error={form.errors.email} required>
-              <Input type="email" value={form.values.email} onChange={(e) => form.setValue('email', e.target.value)} />
-            </Field>
+            <div className="mb-4">
+              <Checkbox
+                checked={anonymous}
+                onChange={(e) => setAnonymous(e.target.checked)}
+                label={
+                  <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
+                    <ShieldCheck className="size-4 text-accent" />
+                    Submit anonymously (grievance or confidential message)
+                  </span>
+                }
+              />
+            </div>
+
+            {!anonymous && (
+              <>
+                <Field label="Your name" error={form.errors.name} required>
+                  <Input value={form.values.name} onChange={(e) => form.setValue('name', e.target.value)} />
+                </Field>
+                <Field label="Email" error={form.errors.email} required>
+                  <Input type="email" value={form.values.email} onChange={(e) => form.setValue('email', e.target.value)} />
+                </Field>
+              </>
+            )}
             <Field label="Message" error={form.errors.message} required>
-              <Textarea rows={5} value={form.values.message} onChange={(e) => form.setValue('message', e.target.value)} />
+              <Textarea rows={5} value={form.values.message} onChange={(e) => form.setValue('message', e.target.value)} placeholder="Type your message, query, or grievance..." />
             </Field>
             <input
               type="text"

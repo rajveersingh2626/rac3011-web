@@ -127,3 +127,65 @@ export function decideDrrBooking(id: string, input: DecideDrrBookingInput): Prom
     schema: drrBookingSchema,
   });
 }
+
+export const drrBlockedDateSchema = z.object({
+  id: z.string(),
+  date: z.string(),
+  reason: z.string().nullable().optional(),
+  createdById: z.string().nullable().optional(),
+  createdAt: z.string(),
+});
+export type DrrBlockedDate = z.infer<typeof drrBlockedDateSchema>;
+
+export const publicDrrCalendarSchema = z.object({
+  capacityPerDay: z.number(),
+  from: z.string(),
+  to: z.string(),
+  blockedDates: z.array(z.object({
+    date: z.string(),
+    reason: z.string().nullable().optional(),
+  })),
+  confirmedDates: z.array(z.object({
+    date: z.string(),
+    count: z.number(),
+  })),
+  dayStatus: z.record(z.string(), z.object({
+    blocked: z.boolean(),
+    reason: z.string().optional(),
+    bookedCount: z.number(),
+    slotsRemaining: z.number(),
+  })),
+});
+export type PublicDrrCalendar = z.infer<typeof publicDrrCalendarSchema>;
+
+export function fetchPublicDrrCalendar(from?: string, to?: string): Promise<PublicDrrCalendar> {
+  const params = new URLSearchParams();
+  if (from) params.set('from', from);
+  if (to) params.set('to', to);
+  const qs = params.toString();
+  return apiFetch(`/public/drr-calendar${qs ? `?${qs}` : ''}`, {
+    schema: publicDrrCalendarSchema,
+  });
+}
+
+export function fetchDrrBlocks(): Promise<DrrBlockedDate[]> {
+  return apiFetch('/drr-bookings/blocks/all', {
+    schema: z.array(drrBlockedDateSchema),
+  });
+}
+
+export function createDrrBlock(input: { date: string; reason?: string }): Promise<DrrBlockedDate> {
+  return apiFetch('/drr-bookings/blocks', {
+    method: 'POST',
+    body: input,
+    schema: drrBlockedDateSchema,
+  });
+}
+
+export function deleteDrrBlock(id: string): Promise<{ deleted: boolean }> {
+  return apiFetch(`/drr-bookings/blocks/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    schema: z.object({ deleted: z.boolean() }),
+  });
+}
+

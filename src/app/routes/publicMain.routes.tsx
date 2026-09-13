@@ -36,7 +36,6 @@ export const publicMainRouteObjects: RouteObject[] = [
   { path: '/calendar/:slug', element: <EventPage /> },
   { path: '/drr-calendar', element: <ComingSoon title="DRR calendar" /> },
   { path: '/drr-calendar/book/:slot', element: <ComingSoon title="Book DRR slot" /> },
-  { path: '/drr-calendar/admin', element: <ComingSoon title="DRR calendar admin" description="Requires drr_calendar:manage in the real build." /> },
   { path: '/privacy-policy', element: <PrivacyPolicyPage /> },
   { path: '/terms-of-service', element: <TermsOfServicePage /> },
 ];

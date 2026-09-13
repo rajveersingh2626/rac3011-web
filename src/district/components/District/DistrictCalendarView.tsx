@@ -14,13 +14,15 @@ import {
   Info, 
   X, 
   CalendarCheck,
-  Download
+  Download,
+  Ban,
+  AlertTriangle
 } from 'lucide-react';
 import type { DistrictClub } from '../../data/districtData';
 import { format } from 'date-fns';
 import { fetchEvents } from '@/lib/publicApi/events';
 import { parseEventStart } from '@/lib/format';
-import { drrBookingErrorMessage, postDrrBooking } from '@/lib/publicApi/drrBookings';
+import { drrBookingErrorMessage, postDrrBooking, fetchPublicDrrCalendar } from '@/lib/publicApi/drrBookings';
 import type { BookingPurpose, DrrBookingSubmitResponse } from '@/lib/publicApi/drrBookings';
 
 interface CalendarEntry {
@@ -140,8 +142,29 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     });
   }, [eventsQuery.data]);
 
-  const signatureTiles = useMemo(() => {
-    return [...allEvents]
+  const [milestoneTab, setMilestoneTab] = useState<'upcoming' | 'concluded'>('upcoming');
+  const todayStr = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+
+  // Build days for the grid
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+
+  // Query live DRR Calendar blocks & capacity for current month
+  const drrCalendarQuery = useQuery({
+    queryKey: ['public', 'drr-calendar', currentYear, currentMonth],
+    queryFn: () => {
+      const startOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-01`;
+      const endOfMonth = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+      return fetchPublicDrrCalendar(startOfMonth, endOfMonth);
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const drrDayStatus = drrCalendarQuery.data?.dayStatus ?? {};
+
+  const upcomingTiles = useMemo(() => {
+    return allEvents
+      .filter((ev) => ev.dateStr >= todayStr)
       .sort((a, b) => a.dateStr.localeCompare(b.dateStr))
       .slice(0, 6)
       .map((ev, idx) => {
@@ -158,7 +181,30 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
           accentColor: TILE_ACCENTS[idx % TILE_ACCENTS.length],
         };
       });
-  }, [allEvents]);
+  }, [allEvents, todayStr]);
+
+  const concludedTiles = useMemo(() => {
+    return allEvents
+      .filter((ev) => ev.dateStr < todayStr)
+      .sort((a, b) => b.dateStr.localeCompare(a.dateStr))
+      .slice(0, 6)
+      .map((ev) => {
+        const d = new Date(`${ev.dateStr}T00:00:00`);
+        return {
+          id: ev.id,
+          title: ev.title,
+          badge: 'Concluded',
+          venue: ev.venue,
+          monthIndex: d.getMonth(),
+          year: d.getFullYear(),
+          monthLabel: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`,
+          dateLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          accentColor: '#6B7280',
+        };
+      });
+  }, [allEvents, todayStr]);
+
+  const signatureTiles = milestoneTab === 'upcoming' ? upcomingTiles : concludedTiles;
 
   // Month navigation helpers
   const handlePrevMonth = () => {
@@ -184,10 +230,6 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     setCurrentYear(yearNum);
   };
 
-  // Build days for the grid
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
-
   // Handle open request modal
   const handleOpenRequestModal = (prefillDate: string = '') => {
     if (!isLoggedIn) {
@@ -211,9 +253,22 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
     setIsRequestModalOpen(true);
   };
 
+  const selectedDateStatus = formData.preferredDate ? drrDayStatus[formData.preferredDate] : undefined;
+  const isDateBlocked = selectedDateStatus?.blocked ?? false;
+  const isDateFull = selectedDateStatus ? selectedDateStatus.slotsRemaining <= 0 : false;
+
   // Submit DRR presence form
   const handleSubmitBooking = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (isDateBlocked) {
+      setFormError(`This date is blocked for DRR presence (${selectedDateStatus?.reason || 'District Calendar Block'}). Please select an alternate date.`);
+      return;
+    }
+    if (isDateFull) {
+      setFormError('Daily visit capacity (2/2) has already been reached for this date. Please select an alternate date.');
+      return;
+    }
 
     const startsAt = new Date(`${formData.preferredDate}T${formData.startTime}`);
     const endsAt = new Date(`${formData.preferredDate}T${formData.endTime}`);
@@ -335,18 +390,64 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
       </div>
 
       {/* 1. UPCOMING EVENTS SQUARE TILES (Top Section) */}
-      {signatureTiles.length > 0 && (
+      {(upcomingTiles.length > 0 || concludedTiles.length > 0) && (
       <div style={{ marginBottom: '40px', background: '#FFFFFF', borderRadius: '22px', padding: '24px', boxShadow: '0 12px 32px rgba(18, 52, 153, 0.10)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#123499', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={18} style={{ color: '#123499' }} />
-            <span>Signature Upcoming Milestones (RY 2026-27)</span>
-          </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#123499', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <Award size={18} style={{ color: '#123499' }} />
+              <span>District Milestones (RY 2026-27)</span>
+            </h3>
+
+            {/* Toggle between Upcoming & Concluded */}
+            <div style={{ display: 'inline-flex', backgroundColor: '#F1F5F9', borderRadius: '10px', padding: '3px', gap: '4px' }}>
+              <button
+                onClick={() => setMilestoneTab('upcoming')}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  backgroundColor: milestoneTab === 'upcoming' ? 'var(--rotaract-pink)' : 'transparent',
+                  color: milestoneTab === 'upcoming' ? '#FFFFFF' : '#64748B',
+                  transition: 'all 0.15s ease',
+                  boxShadow: milestoneTab === 'upcoming' ? '0 2px 6px rgba(216, 27, 96, 0.3)' : 'none',
+                }}
+              >
+                Upcoming ({upcomingTiles.length})
+              </button>
+              <button
+                onClick={() => setMilestoneTab('concluded')}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  backgroundColor: milestoneTab === 'concluded' ? '#1E293B' : 'transparent',
+                  color: milestoneTab === 'concluded' ? '#FFFFFF' : '#64748B',
+                  transition: 'all 0.15s ease',
+                  boxShadow: milestoneTab === 'concluded' ? '0 2px 6px rgba(0, 0, 0, 0.2)' : 'none',
+                }}
+              >
+                Concluded ({concludedTiles.length})
+              </button>
+            </div>
+          </div>
+
           <span style={{ fontSize: '0.82rem', color: '#64748B', fontWeight: 600 }}>
             Scroll or click tile to view in calendar
           </span>
         </div>
 
+        {signatureTiles.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', color: '#64748B', fontSize: '0.88rem', fontWeight: 600 }}>
+            No {milestoneTab} district milestones found.
+          </div>
+        ) : (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -419,6 +520,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             </div>
           ))}
         </div>
+        )}
       </div>
       )}
 
@@ -539,6 +641,10 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             <span style={{ width: '12px', height: '12px', borderRadius: '4px', backgroundColor: '#0284C7' }} />
             <span>District Sports &amp; Exchange Events</span>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.80rem', fontWeight: 700, color: '#DC2626' }}>
+            <span style={{ width: '12px', height: '12px', borderRadius: '4px', backgroundColor: '#FCA5A5', border: '1px solid #DC2626' }} />
+            <span>DRR Calendar Blocked / Reserved</span>
+          </div>
         </div>
 
         {/* Weekday Header Grid */}
@@ -593,6 +699,11 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
             const dayNum = idx + 1;
             const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
             const dayEvents = allEvents.filter((ev) => ev.dateStr === dateStr);
+            const status = drrDayStatus[dateStr];
+            const isBlocked = status?.blocked ?? false;
+            const blockReason = status?.reason;
+            const slotsRemaining = status ? status.slotsRemaining : 2;
+            const bookedCount = status ? status.bookedCount : 0;
 
             return (
               <div
@@ -601,9 +712,13 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                 style={{
                   minHeight: '110px',
                   minWidth: 0,
-                  backgroundColor: dayEvents.length > 0 ? '#FEF2F2' : '#FAFAFA',
+                  backgroundColor: isBlocked ? '#FEF2F2' : dayEvents.length > 0 ? '#FEF2F2' : '#FAFAFA',
                   borderRadius: '12px',
-                  border: dayEvents.length > 0 ? '1.5px solid rgba(216, 27, 96, 0.3)' : '1px solid #F3F4F6',
+                  border: isBlocked
+                    ? '1.5px solid #FCA5A5'
+                    : dayEvents.length > 0
+                    ? '1.5px solid rgba(216, 27, 96, 0.3)'
+                    : '1px solid #F3F4F6',
                   padding: '8px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -612,42 +727,94 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                   position: 'relative'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F3F4F6';
+                  e.currentTarget.style.backgroundColor = isBlocked ? '#FEE2E2' : '#F3F4F6';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = dayEvents.length > 0 ? '#FEF2F2' : '#FAFAFA';
+                  e.currentTarget.style.backgroundColor = isBlocked ? '#FEF2F2' : dayEvents.length > 0 ? '#FEF2F2' : '#FAFAFA';
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="district-calendar-daynum" style={{
                     fontSize: '0.88rem',
                     fontWeight: 800,
-                    color: dayEvents.length > 0 ? 'var(--rotaract-pink)' : '#374151'
+                    color: isBlocked ? '#DC2626' : dayEvents.length > 0 ? 'var(--rotaract-pink)' : '#374151'
                   }}>
                     {dayNum}
                   </span>
 
-                  {/* Plus button to request DRR Presence on this date */}
-                  <button
-                    onClick={() => handleOpenRequestModal(dateStr)}
-                    title={`Request DRR Presence on ${dateStr}`}
-                    style={{
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      cursor: 'pointer',
-                      color: '#9CA3AF',
-                      padding: '2px',
-                      borderRadius: '4px',
-                      display: 'flex',
+                  {isBlocked ? (
+                    <div style={{
+                      display: 'inline-flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--rotaract-pink)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; }}
-                  >
-                    <Plus size={14} />
-                  </button>
+                      gap: '2px',
+                      backgroundColor: '#FEE2E2',
+                      color: '#B91C1C',
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                      fontSize: '0.62rem',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.3px'
+                    }} title={blockReason || 'DRR Calendar Reserved / Blocked'}>
+                      <Ban size={9} />
+                      <span>Blocked</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {bookedCount > 0 && (
+                        <span style={{
+                          fontSize: '0.60rem',
+                          fontWeight: 800,
+                          backgroundColor: slotsRemaining === 0 ? '#FEF3C7' : '#DCFCE7',
+                          color: slotsRemaining === 0 ? '#92400E' : '#15803D',
+                          padding: '1px 4px',
+                          borderRadius: '4px'
+                        }}>
+                          {slotsRemaining === 0 ? 'Full' : `${slotsRemaining} left`}
+                        </span>
+                      )}
+
+                      {slotsRemaining > 0 && (
+                        <button
+                          onClick={() => handleOpenRequestModal(dateStr)}
+                          title={`Request DRR Presence on ${dateStr}`}
+                          style={{
+                            border: 'none',
+                            backgroundColor: 'transparent',
+                            cursor: 'pointer',
+                            color: '#9CA3AF',
+                            padding: '2px',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--rotaract-pink)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; }}
+                        >
+                          <Plus size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {isBlocked && blockReason && (
+                  <div style={{
+                    fontSize: '0.67rem',
+                    color: '#991B1B',
+                    fontWeight: 700,
+                    marginTop: '4px',
+                    lineHeight: 1.2,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
+                  }}>
+                    {blockReason}
+                  </div>
+                )}
 
                 {/* Event Pills inside Day Cell */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px', minWidth: 0 }}>
@@ -1105,12 +1272,49 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                           width: '100%',
                           padding: '10px 14px',
                           borderRadius: '10px',
-                          border: '1.5px solid #D1D5DB',
-                          fontSize: '0.90rem'
+                          border: isDateBlocked ? '1.5px solid #F87171' : '1.5px solid #D1D5DB',
+                          fontSize: '0.90rem',
+                          backgroundColor: isDateBlocked ? '#FEF2F2' : '#FFFFFF'
                         }}
                       />
                     </div>
                   </div>
+
+                  {isDateBlocked && (
+                    <div style={{
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1.5px solid #FCA5A5',
+                      color: '#B91C1C',
+                      fontSize: '0.80rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <Ban size={16} className="shrink-0" />
+                      <span>The DRR Calendar is blocked on this date ({selectedDateStatus?.reason || 'District Calendar Reserved'}). Please select an alternate date.</span>
+                    </div>
+                  )}
+
+                  {isDateFull && !isDateBlocked && (
+                    <div style={{
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      backgroundColor: '#FFFBEB',
+                      border: '1.5px solid #FDE68A',
+                      color: '#92400E',
+                      fontSize: '0.80rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <AlertTriangle size={16} className="shrink-0" />
+                      <span>Daily visit capacity (2/2) has already been reached for this date. Please select an alternate date.</span>
+                    </div>
+                  )}
 
                   {/* Timing & Venue */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '14px' }}>
@@ -1232,24 +1436,33 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
                     </button>
                     <button
                       type="submit"
-                      disabled={submitBooking.isPending}
+                      disabled={submitBooking.isPending || isDateBlocked || isDateFull}
                       style={{
                         padding: '12px 28px',
                         borderRadius: '12px',
                         border: 'none',
-                        backgroundColor: 'var(--rotaract-pink)',
+                        backgroundColor: (isDateBlocked || isDateFull) ? '#9CA3AF' : 'var(--rotaract-pink)',
                         color: '#FFFFFF',
                         fontWeight: 800,
                         fontSize: '0.95rem',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
-                        cursor: submitBooking.isPending ? 'not-allowed' : 'pointer',
-                        boxShadow: '0 4px 14px rgba(216, 27, 96, 0.4)'
+                        cursor: (submitBooking.isPending || isDateBlocked || isDateFull) ? 'not-allowed' : 'pointer',
+                        boxShadow: (isDateBlocked || isDateFull) ? 'none' : '0 4px 14px rgba(216, 27, 96, 0.4)',
+                        opacity: (isDateBlocked || isDateFull) ? 0.7 : 1
                       }}
                     >
                       <Send size={16} />
-                      <span>{submitBooking.isPending ? 'Sending...' : 'Submit Request to DRR Archit'}</span>
+                      <span>
+                        {submitBooking.isPending
+                          ? 'Sending...'
+                          : isDateBlocked
+                          ? 'Date Blocked'
+                          : isDateFull
+                          ? 'Capacity Reached'
+                          : 'Submit Request to DRR Archit'}
+                      </span>
                     </button>
                   </div>
                 </form>

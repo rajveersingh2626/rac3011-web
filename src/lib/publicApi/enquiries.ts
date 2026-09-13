@@ -3,12 +3,13 @@ import { apiFetch } from '@/lib/api';
 
 export const createEnquirySchema = z.object({
   kind: z.enum(['new_club', 'sponsor', 'contact']),
-  name: z.string().trim().min(1, 'Enter your name').max(200),
-  email: z.string().trim().min(1, 'Enter your email').email('Enter a valid email address'),
+  name: z.string().trim().max(200).optional(),
+  email: z.string().trim().email('Enter a valid email address').optional(),
   phone: z.string().trim().max(32).optional(),
   organisation: z.string().trim().max(200).optional(),
   message: z.string().trim().min(1, 'Tell us more').max(4000),
   payload: z.record(z.string(), z.unknown()).optional(),
+  anonymous: z.boolean().optional(),
   website: z.string().max(200).optional(),
 });
 export type CreateEnquiryInput = z.infer<typeof createEnquirySchema>;
