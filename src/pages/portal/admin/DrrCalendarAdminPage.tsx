@@ -496,11 +496,15 @@ export function DrrCalendarAdminPage() {
 
             <div>
               <label className="block text-xs font-bold text-surface-200 mb-1">
-                Reason / Note for Club (Optional)
+                {decisionAction === 'confirmed' ? 'Note for Club (Optional)' : 'Reason for Decline (Optional)'}
               </label>
               <Textarea
                 rows={3}
-                placeholder="e.g. Confirmed for the official installation ceremony. Looking forward to attending!"
+                placeholder={
+                  decisionAction === 'confirmed'
+                    ? 'e.g. Confirmed for the official installation ceremony. Looking forward to attending!'
+                    : 'e.g. Unavailable on requested date / Schedule clash with district conference.'
+                }
                 value={decisionReason}
                 onChange={(e) => setDecisionReason(e.target.value)}
                 className="w-full text-xs"
