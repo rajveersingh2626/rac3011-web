@@ -139,13 +139,23 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
 
     if (isDegraded(events, API_ORIGIN)) return { ok: false };
 
+    const pageTitle = await page.title();
+    if (pageTitle.toLowerCase().includes('502') || pageTitle.toLowerCase().includes('bad gateway') || pageTitle.toLowerCase().includes('error')) {
+      return { ok: false };
+    }
+
+    const rawContent = await page.content();
+    if (rawContent.includes('502: Bad gateway') || rawContent.includes('502 Bad Gateway') || rawContent.includes('cf_styles-css')) {
+      return { ok: false };
+    }
+
     await preparePageForHydration(page);
 
     const stateJson = await page.evaluate(() => {
       const w = globalThis as unknown as { __RAC_DEHYDRATE__?: () => string };
       return w.__RAC_DEHYDRATE__ ? w.__RAC_DEHYDRATE__() : null;
     });
-    const html = injectPrerenderedState(await page.content(), stateJson);
+    const html = injectPrerenderedState(rawContent, stateJson);
     return { ok: true, html };
   } catch {
     return { ok: false };
