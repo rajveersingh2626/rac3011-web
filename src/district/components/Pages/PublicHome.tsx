@@ -7,7 +7,7 @@ import type { FocusArea, ImpactMetric, Achievement } from '../../data/districtDa
 import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers } from 'lucide-react';
 const rotaryWheelImg = '/images.webp';
 import Footer from '../Layout/Footer';
-import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
+import DistrictBentoMatrix from '../Home/DistrictBentoMatrix';
 import DistrictRoadmap from '../Home/DistrictRoadmap';
 import DistrictImpactStats from '../Home/DistrictImpactStats';
 import ClubShowcasePreview from '../Home/ClubShowcasePreview';
@@ -866,8 +866,11 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         </div>
       </section>
 
-      {/* Automated Full-Screen Slideshow */}
-      <DistrictHeroSlideshow />
+      {/* 4x4 Modular District Matrix Layout */}
+      <DistrictBentoMatrix
+        onNavigateDistrict={onNavigateDistrict}
+        onNavigatePage={onNavigatePage}
+      />
 
       <SectionDivider />
 
