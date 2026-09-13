@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import type { FC, FormEvent, MouseEvent, RefObject } from 'react';
+import type { FC, FormEvent, RefObject } from 'react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
