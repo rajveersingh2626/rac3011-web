@@ -90,6 +90,20 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
         ? `Uploaded ${fileName}`
         : '';
 
+  const isImage =
+    Boolean(fileUrl) &&
+    (Boolean(fileUrl?.match(/\.(webp|png|jpe?g|svg|avif|gif)($|\?)/i)) ||
+      fileUrl?.includes('ufs.sh/') ||
+      fileUrl?.includes('utfs.io/') ||
+      fileUrl?.startsWith('data:image/') ||
+      fileUrl?.startsWith('blob:') ||
+      resourceType.includes('photo') ||
+      resourceType.includes('logo') ||
+      resourceType.includes('cover') ||
+      resourceType.includes('image') ||
+      resourceType.includes('certificate') ||
+      (value?.kind === 'file' && value.file.mimeType.startsWith('image/')));
+
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {label ? (
@@ -118,8 +132,15 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
       ) : value && fileUrl ? (
         <div className="flex items-center justify-between gap-3 rounded-[16px] border border-line-accent bg-surface px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
-            {fileUrl.match(/\.(webp|png|jpe?g|svg)($|\?)/i) ? (
-              <img src={fileUrl} alt={fileName ?? 'Uploaded'} className="size-10 shrink-0 rounded-[8px] object-cover border border-line" />
+            {isImage ? (
+              <img
+                src={fileUrl}
+                alt={fileName ?? 'Uploaded'}
+                className="size-12 shrink-0 rounded-[8px] object-cover border border-line bg-surface-2"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
             ) : (
               <FileText aria-hidden className="size-6 shrink-0 text-accent" />
             )}

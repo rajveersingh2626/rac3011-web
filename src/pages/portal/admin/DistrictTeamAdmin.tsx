@@ -23,6 +23,25 @@ export function DistrictTeamAdmin({ canWrite }: { canWrite: boolean }) {
       writableKeys={['name', 'designation', 'kind', 'ryYear', 'photoUrl', 'phone', 'email', 'bio', 'clubId']}
       emptyValues={{ name: '', designation: '', kind: 'dsc', ryYear: currentRyYear() }}
       columns={[
+        {
+          key: 'photoUrl',
+          header: 'Photo',
+          cell: (r) =>
+            r.photoUrl ? (
+              <img
+                src={r.photoUrl}
+                alt={r.name}
+                className="size-9 rounded-full object-cover border border-line"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="size-9 rounded-full bg-surface-2 flex items-center justify-center text-[11px] font-bold text-fg-3 border border-line">
+                {r.name.slice(0, 2).toUpperCase()}
+              </div>
+            ),
+        },
         { key: 'name', header: 'Name', cell: (r) => r.name },
         { key: 'designation', header: 'Designation', cell: (r) => r.designation },
         { key: 'kind', header: 'Kind', cell: (r) => r.kind },

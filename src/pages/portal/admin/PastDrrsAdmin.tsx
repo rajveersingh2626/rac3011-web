@@ -27,6 +27,25 @@ export function PastDrrsAdmin({ canWrite }: { canWrite: boolean }) {
       writableKeys={['name', 'slug', 'terms', 'homeClubId', 'photoUrl', 'bio', 'isLowResPhoto']}
       emptyValues={{ name: '', slug: '', terms: [], isLowResPhoto: false }}
       columns={[
+        {
+          key: 'photoUrl',
+          header: 'Photo',
+          cell: (r) =>
+            r.photoUrl ? (
+              <img
+                src={r.photoUrl}
+                alt={r.name}
+                className="size-9 rounded-full object-cover border border-line"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="size-9 rounded-full bg-surface-2 flex items-center justify-center text-[11px] font-bold text-fg-3 border border-line">
+                {r.name.slice(0, 2).toUpperCase()}
+              </div>
+            ),
+        },
         { key: 'name', header: 'Name', cell: (r) => r.name },
         { key: 'terms', header: 'Terms', cell: (r) => r.terms.join(', ') },
       ]}

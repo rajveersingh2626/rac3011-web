@@ -18,6 +18,23 @@ export function PartnersAdmin({ canWrite }: { canWrite: boolean }) {
       writableKeys={['name', 'logoUrl', 'tier', 'website', 'permissionStatus']}
       emptyValues={{ name: '', tier: 'year_partner', permissionStatus: 'pending' }}
       columns={[
+        {
+          key: 'logoUrl',
+          header: 'Logo',
+          cell: (r) =>
+            r.logoUrl ? (
+              <img
+                src={r.logoUrl}
+                alt={r.name}
+                className="size-9 rounded-lg object-contain bg-surface-2 p-0.5 border border-line"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <span className="text-fg-4 text-xs italic">—</span>
+            ),
+        },
         { key: 'name', header: 'Name', cell: (r) => r.name },
         { key: 'tier', header: 'Tier', cell: (r) => r.tier },
         {

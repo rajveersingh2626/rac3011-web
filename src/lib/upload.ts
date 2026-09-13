@@ -88,16 +88,26 @@ interface ProviderLegInput {
   signal?: AbortSignal;
 }
 
-function sendToProvider({ grant, file, onProgress, signal }: ProviderLegInput): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
+interface ProviderResponse {
+  key?: string;
+  url?: string;
+}
+
+function sendToProvider({ grant, file, onProgress, signal }: ProviderLegInput): Promise<ProviderResponse | undefined> {
+  return new Promise<ProviderResponse | undefined>((resolve, reject) => {
     if (signal?.aborted) {
       reject(new DOMException('Upload cancelled', 'AbortError'));
       return;
     }
     const xhr = new XMLHttpRequest();
     const usesFormData = Boolean(grant.fields);
-    xhr.open(usesFormData ? 'POST' : 'PUT', grant.uploadUrl, true);
-    // third-party host: never attach our session cookies
+    const targetUrl =
+      grant.uploadUrl.startsWith('http://') || grant.uploadUrl.startsWith('https://')
+        ? grant.uploadUrl
+        : `${API_ORIGIN}${grant.uploadUrl.startsWith('/') ? '' : '/'}${grant.uploadUrl}`;
+
+    xhr.open(usesFormData ? 'POST' : 'PUT', targetUrl, true);
+    // third-party host or uncredentialed endpoint: never attach our session cookies
     xhr.withCredentials = false;
 
     const onAbort = (): void => xhr.abort();
@@ -113,7 +123,12 @@ function sendToProvider({ grant, file, onProgress, signal }: ProviderLegInput): 
       done();
       if (xhr.status >= 200 && xhr.status < 300) {
         onProgress?.(1);
-        resolve();
+        try {
+          const resJson = JSON.parse(xhr.responseText) as ProviderResponse;
+          resolve(resJson);
+        } catch {
+          resolve(undefined);
+        }
       } else {
         reject(new ApiError(xhr.status, `Upload to storage failed (${xhr.status}). Check your connection and retry.`));
       }
@@ -202,9 +217,10 @@ export async function uploadFile(input: UploadFileInput): Promise<StoredFile> {
   });
 
   onProgress?.(0);
-  await sendToProvider({ grant, file, onProgress, signal });
+  const providerResult = await sendToProvider({ grant, file, onProgress, signal });
 
-  const providerKey = grant.key ?? grant.fields?.key ?? keyFromUrl(grant.uploadUrl);
+  const providerKey =
+    providerResult?.key ?? grant.key ?? grant.fields?.key ?? keyFromUrl(grant.uploadUrl);
   return apiFetch<StoredFile>(`/files/grants/${encodeURIComponent(grant.grantId)}`, {
     method: 'PATCH',
     body: { providerKey },

@@ -16,6 +16,23 @@ export function PublicationsAdmin({ canWrite }: { canWrite: boolean }) {
       writableKeys={['title', 'type', 'url', 'month', 'coverUrl']}
       emptyValues={{ title: '', type: 'newsletter', url: '', month: new Date().toISOString().slice(0, 7) }}
       columns={[
+        {
+          key: 'coverUrl',
+          header: 'Cover',
+          cell: (r) =>
+            r.coverUrl ? (
+              <img
+                src={r.coverUrl}
+                alt={r.title}
+                className="w-8 h-10 rounded object-cover border border-line shadow-xs"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <span className="text-fg-4 text-xs italic">—</span>
+            ),
+        },
         { key: 'title', header: 'Title', cell: (r) => r.title },
         { key: 'type', header: 'Type', cell: (r) => r.type },
         { key: 'month', header: 'Month', cell: (r) => r.month },

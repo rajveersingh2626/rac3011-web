@@ -24,6 +24,30 @@ export function AchievementsAdmin({ canWrite }: { canWrite: boolean }) {
       writableKeys={['type', 'title', 'clubId', 'date', 'certificateUrl', 'description']}
       emptyValues={{ type: 'milestone', title: '', date: new Date().toISOString().slice(0, 10) }}
       columns={[
+        {
+          key: 'certificateUrl',
+          header: 'Media',
+          cell: (r) =>
+            r.certificateUrl ? (
+              <a
+                href={r.certificateUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5"
+              >
+                <img
+                  src={r.certificateUrl}
+                  alt="Media"
+                  className="size-9 rounded object-cover border border-line"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            ) : (
+              <span className="text-fg-4 text-xs italic">—</span>
+            ),
+        },
         { key: 'title', header: 'Title', cell: (r) => r.title },
         { key: 'type', header: 'Type', cell: (r) => r.type },
         { key: 'date', header: 'Date', cell: (r) => r.date },
