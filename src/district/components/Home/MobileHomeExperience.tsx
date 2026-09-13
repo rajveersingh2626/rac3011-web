@@ -2,7 +2,7 @@ import { useState, useEffect, FC } from 'react';
 import { 
   Users, Award, MapPin, Sparkles, Calendar, 
   FolderOpen, ArrowRight, Calculator,
-  Layers, ShieldCheck,
+  ShieldCheck,
   Search, FileText, LayoutDashboard, LogIn, ChevronRight
 } from 'lucide-react';
 import { useSurfaceHref } from '@/app/host';

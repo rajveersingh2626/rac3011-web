@@ -769,7 +769,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
           focusAreas={focusAreas}
           impactMetrics={impactMetrics}
         />
-        <Footer onNavigateDistrict={onNavigateDistrict} />
+        <Footer onNavigatePage={onNavigatePage} />
       </div>
     );
   }
