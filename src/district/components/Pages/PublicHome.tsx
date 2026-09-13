@@ -8,6 +8,7 @@ import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers
 const rotaryWheelImg = '/images.webp';
 import Footer from '../Layout/Footer';
 import DistrictBentoMatrix from '../Home/DistrictBentoMatrix';
+import MobileHomeExperience from '../Home/MobileHomeExperience';
 import DistrictRoadmap from '../Home/DistrictRoadmap';
 import DistrictImpactStats from '../Home/DistrictImpactStats';
 import ClubShowcasePreview from '../Home/ClubShowcasePreview';
@@ -576,7 +577,7 @@ export interface PublicHomeProps {
   onOpenLoginModal?: () => void;
 }
 
-export default function PublicHome({ onNavigateDistrict, onNavigatePage }: PublicHomeProps) {
+export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenLoginModal }: PublicHomeProps) {
   useVisitOnce();
   useLiveVisits();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -748,6 +749,30 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
       setJoinPhone('');
     }, 2500);
   };
+
+  if (isMobile) {
+    return (
+      <div
+        ref={containerRef}
+        className="snap-container"
+        style={{
+          backgroundColor: '#FFFFFF',
+          paddingBottom: 'calc(76px + env(safe-area-inset-bottom, 12px))',
+          overflowX: 'hidden'
+        }}
+      >
+        <MobileHomeExperience
+          onNavigateDistrict={onNavigateDistrict}
+          onNavigatePage={onNavigatePage}
+          onOpenLoginModal={onOpenLoginModal}
+          achievements={achievements}
+          focusAreas={focusAreas}
+          impactMetrics={impactMetrics}
+        />
+        <Footer onNavigateDistrict={onNavigateDistrict} />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="snap-container" style={{ backgroundColor: '#FFFFFF' }}>

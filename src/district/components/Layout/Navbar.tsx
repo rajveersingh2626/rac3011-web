@@ -179,8 +179,9 @@ export default function Navbar({
       </button>
 
       <div
+        className="wide-only"
         style={{
-          display: 'inline-flex',
+          display: isMobile ? 'none' : 'inline-flex',
           alignItems: 'center',
           gap: '10px',
           padding: '7px 16px 7px 10px',
@@ -332,37 +333,54 @@ export default function Navbar({
           </>
         )}
 
-        <MorphedMenu
-          activePage={activePage}
-          setActivePage={setActivePage}
-          activeDistrictTab={activeDistrictTab}
-          setActiveDistrictTab={setActiveDistrictTab}
-          isLoggedIn={isLoggedIn}
-          userRole={userRole}
-          onOpenLoginModal={onOpenLoginModal}
-          onLogout={onLogout}
-          onMenuOpenChange={setIsMenuOpen}
-          isOpenProp={isMenuOpen}
-        />
+        {!isMobile && (
+          <MorphedMenu
+            activePage={activePage}
+            setActivePage={setActivePage}
+            activeDistrictTab={activeDistrictTab}
+            setActiveDistrictTab={setActiveDistrictTab}
+            isLoggedIn={isLoggedIn}
+            userRole={userRole}
+            onOpenLoginModal={onOpenLoginModal}
+            onLogout={onLogout}
+            onMenuOpenChange={setIsMenuOpen}
+            isOpenProp={isMenuOpen}
+          />
+        )}
       </div>
 
       {isMobile && (
-        <MobileBottomNav
-          activePage={activePage}
-          activeDistrictTab={activeDistrictTab}
-          onNavigate={(page, tab) => {
-            setIsMenuOpen(false);
-            if (page === 'district' && tab) {
-              if (setActiveDistrictTab) setActiveDistrictTab(tab);
-              setActivePage('district', tab);
-            } else {
-              setActivePage(page, tab);
-            }
-          }}
-          onOpenMenu={() => {
-            setIsMenuOpen((prev) => !prev);
-          }}
-        />
+        <>
+          <MorphedMenu
+            activePage={activePage}
+            setActivePage={setActivePage}
+            activeDistrictTab={activeDistrictTab}
+            setActiveDistrictTab={setActiveDistrictTab}
+            isLoggedIn={isLoggedIn}
+            userRole={userRole}
+            onOpenLoginModal={onOpenLoginModal}
+            onLogout={onLogout}
+            onMenuOpenChange={setIsMenuOpen}
+            isOpenProp={isMenuOpen}
+          />
+
+          <MobileBottomNav
+            activePage={activePage}
+            activeDistrictTab={activeDistrictTab}
+            onNavigate={(page, tab) => {
+              setIsMenuOpen(false);
+              if (page === 'district' && tab) {
+                if (setActiveDistrictTab) setActiveDistrictTab(tab);
+                setActivePage('district', tab);
+              } else {
+                setActivePage(page, tab);
+              }
+            }}
+            onOpenMenu={() => {
+              setIsMenuOpen((prev) => !prev);
+            }}
+          />
+        </>
       )}
     </div>
   );
