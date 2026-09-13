@@ -30,13 +30,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
+import { useToast } from '@/components/ui/Toast';
 
 export function DrrCalendarAdminPage() {
   useDocumentMeta({ title: 'DRR Calendar & Official Visit Management' });
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'bookings' | 'blocks'>('bookings');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('requested');
 
   // Decision Modal State
   const [decisionTarget, setDecisionTarget] = useState<DrrBooking | null>(null);
@@ -64,11 +66,28 @@ export function DrrCalendarAdminPage() {
   const decideMutation = useMutation({
     mutationFn: ({ id, status, decisionReason }: { id: string; status: BookingDecision; decisionReason?: string }) =>
       decideDrrBooking(id, { status, decisionReason }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const isConfirmed = variables.status === 'confirmed';
       setDecisionTarget(null);
       setDecisionReason('');
       void queryClient.invalidateQueries({ queryKey: ['admin-drr-bookings'] });
       void queryClient.invalidateQueries({ queryKey: ['public', 'drr-calendar'] });
+      void queryClient.invalidateQueries({ queryKey: ['public', 'events'] });
+      void queryClient.invalidateQueries({ queryKey: ['public'] });
+      toast({
+        title: isConfirmed ? 'Visit Confirmed & Synced' : 'Visit Request Declined',
+        body: isConfirmed
+          ? 'The booking has been confirmed, synced to the public calendar & events page, and an email notification was sent.'
+          : 'The visit request has been declined, removed from the public calendar & events, and an email notification was sent.',
+        tone: isConfirmed ? 'success' : 'info',
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: 'Could not update booking',
+        body: err?.message || 'An error occurred while updating the visit request.',
+        tone: 'error',
+      });
     },
   });
 
@@ -80,6 +99,12 @@ export function DrrCalendarAdminPage() {
       setBlockError(null);
       void queryClient.invalidateQueries({ queryKey: ['admin-drr-blocks'] });
       void queryClient.invalidateQueries({ queryKey: ['public', 'drr-calendar'] });
+      void queryClient.invalidateQueries({ queryKey: ['public'] });
+      toast({
+        title: 'Date Blocked',
+        body: 'The date has been marked unavailable on the public DRR calendar.',
+        tone: 'success',
+      });
     },
     onError: (err: any) => {
       setBlockError(err?.message || 'Failed to block date');
@@ -91,6 +116,19 @@ export function DrrCalendarAdminPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin-drr-blocks'] });
       void queryClient.invalidateQueries({ queryKey: ['public', 'drr-calendar'] });
+      void queryClient.invalidateQueries({ queryKey: ['public'] });
+      toast({
+        title: 'Block Removed',
+        body: 'The calendar block was removed and the date is open for booking.',
+        tone: 'success',
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: 'Failed to remove block',
+        body: err?.message || 'An error occurred while deleting the block.',
+        tone: 'error',
+      });
     },
   });
 
@@ -409,12 +447,17 @@ export function DrrCalendarAdminPage() {
                     </div>
                     <div>
                       <div className="text-sm font-black text-white">
-                        {new Date(`${block.date}T00:00:00`).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'long',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
+                        {(() => {
+                          const dateVal = block.date || (block.startsAt ? block.startsAt.split('T')[0] : '');
+                          return dateVal
+                            ? new Date(`${dateVal}T00:00:00`).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            : 'Date unavailable';
+                        })()}
                       </div>
                       <div className="text-xs text-surface-300">
                         {block.reason ? block.reason : 'No specific reason given'}

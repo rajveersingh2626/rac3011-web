@@ -59,19 +59,18 @@ export default function DistrictAccess({
     }
     return teamQuery.data.items.map((member) => {
       const local = DISTRICT_LEADERSHIP.find(
-        (l) => l.name.toLowerCase() === member.name.toLowerCase() || l.id === member.id
+        (l) =>
+          l.id === member.id ||
+          l.name.toLowerCase() === member.name.toLowerCase() ||
+          (l.role && member.designation && l.role.toLowerCase() === member.designation.toLowerCase()),
       );
 
-      // /public/district-team has no category field, so the local list is the only real source;
-      // kind/designation only give a coarse guess for members it doesn't know.
       let category = local?.category;
       if (!category) {
-        if (member.kind === 'core') {
+        const des = (member.designation || '').toLowerCase();
+        if (member.kind === 'core' || des.includes('drr') || des.includes('representative') || des.includes('facilitator')) {
           category = 'Executive Council';
-        } else if (
-          member.designation.toLowerCase().includes('zonal') || 
-          member.designation.toLowerCase().includes('zrr')
-        ) {
+        } else if (des.includes('zonal') || des.includes('zrr') || des.includes('zrs') || des.includes('zone')) {
           category = 'Zonal Team';
         } else {
           category = 'District Chairs';

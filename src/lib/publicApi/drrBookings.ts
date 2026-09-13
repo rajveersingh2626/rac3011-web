@@ -131,30 +131,36 @@ export function decideDrrBooking(id: string, input: DecideDrrBookingInput): Prom
 export const drrBlockedDateSchema = z.object({
   id: z.string(),
   date: z.string(),
+  startsAt: z.string().optional(),
+  endsAt: z.string().optional(),
   reason: z.string().nullable().optional(),
   createdById: z.string().nullable().optional(),
   createdAt: z.string(),
+  updatedAt: z.string().optional(),
 });
 export type DrrBlockedDate = z.infer<typeof drrBlockedDateSchema>;
 
 export const publicDrrCalendarSchema = z.object({
-  capacityPerDay: z.number(),
-  from: z.string(),
-  to: z.string(),
+  capacityPerDay: z.number().optional().default(2),
+  dailyCapacity: z.number().optional().default(2),
+  from: z.string().optional().default(''),
+  to: z.string().optional().default(''),
   blockedDates: z.array(z.object({
     date: z.string(),
     reason: z.string().nullable().optional(),
-  })),
+  })).optional().default([]),
   confirmedDates: z.array(z.object({
     date: z.string(),
     count: z.number(),
-  })),
+  })).optional().default([]),
   dayStatus: z.record(z.string(), z.object({
     blocked: z.boolean(),
     reason: z.string().optional(),
     bookedCount: z.number(),
     slotsRemaining: z.number(),
-  })),
+  })).optional().default({}),
+  confirmed: z.array(z.any()).optional().default([]),
+  blocks: z.array(z.any()).optional().default([]),
 });
 export type PublicDrrCalendar = z.infer<typeof publicDrrCalendarSchema>;
 
@@ -170,8 +176,8 @@ export function fetchPublicDrrCalendar(from?: string, to?: string): Promise<Publ
 
 export function fetchDrrBlocks(): Promise<DrrBlockedDate[]> {
   return apiFetch('/drr-bookings/blocks/all', {
-    schema: z.array(drrBlockedDateSchema),
-  });
+    schema: z.object({ items: z.array(drrBlockedDateSchema) }),
+  }).then((res) => res.items);
 }
 
 export function createDrrBlock(input: { date: string; reason?: string }): Promise<DrrBlockedDate> {
@@ -182,10 +188,10 @@ export function createDrrBlock(input: { date: string; reason?: string }): Promis
   });
 }
 
-export function deleteDrrBlock(id: string): Promise<{ deleted: boolean }> {
+export function deleteDrrBlock(id: string): Promise<{ success: boolean }> {
   return apiFetch(`/drr-bookings/blocks/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    schema: z.object({ deleted: z.boolean() }),
-  });
+    schema: z.object({ success: z.boolean().optional(), deleted: z.boolean().optional() }),
+  }).then(() => ({ success: true }));
 }
 
