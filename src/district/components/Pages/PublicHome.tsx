@@ -319,18 +319,123 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          gap: '14px',
+          width: '100%',
+          padding: '4px 16px 16px 16px',
+          boxSizing: 'border-box'
+        }}
+      >
+        {DISTRICT_UPCOMING_PROJECTS.map((proj) => {
+          const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+          const Card = proj.surface ? 'a' : 'div';
+          return (
+            <Card
+              key={proj.id}
+              {...(proj.surface
+                ? { href: href ?? '#', 'aria-label': `${proj.title}: ${proj.subtitle}` }
+                : {})}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                textDecoration: 'none',
+                color: '#FFFFFF',
+                position: 'relative',
+                minWidth: '82vw',
+                maxWidth: '320px',
+                height: '360px',
+                borderRadius: '22px',
+                overflow: 'hidden',
+                scrollSnapAlign: 'start',
+                flexShrink: 0,
+                backgroundColor: '#0F1218',
+                boxShadow: '0 12px 30px rgba(0, 0, 0, 0.25)',
+                border: '1px solid rgba(255, 255, 255, 0.12)'
+              }}
+            >
+              <img
+                src={proj.image}
+                alt={proj.title}
+                onError={(e) => {
+                  if (proj.id === 3 || proj.title?.includes('RCL') || proj.title?.includes('Cricket')) {
+                    e.currentTarget.src = '/rcl-cricket.webp';
+                  }
+                }}
+                loading="lazy"
+                decoding="async"
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+              />
+
+              {/* Gradient Scrim for Legibility */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(180deg, rgba(15,18,24,0.1) 0%, rgba(15,18,24,0.6) 45%, rgba(15,18,24,0.95) 100%)'
+                }}
+              />
+
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  padding: '20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', background: 'var(--rotaract-pink)', padding: '3px 8px', borderRadius: '4px', color: '#FFF' }}>
+                    {proj.category}
+                  </span>
+                  <span style={{ fontSize: '0.70rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', background: 'rgba(255,255,255,0.22)', padding: '3px 8px', borderRadius: '4px', backdropFilter: 'blur(6px)', color: '#FFF' }}>
+                    {proj.metric}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#FFFFFF', margin: '2px 0 0 0', lineHeight: 1.2 }}>
+                  {proj.title}
+                </h3>
+
+                <p style={{ fontSize: '0.84rem', color: 'rgba(255, 255, 255, 0.88)', margin: 0, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {proj.description}
+                </p>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
+        flexDirection: 'row',
         width: '100%',
         maxWidth: '1350px',
         margin: '0 auto',
-        gap: isMobile ? '10px' : '16px',
-        /* Tablet: reduce height from 650px to 500px */
-        height: isMobile ? 'auto' : isTablet ? '480px' : '580px',
-        padding: isMobile ? '0 12px' : '0 20px',
+        gap: '16px',
+        height: isTablet ? '480px' : '580px',
+        padding: '0 20px',
         zIndex: 5,
         position: 'relative'
       }}
@@ -345,26 +450,19 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
             {...(proj.surface
               ? { href: href ?? '#', 'aria-label': `${proj.title}: ${proj.subtitle}` }
               : {})}
-            onMouseEnter={() => !isMobile && setSelectedIndex(idx)}
+            onMouseEnter={() => setSelectedIndex(idx)}
             onFocus={() => setSelectedIndex(idx)}
-            onClick={(e: MouseEvent<HTMLElement>) => {
-              // On mobile the first tap only expands the card, matching the pre-link behaviour.
-              if (isMobile && !isActive) {
-                e.preventDefault();
-                setSelectedIndex(idx);
-              }
-            }}
             style={{
               display: 'block',
               textDecoration: 'none',
               color: 'inherit',
               position: 'relative',
-              flex: isActive ? (isMobile ? 'none' : 6) : (isMobile ? 'none' : 1),
-              height: isMobile ? (isActive ? '340px' : '76px') : '100%',
+              flex: isActive ? 6 : 1,
+              height: '100%',
               borderRadius: '24px',
               overflow: 'hidden',
               cursor: 'pointer',
-              transition: 'flex 0.65s cubic-bezier(0.25, 1, 0.5, 1), height 0.65s cubic-bezier(0.25, 1, 0.5, 1)',
+              transition: 'flex 0.65s cubic-bezier(0.25, 1, 0.5, 1)',
               backgroundColor: '#0F1218',
               boxShadow: isActive ? '0 15px 35px rgba(216,27,96,0.28)' : '0 4px 10px rgba(0,0,0,0.08)'
             }}
@@ -423,8 +521,6 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
                 {proj.description}
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                {/* minWidth/overflowWrap: collapsed inactive panels are only ~2px wide, and long
-                    unbreakable words would otherwise push these pills past the panel edge. */}
                 <span style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', background: 'var(--rotaract-pink)', padding: '4px 10px', borderRadius: '4px', minWidth: 0, overflowWrap: 'anywhere' }}>
                   {proj.category}
                 </span>
@@ -467,29 +563,6 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
                 {proj.title}
               </div>
             </div>
-
-            {!isActive && (
-              <div
-                className="narrow-only"
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#FFF',
-                  fontWeight: 800,
-                  fontSize: '1.2rem',
-                  opacity: 1,
-                  transition: 'opacity 0.3s ease',
-                  letterSpacing: '1px',
-                  textTransform: 'uppercase',
-                  pointerEvents: 'none'
-                }}
-              >
-                {proj.title}
-              </div>
-            )}
           </Card>
         );
       })}
@@ -746,12 +819,12 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           <h1
             className="hero-main-title"
             style={{
-              fontSize: 'clamp(2.8rem, 5.5vw, 6.2rem)',
+              fontSize: isMobile ? 'clamp(2.1rem, 9.2vw, 3.2rem)' : 'clamp(2.8rem, 5.5vw, 6.2rem)',
               fontWeight: 900,
               color: '#1a1a1a',
               lineHeight: 0.95,
-              margin: '0 0 16px 0',
-              letterSpacing: '-1.5px',
+              margin: isMobile ? '0 0 10px 0' : '0 0 16px 0',
+              letterSpacing: isMobile ? '-0.8px' : '-1.5px',
               textTransform: 'uppercase',
               textAlign: 'left',
               whiteSpace: 'pre-line'
@@ -760,15 +833,15 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
             {"ROTARACT\nDISTRICT\nORGANISATION"}
           </h1>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '20px', flexWrap: 'wrap' }}>
             <span
               className="hero-number-accent"
               style={{
-                fontSize: 'clamp(4.5rem, 8.5vw, 9rem)',
+                fontSize: isMobile ? 'clamp(3.4rem, 15vw, 4.8rem)' : 'clamp(4.5rem, 8.5vw, 9rem)',
                 fontWeight: 900,
                 color: '#0044ff',
                 lineHeight: 0.85,
-                letterSpacing: '-3px'
+                letterSpacing: isMobile ? '-1.5px' : '-3px'
               }}
             >
               3011
@@ -777,13 +850,14 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
             <p
               className="hero-subtitle"
               style={{
-                fontSize: 'clamp(0.95rem, 1.4vw, 1.35rem)',
+                fontSize: isMobile ? '0.88rem' : 'clamp(0.95rem, 1.4vw, 1.35rem)',
                 color: '#0044ff',
                 margin: '0',
-                lineHeight: 1.3,
+                lineHeight: 1.35,
                 fontWeight: 600,
                 textAlign: 'left',
-                whiteSpace: 'pre-line'
+                whiteSpace: isMobile ? 'normal' : 'pre-line',
+                maxWidth: isMobile ? '240px' : 'none'
               }}
             >
               {"brings together clubs\nand young leaders across\nDelhi NCR\nto drive sustainable social change."}

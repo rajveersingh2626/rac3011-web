@@ -50,13 +50,16 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchDeltaX, setTouchDeltaX] = useState<number>(0);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-advance every 4.5 seconds unless user hovers
+  // Auto-advance every 4.5 seconds unless user hovers or is touching
   useEffect(() => {
     if (isPaused) return;
     timerRef.current = setInterval(() => {
@@ -78,11 +81,37 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
     setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsPaused(true);
+    setTouchStartX(e.touches[0].clientX);
+    setTouchDeltaX(0);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const currentX = e.touches[0].clientX;
+    setTouchDeltaX(currentX - touchStartX);
+  };
+
+  const handleTouchEnd = () => {
+    setIsPaused(false);
+    if (touchStartX === null) return;
+    if (touchDeltaX < -45) {
+      // Swiped left -> next
+      handleNext();
+    } else if (touchDeltaX > 45) {
+      // Swiped right -> prev
+      handlePrev();
+    }
+    setTouchStartX(null);
+    setTouchDeltaX(0);
+  };
+
   return (
     <section
       className="snap-section"
       style={{
-        padding: isMobile ? '8px 12px 36px' : '16px 32px 52px',
+        padding: isMobile ? '8px 12px 32px' : '16px 32px 52px',
         backgroundColor: '#FFFFFF',
         display: 'flex',
         flexDirection: 'column',
@@ -97,17 +126,21 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
       <div
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         style={{
           width: '100%',
           maxWidth: '1440px',
-          height: isMobile ? '70vh' : '82vh',
-          minHeight: isMobile ? '480px' : '560px',
-          borderRadius: isMobile ? '20px' : '28px',
+          height: isMobile ? 'clamp(320px, 50vh, 440px)' : '82vh',
+          minHeight: isMobile ? '320px' : '560px',
+          borderRadius: isMobile ? '18px' : '28px',
           overflow: 'hidden',
           position: 'relative',
           zIndex: 10,
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
-          background: '#090B0E'
+          boxShadow: isMobile ? '0 12px 30px rgba(0, 0, 0, 0.22)' : '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
+          background: '#090B0E',
+          touchAction: 'pan-y'
         }}
       >
         {/* Photos Layer with Smooth Crossfade */}
@@ -148,68 +181,69 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
           );
         })}
 
-
-
         {/* BOTTOM CAPTION BAR */}
         <div
           style={{
             position: 'absolute',
-            bottom: isMobile ? '16px' : '28px',
-            left: isMobile ? '16px' : '28px',
-            right: isMobile ? '16px' : '28px',
+            bottom: isMobile ? '12px' : '28px',
+            left: isMobile ? '12px' : '28px',
+            right: isMobile ? '12px' : '28px',
             zIndex: 10,
             display: 'flex',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
             alignItems: 'flex-end',
-            gap: '12px',
+            gap: isMobile ? '8px' : '12px',
             pointerEvents: 'none'
           }}
         >
           <div
             style={{
-              background: 'rgba(15, 18, 24, 0.55)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '16px',
-              padding: isMobile ? '8px 14px' : '12px 20px',
-              maxWidth: '650px',
+              background: 'rgba(15, 18, 24, 0.65)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              borderRadius: isMobile ? '12px' : '16px',
+              padding: isMobile ? '8px 12px' : '12px 20px',
+              maxWidth: isMobile ? '100%' : '650px',
+              flex: isMobile ? '1 1 100%' : 'initial',
               pointerEvents: 'auto'
             }}
           >
             <div
               style={{
-                fontSize: '0.75rem',
+                fontSize: isMobile ? '0.68rem' : '0.75rem',
                 fontWeight: 800,
                 color: 'var(--rotaract-pink)',
-                letterSpacing: '1px',
+                letterSpacing: '0.8px',
                 textTransform: 'uppercase',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                marginBottom: '4px'
+                gap: '5px',
+                marginBottom: '2px'
               }}
             >
-              <Sparkles size={12} /> OFFICIAL DISTRICT 3011 MOMENTS
+              <Sparkles size={11} /> OFFICIAL DISTRICT 3011 MOMENTS
             </div>
             <h3
               style={{
-                fontSize: isMobile ? '1rem' : '1.35rem',
+                fontSize: isMobile ? '0.94rem' : '1.35rem',
                 fontWeight: 900,
                 color: '#FFFFFF',
                 margin: '0 0 2px 0',
-                letterSpacing: '-0.3px'
+                letterSpacing: '-0.2px',
+                lineHeight: 1.2
               }}
             >
               {SLIDES[currentIndex].title}
             </h3>
             <p
               style={{
-                fontSize: isMobile ? '0.78rem' : '0.88rem',
-                color: 'rgba(255, 255, 255, 0.82)',
+                fontSize: isMobile ? '0.74rem' : '0.88rem',
+                color: 'rgba(255, 255, 255, 0.85)',
                 margin: 0,
-                fontWeight: 500
+                fontWeight: 500,
+                lineHeight: 1.35
               }}
             >
               {SLIDES[currentIndex].subtitle}
@@ -221,14 +255,15 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(15, 18, 24, 0.55)',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              gap: '6px',
+              background: 'rgba(15, 18, 24, 0.65)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
               borderRadius: '999px',
-              padding: '8px 14px',
-              pointerEvents: 'auto'
+              padding: isMobile ? '6px 10px' : '8px 14px',
+              pointerEvents: 'auto',
+              marginLeft: isMobile ? 'auto' : '0'
             }}
           >
             {SLIDES.map((_, dotIdx) => {
@@ -238,8 +273,8 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
                   key={dotIdx}
                   onClick={() => setCurrentIndex(dotIdx)}
                   style={{
-                    width: isDotActive ? '26px' : '8px',
-                    height: '8px',
+                    width: isDotActive ? (isMobile ? '20px' : '26px') : (isMobile ? '6px' : '8px'),
+                    height: isMobile ? '6px' : '8px',
                     borderRadius: '999px',
                     background: isDotActive ? 'var(--rotaract-pink)' : 'rgba(255, 255, 255, 0.35)',
                     border: 'none',
@@ -254,80 +289,84 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
           </div>
         </div>
 
-        {/* Slide Navigation Arrows */}
-        <button
-          onClick={handlePrev}
-          aria-label="Previous Slide"
-          style={{
-            position: 'absolute',
-            left: isMobile ? '10px' : '22px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 15,
-            width: isMobile ? '38px' : '48px',
-            height: isMobile ? '38px' : '48px',
-            borderRadius: '50%',
-            background: 'rgba(15, 18, 24, 0.45)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--rotaract-pink)';
-            e.currentTarget.style.borderColor = 'var(--rotaract-pink)';
-            e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(15, 18, 24, 0.45)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-          }}
-        >
-          <ChevronLeft size={isMobile ? 20 : 24} />
-        </button>
+        {/* Slide Navigation Arrows (Desktop only, swipe on mobile) */}
+        {!isMobile && (
+          <>
+            <button
+              onClick={handlePrev}
+              aria-label="Previous Slide"
+              style={{
+                position: 'absolute',
+                left: '22px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 15,
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(15, 18, 24, 0.45)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--rotaract-pink)';
+                e.currentTarget.style.borderColor = 'var(--rotaract-pink)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(15, 18, 24, 0.45)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronLeft size={24} />
+            </button>
 
-        <button
-          onClick={handleNext}
-          aria-label="Next Slide"
-          style={{
-            position: 'absolute',
-            right: isMobile ? '10px' : '22px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 15,
-            width: isMobile ? '38px' : '48px',
-            height: isMobile ? '38px' : '48px',
-            borderRadius: '50%',
-            background: 'rgba(15, 18, 24, 0.45)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.25)',
-            color: '#FFFFFF',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--rotaract-pink)';
-            e.currentTarget.style.borderColor = 'var(--rotaract-pink)';
-            e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(15, 18, 24, 0.45)';
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
-            e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-          }}
-        >
-          <ChevronRight size={isMobile ? 20 : 24} />
-        </button>
+            <button
+              onClick={handleNext}
+              aria-label="Next Slide"
+              style={{
+                position: 'absolute',
+                right: '22px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 15,
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(15, 18, 24, 0.45)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--rotaract-pink)';
+                e.currentTarget.style.borderColor = 'var(--rotaract-pink)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.08)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(15, 18, 24, 0.45)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+              }}
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
       </div>
     </section>
   );
