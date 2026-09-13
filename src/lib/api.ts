@@ -52,10 +52,12 @@ export async function apiFetch<T = unknown>(path: string, opts: Options<T> = {})
   if (!res.ok) {
     if (res.status === 401) unauthorizedListeners.forEach((l) => l());
     const obj = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
-    const message = typeof obj.message === 'string' ? obj.message : typeof obj.error === 'string' ? obj.error : res.statusText || `HTTP ${res.status}`;
+    const details = Array.isArray(obj.details) ? (obj.details as { path: string; message: string }[]) : undefined;
+    const detailMsg = details?.length ? details.map((d) => (d.path ? `${d.path}: ${d.message}` : d.message)).join('; ') : undefined;
+    const message = detailMsg || (typeof obj.message === 'string' ? obj.message : typeof obj.error === 'string' ? obj.error : res.statusText || `HTTP ${res.status}`);
     throw new ApiError(res.status, message, {
       code: typeof obj.code === 'string' ? obj.code : undefined,
-      details: Array.isArray(obj.details) ? (obj.details as { path: string; message: string }[]) : undefined,
+      details,
     });
   }
   if (opts.schema) {
