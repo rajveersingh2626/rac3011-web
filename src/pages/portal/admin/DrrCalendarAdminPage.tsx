@@ -19,6 +19,7 @@ import {
   deleteDrrBlock,
   type DrrBooking,
   type BookingDecision,
+  type BookingStatus,
 } from '@/lib/publicApi/drrBookings';
 import { Container } from '@/components/ui/Container';
 import { Card } from '@/components/ui/Card';
