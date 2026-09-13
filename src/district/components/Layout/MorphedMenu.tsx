@@ -44,6 +44,7 @@ export interface MorphedMenuProps {
   onOpenLoginModal: () => void;
   onLogout: () => void;
   onMenuOpenChange?: (isOpen: boolean) => void;
+  isOpenProp?: boolean;
 }
 
 export default function MorphedMenu({
@@ -55,7 +56,8 @@ export default function MorphedMenu({
   userRole,
   onOpenLoginModal,
   onLogout,
-  onMenuOpenChange
+  onMenuOpenChange,
+  isOpenProp
 }: MorphedMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [btnHovered, setBtnHovered] = useState(false);
@@ -65,6 +67,12 @@ export default function MorphedMenu({
   const [districtExpanded, setDistrictExpanded] = useState(true);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isOpenProp !== undefined) {
+      setIsOpen(isOpenProp);
+    }
+  }, [isOpenProp]);
 
   useEffect(() => {
     if (onMenuOpenChange) onMenuOpenChange(isOpen);

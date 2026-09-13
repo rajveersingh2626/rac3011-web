@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import MorphedMenu, { type DistrictUserRole } from './MorphedMenu';
+import MobileBottomNav from './MobileBottomNav';
 import { Home, MapPin, Award, Users, FolderOpen, Calendar, ChevronDown, Sparkles } from 'lucide-react';
 
 export interface NavbarProps {
@@ -341,8 +342,28 @@ export default function Navbar({
           onOpenLoginModal={onOpenLoginModal}
           onLogout={onLogout}
           onMenuOpenChange={setIsMenuOpen}
+          isOpenProp={isMenuOpen}
         />
       </div>
+
+      {isMobile && (
+        <MobileBottomNav
+          activePage={activePage}
+          activeDistrictTab={activeDistrictTab}
+          onNavigate={(page, tab) => {
+            setIsMenuOpen(false);
+            if (page === 'district' && tab) {
+              if (setActiveDistrictTab) setActiveDistrictTab(tab);
+              setActivePage('district', tab);
+            } else {
+              setActivePage(page, tab);
+            }
+          }}
+          onOpenMenu={() => {
+            setIsMenuOpen((prev) => !prev);
+          }}
+        />
+      )}
     </div>
   );
 }

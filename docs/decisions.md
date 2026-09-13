@@ -157,3 +157,27 @@ Recorded where the spec left a choice open. Each entry: date, decision, reason.
 - **Admin host-assignment uses a `Drawer` (side="right"), not a `Modal`** - the spec explicitly calls this "a host-assignment drawer," and unlike Mission3011's single-field reject reason, RIDE's assignment surface is a list (every registered support club, each with an inline days/members editor), which reads better in a side panel than a centered dialog. `RideDelegationsController`'s `PUT .../hosts` full-replace contract maps directly onto the drawer's local state: every registered club for the current RY is pre-seeded as a row (checked + populated if already a host on that delegation, unchecked otherwise), and "Save" always sends the complete set of currently-checked rows, matching "replaces set" exactly rather than diff-patching.
 - **Delegation creation is a `Modal` (matching Mission3011/RCL's "log a camp"/"new fixture" pattern), separate from the host-assignment `Drawer`** - these are two independent admin actions (add a delegation vs. assign hosts to an existing one) and combining them into one panel would conflate "describe the visit" with "who's hosting it," which the API also keeps as two separate endpoints (`POST /ride/delegations` vs `PUT .../hosts`).
 - **e2e persona (`e2e/fixtures/me.json`) gained `"subdomain:ride:manage": [{ "type": "project", "id": "ride" }]`**, following the drishti/rcl/careerbridge precedent - this repo's shared mock-server e2e setup only supports one persona/session, so each subdomain that wants a *positive* interactive admin e2e test (here: assigning a host from the drawer) has to add its own grant to the shared fixture. `mission3011` remains the one subdomain deliberately left ungranted, so it stays available as every other subdomain's negative-permission test target. RIDE's own negative test instead asserts `RequireSubdomainAuth`'s sign-in prompt for an anonymous (no-cookie) visitor on `/support-club` and `/admin` - a real, meaningful assertion that doesn't depend on the persona's specific grant set.
+
+## Heritage, Public Content Reflection, and Mobile PWA Overhaul
+
+- **Heritage & Past DRRs exact matching replacing fuzzy year matching (`src/district/components/District/PastDRRShowcase.tsx`)**:
+  - Root cause of duplicate / scrambled PDRR cards: the previous merger used `p.terms.some(t => localDrr.year.includes(t))` which caused co-DRRs sharing the same year (e.g. 2022-23 Ankit Arvind Singh & Rahul Sanjeev Sharma, or 2020-21 Sarthak Bansal & Yaamini Thareja) to collide. The first match clobbered multiple cards and attached photos to the wrong names.
+  - Replaced with strict matching by `id`, `slug`, and clean sanitized `name`.
+  - Added `findPdrrPhoto` (`src/district/data/pdrrImages.ts`) to resolve known high-resolution portraits by slug/name without cross-contaminating profiles.
+  - Live portal updates (name, terms, photoUrl, bio) take immediate visual precedence.
+- **Prisma Foreign Key Relations (`content.prisma` and `clubs.prisma` in `rac3011-api`)**:
+  - `PastDrr.homeClubId` now explicitly links to `Club` via `homeClub Club? @relation(fields: [homeClubId], references: [id])` with index `@@index([homeClubId])`.
+  - `Club` has `pastDrrs PastDrr[]` relation.
+- **Public Content Live Reflection (`PublicHome.tsx` / `DistrictRoadmap.tsx`)**:
+  - Updated `achievements` mapper so live items from the database are rendered directly with their actual title, description, and badge, rather than falling back to static constants when titles differ.
+  - Added `staleTime: 30000` and `refetchOnMount: 'always'` to achievements and partners queries.
+- **Native Mobile Navigation Bar (`MobileBottomNav.tsx`)**:
+  - Docked fixed at the bottom on mobile devices (`< 768px`) with frosted glass morphism (`backdrop-filter: blur(24px)`), safe-area insets (`env(safe-area-inset-bottom)`), and active neon-pink glow indicators.
+  - 5 core thumb-accessible destinations: Home (`/`), Clubs & Map (`/directory`), Heritage (`/heritage`), Leaders (`/governance`), and Explore (opens MorphedMenu drawer).
+  - Client-side navigation uses `pushState` with scroll resets, avoiding jarring page reloads.
+- **Carousel Counter Removal & Typography (`DistrictHeroSlideshow.tsx`)**:
+  - Completely removed the `· SLIDE __ / __` counter from the hero slideshow banner.
+  - Clamped typography and responsive flex layout prevent text clipping or horizontal overflow on small phone screens.
+- **Progressive Web App (PWA) Support**:
+  - Added `public/manifest.webmanifest` and updated `index.html` with standalone display mode, orientation, branding colors, maskable icons, and Apple touch meta tags.
+

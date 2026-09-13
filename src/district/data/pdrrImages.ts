@@ -32,3 +32,24 @@ export const PDRR_PHOTOS = {
 } satisfies Record<string, string>;
 
 export type PdrrPhotoKey = keyof typeof PDRR_PHOTOS;
+
+export function findPdrrPhoto(name: string, slug?: string): string | null {
+  const clean = (s: string) =>
+    s.replace(/^(Rtn\.|Rtr\.|PDRR\s*|DRR\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanName = clean(name);
+  const cleanSlug = slug ? clean(slug) : '';
+
+  for (const [key, photo] of Object.entries(PDRR_PHOTOS)) {
+    const cleanKey = clean(key);
+    if (
+      cleanKey === cleanName ||
+      cleanKey === cleanSlug ||
+      cleanName.includes(cleanKey) ||
+      cleanKey.includes(cleanName) ||
+      (cleanSlug && (cleanSlug.includes(cleanKey) || cleanKey.includes(cleanSlug)))
+    ) {
+      return photo;
+    }
+  }
+  return null;
+}

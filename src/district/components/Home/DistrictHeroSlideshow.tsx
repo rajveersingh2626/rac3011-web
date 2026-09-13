@@ -14,7 +14,7 @@ const SLIDES: Slide[] = [
     id: 'slide-1',
     src: '/slideshow-yugarambh-sitting.webp',
     title: 'DAC 2026–27 Leadership Oath',
-    subtitle: 'District Installation & Investiture Ceremony – "Yugarambh"'
+    subtitle: 'District Installation Ceremony – "Yugarambh"'
   },
   {
     id: 'slide-2',

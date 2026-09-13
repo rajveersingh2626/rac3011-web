@@ -191,7 +191,7 @@ export function ReportFormBuilderPage() {
                       {field.pointSourceKey && (
                         <>
                           <span>·</span>
-                          <span className="text-success font-medium">⚡ Points: {field.pointSourceKey}</span>
+                          <span className="text-success font-medium">Points: {field.pointSourceKey}</span>
                         </>
                       )}
                       {(field.type === 'select' || field.type === 'multiselect') && (

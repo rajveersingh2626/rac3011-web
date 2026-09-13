@@ -69,7 +69,7 @@ export function DistrictPageShell({ children }: DistrictPageShellProps) {
           void signOut().finally(() => navigate('/'));
         }}
       />
-      <main style={{ flex: 1, minHeight: 0 }}>{children}</main>
+      <main style={{ flex: 1, minHeight: 0, paddingBottom: '76px' }}>{children}</main>
       <Footer onNavigatePage={(page: string) => handlePageChange(page)} />
     </div>
   );

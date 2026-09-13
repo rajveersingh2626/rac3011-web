@@ -1,0 +1,26 @@
+{
+  "name": "Rotaract District 3011",
+  "short_name": "Rotaract 3011",
+  "description": "Official Website, Portal & Heritage Archive of Rotaract District Organization 3011",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#D81B60",
+  "categories": ["social", "community", "leadership", "organization"],
+  "icons": [
+    {
+      "src": "/images.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/images.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ]
+}

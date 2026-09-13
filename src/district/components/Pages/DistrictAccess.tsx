@@ -7,6 +7,7 @@ import DistrictResourcesView from '../District/DistrictResourcesView';
 import DistrictCalendarView from '../District/DistrictCalendarView';
 import { DISTRICT_LEADERSHIP } from '../../data/districtData';
 import type { DistrictClub } from '../../data/districtData';
+import { findLeaderPhoto } from '../../data/leadershipImages';
 import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
 import { Mail, Phone, Copy, Check, Search } from 'lucide-react';
 
@@ -55,12 +56,19 @@ export default function DistrictAccess({
 
   const leadersList = useMemo<LeadershipEntry[]>(() => {
     if (!teamQuery.data?.items || teamQuery.data.items.length === 0) {
-      return DISTRICT_LEADERSHIP;
+      return DISTRICT_LEADERSHIP.map(l => ({
+        ...l,
+        photo: l.photo || findLeaderPhoto(l.name, l.email, l.id) || ''
+      }));
     }
     return teamQuery.data.items.map((member) => {
+      const clean = (s: string) => s.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*|Dr\.?\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const mClean = clean(member.name);
       const local = DISTRICT_LEADERSHIP.find(
         (l) =>
           l.id === member.id ||
+          (l.email && member.email && l.email.trim().toLowerCase() === member.email.trim().toLowerCase()) ||
+          clean(l.name) === mClean ||
           l.name.toLowerCase() === member.name.toLowerCase() ||
           (l.role && member.designation && l.role.toLowerCase() === member.designation.toLowerCase()),
       );
@@ -77,6 +85,8 @@ export default function DistrictAccess({
         }
       }
 
+      const photo = member.photoUrl || local?.photo || findLeaderPhoto(member.name, member.email, member.id) || '';
+
       return {
         id: member.id,
         name: member.name,
@@ -84,7 +94,7 @@ export default function DistrictAccess({
         category,
         email: member.email || local?.email || '',
         phone: member.phone || local?.phone || '',
-        photo: member.photoUrl || local?.photo || '',
+        photo,
         club: 'Rotaract District 3011',
       };
     });

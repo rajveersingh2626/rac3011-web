@@ -2,6 +2,7 @@ import { memo, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PAST_DRRS } from '../../data/districtData';
 import type { PastDrr } from '../../data/districtData';
+import { findPdrrPhoto } from '../../data/pdrrImages';
 import { fetchPastDrrs } from '@/lib/publicApi/heritage';
 import { Award, Calendar, MapPin, Search, User, Shield } from 'lucide-react';
 
@@ -336,45 +337,72 @@ export default function PastDRRShowcase() {
   });
 
   const drrList = useMemo<PastDrr[]>(() => {
-    if (!pastDrrQuery.data?.items || pastDrrQuery.data.items.length === 0) {
-      return PAST_DRRS;
-    }
     const clean = (s: string) =>
       s.replace(/^(Rtn\.|Rtr\.|PDRR\s*|DRR\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    if (!pastDrrQuery.data?.items || pastDrrQuery.data.items.length === 0) {
+      return PAST_DRRS.map((drr) => {
+        const photo = drr.photo || findPdrrPhoto(drr.name, drr.id);
+        return {
+          ...drr,
+          photo,
+          hasPhoto: Boolean(photo),
+        };
+      });
+    }
 
     const matchedLiveIds = new Set<string>();
     const mapped = PAST_DRRS.map((localDrr) => {
       const localClean = clean(localDrr.name);
-      const live = pastDrrQuery.data.items.find(
-        (p) =>
-          clean(p.name) === localClean ||
-          p.name.toLowerCase() === localDrr.name.toLowerCase() ||
-          (p.terms && p.terms.some((t) => localDrr.year.includes(t) || localDrr.tenure.includes(t)))
-      );
-      if (!live) return localDrr;
+      const live = pastDrrQuery.data.items.find((p) => {
+        if (matchedLiveIds.has(p.id)) return false;
+        const pClean = clean(p.name);
+        const pSlugClean = clean(p.slug || '');
+        return (
+          p.id === localDrr.id ||
+          pClean === localClean ||
+          (pSlugClean && pSlugClean === localClean) ||
+          p.name.trim().toLowerCase() === localDrr.name.trim().toLowerCase()
+        );
+      });
+
+      if (!live) {
+        const photo = localDrr.photo || findPdrrPhoto(localDrr.name, localDrr.id);
+        return {
+          ...localDrr,
+          photo,
+          hasPhoto: Boolean(photo),
+        };
+      }
+
       matchedLiveIds.add(live.id);
+      const photo = live.photoUrl || localDrr.photo || findPdrrPhoto(live.name, live.slug);
       return {
         ...localDrr,
         name: live.name || localDrr.name,
-        photo: live.photoUrl || localDrr.photo,
-        hasPhoto: Boolean(live.photoUrl || localDrr.photo),
+        photo,
+        hasPhoto: Boolean(photo),
+        year: live.terms?.[0] || localDrr.year,
+        tenure: live.terms?.[0] ? `RY ${live.terms[0]}` : localDrr.tenure,
       };
     });
 
     const unmappedLive = pastDrrQuery.data.items.filter((p) => !matchedLiveIds.has(p.id));
     const extraLive: PastDrr[] = unmappedLive.map((live, idx) => {
-      const yearStr = live.terms?.[0] || 'RY 2026-27';
+      const yearStr = live.terms?.[0] || '2026-27';
+      const tenureStr = live.terms?.[0] ? `RY ${live.terms[0]}` : 'RY 2026-27';
+      const photo = live.photoUrl || findPdrrPhoto(live.name, live.slug);
       return {
         id: live.id,
         srNo: PAST_DRRS.length + idx + 1,
         year: yearStr,
-        tenure: yearStr,
+        tenure: tenureStr,
         name: live.name,
         district: '3011',
-        districtEra: 'District 3011 (2016-Present)',
+        districtEra: 'District 3011',
         homeClub: 'Rotaract District 3011',
-        photo: live.photoUrl,
-        hasPhoto: Boolean(live.photoUrl),
+        photo,
+        hasPhoto: Boolean(photo),
       };
     });
 

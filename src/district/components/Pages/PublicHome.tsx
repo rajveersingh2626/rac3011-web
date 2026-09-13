@@ -569,10 +569,14 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
   const achievementsQuery = useQuery({
     queryKey: ['public', 'achievements'],
     queryFn: fetchAchievements,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
   const partnersQuery = useQuery({
     queryKey: ['public', 'partners'],
     queryFn: fetchPartners,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const impactMetrics = useMemo<ImpactMetric[]>(() => {
@@ -611,11 +615,10 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
     const items = achievementsQuery.data?.items;
     if (!items || items.length === 0) return DISTRICT_ACHIEVEMENTS;
     return items.map((item, idx) => {
-      const base =
-        DISTRICT_ACHIEVEMENTS.find((a) => a.title.toLowerCase() === (item.title || '').toLowerCase()) ??
-        DISTRICT_ACHIEVEMENTS[idx % DISTRICT_ACHIEVEMENTS.length];
-      const matched = Boolean(base && base.title.toLowerCase() === (item.title || '').toLowerCase());
-      const badge = matched ? base.badge : formatAchievementBadge(item.type);
+      const base = DISTRICT_ACHIEVEMENTS.find(
+        (a) => a.title.toLowerCase() === (item.title || '').toLowerCase()
+      );
+      const badge = formatAchievementBadge(item.type) || base?.badge || 'District Milestone';
       return {
         id: item.id || `ach-${idx + 1}`,
         title: item.title || base?.title || `District Milestone ${idx + 1}`,
