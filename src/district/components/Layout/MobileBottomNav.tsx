@@ -1,5 +1,5 @@
 import { FC, memo } from 'react';
-import { Home, MapPin, Award, Users, Menu, Sparkles } from 'lucide-react';
+import { Home, MapPin, Award, Users, Sparkles } from 'lucide-react';
 
 export interface MobileBottomNavProps {
   activePage: string;
