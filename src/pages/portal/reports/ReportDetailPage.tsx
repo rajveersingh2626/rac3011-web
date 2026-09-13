@@ -84,7 +84,7 @@ function PushToShowcaseModal({
       });
       onClose();
     },
-    onError: (e: any) => {
+    onError: (e: Error) => {
       toast({
         title: e?.message || 'Failed to submit project to showcase',
         tone: 'error',

@@ -54,7 +54,7 @@ export function DrrCalendarAdminPage() {
   const bookingsQuery = useQuery({
     queryKey: ['admin-drr-bookings', statusFilter],
     queryFn: () =>
-      fetchDrrBookings(statusFilter === 'all' ? {} : { status: statusFilter as any }),
+      fetchDrrBookings(statusFilter === 'all' ? {} : { status: statusFilter as BookingStatus }),
   });
 
   const blocksQuery = useQuery({
@@ -82,7 +82,7 @@ export function DrrCalendarAdminPage() {
         tone: isConfirmed ? 'success' : 'info',
       });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast({
         title: 'Could not update booking',
         body: err?.message || 'An error occurred while updating the visit request.',
@@ -106,7 +106,7 @@ export function DrrCalendarAdminPage() {
         tone: 'success',
       });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       setBlockError(err?.message || 'Failed to block date');
     },
   });
@@ -123,7 +123,7 @@ export function DrrCalendarAdminPage() {
         tone: 'success',
       });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       toast({
         title: 'Failed to remove block',
         body: err?.message || 'An error occurred while deleting the block.',

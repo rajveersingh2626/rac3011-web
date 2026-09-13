@@ -47,7 +47,7 @@ export function PortalFeedbackPage() {
       setFormError(null);
       void queryClient.invalidateQueries({ queryKey: ['my-feedback'] });
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       setFormError(err?.message || 'Failed to submit feedback. Please try again.');
     },
   });
