@@ -156,7 +156,8 @@ async function prerenderRoute(browser: Browser, baseUrl: string, route: string):
     }
 
     const hasRenderedRoot = await page.evaluate(() => {
-      const root = document.getElementById('root');
+      const doc = (globalThis as unknown as { document?: { getElementById: (id: string) => { innerHTML: string } | null } }).document;
+      const root = doc?.getElementById('root');
       return Boolean(root && root.innerHTML.trim().length > 100);
     });
     if (!hasRenderedRoot) {
