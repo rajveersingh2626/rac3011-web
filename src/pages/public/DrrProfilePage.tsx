@@ -14,7 +14,12 @@ const HERO_GRADIENT = 'linear-gradient(180deg, #D81B60 0%, #AD1457 100%)';
 
 export function DrrProfilePage() {
   const { slug = '' } = useParams<{ slug: string }>();
-  const { data, isPending, isError, refetch } = useQuery({ queryKey: ['public', 'past-drrs', slug], queryFn: () => fetchPastDrr(slug) });
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: ['public', 'past-drrs', slug],
+    queryFn: () => fetchPastDrr(slug),
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
+  });
 
   useDocumentMeta({ title: data ? `${data.name} · Heritage` : 'Heritage profile' });
 

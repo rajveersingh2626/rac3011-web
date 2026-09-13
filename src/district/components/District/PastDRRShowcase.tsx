@@ -329,22 +329,30 @@ export default function PastDRRShowcase() {
   const pastDrrQuery = useQuery({
     queryKey: ['public', 'past-drrs'],
     queryFn: fetchPastDrrs,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const drrList = useMemo<PastDrr[]>(() => {
     if (!pastDrrQuery.data?.items || pastDrrQuery.data.items.length === 0) {
       return PAST_DRRS;
     }
+    const clean = (s: string) =>
+      s.replace(/^(Rtn\.|Rtr\.|PDRR\s*|DRR\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
     return PAST_DRRS.map((localDrr) => {
+      const localClean = clean(localDrr.name);
       const live = pastDrrQuery.data.items.find(
-        (p) => p.name.toLowerCase() === localDrr.name.toLowerCase() ||
-               (p.terms && p.terms.some(t => localDrr.year.includes(t)))
+        (p) =>
+          clean(p.name) === localClean ||
+          p.name.toLowerCase() === localDrr.name.toLowerCase() ||
+          (p.terms && p.terms.some((t) => localDrr.year.includes(t) || localDrr.tenure.includes(t)))
       );
       if (!live) return localDrr;
       return {
         ...localDrr,
         photo: live.photoUrl || localDrr.photo,
+        hasPhoto: Boolean(live.photoUrl || localDrr.photo),
       };
     });
   }, [pastDrrQuery.data]);
