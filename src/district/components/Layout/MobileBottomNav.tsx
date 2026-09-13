@@ -66,15 +66,15 @@ export const MobileBottomNav: FC<MobileBottomNavProps> = memo(({
         left: 0,
         right: 0,
         zIndex: 9998,
-        backgroundColor: 'rgba(15, 18, 26, 0.94)',
+        backgroundColor: 'rgba(15, 18, 26, 0.95)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderTop: '1px solid rgba(255, 255, 255, 0.14)',
-        boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.45)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+        boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
-        padding: '6px 8px calc(max(6px, env(safe-area-inset-bottom))) 8px',
+        padding: '6px 6px calc(max(8px, env(safe-area-inset-bottom, 8px))) 6px',
         boxSizing: 'border-box',
       }}
     >
@@ -89,17 +89,19 @@ export const MobileBottomNav: FC<MobileBottomNavProps> = memo(({
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '3px',
-              padding: '6px 10px',
+              gap: '2px',
+              padding: '6px 8px',
               borderRadius: '12px',
               border: 'none',
               backgroundColor: item.active ? 'rgba(216, 27, 96, 0.22)' : 'transparent',
               color: item.active ? '#FF4081' : 'rgba(255, 255, 255, 0.72)',
               cursor: 'pointer',
               minWidth: '58px',
+              minHeight: '48px',
               transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
               outline: 'none',
               position: 'relative',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             {item.active && (
@@ -107,11 +109,11 @@ export const MobileBottomNav: FC<MobileBottomNavProps> = memo(({
                 style={{
                   position: 'absolute',
                   top: '-6px',
-                  width: '16px',
+                  width: '18px',
                   height: '3px',
                   borderRadius: '2px',
                   backgroundColor: '#D81B60',
-                  boxShadow: '0 0 10px #D81B60',
+                  boxShadow: '0 0 10px #D81B60, 0 0 4px #FF4081',
                 }}
               />
             )}
@@ -120,15 +122,15 @@ export const MobileBottomNav: FC<MobileBottomNavProps> = memo(({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transform: item.active ? 'scale(1.08)' : 'scale(1)',
-                transition: 'transform 0.2s ease',
+                transform: item.active ? 'scale(1.12)' : 'scale(1)',
+                transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               {item.icon}
             </span>
             <span
               style={{
-                fontSize: '0.68rem',
+                fontSize: '0.66rem',
                 fontWeight: item.active ? 800 : 600,
                 letterSpacing: '0.2px',
                 color: item.active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.72)',

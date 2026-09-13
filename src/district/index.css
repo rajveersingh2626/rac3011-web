@@ -836,22 +836,24 @@ button,
      causing content to be trapped or clipped behind it. */
   html, body {
     height: auto !important;
-    overflow: hidden !important; /* Keep outer body locked */
+    overflow-x: clip !important;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .snap-container {
     scroll-snap-type: none !important; /* Disable mandatory snapping on mobile */
     height: 100dvh; /* Use dynamic viewport height to avoid browser chrome issues */
     overflow-y: auto !important;
+    overflow-x: clip !important;
   }
 
   .snap-section {
     scroll-snap-align: none !important;
     scroll-snap-stop: unset !important;
     height: auto !important;
-    min-height: 100svh; /* Small viewport height — excludes browser chrome */
+    min-height: auto !important;
     max-height: none !important;
-    padding: 80px 16px 40px 16px; /* Top padding accounts for navbar */
+    padding: 72px 14px 28px 14px; /* Top padding accounts for navbar */
     overflow: visible !important; /* Let content breathe */
   }
 

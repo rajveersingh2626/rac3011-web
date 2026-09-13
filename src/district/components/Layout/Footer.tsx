@@ -38,7 +38,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
         color: '#FAFAFA',
         borderTop: '4px solid var(--rotaract-pink)',
         paddingTop: isMobile ? '40px' : '60px',
-        paddingBottom: isMobile ? '28px' : '40px',
+        paddingBottom: isMobile ? 'calc(78px + env(safe-area-inset-bottom, 8px))' : '40px',
         position: 'relative',
         zIndex: 20,
         width: '100%',

@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { ArrowUp, TrendingUp } from 'lucide-react';
 import type { ImpactMetric } from '../../data/districtData';
 
@@ -7,6 +7,14 @@ interface DistrictImpactStatsProps {
 }
 
 export const DistrictImpactStats: FC<DistrictImpactStatsProps> = ({ metrics }) => {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Use either dynamic metrics or rich verified defaults
   const cards = [
     {
@@ -42,17 +50,17 @@ export const DistrictImpactStats: FC<DistrictImpactStatsProps> = ({ metrics }) =
   ];
 
   return (
-    <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
+    <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '0 4px' : '0' }}>
       
       {/* Header Block matching Image 2 */}
-      <div style={{ marginBottom: '40px', maxWidth: '780px' }}>
-        <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3.2rem)', fontWeight: 900, color: '#0F172A', letterSpacing: '-1px', margin: 0, lineHeight: 1.15 }}>
+      <div style={{ marginBottom: isMobile ? '24px' : '40px', maxWidth: '780px' }}>
+        <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 3.2rem)', fontWeight: 900, color: '#0F172A', letterSpacing: '-0.5px', margin: 0, lineHeight: 1.18 }}>
           Measurable change across Delhi &amp; NCR
         </h2>
         
-        <div style={{ width: '54px', height: '4px', backgroundColor: '#123499', borderRadius: '2px', margin: '14px 0 16px' }} />
+        <div style={{ width: '54px', height: '4px', backgroundColor: '#123499', borderRadius: '2px', margin: isMobile ? '10px 0 12px' : '14px 0 16px' }} />
         
-        <p style={{ color: '#475569', fontSize: '1.05rem', lineHeight: 1.6, margin: 0 }}>
+        <p style={{ color: '#475569', fontSize: isMobile ? '0.92rem' : '1.05rem', lineHeight: 1.6, margin: 0 }}>
           Real, verified grassroots metrics driven by 54 recognized Rotaract clubs and thousands of dedicated youth leaders throughout Rotary Year 2026–27.
         </p>
       </div>
@@ -60,23 +68,23 @@ export const DistrictImpactStats: FC<DistrictImpactStatsProps> = ({ metrics }) =
       {/* 3 Modern Metric Cards matching Image 2 */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '24px'
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: isMobile ? '16px' : '24px'
       }}>
         {cards.map((card, idx) => (
           <div
             key={idx}
             style={{
               backgroundColor: '#FFFFFF',
-              borderRadius: '24px',
-              padding: '36px 30px',
+              borderRadius: isMobile ? '18px' : '24px',
+              padding: isMobile ? '24px 20px' : '36px 30px',
               position: 'relative',
               boxShadow: '0 12px 35px rgba(18, 52, 153, 0.06)',
               border: '1px solid rgba(226, 232, 240, 0.9)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              minHeight: '270px',
+              minHeight: isMobile ? '220px' : '270px',
               transition: 'transform 0.25s ease, box-shadow 0.25s ease',
               overflow: 'hidden'
             }}

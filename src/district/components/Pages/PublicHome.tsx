@@ -1250,7 +1250,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
         style={{
           position: 'fixed',
           right: isMobile ? '12px' : '24px',
-          bottom: isMobile ? '16px' : '28px',
+          bottom: isMobile ? 'calc(74px + env(safe-area-inset-bottom, 8px))' : '28px',
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',

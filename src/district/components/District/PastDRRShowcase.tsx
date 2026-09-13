@@ -1,4 +1,4 @@
-import { memo, useState, useMemo } from 'react';
+import { memo, useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PAST_DRRS } from '../../data/districtData';
 import type { PastDrr } from '../../data/districtData';
@@ -20,9 +20,10 @@ interface DRRCardProps {
   eraConfig: EraBadgeConfig;
   isCurrentDRR: boolean;
   initials: string;
+  isMobile?: boolean;
 }
 
-const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials }: DRRCardProps) {
+const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, isMobile }: DRRCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
 
@@ -33,7 +34,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials }
       onMouseLeave={() => setIsHovered(false)}
       style={{
         padding: '0px',
-        borderRadius: '20px',
+        borderRadius: isMobile ? '16px' : '20px',
         overflow: 'hidden',
         border: isCurrentDRR 
           ? '1.5px solid rgba(216, 27, 96, 0.45)'
@@ -55,7 +56,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials }
       <div 
         style={{ 
           width: '100%', 
-          height: '330px', 
+          height: isMobile ? '240px' : '330px', 
           position: 'relative', 
           overflow: 'hidden',
           backgroundColor: '#1E1E24'
@@ -328,6 +329,13 @@ export type PastDRRShowcaseProps = Record<string, never>;
 export default function PastDRRShowcase() {
   const [selectedEra, setSelectedEra] = useState('all'); // 'all' | '3011' | '3010' | '301'
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const pastDrrQuery = useQuery({
     queryKey: ['public', 'past-drrs'],
@@ -484,14 +492,14 @@ export default function PastDRRShowcase() {
     <div style={{ marginTop: '10px', color: '#FFFFFF' }}>
       
       {/* Page Header */}
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <span className="pill-gold" style={{ marginBottom: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <Award size={14} /> DISTRICT HERITAGE & COUNCIL OF DRRs
+      <div style={{ textAlign: 'center', marginBottom: isMobile ? '20px' : '32px' }}>
+        <span className="pill-gold" style={{ marginBottom: isMobile ? '8px' : '14px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.74rem' : '0.82rem' }}>
+          <Award size={14} /> DISTRICT HERITAGE &amp; COUNCIL OF DRRs
         </span>
-        <h1 style={{ fontSize: '2.8rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.5px', margin: '4px 0 12px 0' }}>
+        <h1 style={{ fontSize: isMobile ? 'clamp(1.8rem, 5vw, 2.5rem)' : '2.8rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.5px', margin: '4px 0 10px 0' }}>
           Council of Past DRRs
         </h1>
-        <p style={{ color: '#FCE4EC', fontSize: '1.1rem', maxWidth: '760px', margin: '0 auto', lineHeight: 1.6 }}>
+        <p style={{ color: '#FCE4EC', fontSize: isMobile ? '0.92rem' : '1.1rem', maxWidth: '760px', margin: '0 auto', lineHeight: 1.55 }}>
           Honoring four decades of visionary leadership, selfless service, and transformative impact across our District.
         </p>
       </div>
@@ -500,19 +508,27 @@ export default function PastDRRShowcase() {
       <div 
         style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
           justifyContent: 'space-between',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: isMobile ? '12px' : '16px',
+          marginBottom: isMobile ? '20px' : '32px',
           background: '#FFFFFF',
-          padding: '14px 20px',
-          borderRadius: '16px',
+          padding: isMobile ? '12px 14px' : '14px 20px',
+          borderRadius: isMobile ? '16px' : '16px',
           boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)'
         }}
       >
         {/* Era Filter Buttons */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          flexWrap: isMobile ? 'nowrap' : 'wrap',
+          overflowX: isMobile ? 'auto' : 'visible',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: isMobile ? '4px' : '0',
+          scrollbarWidth: 'none'
+        }}>
           {[
             { id: 'all', label: `All Past DRRs (${counts.all})`, color: 'var(--rotaract-pink)' },
             { id: '3011', label: `District 3011 (${counts['3011']})`, color: '#D81B60' },
@@ -528,14 +544,16 @@ export default function PastDRRShowcase() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '8px 16px',
+                  padding: isMobile ? '7px 14px' : '8px 16px',
                   borderRadius: '10px',
                   border: isActive ? `2px solid ${era.color}` : '1px solid #E4E4E7',
                   background: isActive ? era.color : '#F4F4F5',
                   color: isActive ? '#FFFFFF' : '#3F3F46',
-                  fontSize: '0.84rem',
+                  fontSize: isMobile ? '0.78rem' : '0.84rem',
                   fontWeight: 800,
                   cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                   transition: 'all 0.2s ease',
                   boxShadow: isActive ? `0 4px 14px ${era.color}40` : 'none'
                 }}
@@ -553,9 +571,9 @@ export default function PastDRRShowcase() {
             position: 'relative',
             display: 'flex',
             alignItems: 'center',
-            minWidth: '260px',
-            flex: '1 1 260px',
-            maxWidth: '380px'
+            minWidth: isMobile ? '100%' : '260px',
+            flex: isMobile ? 'none' : '1 1 260px',
+            maxWidth: isMobile ? '100%' : '380px'
           }}
         >
           <Search size={16} style={{ position: 'absolute', left: '12px', color: '#71717A' }} />
@@ -573,7 +591,8 @@ export default function PastDRRShowcase() {
               outline: 'none',
               color: '#18181B',
               fontWeight: 600,
-              background: '#FAFAFA'
+              background: '#FAFAFA',
+              boxSizing: 'border-box'
             }}
           />
         </div>
@@ -597,7 +616,7 @@ export default function PastDRRShowcase() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '26px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? '16px' : '26px' }}>
           {filteredDRRs.map((drr) => {
             const isCurrentDRR = drr.year === '2026-27' || drr.name.toLowerCase().includes('archit');
             const eraConfig = getEraBadgeConfig(drr.district);
@@ -608,6 +627,7 @@ export default function PastDRRShowcase() {
                 eraConfig={eraConfig}
                 isCurrentDRR={isCurrentDRR}
                 initials={getInitials(drr.name)}
+                isMobile={isMobile}
               />
             );
           })}

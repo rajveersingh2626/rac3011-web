@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import DistrictMap from '../District/DistrictMap';
 import ClubInitiativesList from '../District/ClubInitiativesList';
@@ -46,6 +46,13 @@ export default function DistrictAccess({
   const [leadershipCategory, setLeadershipCategory] = useState('All');
   const [leadershipSearch, setLeadershipSearch] = useState('');
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const teamQuery = useQuery({
     queryKey: ['public', 'district-team'],
@@ -131,7 +138,15 @@ export default function DistrictAccess({
             : '#FFFFFF';
 
   return (
-    <div style={{ background: districtTabBackground, minHeight: '100vh', padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab) ? '0px' : '40px 24px 80px 24px', color: 'var(--text-primary)' }}>
+    <div style={{
+      background: districtTabBackground,
+      minHeight: '100vh',
+      padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab)
+        ? '0px'
+        : (isMobile ? '20px 12px calc(84px + env(safe-area-inset-bottom, 8px)) 12px' : '40px 24px 80px 24px'),
+      color: 'var(--text-primary)',
+      boxSizing: 'border-box'
+    }}>
       {(!activeDistrictTab || activeDistrictTab === 'map-clubs') ? (
         <div style={{ width: '100%', minHeight: 'calc(100vh - 70px)' }}>
           <DistrictMap
@@ -175,14 +190,14 @@ export default function DistrictAccess({
 
         {activeDistrictTab === 'leadership' && (
           <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', color: '#FFFFFF', marginBottom: '32px' }}>
-              <span className="pill-gold" style={{ fontSize: '0.82rem', marginBottom: '12px' }}>
+            <div style={{ textAlign: 'center', color: '#FFFFFF', marginBottom: isMobile ? '20px' : '32px' }}>
+              <span className="pill-gold" style={{ fontSize: isMobile ? '0.74rem' : '0.82rem', marginBottom: '8px' }}>
                 DISTRICT ACTION COMMITTEE RY 2026-27
               </span>
-              <h2 style={{ fontSize: '2.5rem', fontWeight: 900, letterSpacing: '-0.5px', marginTop: '8px' }}>
-                District Secretariat & Leadership
+              <h2 style={{ fontSize: isMobile ? 'clamp(1.75rem, 5vw, 2.4rem)' : '2.5rem', fontWeight: 900, letterSpacing: '-0.5px', marginTop: '6px' }}>
+                District Secretariat &amp; Leadership
               </h2>
-              <p style={{ opacity: 0.9, fontSize: '1.05rem', maxWidth: '680px', margin: '8px auto 0 auto' }}>
+              <p style={{ opacity: 0.9, fontSize: isMobile ? '0.92rem' : '1.05rem', maxWidth: '680px', margin: '8px auto 0 auto', lineHeight: 1.55 }}>
                 Guided by passion, fellowship, and visionary leadership — 50 dedicated leaders steering Rotaract District Organization 3011.
               </p>
             </div>
@@ -190,19 +205,27 @@ export default function DistrictAccess({
             {/* Controls Bar: Category Pills & Search */}
             <div style={{ 
               display: 'flex', 
-              flexWrap: 'wrap', 
-              alignItems: 'center', 
+              flexDirection: isMobile ? 'column' : 'row',
+              alignItems: isMobile ? 'stretch' : 'center', 
               justifyContent: 'space-between', 
-              gap: '16px', 
-              marginBottom: '32px',
+              gap: isMobile ? '12px' : '16px', 
+              marginBottom: isMobile ? '20px' : '32px',
               background: 'rgba(255, 255, 255, 0.1)',
               backdropFilter: 'blur(12px)',
-              padding: '16px 20px',
-              borderRadius: '20px',
+              padding: isMobile ? '12px 14px' : '16px 20px',
+              borderRadius: isMobile ? '16px' : '20px',
               border: '1px solid rgba(255, 255, 255, 0.2)'
             }}>
               {/* Category Pills */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{
+                display: 'flex',
+                flexWrap: isMobile ? 'nowrap' : 'wrap',
+                overflowX: isMobile ? 'auto' : 'visible',
+                WebkitOverflowScrolling: 'touch',
+                gap: '8px',
+                paddingBottom: isMobile ? '4px' : '0',
+                scrollbarWidth: 'none'
+              }}>
                 {[
                   { key: 'All', label: 'All Leaders', count: leadersList.length },
                   { key: 'Executive Council', label: 'Executive Council', count: leadersList.filter(l => l.category === 'Executive Council').length },
@@ -215,12 +238,14 @@ export default function DistrictAccess({
                       key={cat.key}
                       onClick={() => setLeadershipCategory(cat.key)}
                       style={{
-                        padding: '8px 16px',
+                        padding: isMobile ? '7px 14px' : '8px 16px',
                         borderRadius: '100px',
                         border: 'none',
                         cursor: 'pointer',
-                        fontSize: '0.82rem',
+                        fontSize: isMobile ? '0.78rem' : '0.82rem',
                         fontWeight: 700,
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
                         transition: 'all 0.2s ease',
                         background: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)',
                         color: isActive ? '#D81B60' : '#FFFFFF',
@@ -234,7 +259,7 @@ export default function DistrictAccess({
               </div>
 
               {/* Search Box */}
-              <div style={{ position: 'relative', minWidth: '260px', flex: '1', maxWidth: '360px' }}>
+              <div style={{ position: 'relative', minWidth: isMobile ? '100%' : '260px', flex: '1', maxWidth: isMobile ? '100%' : '360px' }}>
                 <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
                 <input
                   type="text"
@@ -243,14 +268,15 @@ export default function DistrictAccess({
                   onChange={(e) => setLeadershipSearch(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '8px 12px 8px 36px',
+                    padding: '9px 12px 9px 36px',
                     borderRadius: '100px',
                     border: '1px solid rgba(255, 255, 255, 0.3)',
                     background: '#FFFFFF',
                     color: '#0F172A',
                     fontSize: '0.85rem',
                     outline: 'none',
-                    fontWeight: 500
+                    fontWeight: 500,
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
@@ -268,13 +294,13 @@ export default function DistrictAccess({
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '22px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', gap: isMobile ? '16px' : '22px' }}>
                 {filteredLeaders.map((leader) => (
                   <div 
                     key={leader.id} 
                     className="rotaract-card" 
                     style={{ 
-                      padding: '24px 20px', 
+                      padding: isMobile ? '20px 16px' : '24px 20px', 
                       textAlign: 'center', 
                       backgroundColor: '#FFFFFF', 
                       borderRadius: '20px',

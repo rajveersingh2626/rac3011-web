@@ -191,7 +191,7 @@ const DistrictHeroSlideshow: FC<DistrictHeroSlideshowProps> = () => {
                 marginBottom: '4px'
               }}
             >
-              <Sparkles size={12} /> OFFICIAL DISTRICT 3011 MOMENTS · SLIDE 0{currentIndex + 1} / 0{SLIDES.length}
+              <Sparkles size={12} /> OFFICIAL DISTRICT 3011 MOMENTS
             </div>
             <h3
               style={{
