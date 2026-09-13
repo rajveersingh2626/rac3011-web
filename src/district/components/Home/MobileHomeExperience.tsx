@@ -2,8 +2,8 @@ import { useState, useEffect, FC } from 'react';
 import { 
   Users, Award, MapPin, Sparkles, Calendar, 
   FolderOpen, ArrowRight, Calculator,
-  ShieldCheck,
-  Search, FileText, LayoutDashboard, LogIn, ChevronRight
+  ShieldCheck, ChevronLeft, ChevronRight,
+  Search, FileText, LayoutDashboard, LogIn, Compass, ArrowUpRight
 } from 'lucide-react';
 import { useSurfaceHref } from '@/app/host';
 import type { Achievement, FocusArea, ImpactMetric } from '../../data/districtData';
@@ -22,25 +22,31 @@ const HERO_SLIDES = [
     id: 'mob-slide-1',
     src: '/slideshow-yugarambh-sitting.webp',
     title: 'DAC 2026–27 Leadership Oath',
-    subtitle: 'District Installation – "Yugarambh"'
+    subtitle: 'District Installation Ceremony – "Yugarambh"'
   },
   {
     id: 'mob-slide-2',
     src: '/slideshow-yugarambh-standing.webp',
     title: 'United in Purpose: District Council',
-    subtitle: '75 Clubs Across Delhi & NCR'
+    subtitle: '75 Rotaract Clubs Uniting Across Delhi & NCR'
   },
   {
     id: 'mob-slide-3',
     src: '/slideshow-drr-speech.webp',
     title: 'DRR Archit Bhatia Address',
-    subtitle: 'Vision for Fellowship & Grassroots Impact'
+    subtitle: 'Setting the Vision for Fellowship, Service & Grassroots Impact'
   },
   {
     id: 'mob-slide-4',
     src: '/slideshow-dg-speech.webp',
     title: 'Rotary Leadership Keynote',
-    subtitle: 'DG Rtn. CA Ajeet Jalan Keynote'
+    subtitle: 'DG Rtn. CA Ajeet Jalan Keynote to District 3011'
+  },
+  {
+    id: 'mob-slide-5',
+    src: '/slideshow-team-hall.webp',
+    title: 'The Rotaract Family Assembly',
+    subtitle: 'Empowering Changemakers & Future Community Leaders'
   }
 ];
 
@@ -130,9 +136,9 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX === null) return;
     const diff = touchStartX - e.changedTouches[0].clientX;
-    if (diff > 45) {
+    if (diff > 40) {
       setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
-    } else if (diff < -45) {
+    } else if (diff < -40) {
       setSlideIdx((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
     }
     setTouchStartX(null);
@@ -167,79 +173,55 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const currentSlide = HERO_SLIDES[slideIdx];
   const activeZoneObj = ZONES_DATA.find((z) => z.id === selectedZone) || ZONES_DATA[0];
 
-  // 3x3 Matrix Grid Items
-  const MATRIX_3X3_ITEMS = [
+  // Secondary Quick District Navigation Cards
+  const SECONDARY_DISTRICT_CARDS = [
     {
-      id: 'm1-leadership',
-      title: 'DAC Leadership',
-      subtitle: 'Council 2026–27',
-      icon: <Users size={22} color="#123499" />,
-      badge: 'Team DRR',
-      onClick: () => navigateTo('leadership')
-    },
-    {
-      id: 'm2-heritage',
-      title: 'Heritage Vault',
-      subtitle: 'Past DRRs (1985–2026)',
-      icon: <Award size={22} color="#C5A059" />,
-      badge: '40+ Yrs',
-      onClick: () => navigateTo('heritage')
-    },
-    {
-      id: 'm3-zones',
+      id: 'sec-map',
       title: 'Zone Radar',
-      subtitle: '4 Zones & 54 Clubs',
-      icon: <MapPin size={22} color="#059669" />,
+      subtitle: '4 Zones • 54 Clubs',
+      icon: <Compass size={20} color="#0284C7" />,
       badge: '54 Clubs',
       onClick: () => navigateTo('map-clubs')
     },
     {
-      id: 'm4-awards',
+      id: 'sec-citations',
       title: 'District Citations',
-      subtitle: 'Awards & Honors',
-      icon: <ShieldCheck size={22} color="#D81B60" />,
-      badge: 'Merits',
+      subtitle: 'Merits & Milestones',
+      icon: <ShieldCheck size={20} color="#D81B60" />,
+      badge: 'Awards',
       onClick: () => navigateToPage('achievements')
     },
     {
-      id: 'm5-bylaws',
-      title: 'District Bylaws',
-      subtitle: 'Constitution & Rules',
-      icon: <FolderOpen size={22} color="#7C3AED" />,
-      badge: 'Official',
-      onClick: () => navigateTo('resources')
-    },
-    {
-      id: 'm6-directory',
+      id: 'sec-directory',
       title: 'Club Directory',
       subtitle: 'Search All Clubs',
-      icon: <Search size={22} color="#0284C7" />,
+      icon: <Search size={20} color="#059669" />,
       badge: 'Verified',
       onClick: () => navigateToPage('directory')
     },
     {
-      id: 'm7-calendar',
-      title: 'Calendar & Dates',
+      id: 'sec-calendar',
+      title: 'Official Calendar',
       subtitle: 'Conclaves & Meets',
-      icon: <Calendar size={22} color="#D97706" />,
-      badge: 'Upcoming',
+      icon: <Calendar size={20} color="#D97706" />,
+      badge: 'RY 26-27',
       onClick: () => navigateTo('calendar')
     },
     {
-      id: 'm8-flagships',
-      title: 'Flagship Projects',
-      subtitle: 'District Campaigns',
-      icon: <Sparkles size={22} color="#E11D48" />,
-      badge: 'Active',
-      onClick: () => navigateTo('initiatives')
+      id: 'sec-bylaws',
+      title: 'Bylaws & Vault',
+      subtitle: 'Governance & Rules',
+      icon: <FolderOpen size={20} color="#7C3AED" />,
+      badge: 'Official',
+      onClick: () => navigateTo('resources')
     },
     {
-      id: 'm9-portal',
-      title: 'Portal Hub',
-      subtitle: 'Reporting & Officer Access',
-      icon: <LayoutDashboard size={22} color="#123499" />,
-      badge: 'Access',
-      onClick: () => handlePortalAction('/portal/dashboard')
+      id: 'sec-flagships',
+      title: 'Social Initiatives',
+      subtitle: 'District Campaigns',
+      icon: <Sparkles size={20} color="#E11D48" />,
+      badge: 'Active',
+      onClick: () => navigateTo('initiatives')
     }
   ];
 
@@ -248,33 +230,33 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       style={{
         width: '100%',
         maxWidth: '100%',
-        padding: '0 0 40px 0',
+        padding: '0 0 60px 0',
         boxSizing: 'border-box',
         overflowX: 'hidden',
         backgroundColor: '#F8FAFC'
       }}
     >
       {/* ===================================================================
-          1. HERO HEADER SECTION (Mobile)
+          1. HERO HEADER SECTION WITH RESILIENT CAROUSEL
          =================================================================== */}
       <div
         style={{
           position: 'relative',
-          padding: '24px 16px 20px',
+          padding: '20px 14px 18px',
           background: 'linear-gradient(180deg, #FFFFFF 0%, #EEF2F9 100%)',
           borderBottom: '1px solid rgba(18, 52, 153, 0.08)'
         }}
       >
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EEF2FF', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(18, 52, 153, 0.18)', marginBottom: '12px' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EEF2FF', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(18, 52, 153, 0.18)', marginBottom: '10px' }}>
           <Sparkles size={13} color="#123499" />
-          <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#123499', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
             ROTARACT DISTRICT 3011 • RY 2026-27
           </span>
         </div>
 
         <h1
           style={{
-            fontSize: 'clamp(2.1rem, 9.4vw, 2.9rem)',
+            fontSize: 'clamp(2.0rem, 8.8vw, 2.7rem)',
             fontWeight: 900,
             color: '#0F1218',
             lineHeight: 1.05,
@@ -288,9 +270,9 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
 
         <p
           style={{
-            fontSize: '0.90rem',
+            fontSize: '0.88rem',
             color: '#475569',
-            margin: '0 0 16px 0',
+            margin: '0 0 14px 0',
             lineHeight: 1.45,
             fontWeight: 500
           }}
@@ -298,97 +280,171 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
           Uniting 54 chartered clubs and young changemakers across Delhi NCR for grassroots humanitarian action.
         </p>
 
-        {/* Hero Slideshow Card with Native Touch Swipe */}
+        {/* Hero Slideshow Card with Fluid Proportions and Native Swipe */}
         <div
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           style={{
             position: 'relative',
             width: '100%',
-            height: '240px',
+            height: '250px',
             borderRadius: '20px',
             overflow: 'hidden',
             backgroundColor: '#0F1218',
-            boxShadow: '0 12px 32px rgba(18, 52, 153, 0.14)',
-            border: '1px solid rgba(18, 52, 153, 0.12)'
+            boxShadow: '0 14px 34px rgba(18, 52, 153, 0.16)',
+            border: '1.5px solid rgba(18, 52, 153, 0.14)',
+            boxSizing: 'border-box'
           }}
         >
-          <img
-            src={currentSlide.src}
-            alt={currentSlide.title}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }}
-          />
+          {HERO_SLIDES.map((slide, idx) => (
+            <img
+              key={slide.id}
+              src={slide.src}
+              alt={slide.title}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                opacity: idx === slideIdx ? 1 : 0,
+                transform: idx === slideIdx ? 'scale(1)' : 'scale(1.04)',
+                transition: 'opacity 0.6s ease, transform 0.6s ease'
+              }}
+            />
+          ))}
 
+          {/* Vignette Shadow Overlay */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(180deg, rgba(15,18,24,0.1) 0%, rgba(15,18,24,0.4) 40%, rgba(15,18,24,0.92) 100%)'
+              background: 'linear-gradient(180deg, rgba(15,18,24,0.15) 0%, rgba(15,18,24,0.45) 45%, rgba(15,18,24,0.94) 100%)'
             }}
           />
 
+          {/* Top Tag & Prev/Next Mini Controls */}
           <div
             style={{
               position: 'absolute',
               top: '12px',
               left: '12px',
-              zIndex: 2,
-              background: 'rgba(15, 18, 24, 0.75)',
-              backdropFilter: 'blur(10px)',
-              padding: '4px 10px',
-              borderRadius: '100px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#FFFFFF',
-              fontSize: '0.68rem',
-              fontWeight: 800,
-              letterSpacing: '0.4px',
-              textTransform: 'uppercase'
+              right: '12px',
+              zIndex: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
             }}
           >
-            DISTRICT MOMENTS
+            <div
+              style={{
+                background: 'rgba(15, 18, 24, 0.75)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                padding: '4px 10px',
+                borderRadius: '100px',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                color: '#FF4081',
+                fontSize: '0.68rem',
+                fontWeight: 800,
+                letterSpacing: '0.6px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                textTransform: 'uppercase'
+              }}
+            >
+              <Sparkles size={11} /> DISTRICT MOMENTS
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setSlideIdx((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
+                aria-label="Previous slide"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  background: 'rgba(15, 18, 24, 0.7)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length)}
+                aria-label="Next slide"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  background: 'rgba(15, 18, 24, 0.7)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
 
+          {/* Bottom Captions and Non-Distorted Slide Dots */}
           <div
             style={{
               position: 'absolute',
-              bottom: '14px',
-              left: '14px',
-              right: '14px',
-              zIndex: 2,
+              bottom: '12px',
+              left: '12px',
+              right: '12px',
+              zIndex: 3,
               display: 'flex',
               flexDirection: 'column',
               gap: '4px'
             }}
           >
-            <h3 style={{ color: '#FFFFFF', fontSize: '1.05rem', fontWeight: 800, margin: 0, lineHeight: 1.2 }}>
+            <h3 style={{ color: '#FFFFFF', fontSize: '1.02rem', fontWeight: 800, margin: 0, lineHeight: 1.25 }}>
               {currentSlide.title}
             </h3>
-            <p style={{ color: 'rgba(255, 255, 255, 0.82)', fontSize: '0.78rem', margin: 0 }}>
+            <p style={{ color: 'rgba(255, 255, 255, 0.85)', fontSize: '0.76rem', margin: 0, fontWeight: 500, lineHeight: 1.3 }}>
               {currentSlide.subtitle}
             </p>
 
-            {/* Slide Dots */}
-            <div style={{ display: 'flex', gap: '5px', marginTop: '6px' }}>
+            {/* Crisp Pill Indicators (Zero Distortion) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
               {HERO_SLIDES.map((_, i) => (
                 <button
                   key={i}
+                  type="button"
                   onClick={() => setSlideIdx(i)}
-                  aria-label={`Slide ${i + 1}`}
+                  aria-label={`Go to slide ${i + 1}`}
                   style={{
-                    width: i === slideIdx ? '20px' : '6px',
-                    height: '5px',
-                    borderRadius: '4px',
-                    background: i === slideIdx ? '#FF4081' : 'rgba(255, 255, 255, 0.4)',
+                    width: i === slideIdx ? '22px' : '6px',
+                    height: '6px',
+                    minWidth: '6px',
+                    minHeight: '6px',
+                    borderRadius: '100px',
+                    backgroundColor: i === slideIdx ? '#FF4081' : 'rgba(255, 255, 255, 0.4)',
                     border: 'none',
                     padding: 0,
+                    margin: 0,
+                    flexShrink: 0,
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    boxShadow: i === slideIdx ? '0 0 8px rgba(255, 64, 129, 0.6)' : 'none'
                   }}
                 />
               ))}
@@ -404,16 +460,16 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
         <div
           style={{
             background: 'linear-gradient(135deg, #0F1218 0%, #152238 60%, #1E293B 100%)',
-            borderRadius: '20px',
+            borderRadius: '22px',
             padding: '18px 16px',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.18), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
             border: '1.5px solid rgba(197, 160, 89, 0.45)',
             color: '#FFFFFF'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(197, 160, 89, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FCD34D' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(197, 160, 89, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FCD34D' }}>
                 <LayoutDashboard size={18} />
               </div>
               <div>
@@ -534,9 +590,193 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          3. PROMINENTLY PLACED DELHI NCR ZONE MAP & RADAR
+          3. FEATURED PROMINENT CARDS: DAC LEADERSHIP & HERITAGE VAULT (Not 1x1!)
          =================================================================== */}
-      <div style={{ padding: '18px 14px 0' }}>
+      <div style={{ padding: '20px 14px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div>
+            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+              DISTRICT 3011 LEADERSHIP &amp; LEGACY
+            </span>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 900, margin: 0, color: '#0F1218' }}>
+              Executive Council &amp; Vault
+            </h2>
+          </div>
+          <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '3px 8px', borderRadius: '100px', background: '#EEF2FF', color: '#123499' }}>
+            CORE
+          </span>
+        </div>
+
+        {/* Featured Prominent Cards Stack */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {/* Card A: DAC Leadership Council (Prominent Full Width Card) */}
+          <div
+            onClick={() => navigateTo('leadership')}
+            style={{
+              position: 'relative',
+              borderRadius: '20px',
+              padding: '18px 16px',
+              background: '#FFFFFF',
+              border: '1.5px solid rgba(18, 52, 153, 0.16)',
+              boxShadow: '0 10px 28px rgba(18, 52, 153, 0.07)',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    backgroundColor: '#EEF2FF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#123499'
+                  }}
+                >
+                  <Users size={22} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                    DISTRICT ACTION COMMITTEE
+                  </span>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0F172A', margin: '1px 0 0 0' }}>
+                    DAC 2026–27 Leadership
+                  </h3>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#EEF2FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#123499'
+                }}
+              >
+                <ArrowRight size={16} />
+              </div>
+            </div>
+
+            <p style={{ color: '#64748B', fontSize: '0.82rem', lineHeight: 1.45, margin: 0 }}>
+              Meet DRR CA Archit Bhatia &amp; the 50-member Executive Council steering district initiatives.
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#123499', background: '#EEF2FF', padding: '3px 8px', borderRadius: '6px' }}>
+                  Core Team
+                </span>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#059669', background: '#ECFDF5', padding: '3px 8px', borderRadius: '6px' }}>
+                  Zonal Team
+                </span>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#D81B60', background: '#FFF0F5', padding: '3px 8px', borderRadius: '6px' }}>
+                  District Chairs
+                </span>
+              </div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#123499' }}>
+                50 Leaders &rarr;
+              </span>
+            </div>
+          </div>
+
+          {/* Card B: Council of Past DRRs (Heritage Vault) (Prominent High-Contrast Card) */}
+          <div
+            onClick={() => navigateTo('heritage')}
+            style={{
+              position: 'relative',
+              borderRadius: '20px',
+              padding: '18px 16px',
+              background: 'linear-gradient(135deg, #880E4F 0%, #D81B60 100%)',
+              boxShadow: '0 12px 32px rgba(216, 27, 96, 0.22)',
+              border: '1.5px solid rgba(255, 255, 255, 0.25)',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFE082'
+                  }}
+                >
+                  <Award size={22} />
+                </div>
+                <div>
+                  <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#FFE082', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+                    HISTORICAL ARCHIVE (1985–2026)
+                  </span>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', margin: '1px 0 0 0' }}>
+                    Council of Past DRRs
+                  </h3>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF'
+                }}
+              >
+                <ArrowRight size={16} />
+              </div>
+            </div>
+
+            <p style={{ color: 'rgba(255, 255, 255, 0.88)', fontSize: '0.82rem', lineHeight: 1.45, margin: 0 }}>
+              Honoring 40+ years of visionary leadership from RID 301, RID 3010, and RID 3011.
+            </p>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.18)' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#FFFFFF', background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: '6px' }}>
+                  RID 3011
+                </span>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#FFFFFF', background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: '6px' }}>
+                  RID 3010
+                </span>
+                <span style={{ fontSize: '0.70rem', fontWeight: 800, color: '#FFFFFF', background: 'rgba(255,255,255,0.2)', padding: '3px 8px', borderRadius: '6px' }}>
+                  RID 301
+                </span>
+              </div>
+              <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#FFE082' }}>
+                40+ Years &rarr;
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===================================================================
+          4. PROMINENT DELHI NCR ZONE MAP & RADAR
+         =================================================================== */}
+      <div style={{ padding: '20px 14px 0' }}>
         <div
           style={{
             background: '#FFFFFF',
@@ -548,7 +788,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#123499' }}>
+              <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#123499' }}>
                 <MapPin size={18} />
               </div>
               <div>
@@ -645,33 +885,33 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          4. 3x3 HERITAGE & LEADERSHIP GRID MATRIX (Mobile Matrix)
+          5. SECONDARY DISTRICT SERVICES (2-Column Balanced Grid)
          =================================================================== */}
       <div style={{ padding: '20px 14px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
           <div>
             <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-              DISTRICT 3011 ECOSYSTEM
+              EXPLORE DISTRICT 3011
             </span>
             <h2 style={{ fontSize: '1.15rem', fontWeight: 900, margin: 0, color: '#0F1218' }}>
-              Leadership &amp; Heritage Matrix
+              District Services &amp; Tools
             </h2>
           </div>
           <span style={{ fontSize: '0.68rem', fontWeight: 800, padding: '3px 8px', borderRadius: '100px', background: '#EEF2FF', color: '#123499' }}>
-            3x3 HUB
+            SERVICES
           </span>
         </div>
 
-        {/* 3x3 Grid Matrix */}
+        {/* 2-Column Responsive Grid with Clear Cards */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: '10px',
             width: '100%'
           }}
         >
-          {MATRIX_3X3_ITEMS.map((item) => (
+          {SECONDARY_DISTRICT_CARDS.map((item) => (
             <button
               key={item.id}
               type="button"
@@ -681,12 +921,12 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
                 flexDirection: 'column',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
-                padding: '12px 10px',
+                padding: '12px 12px',
                 borderRadius: '16px',
                 background: '#FFFFFF',
                 border: '1.5px solid rgba(18, 52, 153, 0.10)',
                 boxShadow: '0 4px 12px rgba(18, 52, 153, 0.04)',
-                minHeight: '104px',
+                minHeight: '100px',
                 cursor: 'pointer',
                 textAlign: 'left',
                 position: 'relative',
@@ -694,19 +934,19 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {item.icon}
                 </div>
-                <span style={{ fontSize: '0.60rem', fontWeight: 800, color: '#64748B', background: '#F1F5F9', padding: '2px 5px', borderRadius: '4px' }}>
+                <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#64748B', background: '#F1F5F9', padding: '2px 6px', borderRadius: '4px' }}>
                   {item.badge}
                 </span>
               </div>
 
-              <div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0F1218', lineHeight: 1.2 }}>
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0F1218', lineHeight: 1.2 }}>
                   {item.title}
                 </div>
-                <div style={{ fontSize: '0.64rem', color: '#64748B', marginTop: '2px', lineHeight: 1.2 }}>
+                <div style={{ fontSize: '0.68rem', color: '#64748B', marginTop: '2px', lineHeight: 1.2 }}>
                   {item.subtitle}
                 </div>
               </div>
@@ -716,7 +956,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          5. FLAGSHIP PROJECTS HORIZONTAL CAROUSEL STREAM
+          6. FLAGSHIP PROJECTS HORIZONTAL CAROUSEL STREAM
          =================================================================== */}
       <div style={{ padding: '24px 0 0 0' }}>
         <div style={{ padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
@@ -831,7 +1071,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          6. DYNAMIC IMPACT CALCULATOR (Mobile Polished)
+          7. DYNAMIC IMPACT CALCULATOR (Mobile Polished)
          =================================================================== */}
       <div style={{ padding: '12px 14px 0' }}>
         <div

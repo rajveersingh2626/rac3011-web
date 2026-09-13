@@ -146,3 +146,37 @@ export function findLeaderPhoto(name?: string | null, email?: string | null, id?
 
   return null;
 }
+
+/**
+ * Resolves a DAC leader's photo URL from portal DB edits, cloud uploads, or local assets.
+ */
+export function resolveLeaderPhotoUrl(
+  photoUrl?: string | null,
+  name?: string | null,
+  email?: string | null,
+  id?: string | null
+): string {
+  if (photoUrl && photoUrl.trim()) {
+    const trimmed = photoUrl.trim();
+    // Direct cloud / storage uploads
+    if (
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('/uploads/')
+    ) {
+      return trimmed;
+    }
+    // Normalize local /leadership/ paths (.jpg/.png/.jpeg -> .webp)
+    if (trimmed.startsWith('/leadership/')) {
+      return trimmed.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    if (!trimmed.startsWith('/') && trimmed.includes('.')) {
+      return `/leadership/${trimmed.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`;
+    }
+    return trimmed;
+  }
+
+  return findLeaderPhoto(name, email, id) || '';
+}

@@ -7,7 +7,7 @@ import DistrictResourcesView from '../District/DistrictResourcesView';
 import DistrictCalendarView from '../District/DistrictCalendarView';
 import { DISTRICT_LEADERSHIP } from '../../data/districtData';
 import type { DistrictClub } from '../../data/districtData';
-import { findLeaderPhoto } from '../../data/leadershipImages';
+import { findLeaderPhoto, resolveLeaderPhotoUrl } from '../../data/leadershipImages';
 import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
 import { Mail, Phone, Copy, Check, Search } from 'lucide-react';
 
@@ -65,7 +65,7 @@ export default function DistrictAccess({
     if (!teamQuery.data?.items || teamQuery.data.items.length === 0) {
       return DISTRICT_LEADERSHIP.map(l => ({
         ...l,
-        photo: l.photo || findLeaderPhoto(l.name, l.email, l.id) || ''
+        photo: resolveLeaderPhotoUrl(l.photo, l.name, l.email, l.id) || ''
       }));
     }
     return teamQuery.data.items.map((member) => {
@@ -92,7 +92,7 @@ export default function DistrictAccess({
         }
       }
 
-      const photo = member.photoUrl || local?.photo || findLeaderPhoto(member.name, member.email, member.id) || '';
+      const photo = resolveLeaderPhotoUrl(member.photoUrl, member.name, member.email, member.id) || resolveLeaderPhotoUrl(local?.photo, member.name, member.email, member.id) || '';
 
       return {
         id: member.id,
@@ -321,9 +321,14 @@ export default function DistrictAccess({
                             alt={leader.name}
                             loading="lazy"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
-                              if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                              const fallbackAsset = findLeaderPhoto(leader.name, leader.email, leader.id);
+                              if (fallbackAsset && !e.currentTarget.src.includes(fallbackAsset)) {
+                                e.currentTarget.src = fallbackAsset;
+                              } else {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
+                                if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                              }
                             }}
                             style={{
                               width: '96px',

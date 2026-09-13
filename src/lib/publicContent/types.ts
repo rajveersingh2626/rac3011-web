@@ -2,48 +2,48 @@ import { z } from 'zod';
 
 export const achievementSchema = z.object({
   id: z.string(),
-  type: z.enum(['chartered_club', 'award', 'milestone']),
+  type: z.string(),
   title: z.string(),
-  clubId: z.string().nullable(),
+  clubId: z.string().nullable().optional(),
   date: z.string(),
-  certificateUrl: z.string().nullable(),
-  description: z.string().nullable(),
-  order: z.number(),
+  certificateUrl: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  order: z.number().nullable().optional(),
 });
 export type Achievement = z.infer<typeof achievementSchema>;
 
 export const partnerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  logoUrl: z.string().nullable(),
-  tier: z.string(),
-  website: z.string().nullable(),
-  permissionStatus: z.enum(['pending', 'granted']),
-  order: z.number(),
+  logoUrl: z.string().nullable().optional(),
+  tier: z.string().optional().default('General'),
+  website: z.string().nullable().optional(),
+  permissionStatus: z.string().optional().default('granted'),
+  order: z.number().nullable().optional(),
 });
 export type Partner = z.infer<typeof partnerSchema>;
 
 export const publicationSchema = z.object({
   id: z.string(),
   title: z.string(),
-  type: z.enum(['directory', 'newsletter']),
+  type: z.string(),
   url: z.string(),
   month: z.string(),
-  coverUrl: z.string().nullable(),
+  coverUrl: z.string().nullable().optional(),
 });
 export type Publication = z.infer<typeof publicationSchema>;
 
 export const RESOURCE_CATEGORIES = ['documents', 'forms', 'logos', 'photos', 'guest_kit', 'templates'] as const;
 export const resourceSchema = z.object({
   id: z.string(),
-  category: z.enum(RESOURCE_CATEGORIES),
+  category: z.string(),
   title: z.string(),
-  description: z.string().nullable(),
+  description: z.string().nullable().optional(),
   url: z.string(),
-  isLocked: z.boolean(),
-  requiredPermission: z.string().nullable(),
-  comingSoonMonth: z.string().nullable(),
-  order: z.number(),
+  isLocked: z.boolean().optional().default(false),
+  requiredPermission: z.string().nullable().optional(),
+  comingSoonMonth: z.string().nullable().optional(),
+  order: z.number().nullable().optional(),
 });
 export type Resource = z.infer<typeof resourceSchema>;
 
@@ -51,12 +51,12 @@ export const pastDrrSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  terms: z.array(z.string()),
-  homeClubId: z.string().nullable(),
-  photoUrl: z.string().nullable(),
-  bio: z.string().nullable(),
-  isLowResPhoto: z.boolean(),
-  order: z.number(),
+  terms: z.array(z.string()).optional().default([]),
+  homeClubId: z.string().nullable().optional(),
+  photoUrl: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  isLowResPhoto: z.boolean().optional().default(false),
+  order: z.number().nullable().optional(),
 });
 export type PastDrr = z.infer<typeof pastDrrSchema>;
 
@@ -64,14 +64,14 @@ export const districtTeamMemberSchema = z.object({
   id: z.string(),
   name: z.string(),
   designation: z.string(),
-  kind: z.enum(['core', 'dsc']),
-  photoUrl: z.string().nullable(),
-  phone: z.string().nullable(),
-  email: z.string().nullable(),
-  bio: z.string().nullable(),
-  clubId: z.string().nullable(),
-  order: z.number(),
-  ryYear: z.number(),
+  kind: z.string().optional().default('core'),
+  photoUrl: z.string().nullable().optional(),
+  phone: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  clubId: z.string().nullable().optional(),
+  order: z.number().nullable().optional(),
+  ryYear: z.number().nullable().optional(),
 });
 export type DistrictTeamMember = z.infer<typeof districtTeamMemberSchema>;
 
