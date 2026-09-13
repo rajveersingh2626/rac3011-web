@@ -65,7 +65,8 @@ export function PublicContentTable<T extends { id: string }>({
       const keys = (isNew ? createKeys : updateKeys) ?? writableKeys ?? [];
       const payload = pick(values, keys);
       for (const k of Object.keys(payload)) {
-        if ((payload as Record<string, unknown>)[k] === '') {
+        const v = (payload as Record<string, unknown>)[k];
+        if (v === '' || (typeof v === 'number' && Number.isNaN(v))) {
           (payload as Record<string, unknown>)[k] = null;
         }
       }
