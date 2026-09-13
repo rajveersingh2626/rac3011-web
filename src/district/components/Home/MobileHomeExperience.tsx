@@ -3,7 +3,7 @@ import {
   Users, Award, MapPin, Sparkles, Calendar, 
   FolderOpen, ArrowRight, Calculator,
   ShieldCheck, ChevronLeft, ChevronRight,
-  Search, FileText, LayoutDashboard, LogIn, Compass, ArrowUpRight
+  Search, FileText, LayoutDashboard, LogIn, Compass
 } from 'lucide-react';
 import { useSurfaceHref } from '@/app/host';
 import type { Achievement, FocusArea, ImpactMetric } from '../../data/districtData';
