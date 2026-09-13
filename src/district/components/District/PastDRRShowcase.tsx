@@ -23,6 +23,7 @@ interface DRRCardProps {
 
 const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials }: DRRCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
   return (
     <div
@@ -59,12 +60,13 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials }
           backgroundColor: '#1E1E24'
         }}
       >
-        {drr.photo ? (
+        {drr.photo && !imgFailed ? (
           <img
             src={drr.photo}
             alt={drr.name}
             loading="lazy"
             decoding="async"
+            onError={() => setImgFailed(true)}
             style={{
               width: '100%',
               height: '100%',
@@ -340,7 +342,8 @@ export default function PastDRRShowcase() {
     const clean = (s: string) =>
       s.replace(/^(Rtn\.|Rtr\.|PDRR\s*|DRR\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
-    return PAST_DRRS.map((localDrr) => {
+    const matchedLiveIds = new Set<string>();
+    const mapped = PAST_DRRS.map((localDrr) => {
       const localClean = clean(localDrr.name);
       const live = pastDrrQuery.data.items.find(
         (p) =>
@@ -349,12 +352,33 @@ export default function PastDRRShowcase() {
           (p.terms && p.terms.some((t) => localDrr.year.includes(t) || localDrr.tenure.includes(t)))
       );
       if (!live) return localDrr;
+      matchedLiveIds.add(live.id);
       return {
         ...localDrr,
+        name: live.name || localDrr.name,
         photo: live.photoUrl || localDrr.photo,
         hasPhoto: Boolean(live.photoUrl || localDrr.photo),
       };
     });
+
+    const unmappedLive = pastDrrQuery.data.items.filter((p) => !matchedLiveIds.has(p.id));
+    const extraLive: PastDrr[] = unmappedLive.map((live, idx) => {
+      const yearStr = live.terms?.[0] || 'RY 2026-27';
+      return {
+        id: live.id,
+        srNo: PAST_DRRS.length + idx + 1,
+        year: yearStr,
+        tenure: yearStr,
+        name: live.name,
+        district: '3011',
+        districtEra: 'District 3011 (2016-Present)',
+        homeClub: 'Rotaract District 3011',
+        photo: live.photoUrl,
+        hasPhoto: Boolean(live.photoUrl),
+      };
+    });
+
+    return [...mapped, ...extraLive];
   }, [pastDrrQuery.data]);
 
   // Filtered DRRs

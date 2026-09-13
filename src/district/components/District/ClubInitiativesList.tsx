@@ -302,13 +302,28 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
                       alt={proj.title}
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.initiative-fallback');
+                        if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                      }}
                       style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
                       onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                       onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
                     />
-                  ) : (
+                  ) : null}
+                  <div
+                    className="initiative-fallback"
+                    style={{
+                      display: proj.photo ? 'none' : 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                  >
                     <Sparkles size={40} style={{ color: 'rgba(255,255,255,0.35)' }} />
-                  )}
+                  </div>
                   {proj.zone && (
                     <div style={{ position: 'absolute', top: '14px', left: '14px', display: 'flex', gap: '8px' }}>
                       <span className="pill-pink" style={{ fontSize: '0.74rem', padding: '4px 12px', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(216, 27, 96, 0.92)' }}>
