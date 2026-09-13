@@ -166,7 +166,7 @@ export function ReportFormBuilderPage() {
             </div>
             <div className="overflow-hidden rounded-[12px] border border-line-accent">
               {fields.map((field, index) => (
-                <div key={field.fieldKey} className="flex items-center gap-3.5 border-t border-line p-3.5 first:border-t-0">
+                <div key={field.fieldKey} className="flex items-center gap-3.5 border-t border-line p-3.5 first:border-t-0 hover:bg-hover/50 transition-colors">
                   {isDraft && (
                     <div className="flex flex-col gap-0.5">
                       <IconButton label={`Move ${field.label} up`} onClick={() => move(index, -1)} disabled={index === 0}>
@@ -178,10 +178,33 @@ export function ReportFormBuilderPage() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="m-0 text-[12.5px] font-bold text-fg">{field.label}</p>
-                    <p className="m-0 text-[10.5px] text-fg-3">
-                      <code className="text-accent-deep">{field.type}</code> · {field.perActivity ? 'Per activity' : 'Once a month'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="m-0 text-[12.5px] font-bold text-fg">{field.label}</p>
+                      <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent">
+                        {field.section}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10.5px] text-fg-3">
+                      <code className="rounded bg-[var(--bg-subtle)] px-1 py-0.5 text-accent-deep font-mono font-semibold">{field.type}</code>
+                      <span>·</span>
+                      <span>{field.perActivity ? 'Per activity' : 'Once a month'}</span>
+                      {field.pointSourceKey && (
+                        <>
+                          <span>·</span>
+                          <span className="text-success font-medium">⚡ Points: {field.pointSourceKey}</span>
+                        </>
+                      )}
+                      {(field.type === 'select' || field.type === 'multiselect') && (
+                        <>
+                          <span>·</span>
+                          <span className="font-semibold text-accent">
+                            {Array.isArray((field.options as { choices?: string[] })?.choices)
+                              ? `${(field.options as { choices: string[] }).choices.length} choices`
+                              : '0 choices'}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <Badge tone={field.required ? 'pink' : 'neutral'}>{field.required ? 'REQUIRED' : 'OPTIONAL'}</Badge>
                   {isDraft && (
@@ -200,7 +223,7 @@ export function ReportFormBuilderPage() {
                 <button
                   type="button"
                   onClick={() => setAdding(true)}
-                  className="min-h-11 w-full border-t border-dashed border-line-accent bg-page px-4 py-3 text-left text-[12px] font-bold text-accent"
+                  className="min-h-11 w-full border-t border-dashed border-line-accent bg-page px-4 py-3 text-left text-[12px] font-bold text-accent hover:bg-accent/5 transition-colors"
                 >
                   + Add a field
                 </button>
@@ -223,7 +246,7 @@ export function ReportFormBuilderPage() {
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-line-accent p-5">
+          <div className="rounded-[16px] border border-line-accent p-5 bg-[var(--bg-subtle)]">
             <p className="m-0 mb-3 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Versions</p>
             <div className="flex flex-col gap-2.5">
               {summaries.data.map((s) => (
@@ -244,6 +267,7 @@ export function ReportFormBuilderPage() {
           open
           initial={editing?.field ?? null}
           nextOrder={fields.length}
+          existingSections={Array.from(new Set(fields.map((f) => f.section))).filter(Boolean)}
           onClose={() => {
             setAdding(false);
             setEditing(null);
@@ -252,16 +276,23 @@ export function ReportFormBuilderPage() {
         />
       )}
 
-      <Modal open={preview} onClose={() => setPreview(false)} title="Preview as a president" size="lg">
-        <div className="flex flex-col gap-4">
+      <Modal open={preview} onClose={() => setPreview(false)} title="Interactive Preview (President Experience)" size="lg">
+        <div className="flex flex-col gap-5">
+          <div className="rounded-[10px] bg-accent/10 p-3 text-[12px] text-accent-deep">
+            <strong>Interactive Mode:</strong> Test filling out fields below to test dropdown options, date selectors, and links.
+          </div>
           {fields.map((field) => (
             <ReportFieldControl
               key={field.fieldKey}
               field={toRenderField(field)}
               value={undefined}
               onChange={() => undefined}
-              clubOptions={[]}
-              disabled
+              clubOptions={[
+                { value: 'c1', label: 'Rotaract Club of Delhi Central' },
+                { value: 'c2', label: 'Rotaract Club of New Delhi' },
+                { value: 'c3', label: 'Rotaract Club of Delhi South' },
+              ]}
+              disabled={false}
             />
           ))}
         </div>

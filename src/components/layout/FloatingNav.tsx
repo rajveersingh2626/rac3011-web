@@ -171,7 +171,7 @@ export function FloatingNav({ links, homeHref, title }: FloatingNavProps) {
         {open && (
           <>
             <div className="flex items-center justify-between">
-              <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="h-8 w-auto" />
+              <img src="/district-logo.webp" alt="Rotaract District Organization 3011" className="h-8 w-auto" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

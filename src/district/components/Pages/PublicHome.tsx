@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ROTARY_FOCUS_AREAS, IMPACT_METRICS, DISTRICT_ACHIEVEMENTS } from '../../data/districtData';
 import type { FocusArea, ImpactMetric, Achievement } from '../../data/districtData';
 import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers } from 'lucide-react';
-const rotaryWheelImg = '/images.png';
+const rotaryWheelImg = '/images.webp';
 import Footer from '../Layout/Footer';
 import DistrictHeroSlideshow from '../Home/DistrictHeroSlideshow';
 import DistrictRoadmap from '../Home/DistrictRoadmap';
@@ -15,6 +15,7 @@ import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
 import { fetchAchievements } from '@/lib/publicApi/achievements';
+import { fetchPartners } from '@/lib/publicApi/partners';
 import { useSurfaceHref } from '@/app/host';
 
 const impactStatsSchema = z.array(
@@ -270,7 +271,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     surface: 'rcl',
     category: 'District Fellowship & Sports',
     subtitle: 'Inter-Club Championship & Youth Sports Festival',
-    image: '/rcl-cricket.jpg',
+    image: '/rcl-cricket.webp',
     metric: 'Inter-Club Championship',
     description: 'District 3011’s marquee sports tournament fostering camaraderie, athletic grit, and inter-club fellowship across Delhi, Gurgaon, and Faridabad on the cricket pitch.'
   },
@@ -373,7 +374,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
               alt={proj.title}
               onError={(e) => {
                 if (proj.id === 3 || proj.title?.includes('RCL') || proj.title?.includes('Cricket')) {
-                  e.currentTarget.src = '/rcl-cricket.jpg';
+                  e.currentTarget.src = '/rcl-cricket.webp';
                 }
               }}
               loading="lazy"
@@ -569,6 +570,10 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
     queryKey: ['public', 'achievements'],
     queryFn: fetchAchievements,
   });
+  const partnersQuery = useQuery({
+    queryKey: ['public', 'partners'],
+    queryFn: fetchPartners,
+  });
 
   const impactMetrics = useMemo<ImpactMetric[]>(() => {
     const stats = listBlockOf(homeContentQuery.data, 'impact-stats', impactStatsSchema);
@@ -698,7 +703,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
           }}
         >
           <img
-            src="/hero-dac-oath.jpg"
+            src="/hero-dac-oath.webp"
             alt="Rotaract District 3011 Administrative Council Oath"
             style={{
               width: '100%',
@@ -1049,6 +1054,176 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage }: Publi
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* Corporate & Community Partners Section */}
+      <section
+        style={{
+          width: '100%',
+          padding: isMobile ? '50px 16px' : '70px 24px',
+          background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-subtle) 100%)',
+          position: 'relative',
+          zIndex: 10,
+          borderTop: '1px solid rgba(0,0,0,0.06)',
+        }}
+      >
+        <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <span className="pill-pink">COLLABORATIONS &amp; IMPACT</span>
+          </div>
+          <h2
+            style={{
+              fontSize: isMobile ? '2rem' : '2.6rem',
+              fontWeight: 900,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.03em',
+              marginBottom: '12px',
+            }}
+          >
+            Corporate &amp; Community Partners
+          </h2>
+          <p
+            style={{
+              maxWidth: '680px',
+              margin: '0 auto 36px',
+              fontSize: isMobile ? '0.92rem' : '1.05rem',
+              color: 'var(--text-secondary)',
+              lineHeight: 1.6,
+            }}
+          >
+            Powering scalable service initiatives, leadership summits, and community outreach across NCR through trusted collaborations.
+          </p>
+
+          {partnersQuery.data?.items && partnersQuery.data.items.length > 0 ? (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(220px, 1fr))',
+                gap: '20px',
+                marginBottom: '36px',
+              }}
+            >
+              {partnersQuery.data.items.map((partner) => (
+                <div
+                  key={partner.id}
+                  className="rotaract-card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '24px 16px',
+                    borderRadius: '16px',
+                    textAlign: 'center',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  }}
+                >
+                  {partner.logoUrl ? (
+                    <img
+                      src={partner.logoUrl}
+                      alt={partner.name}
+                      style={{
+                        height: '52px',
+                        maxWidth: '100%',
+                        objectFit: 'contain',
+                        marginBottom: '14px',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        height: '52px',
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'var(--bg-subtle)',
+                        borderRadius: '10px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: 'var(--text-muted)',
+                        marginBottom: '14px',
+                        padding: '0 8px',
+                      }}
+                    >
+                      {partner.name}
+                    </div>
+                  )}
+                  <p
+                    style={{
+                      margin: '0 0 6px',
+                      fontSize: '0.92rem',
+                      fontWeight: 800,
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {partner.name}
+                  </p>
+                  <span
+                    className="pill-pink"
+                    style={{ fontSize: '0.68rem', padding: '2px 8px', textTransform: 'capitalize' }}
+                  >
+                    {partner.tier.replace(/_/g, ' ')}
+                  </span>
+                  {partner.website && (
+                    <a
+                      href={partner.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        marginTop: '10px',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        color: 'var(--rotaract-pink)',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      Visit website →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="rotaract-card"
+              style={{
+                maxWidth: '600px',
+                margin: '0 auto 36px',
+                padding: '32px 24px',
+                borderRadius: '16px',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                Collaborate with Rotaract District 3011
+              </p>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                We partner with leading institutions, CSR foundations, healthcare bodies, and corporate innovators to amplify youth impact across Delhi and NCR.
+              </p>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigatePage) {
+                  onNavigatePage('partners');
+                } else {
+                  window.location.href = '/partners';
+                }
+              }}
+              className="btn-rotaract"
+              style={{ padding: '12px 28px', fontSize: '0.92rem' }}
+            >
+              Explore All Partners &amp; Collaborations →
+            </button>
+          </div>
         </div>
       </section>
 

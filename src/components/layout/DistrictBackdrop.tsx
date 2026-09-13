@@ -13,7 +13,7 @@ export function DistrictBackdrop() {
       />
       <div className="wide-only absolute top-1/2 left-[92%] -translate-x-1/2 -translate-y-1/2 opacity-80 [width:clamp(680px,58vw,1080px)] [height:clamp(680px,58vw,1080px)]">
         <img
-          src="/images.png"
+          src="/images.webp"
           alt=""
           loading="lazy"
           decoding="async"

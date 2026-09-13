@@ -103,7 +103,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
             }}
           >
             <img
-              src="/district-logo.png"
+              src="/district-logo.webp"
               alt="Rotaract District Organization 3011"
               style={{
                 height: '38px',

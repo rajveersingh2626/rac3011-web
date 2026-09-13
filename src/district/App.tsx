@@ -30,7 +30,7 @@ export function preload(pathname: string): Promise<unknown> | undefined {
   return routeFor(pathname).page === 'district' ? loadDistrictAccess() : undefined;
 }
 
-const rotaryLogoImg = '/images.png';
+const rotaryLogoImg = '/images.webp';
 
 function RotaryLoaderLogo({ size = 96 }: { size?: number }) {
   return (

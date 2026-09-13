@@ -24,7 +24,7 @@ export function PublicHeader() {
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line-accent bg-surface px-5 md:h-[60px] md:px-8 lg:h-[68px] lg:px-10">
       <div className="flex items-center gap-6 lg:gap-[34px]">
         <Link to="/" className="flex items-center">
-          <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="h-6 w-auto md:h-7 lg:h-[34px]" />
+          <img src="/district-logo.webp" alt="Rotaract District Organization 3011" className="h-6 w-auto md:h-7 lg:h-[34px]" />
         </Link>
         <nav aria-label="Primary" className="hidden items-center gap-6 text-[13.5px] font-semibold text-fg-2 lg:flex">
           {NAV_LINKS.map((link) => (

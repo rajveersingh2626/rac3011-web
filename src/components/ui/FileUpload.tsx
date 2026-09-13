@@ -1,10 +1,9 @@
 import { useId, useRef, useState, type ChangeEvent, type DragEvent } from 'react';
-import { FileText, Link2, RotateCcw, Upload, X } from 'lucide-react';
+import { FileText, RotateCcw, Upload, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { TIER_MAX_BYTES, TIER_MIME_TYPES, type StorageTier } from '@/lib/upload';
 import { Button } from './Button';
 import { IconButton } from './IconButton';
-import { Input } from './Input';
 import { ProgressBar } from './ProgressBar';
 import { VisuallyHidden } from './VisuallyHidden';
 import { useFileUpload, type FileUploadValue } from './useFileUpload';
@@ -52,8 +51,6 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
 
-  const [mode, setMode] = useState<'file' | 'link'>(value?.kind === 'link' ? 'link' : 'file');
-  const [linkDraft, setLinkDraft] = useState(value?.kind === 'link' ? value.url : '');
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -82,28 +79,15 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
     onChange(null);
   };
 
-  const switchMode = (next: 'file' | 'link') => {
-    reset();
-    setMode(next);
-  };
-
-  const saveLink = () => {
-    const url = linkDraft.trim();
-    if (!url) return;
-    onChange({ kind: 'link', url });
-  };
-
-  const removeLink = () => {
-    setLinkDraft('');
-    onChange(null);
-  };
+  const fileUrl = value?.kind === 'file' ? value.file.url : value?.url;
+  const fileName = value?.kind === 'file' ? value.file.name : (fileUrl ? fileUrl.split('/').pop()?.split('?')[0] : '');
 
   const liveMessage = state.uploading
     ? `Uploading, ${Math.round(state.progress * 100)} percent complete`
     : state.error
       ? state.error
-      : value?.kind === 'file'
-        ? `Uploaded ${value.file.name}, ${formatBytes(value.file.size)}`
+      : value
+        ? `Uploaded ${fileName}`
         : '';
 
   return (
@@ -124,47 +108,24 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
         className="sr-only"
       />
 
-      {mode === 'link' ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Input
-              type="url"
-              value={linkDraft}
-              onChange={(e) => setLinkDraft(e.target.value)}
-              placeholder="https://drive.google.com/…"
-              aria-label={label ?? 'Link URL'}
-              className="flex-1"
-            />
-            <Button type="button" size="sm" onClick={saveLink} disabled={!linkDraft.trim()}>
-              Save link
-            </Button>
-          </div>
-          {value?.kind === 'link' ? (
-            <div className="flex items-center justify-between gap-3 rounded-[12px] border border-line-accent bg-surface px-4 py-3">
-              <span className="min-w-0 truncate text-[12.5px] text-fg-2">{value.url}</span>
-              <IconButton label="Remove link" variant="ghost" onClick={removeLink}>
-                <X aria-hidden />
-              </IconButton>
-            </div>
-          ) : null}
-          <p id={hintId} className="m-0 text-[11.5px] text-fg-3">
-            {hint ?? 'Paste a Google Drive, Google Photos, or YouTube link.'}
-          </p>
-        </div>
-      ) : state.uploading ? (
+      {state.uploading ? (
         <div className="rounded-[16px] border border-line-accent bg-surface px-5 py-5">
           <ProgressBar value={Math.round(state.progress * 100)} max={100} label="Uploading…" hint={`${Math.round(state.progress * 100)}%`} />
           <Button type="button" variant="ghost" size="sm" onClick={cancel} className="mt-3">
             Cancel
           </Button>
         </div>
-      ) : value?.kind === 'file' ? (
+      ) : value && fileUrl ? (
         <div className="flex items-center justify-between gap-3 rounded-[16px] border border-line-accent bg-surface px-5 py-4">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <FileText aria-hidden className="size-5 shrink-0 text-accent" />
+          <div className="flex min-w-0 items-center gap-3">
+            {fileUrl.match(/\.(webp|png|jpe?g|svg)($|\?)/i) ? (
+              <img src={fileUrl} alt={fileName ?? 'Uploaded'} className="size-10 shrink-0 rounded-[8px] object-cover border border-line" />
+            ) : (
+              <FileText aria-hidden className="size-6 shrink-0 text-accent" />
+            )}
             <div className="min-w-0">
-              <p className="m-0 truncate text-[13px] font-bold text-fg">{value.file.name}</p>
-              <p className="m-0 text-[11.5px] text-fg-3">{formatBytes(value.file.size)}</p>
+              <p className="m-0 truncate text-[13px] font-bold text-fg">{fileName || 'Attached file'}</p>
+              {value.kind === 'file' && <p className="m-0 text-[11.5px] text-fg-3">{formatBytes(value.file.size)}</p>}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
@@ -199,7 +160,7 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
         </div>
       )}
 
-      {state.error && mode === 'file' ? (
+      {state.error ? (
         <div id={errorId} role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-[12px] border border-danger bg-accent-soft px-4 py-3">
           <p className="m-0 text-[12.5px] font-semibold text-danger-fg">{state.error}</p>
           <Button type="button" variant="secondary" size="sm" onClick={retry}>
@@ -207,13 +168,6 @@ export function FileUpload({ tier, resourceType, resourceId, value, onChange, la
             Retry
           </Button>
         </div>
-      ) : null}
-
-      {!state.uploading ? (
-        <Button type="button" variant="link" size="sm" onClick={() => switchMode(mode === 'file' ? 'link' : 'file')} className="self-start">
-          <Link2 aria-hidden className="size-3.5" />
-          {mode === 'file' ? 'Paste a link instead' : 'Upload a file instead'}
-        </Button>
       ) : null}
 
       <VisuallyHidden as="p" aria-live="polite">

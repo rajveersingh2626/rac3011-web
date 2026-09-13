@@ -50,63 +50,114 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
       }}
     >
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px', width: '100%', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.5fr 1fr', gap: isMobile ? '32px' : '60px', marginBottom: isMobile ? '32px' : '50px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1fr 1fr 1fr', gap: isMobile ? '28px' : '36px', marginBottom: isMobile ? '32px' : '48px' }}>
           
           <div>
-            <div style={{ background: 'transparent', padding: '0px', display: 'inline-block', marginBottom: '20px' }}>
+            <div style={{ background: 'transparent', padding: '0px', display: 'inline-block', marginBottom: '16px' }}>
               <DistrictLogo size="small" />
             </div>
-            <p style={{ color: '#A1A1AA', fontSize: isMobile ? '0.85rem' : '0.9rem', lineHeight: '1.7', marginBottom: '20px' }}>
-              Rotaract District Organization 3011 encompasses 75 clubs across Delhi &amp; NCR, uniting young leaders for impact, service, and global fellowship.
+            <p style={{ color: '#A1A1AA', fontSize: isMobile ? '0.85rem' : '0.88rem', lineHeight: '1.65', marginBottom: '16px' }}>
+              Rotaract District Organization 3011 unites 75+ clubs across Delhi NCR &amp; Haryana under Rotary International for service, youth leadership, and international fellowship.
             </p>
-            <span className="pill-gold" style={{ fontSize: '0.8rem' }}>
+            <span className="pill-gold" style={{ fontSize: '0.78rem' }}>
               Service Above Self • RY 2026-27
             </span>
           </div>
 
           <div>
-            <h4 style={{ color: '#FFFFFF', fontSize: '1.05rem', fontWeight: 700, marginBottom: '16px', letterSpacing: '0.5px' }}>
-              Quick Navigation
+            <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
+              District &amp; Governance
             </h4>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: isMobile ? '0' : '8px' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
               <li>
-                <button
-                  onClick={() => (onNavigatePage ? onNavigatePage('home') : (window.location.href = '/'))}
-                  style={navLinkStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
-                >
+                <button onClick={() => (onNavigatePage ? onNavigatePage('home') : (window.location.href = '/'))} style={navLinkStyle}>
                   Home Page
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => (onNavigatePage ? onNavigatePage('district') : (window.location.href = '/map'))}
-                  style={navLinkStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
-                >
-                  District Directory (RY 2026-27)
+                <button onClick={() => (onNavigatePage ? onNavigatePage('district') : (window.location.href = '/map'))} style={navLinkStyle}>
+                  District Map &amp; Directory
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => (onNavigatePage ? onNavigatePage('portal') : (window.location.href = '/portal/login'))}
-                  style={navLinkStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
-                >
-                  District Portal Access
+                <button onClick={() => (window.location.href = '/leadership')} style={navLinkStyle}>
+                  District Team &amp; Council
                 </button>
               </li>
               <li>
-                <button
-                  onClick={() => (window.location.href = '/portal/feedback')}
-                  style={navLinkStyle}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
-                >
-                  District Feedback &amp; Grievances
+                <button onClick={() => (window.location.href = '/heritage')} style={navLinkStyle}>
+                  Past DRRs (Heritage)
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/governance')} style={navLinkStyle}>
+                  Governance &amp; Demarcations
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
+              Impact &amp; Media
+            </h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
+              <li>
+                <button onClick={() => (window.location.href = '/initiatives')} style={navLinkStyle}>
+                  Flagship Initiatives
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/showcase')} style={navLinkStyle}>
+                  Project Showcase
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/achievements')} style={navLinkStyle}>
+                  District Achievements
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/publications')} style={navLinkStyle}>
+                  Publications &amp; GML
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/partners')} style={navLinkStyle}>
+                  Corporate &amp; Community Partners
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
+              Connect &amp; Resources
+            </h4>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
+              <li>
+                <button onClick={() => (window.location.href = '/resources')} style={navLinkStyle}>
+                  Official Resources Archive
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/resources/sister-club')} style={navLinkStyle}>
+                  Sister-Club Requests
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/contact')} style={navLinkStyle}>
+                  Contact &amp; Enquiries
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/portal/login')} style={navLinkStyle}>
+                  Member Portal Login
+                </button>
+              </li>
+              <li>
+                <button onClick={() => (window.location.href = '/portal/feedback')} style={navLinkStyle}>
+                  Grievances &amp; Feedback
                 </button>
               </li>
               <li>
@@ -115,22 +166,8 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
                   target="_blank"
                   rel="noreferrer"
                   style={{ ...navLinkStyle, color: '#A1A1AA', textDecoration: 'none', gap: '6px' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
                 >
-                  Official Instagram <ExternalLink size={14} />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.rotary.org"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ ...navLinkStyle, color: '#A1A1AA', textDecoration: 'none', gap: '6px' }}
-                  onMouseEnter={(e) => e.currentTarget.style.color = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.color = '#A1A1AA'}
-                >
-                  Rotary International <ExternalLink size={14} />
+                  Official Instagram <ExternalLink size={13} />
                 </a>
               </li>
             </ul>

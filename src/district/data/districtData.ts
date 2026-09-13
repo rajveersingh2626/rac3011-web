@@ -2073,7 +2073,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrdivyanshu3011@gmail.com",
     phone: "9794565358",
     category: "Executive Council",
-    photo: "/leadership/divyanshu-katiyar.jpeg",
+    photo: "/leadership/divyanshu-katiyar.webp",
     order: 3
   },
   {
@@ -2083,7 +2083,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rajatkapoor44@gmail.com",
     phone: "7838923776",
     category: "Executive Council",
-    photo: "/leadership/rajat-kapoor.jpg",
+    photo: "/leadership/rajat-kapoor.webp",
     order: 4
   },
   {
@@ -2093,7 +2093,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "sarthakmanchanda2@gmail.com",
     phone: "7206708029",
     category: "Executive Council",
-    photo: "/leadership/sarthak-manchanda.jpg",
+    photo: "/leadership/sarthak-manchanda.webp",
     order: 5
   },
   {
@@ -2103,7 +2103,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrshefali2004@gmail.com",
     phone: "8826376323",
     category: "Executive Council",
-    photo: "/leadership/shefali-prakash.jpg",
+    photo: "/leadership/shefali-prakash.webp",
     order: 6
   },
   {
@@ -2113,7 +2113,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "himanshugulati.rotary@gmail.com",
     phone: "9643889803",
     category: "Executive Council",
-    photo: "/leadership/himanshu-gulati.jpg",
+    photo: "/leadership/himanshu-gulati.webp",
     order: 7
   },
   {
@@ -2123,7 +2123,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "harshitam2636@gmail.com",
     phone: "9315267609",
     category: "Executive Council",
-    photo: "/leadership/harshita-malhotra.jpeg",
+    photo: "/leadership/harshita-malhotra.webp",
     order: 8
   },
   {
@@ -2133,7 +2133,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "aayushrai68@gmail.com",
     phone: "7065668589",
     category: "Executive Council",
-    photo: "/leadership/ayush-rai.png",
+    photo: "/leadership/ayush-rai.webp",
     order: 9
   },
   {
@@ -2143,7 +2143,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtr.radhikabansal23@gmail.com",
     phone: "8826274877",
     category: "Executive Council",
-    photo: "/leadership/radhika-bansal.png",
+    photo: "/leadership/radhika-bansal.webp",
     order: 10
   },
   {
@@ -2153,7 +2153,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrharshit0403@gmail.com",
     phone: "9899424822",
     category: "Executive Council",
-    photo: "/leadership/harshit-mehta.jpg",
+    photo: "/leadership/harshit-mehta.webp",
     order: 11
   },
   {
@@ -2163,7 +2163,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtr.tushaar@gmail.com",
     phone: "9667836167",
     category: "Executive Council",
-    photo: "/leadership/v-tushaar.jpeg",
+    photo: "/leadership/v-tushaar.webp",
     order: 12
   },
   {
@@ -2173,7 +2173,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "drishtibuttan12@gmail.com",
     phone: "9773728313",
     category: "Executive Council",
-    photo: "/leadership/drishti-buttan.jpeg",
+    photo: "/leadership/drishti-buttan.webp",
     order: 13
   },
   {
@@ -2183,7 +2183,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "tanishaasonker08@gmail.com",
     phone: "9305833297",
     category: "Zonal Team",
-    photo: "/leadership/tanishaa-sonker.jpeg",
+    photo: "/leadership/tanishaa-sonker.webp",
     order: 14
   },
   {
@@ -2193,7 +2193,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "sachdevakanav3@gmail.com",
     phone: "9821909169",
     category: "Zonal Team",
-    photo: "/leadership/kanav-sachdeva.jpg",
+    photo: "/leadership/kanav-sachdeva.webp",
     order: 15
   },
   {
@@ -2203,7 +2203,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrdhruvjha@gmail.com",
     phone: "9534987772",
     category: "Zonal Team",
-    photo: "/leadership/dhruv-kumar-jha.jpg",
+    photo: "/leadership/dhruv-kumar-jha.webp",
     order: 16
   },
   {
@@ -2213,7 +2213,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "palak041003@gmail.com",
     phone: "8218365157",
     category: "Zonal Team",
-    photo: "/leadership/palak-jain.jpeg",
+    photo: "/leadership/palak-jain.webp",
     order: 17
   },
   {
@@ -2223,7 +2223,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "stormk375@gmail.com",
     phone: "9318317554",
     category: "Zonal Team",
-    photo: "/leadership/arjun-pratap-singh.jpeg",
+    photo: "/leadership/arjun-pratap-singh.webp",
     order: 18
   },
   {
@@ -2233,7 +2233,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "prathamgirdhar08@gmail.com",
     phone: "7302495688",
     category: "Zonal Team",
-    photo: "/leadership/pratham-girdhar.jpeg",
+    photo: "/leadership/pratham-girdhar.webp",
     order: 19
   },
   {
@@ -2243,7 +2243,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "kartiksingh15082005@gmail.com",
     phone: "9582323419",
     category: "Zonal Team",
-    photo: "/leadership/kartik-kumar.jpg",
+    photo: "/leadership/kartik-kumar.webp",
     order: 20
   },
   {
@@ -2253,7 +2253,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrhitaishichawla@gmail.com",
     phone: "9810410704",
     category: "Zonal Team",
-    photo: "/leadership/hitaishi-chawla.png",
+    photo: "/leadership/hitaishi-chawla.webp",
     order: 21
   },
   {
@@ -2263,7 +2263,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "ritikvarshney483@gmail.com",
     phone: "8006911311",
     category: "District Chairs",
-    photo: "/leadership/ritik-varshney.jpg",
+    photo: "/leadership/ritik-varshney.webp",
     order: 22
   },
   {
@@ -2273,7 +2273,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "yashika11malhotra@gmail.com",
     phone: "8287628612",
     category: "District Chairs",
-    photo: "/leadership/yashika-malhotra.jpeg",
+    photo: "/leadership/yashika-malhotra.webp",
     order: 23
   },
   {
@@ -2283,7 +2283,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "nishithmajumdar8@gmail.com",
     phone: "7011079558",
     category: "District Chairs",
-    photo: "/leadership/nishith-majumdar.jpeg",
+    photo: "/leadership/nishith-majumdar.webp",
     order: 24
   },
   {
@@ -2293,7 +2293,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrefaajafri20@gmail.com",
     phone: "9311632069",
     category: "District Chairs",
-    photo: "/leadership/efaa-jafri.png",
+    photo: "/leadership/efaa-jafri.webp",
     order: 25
   },
   {
@@ -2303,7 +2303,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "harshitaagarwal2704@gmail.com",
     phone: "8130120701",
     category: "District Chairs",
-    photo: "/leadership/harshita-agarwal.jpg",
+    photo: "/leadership/harshita-agarwal.webp",
     order: 26
   },
   {
@@ -2313,7 +2313,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrparidhirawat@gmail.com",
     phone: "8860409982",
     category: "District Chairs",
-    photo: "/leadership/paridhi-rawat.jpeg",
+    photo: "/leadership/paridhi-rawat.webp",
     order: 27
   },
   {
@@ -2323,7 +2323,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrarynsnjv@gmail.com",
     phone: "8826880497",
     category: "District Chairs",
-    photo: "/leadership/aryan-sanjeev.jpg",
+    photo: "/leadership/aryan-sanjeev.webp",
     order: 28
   },
   {
@@ -2333,7 +2333,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrrachitkathuria@gmail.com",
     phone: "8851974024",
     category: "District Chairs",
-    photo: "/leadership/rachit-kathuria.png",
+    photo: "/leadership/rachit-kathuria.webp",
     order: 29
   },
   {
@@ -2343,7 +2343,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "sejalmishra432@gmail.com",
     phone: "9625817125",
     category: "District Chairs",
-    photo: "/leadership/sejal-mishra.png",
+    photo: "/leadership/sejal-mishra.webp",
     order: 30
   },
   {
@@ -2353,7 +2353,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "prashantjoshi8088@gmail.com",
     phone: "7300685437",
     category: "District Chairs",
-    photo: "/leadership/prashant-joshi.png",
+    photo: "/leadership/prashant-joshi.webp",
     order: 31
   },
   {
@@ -2363,7 +2363,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrsaranshsrivastava@gmail.com",
     phone: "9599550719",
     category: "District Chairs",
-    photo: "/leadership/saransh-srivastava.png",
+    photo: "/leadership/saransh-srivastava.webp",
     order: 32
   },
   {
@@ -2373,7 +2373,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "singh.shubham1901@gmail.com",
     phone: "7900542995",
     category: "District Chairs",
-    photo: "/leadership/shubham-singh.jpg",
+    photo: "/leadership/shubham-singh.webp",
     order: 33
   },
   {
@@ -2383,7 +2383,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "rtrbhavyamehta@gmail.com",
     phone: "9899834027",
     category: "District Chairs",
-    photo: "/leadership/bhavya-mehta.jpg",
+    photo: "/leadership/bhavya-mehta.webp",
     order: 34
   },
   {
@@ -2393,7 +2393,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "yashicachaudhary2026@gmail.com",
     phone: "9717832715",
     category: "District Chairs",
-    photo: "/leadership/yashica-chaudhary.png",
+    photo: "/leadership/yashica-chaudhary.webp",
     order: 35
   },
   {
@@ -2403,7 +2403,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "avnibhatia0707@gmail.com",
     phone: "7982927168",
     category: "District Chairs",
-    photo: "/leadership/avni-bhatia.jpeg",
+    photo: "/leadership/avni-bhatia.webp",
     order: 36
   },
   {
@@ -2413,7 +2413,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "jatin.mugrai25@gmail.com",
     phone: "9355456999",
     category: "District Chairs",
-    photo: "/leadership/jatin-mugrai.jpg",
+    photo: "/leadership/jatin-mugrai.webp",
     order: 37
   },
   {
@@ -2423,7 +2423,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "shreyaasinghh585@gmail.com",
     phone: "6307097958",
     category: "District Chairs",
-    photo: "/leadership/shreya-singh.jpeg",
+    photo: "/leadership/shreya-singh.webp",
     order: 38
   },
   {
@@ -2433,7 +2433,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "apurvjain2003@gmail.com",
     phone: "9992829846",
     category: "District Chairs",
-    photo: "/leadership/apurv-jain.jpeg",
+    photo: "/leadership/apurv-jain.webp",
     order: 39
   },
   {
@@ -2443,7 +2443,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "yamanpuri@outlook.in",
     phone: "8750411555",
     category: "District Chairs",
-    photo: "/leadership/yaman-puri.jpeg",
+    photo: "/leadership/yaman-puri.webp",
     order: 40
   },
   {
@@ -2453,7 +2453,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "jayantsharmacreates@gmail.com",
     phone: "8862827515",
     category: "District Chairs",
-    photo: "/leadership/jayant-kumar-sharma.jpeg",
+    photo: "/leadership/jayant-kumar-sharma.webp",
     order: 41
   },
   {
@@ -2463,7 +2463,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "ashi7142@gmail.com",
     phone: "8851645688",
     category: "District Chairs",
-    photo: "/leadership/ashi-gupta.jpeg",
+    photo: "/leadership/ashi-gupta.webp",
     order: 42
   },
   {
@@ -2473,7 +2473,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "mayurpandita7@gmail.com",
     phone: "9906981963",
     category: "District Chairs",
-    photo: "/leadership/mayur-pandita.jpeg",
+    photo: "/leadership/mayur-pandita.webp",
     order: 43
   },
   {
@@ -2483,7 +2483,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "muktakumari1811@gmail.com",
     phone: "8368803505",
     category: "District Chairs",
-    photo: "/leadership/mukta-kumari.png",
+    photo: "/leadership/mukta-kumari.webp",
     order: 44
   },
   {
@@ -2493,7 +2493,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "durgesh.ly22@gmail.com",
     phone: "7462893778",
     category: "District Chairs",
-    photo: "/leadership/durgesh-k-chaudhary.jpg",
+    photo: "/leadership/durgesh-k-chaudhary.webp",
     order: 45
   },
   {
@@ -2503,7 +2503,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "jasraj2626@gmail.com",
     phone: "9315218284",
     category: "District Chairs",
-    photo: "/leadership/rajveer-singh-marwah.jpg",
+    photo: "/leadership/rajveer-singh-marwah.webp",
     order: 46
   },
   {
@@ -2513,7 +2513,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "mehulbuttan85@gmail.com",
     phone: "8377842506",
     category: "District Chairs",
-    photo: "/leadership/mehul-buttan.jpg",
+    photo: "/leadership/mehul-buttan.webp",
     order: 47
   },
   {
@@ -2523,7 +2523,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "vrinda.garg1998@gmail.com",
     phone: "9871577088",
     category: "District Chairs",
-    photo: "/leadership/vrinda-garg.jpg",
+    photo: "/leadership/vrinda-garg.webp",
     order: 48
   },
   {
@@ -2533,7 +2533,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "thisisparthagarwal@gmail.com",
     phone: "7011638319",
     category: "District Chairs",
-    photo: "/leadership/parth-agarwal.jpg",
+    photo: "/leadership/parth-agarwal.webp",
     order: 49
   },
   {
@@ -2543,7 +2543,7 @@ export const DISTRICT_LEADERSHIP: DistrictLeader[] = [
     email: "dhruvika038@gmail.com",
     phone: "7303530476",
     category: "District Chairs",
-    photo: "/leadership/dhruvika-chopra.jpeg",
+    photo: "/leadership/dhruvika-chopra.webp",
     order: 50
   }
 ];

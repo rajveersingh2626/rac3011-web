@@ -1,4 +1,4 @@
-const logoImg = '/20260803_134104_0000.jpg';
+const logoImg = '/20260803_134104_0000.webp';
 
 export interface DistrictLogoProps {
   size?: 'small' | 'medium' | 'large';

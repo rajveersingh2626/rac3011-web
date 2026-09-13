@@ -52,7 +52,12 @@ export function PublicContentTable<T extends { id: string }>({
   const [values, setValuesState] = useState<Partial<T>>(emptyValues);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: [queryKey] });
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: [queryKey] });
+    const publicEntity = queryKey.replace('-admin', '');
+    qc.invalidateQueries({ queryKey: ['public', publicEntity] });
+    qc.invalidateQueries({ queryKey: ['public'] });
+  };
 
   const saveMutation = useMutation({
     mutationFn: () => {

@@ -227,7 +227,7 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
             {mobileNavOpen ? <XIcon size={18} /> : <MenuIcon size={18} />}
           </button>
           <Link to="/portal/dashboard" className="flex items-center gap-2.5">
-            <img src="/district-logo.png" alt="Rotaract District Organization 3011" className="h-7 w-auto brightness-0 invert" />
+            <img src="/district-logo.webp" alt="Rotaract District Organization 3011" className="h-7 w-auto brightness-0 invert" />
             <span className="hidden sm:inline-block rounded-md bg-white/10 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-[#FF6B8B]">
               Portal
             </span>

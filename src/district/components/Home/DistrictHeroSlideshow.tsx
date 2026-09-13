@@ -12,31 +12,31 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     id: 'slide-1',
-    src: '/slideshow-yugarambh-sitting.jpg',
+    src: '/slideshow-yugarambh-sitting.webp',
     title: 'DAC 2026–27 Leadership Oath',
     subtitle: 'District Installation & Investiture Ceremony – "Yugarambh"'
   },
   {
     id: 'slide-2',
-    src: '/slideshow-yugarambh-standing.jpg',
+    src: '/slideshow-yugarambh-standing.webp',
     title: 'United in Purpose: District Council',
     subtitle: '75 Rotaract Clubs Uniting Across Delhi & NCR'
   },
   {
     id: 'slide-3',
-    src: '/slideshow-drr-speech.jpg',
+    src: '/slideshow-drr-speech.webp',
     title: 'DRR Archit Bhatia Address',
     subtitle: 'Setting the Vision for Fellowship, Service & Impact'
   },
   {
     id: 'slide-4',
-    src: '/slideshow-dg-speech.jpg',
+    src: '/slideshow-dg-speech.webp',
     title: 'Rotary Leadership Keynote',
     subtitle: 'District Governor Rtn. CA Ajeet Jalan Addressing the Assembly'
   },
   {
     id: 'slide-5',
-    src: '/slideshow-team-hall.jpg',
+    src: '/slideshow-team-hall.webp',
     title: 'The Rotaract Family Assembly',
     subtitle: 'Empowering Changemakers & Future Community Leaders'
   }
