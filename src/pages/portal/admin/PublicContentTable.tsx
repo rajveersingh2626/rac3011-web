@@ -18,7 +18,7 @@ export interface PublicContentTableProps<T extends { id: string }> {
   columns: Column<T>[];
   renderForm: (props: { values: Partial<T>; setValues: (patch: Partial<T>) => void; isNew: boolean }) => ReactNode;
   emptyValues: Partial<T>;
-  /** Field keys the write endpoints accept; falls back to this for whichever of create/update isn't given (most entities share one shape - enquiries and sister-club-requests don't). */
+  /** Field keys the write endpoints accept; falls back to this for whichever of create/update isn't given */
   writableKeys?: (keyof T)[];
   createKeys?: (keyof T)[];
   updateKeys?: (keyof T)[];
@@ -28,7 +28,11 @@ export interface PublicContentTableProps<T extends { id: string }> {
 
 function pick<T extends object>(values: Partial<T>, keys: (keyof T)[]): Partial<T> {
   const out: Partial<T> = {};
-  for (const key of keys) if (key in values) out[key] = values[key];
+  for (const key of keys) {
+    if (key in values && values[key] !== undefined) {
+      out[key] = values[key];
+    }
+  }
   return out;
 }
 
@@ -60,23 +64,39 @@ export function PublicContentTable<T extends { id: string }>({
   };
 
   const saveMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const isNew = editing === 'new';
       const keys = (isNew ? createKeys : updateKeys) ?? writableKeys ?? [];
       const payload = pick(values, keys);
+
+      // Clean payload for backend ingestion
+      const cleaned: Record<string, unknown> = {};
       for (const k of Object.keys(payload)) {
         const v = (payload as Record<string, unknown>)[k];
-        if (v === '' || (typeof v === 'number' && Number.isNaN(v))) {
-          (payload as Record<string, unknown>)[k] = null;
+        if (typeof v === 'string') {
+          const trimmed = v.trim();
+          // If empty string, keep null for optional/cleared fields
+          cleaned[k] = trimmed === '' ? null : trimmed;
+        } else if (typeof v === 'number' && Number.isNaN(v)) {
+          cleaned[k] = null;
+        } else {
+          cleaned[k] = v;
         }
       }
-      return !isNew && editing ? crud.update(editing.id, payload) : crud.create(payload);
+
+      if (!isNew && editing && typeof editing === 'object') {
+        return await crud.update(editing.id, cleaned);
+      }
+      return await crud.create(cleaned);
     },
     onSuccess: () => {
       setEditing(null);
       invalidate();
+      toast({ title: 'Saved successfully', tone: 'success' });
     },
-    onError: (err) => toast({ title: 'Could not save', body: (err as Error).message, tone: 'error' }),
+    onError: (err) => {
+      toast({ title: 'Could not save', body: (err as Error).message, tone: 'error' });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -84,24 +104,34 @@ export function PublicContentTable<T extends { id: string }>({
     onSuccess: () => {
       setConfirmDeleteId(null);
       invalidate();
+      toast({ title: 'Deleted successfully', tone: 'success' });
     },
-    onError: (err) => toast({ title: 'Could not delete', body: (err as Error).message, tone: 'error' }),
+    onError: (err) => {
+      toast({ title: 'Could not delete', body: (err as Error).message, tone: 'error' });
+    },
   });
 
   const reorderMutation = useMutation({
     mutationFn: (ids: string[]) => crud.reorder(ids),
-    onSuccess: () => invalidate(),
-    onError: (err) => toast({ title: 'Could not reorder', body: (err as Error).message, tone: 'error' }),
+    onSuccess: () => {
+      invalidate();
+      toast({ title: 'Order updated', tone: 'success' });
+    },
+    onError: (err) => {
+      toast({ title: 'Could not reorder', body: (err as Error).message, tone: 'error' });
+    },
   });
 
   function openCreate() {
     setValuesState(emptyValues);
     setEditing('new');
   }
+
   function openEdit(row: T) {
-    setValuesState(row);
+    setValuesState({ ...row });
     setEditing(row);
   }
+
   function move(rowId: string, direction: -1 | 1) {
     const ids = (query.data ?? []).map((r) => r.id);
     const idx = ids.indexOf(rowId);

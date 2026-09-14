@@ -16,7 +16,11 @@ import {
   Layers,
   Phone,
   Mail,
-  UserCheck
+  UserCheck,
+  Map as MapIcon,
+  LayoutGrid,
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 import { useDistrictClubs, useZoneNames, type DistrictClubLive } from '../../hooks/useDistrictClubs';
 
@@ -169,6 +173,21 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
+
+  const filteredClubs = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    return activeClubs.filter((c) => {
+      const matchesSearch = !query || 
+        (c.name || '').toLowerCase().includes(query) || 
+        (c.president || '').toLowerCase().includes(query) ||
+        (c.shortName || '').toLowerCase().includes(query) ||
+        (c.location || '').toLowerCase().includes(query) ||
+        (c.address || '').toLowerCase().includes(query);
+      const matchesZone = clubMatchesZone(c, activeZoneId);
+      return matchesSearch && matchesZone;
+    });
+  }, [activeClubs, searchQuery, activeZoneId]);
 
   const updateTooltipPos = (clientX: number, clientY: number) => {
     const tooltipWidth = 320;
@@ -454,10 +473,178 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         transition: 'all 0.3s ease'
       }}
     >
+      {/* Map View Canvas */}
       <div 
         ref={mapContainerRef} 
-        style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, zIndex: 1 }}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'absolute', 
+          inset: 0, 
+          zIndex: 1,
+          display: viewMode === 'map' ? 'block' : 'none'
+        }}
       />
+
+      {/* Tiles / Cards View Grid */}
+      {viewMode === 'cards' && (
+        <div 
+          style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            zIndex: 1, 
+            overflowY: 'auto', 
+            padding: '90px 24px 100px 24px',
+            backgroundColor: '#FAF5F7'
+          }}
+        >
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1E1E24', margin: '0 0 4px 0' }}>
+                  Directory of Rotaract Clubs (District 3011)
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: 600 }}>
+                  Showing {filteredClubs.length} verified clubs across Delhi NCR • Click any card for official club details and leadership contact
+                </p>
+              </div>
+            </div>
+
+            {filteredClubs.length === 0 ? (
+              <div style={{ background: '#FFFFFF', borderRadius: '18px', padding: '60px 24px', textAlign: 'center', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
+                <Sparkles size={48} style={{ color: 'var(--rotaract-pink)', margin: '0 auto 16px' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E1E24', marginBottom: '8px' }}>
+                  No clubs found matching "{searchQuery}"
+                </h3>
+                <p style={{ color: '#64748B', fontSize: '0.9rem', maxWidth: '420px', margin: '0 auto 16px' }}>
+                  Try resetting your search query or selecting "All Zones" to view all active clubs.
+                </p>
+                <button
+                  onClick={() => { setSearchQuery(''); setActiveZoneId(null); }}
+                  className="btn-rotaract"
+                  style={{ padding: '8px 20px', fontSize: '0.84rem' }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+                {filteredClubs.map((club) => {
+                  const neonColor = getClubNeonColor(club);
+                  const hasSecretary = Boolean(club.secretary && club.secretary.trim() && club.secretary.toLowerCase() !== 'n/a' && club.secretary !== 'Rtr. Club Secretary');
+                  return (
+                    <div
+                      key={club.id}
+                      onClick={() => {
+                        setActiveSlideoutClub(club);
+                        if (onSelectClub) onSelectClub(club.id);
+                      }}
+                      className="rotaract-card"
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: '16px',
+                        padding: '20px 22px',
+                        border: `1.5px solid ${neonColor}35`,
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.22s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.borderColor = neonColor;
+                        e.currentTarget.style.boxShadow = `0 12px 28px ${neonColor}25`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = `${neonColor}35`;
+                        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.04)';
+                      }}
+                    >
+                      <div>
+                        {/* Zone Badge & Rotary ID */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '3px 10px',
+                              borderRadius: '100px',
+                              background: `${neonColor}15`,
+                              border: `1px solid ${neonColor}40`,
+                              color: neonColor,
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: neonColor }} />
+                            {club.zone || 'District 3011'}
+                          </span>
+
+                          {club.rotaryId && club.rotaryId !== 'N/A' && (
+                            <span style={{ fontSize: '0.70rem', color: '#71717A', fontWeight: 700, background: '#F4F4F5', padding: '2px 8px', borderRadius: '6px' }}>
+                              ID: {club.rotaryId}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Club Name */}
+                        <h4 style={{ fontSize: '1.08rem', fontWeight: 900, color: '#0F172A', margin: '0 0 10px 0', lineHeight: 1.35 }}>
+                          {club.name}
+                        </h4>
+
+                        {/* Location / Address */}
+                        {(club.address || club.location) && (
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.78rem', color: '#64748B', marginBottom: '12px', fontWeight: 600 }}>
+                            <MapPin size={13} style={{ color: neonColor, flexShrink: 0, marginTop: '2px' }} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {club.address || club.location}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Leadership */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: '#334155', fontWeight: 700, background: '#F8FAFC', padding: '10px 12px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <User size={13} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              Pres: <strong>{club.president || 'Rtr. Club President'}</strong>
+                            </span>
+                          </div>
+
+                          {/* Only render secretary if present */}
+                          {hasSecretary && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <UserCheck size={13} style={{ color: '#059669', flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                Sec: <strong>{club.secretary}</strong>
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer: Charter year & View Details button */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.76rem' }}>
+                        <span style={{ color: '#94A3B8', fontWeight: 700 }}>
+                          {club.charterYear ? `Chartered ${club.charterYear}` : 'Verified Club'}
+                        </span>
+                        <span style={{ color: 'var(--rotaract-pink)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          View Details <ChevronRight size={13} />
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Floating Active Zone ZRR / ZRS Info Box (Top Left) */}
       {activeZoneObj && (
@@ -593,6 +780,58 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto', flexWrap: 'wrap' }}>
+          {/* Segmented View Mode Control: Map View vs Cards/Tiles View */}
+          <div
+            style={{
+              display: 'inline-flex',
+              background: 'rgba(255, 255, 255, 0.96)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '8px',
+              padding: '3px',
+              border: '1.5px solid rgba(216, 27, 96, 0.25)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
+            }}
+          >
+            <button
+              onClick={() => setViewMode('map')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: viewMode === 'map' ? 'var(--rotaract-pink)' : 'transparent',
+                color: viewMode === 'map' ? '#FFFFFF' : '#1E1E24',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <MapIcon size={14} /> Map View
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: viewMode === 'cards' ? 'var(--rotaract-pink)' : 'transparent',
+                color: viewMode === 'cards' ? '#FFFFFF' : '#1E1E24',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <LayoutGrid size={14} /> Cards / Tiles View
+            </button>
+          </div>
+
           <div 
             style={{
               position: 'relative',
@@ -903,8 +1142,8 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                   </div>
                 </div>
 
-                {/* Club Secretary Card */}
-                {(currentSlideoutClub.secretary || currentSlideoutClub.secretaryEmail) && (
+                {/* Club Secretary Card - omitted if empty or placeholder */}
+                {Boolean(currentSlideoutClub.secretary && currentSlideoutClub.secretary.trim() && currentSlideoutClub.secretary.toLowerCase() !== 'n/a' && currentSlideoutClub.secretary !== 'Rtr. Club Secretary') && (
                   <div 
                     style={{
                       background: '#F0FDF4',
@@ -919,7 +1158,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                     </div>
 
                     <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#18181B' }}>
-                      {currentSlideoutClub.secretary || 'Rtr. Club Secretary'}
+                      {currentSlideoutClub.secretary}
                     </div>
 
                     {/* Secretary Contact Actions */}

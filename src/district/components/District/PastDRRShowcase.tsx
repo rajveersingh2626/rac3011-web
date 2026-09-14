@@ -382,12 +382,22 @@ export default function PastDRRShowcase() {
         if (matchedLiveIds.has(p.id)) return false;
         const pClean = clean(p.name);
         const pSlugClean = clean(p.slug || '');
-        return (
+        const nameMatch = (
           p.id === localDrr.id ||
           pClean === localClean ||
           (pSlugClean && pSlugClean === localClean) ||
           p.name.trim().toLowerCase() === localDrr.name.trim().toLowerCase()
         );
+        if (!nameMatch) return false;
+        // If multiple entries have the same name, prefer the one with matching term/year
+        if (p.terms && p.terms.length > 0) {
+          return p.terms.includes(localDrr.year) || p.terms[0] === localDrr.year;
+        }
+        return true;
+      }) || pastDrrQuery.data.items.find((p) => {
+        if (matchedLiveIds.has(p.id)) return false;
+        const pClean = clean(p.name);
+        return pClean === localClean || p.name.trim().toLowerCase() === localDrr.name.trim().toLowerCase();
       });
 
       if (!live) {
@@ -401,13 +411,14 @@ export default function PastDRRShowcase() {
 
       matchedLiveIds.add(live.id);
       const photo = resolvePdrrPhotoUrl(live.photoUrl, live.name, live.slug) || resolvePdrrPhotoUrl(localDrr.photo, localDrr.name, localDrr.id);
+      const matchedYear = live.terms?.find((t) => t === localDrr.year) || localDrr.year || live.terms?.[0];
       return {
         ...localDrr,
         name: live.name || localDrr.name,
         photo: photo || '',
         hasPhoto: Boolean(photo),
-        year: live.terms?.[0] || localDrr.year,
-        tenure: live.terms?.[0] ? `RY ${live.terms[0]}` : localDrr.tenure,
+        year: matchedYear,
+        tenure: `RY ${matchedYear}`,
       };
     });
 

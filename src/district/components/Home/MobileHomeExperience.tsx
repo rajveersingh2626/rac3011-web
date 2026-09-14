@@ -1,4 +1,5 @@
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, useMemo, FC } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Users, Award, MapPin, Sparkles, Calendar, 
   FolderOpen, ArrowRight, Calculator,
@@ -6,6 +7,11 @@ import {
   Search, FileText, LayoutDashboard, LogIn, Compass
 } from 'lucide-react';
 import { useSurfaceHref } from '@/app/host';
+import { fetchClubs } from '@/lib/publicApi/clubs';
+import { fetchZones } from '@/lib/publicApi/zones';
+import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
+import { fetchPastDrrs } from '@/lib/publicApi/heritage';
+import { fetchAchievements } from '@/lib/publicApi/achievements';
 import type { Achievement, FocusArea, ImpactMetric } from '../../data/districtData';
 
 export interface MobileHomeExperienceProps {
@@ -93,11 +99,11 @@ const FLAGSHIP_ITEMS = [
   }
 ];
 
-const ZONES_DATA = [
-  { id: 'prithvi', name: 'Zone Prithvi', clubs: 14, region: 'North & East Delhi', color: '#0284C7' },
-  { id: 'agni', name: 'Zone Agni', clubs: 15, region: 'Central & West Delhi', color: '#EA580C' },
-  { id: 'vayu', name: 'Zone Vayu', clubs: 13, region: 'South Delhi & Noida', color: '#16A34A' },
-  { id: 'akash', name: 'Zone Akash', clubs: 12, region: 'Gurgaon & Faridabad', color: '#7C3AED' }
+const DEFAULT_ZONES_CONFIG = [
+  { id: 'prithvi', name: 'Zone Prithvi', defaultCount: 14, region: 'North & East Delhi', color: '#0284C7' },
+  { id: 'agni', name: 'Zone Agni', defaultCount: 15, region: 'Central & West Delhi', color: '#EA580C' },
+  { id: 'vayu', name: 'Zone Vayu', defaultCount: 13, region: 'South Delhi & Noida', color: '#16A34A' },
+  { id: 'akash', name: 'Zone Akash', defaultCount: 12, region: 'Gurgaon & Faridabad', color: '#7C3AED' }
 ];
 
 export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
@@ -109,6 +115,60 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [selectedZone, setSelectedZone] = useState('prithvi');
   const [contributionAmount, setContributionAmount] = useState(10000);
+
+  // Dynamic Live Queries (cached and synchronized with portal updates)
+  const clubsQuery = useQuery({
+    queryKey: ['public', 'clubs'],
+    queryFn: () => fetchClubs(),
+    staleTime: 60 * 1000,
+  });
+
+  const zonesQuery = useQuery({
+    queryKey: ['public', 'zones'],
+    queryFn: fetchZones,
+    staleTime: 60 * 1000,
+  });
+
+  const teamQuery = useQuery({
+    queryKey: ['public', 'district-team'],
+    queryFn: fetchDistrictTeam,
+    staleTime: 60 * 1000,
+  });
+
+  const pastDrrsQuery = useQuery({
+    queryKey: ['public', 'past-drrs'],
+    queryFn: fetchPastDrrs,
+    staleTime: 60 * 1000,
+  });
+
+  const achievementsQuery = useQuery({
+    queryKey: ['public', 'achievements'],
+    queryFn: fetchAchievements,
+    staleTime: 60 * 1000,
+  });
+
+  const totalClubs = clubsQuery.data?.items?.length || 54;
+  const totalLeaders = teamQuery.data?.items?.length || 50;
+  const totalPastDrrs = pastDrrsQuery.data?.items?.length || 40;
+  const totalAchievements = achievementsQuery.data?.items?.length || 6;
+
+  // Dynamic zone data computation from live API clubs & zones
+  const zonesData = useMemo(() => {
+    const clubs = clubsQuery.data?.items || [];
+    return DEFAULT_ZONES_CONFIG.map((z) => {
+      const liveMatching = clubs.filter((c) => {
+        const zoneStr = (c.zoneName || c.zoneId || '').toLowerCase();
+        return zoneStr.includes(z.id) || zoneStr.includes(z.name.toLowerCase().replace('zone ', ''));
+      });
+      return {
+        id: z.id,
+        name: z.name,
+        region: z.region,
+        color: z.color,
+        clubs: liveMatching.length > 0 ? liveMatching.length : z.defaultCount,
+      };
+    });
+  }, [clubsQuery.data, zonesQuery.data]);
 
   const missionHref = useSurfaceHref('mission3011');
   const drishtiHref = useSurfaceHref('drishti');
@@ -171,16 +231,16 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   };
 
   const currentSlide = HERO_SLIDES[slideIdx];
-  const activeZoneObj = ZONES_DATA.find((z) => z.id === selectedZone) || ZONES_DATA[0];
+  const activeZoneObj = zonesData.find((z) => z.id === selectedZone) || zonesData[0];
 
   // Secondary Quick District Navigation Cards
   const SECONDARY_DISTRICT_CARDS = [
     {
       id: 'sec-map',
       title: 'Zone Radar',
-      subtitle: '4 Zones • 54 Clubs',
+      subtitle: `4 Zones • ${totalClubs} Clubs`,
       icon: <Compass size={20} color="#0284C7" />,
-      badge: '54 Clubs',
+      badge: `${totalClubs} Clubs`,
       onClick: () => navigateTo('map-clubs')
     },
     {
@@ -188,7 +248,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       title: 'District Citations',
       subtitle: 'Merits & Milestones',
       icon: <ShieldCheck size={20} color="#D81B60" />,
-      badge: 'Awards',
+      badge: `${totalAchievements} Honors`,
       onClick: () => navigateToPage('achievements')
     },
     {
@@ -277,7 +337,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             fontWeight: 500
           }}
         >
-          Uniting 54 chartered clubs and young changemakers across Delhi NCR for grassroots humanitarian action.
+          Uniting {totalClubs} chartered clubs and young changemakers across Delhi NCR for grassroots humanitarian action.
         </p>
 
         {/* Hero Slideshow Card with Fluid Proportions and Native Swipe */}
@@ -590,7 +650,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          3. FEATURED PROMINENT CARDS: DAC LEADERSHIP & HERITAGE VAULT (Not 1x1!)
+          3. FEATURED PROMINENT CARDS: DAC LEADERSHIP & HERITAGE VAULT (Dynamic Stats)
          =================================================================== */}
       <div style={{ padding: '20px 14px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -668,7 +728,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             </div>
 
             <p style={{ color: '#64748B', fontSize: '0.82rem', lineHeight: 1.45, margin: 0 }}>
-              Meet DRR CA Archit Bhatia &amp; the 50-member Executive Council steering district initiatives.
+              Meet DRR CA Archit Bhatia &amp; the {totalLeaders}-member Executive Council steering district initiatives.
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid #F1F5F9' }}>
@@ -684,7 +744,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
                 </span>
               </div>
               <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#123499' }}>
-                50 Leaders &rarr;
+                {totalLeaders} Leaders &rarr;
               </span>
             </div>
           </div>
@@ -750,7 +810,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             </div>
 
             <p style={{ color: 'rgba(255, 255, 255, 0.88)', fontSize: '0.82rem', lineHeight: 1.45, margin: 0 }}>
-              Honoring 40+ years of visionary leadership from RID 301, RID 3010, and RID 3011.
+              Honoring {totalPastDrrs}+ visionary leaders from RID 301, RID 3010, and RID 3011 across 40+ years.
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.18)' }}>
@@ -766,7 +826,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
                 </span>
               </div>
               <span style={{ fontSize: '0.74rem', fontWeight: 800, color: '#FFE082' }}>
-                40+ Years &rarr;
+                {totalPastDrrs} DRRs &rarr;
               </span>
             </div>
           </div>
@@ -774,7 +834,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       </div>
 
       {/* ===================================================================
-          4. PROMINENT DELHI NCR ZONE MAP & RADAR
+          4. PROMINENT DELHI NCR ZONE MAP & RADAR (Dynamic Club Count)
          =================================================================== */}
       <div style={{ padding: '20px 14px 0' }}>
         <div
@@ -802,17 +862,17 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             </div>
 
             <span style={{ fontSize: '0.70rem', fontWeight: 800, padding: '3px 8px', borderRadius: '6px', background: '#EEF2FF', color: '#123499' }}>
-              54 CLUBS
+              {totalClubs} CLUBS
             </span>
           </div>
 
           <p style={{ fontSize: '0.80rem', color: '#64748B', margin: '0 0 12px 0', lineHeight: 1.4 }}>
-            Explore chartered Rotaract clubs and youth chapters organized across 4 Delhi NCR zones.
+            Explore {totalClubs} chartered Rotaract clubs and youth chapters organized across 4 Delhi NCR zones.
           </p>
 
           {/* Zone Selector Pills */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '12px' }}>
-            {ZONES_DATA.map((z) => {
+            {zonesData.map((z) => {
               const isSel = z.id === selectedZone;
               return (
                 <button

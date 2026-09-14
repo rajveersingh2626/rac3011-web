@@ -16,6 +16,7 @@ interface DisplayProject {
   category: string;
   categoryLabel: string;
   date: string;
+  rawDate: string;
   summary: string;
   photo: string | null;
   tags: string[];
@@ -34,16 +35,33 @@ interface ClubInitiativesListProps {
 
 const PAGE_SIZE = 12;
 
+const MONTHS = [
+  'All Months',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+];
+
 const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ clubs = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedZone, setSelectedZone] = useState('All');
+  const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [activeProjectModal, setActiveProjectModal] = useState<DisplayProject | null>(null);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchTerm, selectedCategory, selectedZone]);
+  }, [searchTerm, selectedCategory, selectedZone, selectedMonth]);
 
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects'],
@@ -60,26 +78,48 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
     staleTime: 5 * 60 * 1000,
   });
 
-  const zoneByClubId = useMemo(() => {
-    return new Map(clubs.map((c) => [c.id, c.zone]));
+  const zoneByClubName = useMemo(() => {
+    const clean = (s: string) => s.toLowerCase().replace(/^(rotaract club of|rac)\s+/i, '').trim();
+    const map = new Map<string, string>();
+    for (const c of clubs) {
+      if (c.zone) {
+        map.set(c.id, c.zone);
+        map.set(clean(c.name), c.zone);
+      }
+    }
+    return map;
   }, [clubs]);
 
   const allProjects = useMemo<DisplayProject[]>(() => {
     const items = projectsQuery.data?.items ?? [];
-    return items.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title || 'Rotaract Initiative',
-      clubName: p.leadClub?.name ?? null,
-      zone: (p.leadClub && zoneByClubId.get(p.leadClub.id)) || null,
-      category: p.category,
-      categoryLabel: categoryLabelOf(p.category),
-      date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      summary: p.summary || '',
-      photo: p.photos?.[0] ?? null,
-      tags: [categoryLabelOf(p.category)],
-    }));
-  }, [projectsQuery.data, zoneByClubId]);
+    const clean = (s: string) => s.toLowerCase().replace(/^(rotaract club of|rac)\s+/i, '').trim();
+
+    return items.map((p) => {
+      const leadClubObj = p.leadClub as { id?: string; name?: string; slug?: string; zone?: string | null } | null;
+      let zoneName = leadClubObj?.zone ?? null;
+      if (!zoneName && leadClubObj?.name) {
+        zoneName = zoneByClubName.get(clean(leadClubObj.name)) || (leadClubObj.id ? zoneByClubName.get(leadClubObj.id) : null) || null;
+      }
+      if (zoneName && !zoneName.toLowerCase().startsWith('zone')) {
+        zoneName = `Zone ${zoneName}`;
+      }
+
+      return {
+        id: p.id,
+        slug: p.slug,
+        title: p.title || 'Rotaract Initiative',
+        clubName: p.leadClub?.name ?? null,
+        zone: zoneName,
+        category: p.category,
+        categoryLabel: categoryLabelOf(p.category),
+        date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rawDate: p.date,
+        summary: p.summary || '',
+        photo: p.photos?.[0] ?? null,
+        tags: [categoryLabelOf(p.category)],
+      };
+    });
+  }, [projectsQuery.data, zoneByClubName]);
 
   const detailBeneficiaries = projectDetailQuery.data?.beneficiaries;
   const detailBody = projectDetailQuery.data?.body;
@@ -96,6 +136,8 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
 
   const filteredProjects = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
+    const normZone = (z: string) => z.toLowerCase().replace(/^zone\s+/i, '').trim();
+
     return allProjects.filter((proj) => {
       const matchesSearch = !q ||
         proj.title.toLowerCase().includes(q) ||
@@ -105,11 +147,17 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         proj.tags.some((t) => t.toLowerCase().includes(q));
 
       const matchesCategory = selectedCategory === 'All' || proj.category === selectedCategory;
-      const matchesZone = selectedZone === 'All' || proj.zone === selectedZone;
+      const matchesZone = selectedZone === 'All' || (proj.zone ? normZone(proj.zone) === normZone(selectedZone) : false);
 
-      return matchesSearch && matchesCategory && matchesZone;
+      let matchesMonth = true;
+      if (selectedMonth !== 'All Months' && proj.rawDate) {
+        const projMonth = new Date(proj.rawDate).toLocaleDateString('en-US', { month: 'long' });
+        matchesMonth = projMonth.toLowerCase() === selectedMonth.toLowerCase();
+      }
+
+      return matchesSearch && matchesCategory && matchesZone && matchesMonth;
     });
-  }, [allProjects, searchTerm, selectedCategory, selectedZone]);
+  }, [allProjects, searchTerm, selectedCategory, selectedZone, selectedMonth]);
 
   const visibleProjects = useMemo(() => {
     return filteredProjects.slice(0, visibleCount);
@@ -190,27 +238,52 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Filter Zone:</span>
-          <select
-            value={selectedZone}
-            onChange={(e) => setSelectedZone(e.target.value)}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '10px',
-              border: '1px solid rgba(18, 52, 153, 0.2)',
-              backgroundColor: '#FFFFFF',
-              color: '#123499',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            {zones.map((z, idx) => (
-              <option key={idx} value={z}>{z}</option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{
+                padding: '9px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(18, 52, 153, 0.2)',
+                backgroundColor: '#FFFFFF',
+                color: '#123499',
+                fontWeight: 700,
+                fontSize: '0.86rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {MONTHS.map((m, idx) => (
+                <option key={idx} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Zone:</span>
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              style={{
+                padding: '9px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(18, 52, 153, 0.2)',
+                backgroundColor: '#FFFFFF',
+                color: '#123499',
+                fontWeight: 700,
+                fontSize: '0.86rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {zones.map((z, idx) => (
+                <option key={idx} value={z}>{z}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -257,7 +330,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           </p>
           {allProjects.length > 0 && (
             <button
-              onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedZone('All'); }}
+              onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedZone('All'); setSelectedMonth('All Months'); }}
               className="btn-rotaract"
               style={{ padding: '10px 24px', fontSize: '0.88rem' }}
             >

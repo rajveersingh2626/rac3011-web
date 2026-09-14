@@ -108,7 +108,7 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
         <Field label="Roughly how many people did it reach">
           <Input type="number" min={0} value={beneficiaries} onChange={(e) => setBeneficiaries(e.target.value)} />
         </Field>
-        <Field label="Other clubs or organisations" hint="Optional">
+        <Field label="Other clubs or organizations" hint="Optional">
           <MultiSelect options={clubOptions} values={collaboratingClubIds} onChange={setCollaboratingClubIds} />
         </Field>
       </div>

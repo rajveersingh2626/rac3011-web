@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 const GRID_CLASS = 'grid grid-cols-2 gap-5 sm:grid-cols-4';
 
 export function PartnersPage() {
-  useDocumentMeta({ title: 'Partners', description: 'Organisations that support district projects.' });
+  useDocumentMeta({ title: 'Partners', description: 'Organizations that support district projects.' });
   const { data, isPending, isError, refetch } = useQuery({ queryKey: ['public', 'partners'], queryFn: fetchPartners });
 
   if (isPending) {
@@ -40,7 +40,7 @@ export function PartnersPage() {
         align="center"
         eyebrow="District 3011"
         title="Partners"
-        description="Organisations that support district projects."
+        description="Organizations that support district projects."
       >
         {data.items.length === 0 ? (
           <EmptyState title="No partners listed yet" />
@@ -59,9 +59,21 @@ export function PartnersPage() {
                   </div>
                 )}
                 <p className="m-0 text-[13.5px] font-extrabold leading-snug text-[var(--text-primary)]">{partner.name}</p>
-                <span className="pill-pink" style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
-                  {titleCaseSlug(partner.tier)}
-                </span>
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <span className="pill-pink" style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
+                    {titleCaseSlug(partner.tier)}
+                  </span>
+                  {partner.website && (
+                    <a
+                      href={partner.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-accent hover:underline font-bold"
+                    >
+                      Visit &rarr;
+                    </a>
+                  )}
+                </div>
               </div>
             ))}
           </div>

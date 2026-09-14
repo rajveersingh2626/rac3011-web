@@ -3,7 +3,7 @@ import {
   ArrowRight, Sparkles, MapPin, Award, Globe, 
   ExternalLink, LogOut, UserCheck, ChevronRight, 
   ChevronDown, Home, Users, LayoutDashboard, X, LogIn,
-  FolderOpen, Calendar
+  FolderOpen, Calendar, Image as ImageIcon
 } from 'lucide-react';
 import DistrictLogo from './DistrictLogo';
 
@@ -102,7 +102,7 @@ export default function MorphedMenu({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const mainLinks: MorphedMenuLink[] = [
+  const navLinks: MorphedMenuLink[] = [
     {
       id: 'home',
       title: 'Home',
@@ -140,7 +140,7 @@ export default function MorphedMenu({
         }
         setIsOpen(false);
       },
-      active: activePage === 'district' && ['map-clubs', 'heritage', 'leadership'].includes(activeDistrictTab),
+      active: activePage === 'district' && ['map-clubs', 'heritage', 'leadership', 'gallery'].includes(activeDistrictTab),
       subTabs: [
         {
           id: 'map-clubs',
@@ -169,6 +169,20 @@ export default function MorphedMenu({
             setIsOpen(false);
           },
           active: activePage === 'district' && activeDistrictTab === 'heritage'
+        },
+        {
+          id: 'gallery',
+          title: 'Event Gallery & Moments',
+          icon: <ImageIcon size={15} />,
+          action: () => {
+            if (setActiveDistrictTab) {
+              setActiveDistrictTab('gallery');
+            } else {
+              setActivePage('district', 'gallery');
+            }
+            setIsOpen(false);
+          },
+          active: activePage === 'district' && activeDistrictTab === 'gallery'
         },
         {
           id: 'leadership',

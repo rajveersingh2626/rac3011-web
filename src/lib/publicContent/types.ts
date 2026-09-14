@@ -9,6 +9,8 @@ export const achievementSchema = z.object({
   certificateUrl: z.string().nullable().optional(),
   description: z.string().nullable().optional(),
   order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type Achievement = z.infer<typeof achievementSchema>;
 
@@ -20,6 +22,8 @@ export const partnerSchema = z.object({
   website: z.string().nullable().optional(),
   permissionStatus: z.string().optional().default('granted'),
   order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type Partner = z.infer<typeof partnerSchema>;
 
@@ -30,6 +34,9 @@ export const publicationSchema = z.object({
   url: z.string(),
   month: z.string(),
   coverUrl: z.string().nullable().optional(),
+  order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type Publication = z.infer<typeof publicationSchema>;
 
@@ -39,11 +46,13 @@ export const resourceSchema = z.object({
   category: z.string(),
   title: z.string(),
   description: z.string().nullable().optional(),
-  url: z.string(),
+  url: z.string().nullable().optional(),
   isLocked: z.boolean().optional().default(false),
   requiredPermission: z.string().nullable().optional(),
   comingSoonMonth: z.string().nullable().optional(),
   order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type Resource = z.infer<typeof resourceSchema>;
 
@@ -57,6 +66,8 @@ export const pastDrrSchema = z.object({
   bio: z.string().nullable().optional(),
   isLowResPhoto: z.boolean().optional().default(false),
   order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type PastDrr = z.infer<typeof pastDrrSchema>;
 
@@ -71,23 +82,26 @@ export const districtTeamMemberSchema = z.object({
   bio: z.string().nullable().optional(),
   clubId: z.string().nullable().optional(),
   order: z.number().nullable().optional(),
-  ryYear: z.number().nullable().optional(),
+  ryYear: z.coerce.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type DistrictTeamMember = z.infer<typeof districtTeamMemberSchema>;
 
 export const enquirySchema = z.object({
   id: z.string(),
-  kind: z.enum(['new_club', 'sponsor', 'contact']),
+  kind: z.string(),
   name: z.string(),
   email: z.string(),
-  phone: z.string().nullable(),
-  organisation: z.string().nullable(),
+  phone: z.string().nullable().optional(),
+  organisation: z.string().nullable().optional(),
   message: z.string(),
-  payload: z.unknown().nullable(),
-  routedTo: z.string(),
-  status: z.string(),
-  assignedToId: z.string().nullable(),
-  createdAt: z.string(),
+  payload: z.unknown().nullable().optional(),
+  routedTo: z.string().nullable().optional(),
+  status: z.string().optional().default('new'),
+  assignedToId: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type Enquiry = z.infer<typeof enquirySchema>;
 
@@ -99,9 +113,25 @@ export const sisterClubRequestSchema = z.object({
   country: z.string(),
   contactName: z.string(),
   contactEmail: z.string(),
-  status: z.string(),
-  signedOn: z.string().nullable(),
-  submittedById: z.string().nullable(),
-  createdAt: z.string(),
+  status: z.string().optional().default('submitted'),
+  signedOn: z.string().nullable().optional(),
+  submittedById: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 export type SisterClubRequest = z.infer<typeof sisterClubRequestSchema>;
+
+export const GALLERY_CATEGORIES = ['District Events', 'Club Projects', 'Installations', 'Conferences', 'Socials', 'Other'] as const;
+export const galleryItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  eventName: z.string().nullable().optional(),
+  category: z.string().optional().default('District Events'),
+  imageUrl: z.string(),
+  caption: z.string().nullable().optional(),
+  date: z.string(),
+  order: z.number().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type GalleryItem = z.infer<typeof galleryItemSchema>;

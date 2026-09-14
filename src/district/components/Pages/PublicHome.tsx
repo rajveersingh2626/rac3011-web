@@ -203,7 +203,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: 1,
+        zIndex: 0,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
@@ -855,7 +855,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
               whiteSpace: 'pre-line'
             }}
           >
-            {"ROTARACT\nDISTRICT\nORGANISATION"}
+            {"ROTARACT\nDISTRICT\nORGANIZATION"}
           </h1>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '20px', flexWrap: 'wrap' }}>

@@ -14,11 +14,11 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
   const dynamicSteps = (achievements.length > 0 ? achievements : [
     {
       id: '1',
-      title: 'Charter Expansion Across NCR',
-      metric: 'New Clubs Chartered',
-      description: 'New community and campus Rotaract clubs chartered during the year, expanding youth leadership and service reach across Delhi NCR.',
-      badge: 'Charter Expansion',
-      highlight: 'Active Charters',
+      title: 'Clubs Chartered During the Year',
+      metric: 'Active Charters',
+      description: 'Four new Community/University based Rotaract Clubs chartered during the year, expanding youth leadership and service reach across Delhi NCR.',
+      badge: 'Active Charters',
+      highlight: 'Four new Community/University based Rotaract Clubs',
       color: '#123499'
     },
     {

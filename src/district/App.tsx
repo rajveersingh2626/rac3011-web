@@ -56,6 +56,7 @@ const ROUTE_MAP: Record<string, RouteState> = {
   '/showcase': { page: 'district', tab: 'initiatives' },
   '/initiatives': { page: 'district', tab: 'initiatives' },
   '/heritage': { page: 'district', tab: 'heritage' },
+  '/gallery': { page: 'district', tab: 'gallery' },
   '/resources': { page: 'district', tab: 'resources' },
   '/calendar': { page: 'district', tab: 'calendar' },
   '/governance': { page: 'district', tab: 'leadership' },
@@ -91,6 +92,7 @@ function getPathFromState(page: DistrictPage, tab: string): string {
   if (page === 'home') return '/';
   if (tab === 'heritage') return '/heritage';
   if (tab === 'initiatives' || tab === 'showcase') return '/showcase';
+  if (tab === 'gallery') return '/gallery';
   if (tab === 'leadership') return '/governance';
   if (tab === 'resources') return '/resources';
   if (tab === 'calendar') return '/calendar';

@@ -173,7 +173,7 @@ export function SubmitShowcasePage() {
                   placeholder="120"
                 />
               </Field>
-              <Field label="Other clubs or organisations" hint="Optional">
+              <Field label="Other clubs or organizations" hint="Optional">
                 <MultiSelect
                   options={clubOptions}
                   values={collaboratingClubIds}

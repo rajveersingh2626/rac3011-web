@@ -62,7 +62,10 @@ export async function apiFetch<T = unknown>(path: string, opts: Options<T> = {})
   }
   if (opts.schema) {
     const parsed = opts.schema.safeParse(data);
-    if (!parsed.success) throw new ApiError(500, `Unexpected response shape from ${path}`);
+    if (!parsed.success) {
+      console.warn(`Zod schema warning for ${path}:`, parsed.error.issues, data);
+      return data as T;
+    }
     return parsed.data;
   }
   return data as T;

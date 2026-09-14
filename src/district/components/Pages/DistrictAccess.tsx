@@ -5,7 +5,9 @@ import ClubInitiativesList from '../District/ClubInitiativesList';
 import PastDRRShowcase from '../District/PastDRRShowcase';
 import DistrictResourcesView from '../District/DistrictResourcesView';
 import DistrictCalendarView from '../District/DistrictCalendarView';
+import EventGalleryView from '../District/EventGalleryView';
 import { DISTRICT_LEADERSHIP } from '../../data/districtData';
+
 import type { DistrictClub } from '../../data/districtData';
 import { findLeaderPhoto, resolveLeaderPhotoUrl } from '../../data/leadershipImages';
 import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
@@ -62,14 +64,28 @@ export default function DistrictAccess({
   });
 
   const leadersList = useMemo<LeadershipEntry[]>(() => {
+    const clean = (s: string) => s.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*|Dr\.?\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const deduplicate = (list: LeadershipEntry[]): LeadershipEntry[] => {
+      const seen = new Set<string>();
+      return list.filter((item) => {
+        const cName = clean(item.name);
+        const cEmail = item.email.trim().toLowerCase();
+        const key = cEmail ? `email:${cEmail}` : `name:${cName}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+
     if (!teamQuery.data?.items || teamQuery.data.items.length === 0) {
-      return DISTRICT_LEADERSHIP.map(l => ({
+      return deduplicate(DISTRICT_LEADERSHIP.map(l => ({
         ...l,
         photo: resolveLeaderPhotoUrl(l.photo, l.name, l.email, l.id) || ''
-      }));
+      })));
     }
-    return teamQuery.data.items.map((member) => {
-      const clean = (s: string) => s.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*|Dr\.?\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const mapped = teamQuery.data.items.map((member) => {
       const mClean = clean(member.name);
       const local = DISTRICT_LEADERSHIP.find(
         (l) =>
@@ -105,6 +121,8 @@ export default function DistrictAccess({
         club: 'Rotaract District 3011',
       };
     });
+
+    return deduplicate(mapped);
   }, [teamQuery.data]);
 
   const handleCopyEmail = (email: string) => {
@@ -177,6 +195,10 @@ export default function DistrictAccess({
 
         {activeDistrictTab === 'resources' && (
           <DistrictResourcesView />
+        )}
+
+        {activeDistrictTab === 'gallery' && (
+          <EventGalleryView />
         )}
 
         {activeDistrictTab === 'calendar' && (
