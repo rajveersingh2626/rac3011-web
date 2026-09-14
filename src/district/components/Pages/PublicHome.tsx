@@ -17,7 +17,7 @@ import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
 import { fetchAchievements } from '@/lib/publicApi/achievements';
 import { fetchPartners } from '@/lib/publicApi/partners';
-import { useSurfaceHref } from '@/app/host';
+import { useSurfaceHref, surfaceHref } from '@/app/host';
 
 const impactStatsSchema = z.array(
   z.object({
@@ -320,6 +320,11 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const getSafeSurfaceHref = (surface?: FlagshipSurface): string | undefined => {
+    if (!surface) return undefined;
+    return surfaceHrefs[surface] || surfaceHref(surface) || `/?surface=${surface}`;
+  };
+
   if (isMobile) {
     return (
       <div
@@ -337,7 +342,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
         }}
       >
         {DISTRICT_UPCOMING_PROJECTS.map((proj) => {
-          const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+          const href = getSafeSurfaceHref(proj.surface);
           const Card = proj.surface ? 'a' : 'div';
           return (
             <Card
@@ -443,7 +448,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     >
       {DISTRICT_UPCOMING_PROJECTS.map((proj, idx) => {
         const isActive = idx === selectedIndex;
-        const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+        const href = getSafeSurfaceHref(proj.surface);
         const Card = proj.surface ? 'a' : 'div';
         return (
           <Card
