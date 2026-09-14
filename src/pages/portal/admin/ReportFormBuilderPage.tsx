@@ -17,6 +17,8 @@ import {
   createReportSchemaDraft,
   saveReportSchemaFields,
   publishReportSchema,
+  unpublishReportSchema,
+  deleteReportSchemaDraft,
   type ReportFieldInput,
 } from '@/lib/reports/api';
 import { ApiError } from '@/lib/api';
@@ -50,9 +52,11 @@ export function ReportFormBuilderPage() {
   const qc = useQueryClient();
 
   const summaries = useQuery({ queryKey: ['report-schemas'], queryFn: fetchReportSchemas });
+  const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
+
   const draftSummary = summaries.data?.find((s) => s.status === 'draft');
   const activeSummary = summaries.data?.find((s) => s.status === 'active');
-  const workingVersion = draftSummary?.version ?? activeSummary?.version;
+  const workingVersion = selectedVersion ?? (draftSummary?.version ?? activeSummary?.version ?? summaries.data?.[0]?.version);
 
   const working = useQuery({
     queryKey: ['report-schema', workingVersion],
@@ -65,15 +69,24 @@ export function ReportFormBuilderPage() {
   const [adding, setAdding] = useState(false);
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [baseVersionChoice, setBaseVersionChoice] = useState<number | undefined>(undefined);
+
   const isDraft = working.data?.status === 'draft';
+  const isActive = working.data?.status === 'active';
+  const isRetired = working.data?.status === 'retired';
 
   useEffect(() => {
     if (working.data) setFields(working.data.fields.map(toInput));
   }, [working.data]);
 
   const startDraftMutation = useMutation({
-    mutationFn: createReportSchemaDraft,
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['report-schemas'] }),
+    mutationFn: (baseVer?: number) => createReportSchemaDraft(baseVer),
+    onSuccess: (newSchema) => {
+      setSelectedVersion(newSchema.version);
+      void qc.invalidateQueries({ queryKey: ['report-schemas'] });
+      void qc.invalidateQueries({ queryKey: ['report-schema'] });
+    },
+    onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not create new draft'),
   });
 
   const saveMutation = useMutation({
@@ -86,12 +99,31 @@ export function ReportFormBuilderPage() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: () => publishReportSchema(workingVersion!),
+    mutationFn: (versionToPublish?: number) => publishReportSchema(versionToPublish ?? workingVersion!),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['report-schemas'] });
       void qc.invalidateQueries({ queryKey: ['report-schema'] });
     },
     onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not publish'),
+  });
+
+  const unpublishMutation = useMutation({
+    mutationFn: () => unpublishReportSchema(workingVersion!),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['report-schemas'] });
+      void qc.invalidateQueries({ queryKey: ['report-schema'] });
+    },
+    onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not unpublish'),
+  });
+
+  const deleteDraftMutation = useMutation({
+    mutationFn: () => deleteReportSchemaDraft(workingVersion!),
+    onSuccess: () => {
+      setSelectedVersion(null);
+      void qc.invalidateQueries({ queryKey: ['report-schemas'] });
+      void qc.invalidateQueries({ queryKey: ['report-schema'] });
+    },
+    onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not delete draft'),
   });
 
   const persist = (next: ReportFieldInput[]) => {
@@ -139,20 +171,28 @@ export function ReportFormBuilderPage() {
     );
   }
 
+  const schema = working.data;
+  const versionList = summaries.data ?? [];
+  const latestSummaryVer = versionList.length > 0
+    ? Math.max(...versionList.map((s) => s.version))
+    : 1;
+
   return (
     <Container>
       <Section
-        eyebrow="Versioned, so a change never reshapes a past submission"
-        title="The monthly report form"
+        eyebrow="Versioned form schema with instant branching and draft controls"
+        title={`Report Form Schema (v${schema.version})`}
         description={
           isDraft
-            ? `Editing draft version ${working.data.version}. Publish to make it live.`
-            : `Version ${working.data.version} is live. Start a new draft to make changes.`
+            ? `Editing draft version ${schema.version}. Modify fields below or publish to make it active district-wide.`
+            : isActive
+            ? `Version ${schema.version} is currently LIVE district-wide. Unpublish to edit, or branch into a new draft.`
+            : `Version ${schema.version} is RETIRED. You can preview, branch into a new draft, or re-activate it.`
         }
       >
         {error && (
           <div className="mb-5">
-            <Alert tone="error" title="Something went wrong">
+            <Alert tone="error" title="Notice">
               {error}
             </Alert>
           </div>
@@ -160,10 +200,22 @@ export function ReportFormBuilderPage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_320px]">
           <div>
-            <div className="mb-3.5 flex items-center gap-3">
-              <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Fields</p>
-              <div aria-hidden className="h-px flex-1 bg-line" />
+            <div className="mb-3.5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">
+                  Fields ({fields.length})
+                </p>
+                <Badge tone={isDraft ? 'amber' : isActive ? 'green' : 'neutral'}>
+                  {schema.status.toUpperCase()}
+                </Badge>
+              </div>
+              {!isDraft && (
+                <span className="text-[11.5px] text-fg-3 italic">
+                  Read-only view of published/archived schema
+                </span>
+              )}
             </div>
+
             <div className="overflow-hidden rounded-[12px] border border-line-accent">
               {fields.map((field, index) => (
                 <div key={field.fieldKey} className="flex items-center gap-3.5 border-t border-line p-3.5 first:border-t-0 hover:bg-hover/50 transition-colors">
@@ -230,33 +282,136 @@ export function ReportFormBuilderPage() {
               )}
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
-              {isDraft ? (
-                <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>
-                  Publish as version {working.data.version}
-                </Button>
-              ) : (
-                <Button onClick={() => startDraftMutation.mutate()} loading={startDraftMutation.isPending}>
-                  Start a new draft
-                </Button>
+            {/* Action Bar */}
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {isDraft && (
+                <>
+                  <Button onClick={() => publishMutation.mutate()} loading={publishMutation.isPending}>
+                    Publish as version {schema.version}
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to delete draft version ${schema.version}?`)) {
+                        deleteDraftMutation.mutate();
+                      }
+                    }}
+                    loading={deleteDraftMutation.isPending}
+                  >
+                    Delete Draft v{schema.version}
+                  </Button>
+                </>
               )}
+
+              {isActive && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      if (window.confirm(`Unpublish version ${schema.version}? It will revert to draft status for editing.`)) {
+                        unpublishMutation.mutate();
+                      }
+                    }}
+                    loading={unpublishMutation.isPending}
+                  >
+                    Unpublish (Revert to Draft)
+                  </Button>
+                </>
+              )}
+
+              {isRetired && (
+                <>
+                  <Button
+                    onClick={() => publishMutation.mutate(schema.version)}
+                    loading={publishMutation.isPending}
+                  >
+                    Reactivate v{schema.version}
+                  </Button>
+                </>
+              )}
+
               <Button variant="secondary" onClick={() => setPreview(true)}>
                 Preview as a president
               </Button>
             </div>
           </div>
 
-          <div className="rounded-[16px] border border-line-accent p-5 bg-[var(--bg-subtle)]">
-            <p className="m-0 mb-3 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Versions</p>
-            <div className="flex flex-col gap-2.5">
-              {summaries.data.map((s) => (
-                <div key={s.version} className="flex items-center justify-between border-t border-line pt-2.5 first:border-t-0 first:pt-0">
-                  <span className="text-[12px] font-bold text-fg">v{s.version}</span>
-                  <Badge tone={s.status === 'active' ? 'green' : s.status === 'draft' ? 'amber' : 'neutral'}>
-                    {s.status.toUpperCase()}
-                  </Badge>
-                </div>
-              ))}
+          {/* Sidebar: Version History & Branching */}
+          <div className="flex flex-col gap-4">
+            <div className="rounded-[16px] border border-line-accent p-5 bg-[var(--bg-subtle)]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">
+                  Available Versions
+                </p>
+                <span className="text-[11px] text-fg-3">Click to open</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {versionList.map((s) => {
+                  const isSelected = workingVersion === s.version;
+                  return (
+                    <button
+                      key={s.version}
+                      type="button"
+                      onClick={() => setSelectedVersion(s.version)}
+                      className={`flex w-full items-center justify-between rounded-[10px] p-2.5 text-left transition-all border ${
+                        isSelected
+                          ? 'border-accent bg-accent/10 shadow-sm'
+                          : 'border-line bg-page hover:border-accent/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[12.5px] font-bold ${isSelected ? 'text-accent' : 'text-fg'}`}>
+                          v{s.version}
+                        </span>
+                        {isSelected && (
+                          <span className="text-[10px] font-extrabold text-accent uppercase">
+                            (Viewing)
+                          </span>
+                        )}
+                      </div>
+                      <Badge tone={s.status === 'active' ? 'green' : s.status === 'draft' ? 'amber' : 'neutral'}>
+                        {s.status.toUpperCase()}
+                      </Badge>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Create New Draft Box with explicit base template selection */}
+            <div className="rounded-[16px] border border-line-accent p-5 bg-page flex flex-col gap-3">
+              <p className="m-0 text-[11px] font-bold uppercase tracking-[0.1em] text-fg">
+                Draft New Version
+              </p>
+              <p className="m-0 text-[11.5px] text-fg-3 leading-relaxed">
+                Start a new version with fields cloned from any previous template version.
+              </p>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-semibold text-fg-2">
+                  Base Template:
+                </label>
+                <select
+                  value={baseVersionChoice ?? schema.version}
+                  onChange={(e) => setBaseVersionChoice(Number(e.target.value))}
+                  className="rounded-[8px] border border-line bg-surface p-2 text-[12px] font-semibold text-fg outline-none focus:border-accent"
+                >
+                  {versionList.map((s) => (
+                    <option key={s.version} value={s.version}>
+                      v{s.version} ({s.status}) {s.version === latestSummaryVer ? '• Latest' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                size="sm"
+                onClick={() => startDraftMutation.mutate(baseVersionChoice ?? schema.version)}
+                loading={startDraftMutation.isPending}
+                className="w-full mt-1"
+              >
+                + Draft v{latestSummaryVer + 1} from v{baseVersionChoice ?? schema.version}
+              </Button>
             </div>
           </div>
         </div>
