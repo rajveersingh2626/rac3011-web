@@ -82,9 +82,19 @@ export function AdminAuditPage() {
       header: 'Actor',
       cell: (row) =>
         row.actorId ? (
-          <button type="button" onClick={() => filterByActor(row.actorId as string)} className="font-mono text-[11.5px] text-accent underline-offset-2 hover:underline">
-            {row.actorId}
-          </button>
+          <div>
+            <div className="font-semibold text-fg-1 text-[13px]">
+              {row.actorName || <span className="text-fg-3 font-normal italic">Unknown user</span>}
+            </div>
+            <button
+              type="button"
+              onClick={() => filterByActor(row.actorId as string)}
+              title="Filter by this Actor ID"
+              className="font-mono text-[11px] text-accent underline-offset-2 hover:underline inline-block"
+            >
+              {row.actorEmail ? `${row.actorEmail} (${row.actorId})` : row.actorId}
+            </button>
+          </div>
         ) : (
           <span className="font-mono text-[11.5px] text-fg-3">system</span>
         ),
@@ -177,6 +187,29 @@ export function AdminAuditPage() {
       <Modal open={Boolean(inspecting)} onClose={() => setInspecting(null)} title="Audit entry" size="lg">
         {inspecting ? (
           <div className="flex flex-col gap-4">
+            <div className="rounded-[8px] bg-track p-3 text-xs flex flex-wrap gap-x-6 gap-y-2">
+              <div>
+                <span className="text-fg-3 font-semibold">Actor: </span>
+                <span className="font-bold text-fg-1">{inspecting.actorName || inspecting.actorId || 'system'}</span>
+              </div>
+              {inspecting.actorEmail ? (
+                <div>
+                  <span className="text-fg-3 font-semibold">Email: </span>
+                  <span className="text-fg-2">{inspecting.actorEmail}</span>
+                </div>
+              ) : null}
+              {inspecting.actorId ? (
+                <div>
+                  <span className="text-fg-3 font-semibold">Actor ID: </span>
+                  <span className="font-mono text-fg-2">{inspecting.actorId}</span>
+                </div>
+              ) : null}
+              <div>
+                <span className="text-fg-3 font-semibold">Action: </span>
+                <span className="font-mono font-bold text-accent">{inspecting.action}</span>
+              </div>
+            </div>
+
             <div>
               <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.9px] text-fg-3">Before</p>
               <pre className="mt-1.5 max-h-64 overflow-auto whitespace-pre-wrap rounded-[8px] bg-track p-3 font-mono text-[11.5px] text-fg">

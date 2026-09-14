@@ -141,10 +141,10 @@ export default function EventGalleryView() {
           <span className="pill-gold" style={{ marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} /> DISTRICT EVENT GALLERY · RY 2026-27
           </span>
-          <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-1px' }}>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, color: '#123499', letterSpacing: '-1px' }}>
             Moments &amp; District Gallery
           </h2>
-          <p style={{ color: 'rgba(255, 255, 255, 0.92)', fontSize: '1rem', marginTop: '8px', maxWidth: '780px', lineHeight: 1.5, fontWeight: 500 }}>
+          <p style={{ color: '#475569', fontSize: '1rem', marginTop: '8px', maxWidth: '780px', lineHeight: 1.5, fontWeight: 500 }}>
             Capturing the spirit of youth leadership, high-impact community projects, district assemblies, installations, and fellowships across Rotaract District 3011.
           </p>
         </div>

@@ -286,7 +286,7 @@ export default function DistrictApp() {
       <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: isMobile ? '76px' : '0px' }}>
         {activePage === 'home' && (
           <PublicHome
-            onNavigateDistrict={() => handlePageChange('district', 'map-clubs')}
+            onNavigateDistrict={(tab?: string) => handlePageChange('district', tab || 'map-clubs')}
             onNavigatePage={handlePageChange}
             onOpenLoginModal={handleOpenLogin}
           />

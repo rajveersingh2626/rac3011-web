@@ -203,13 +203,13 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: -1,
+        zIndex: 0,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transformOrigin: 'center center',
-        opacity: 0.12,
+        opacity: 0.70,
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}
@@ -223,7 +223,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          filter: 'drop-shadow(0 0 30px rgba(216, 27, 96, 0.10))'
+          filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))'
         }}
       />
     </div>
@@ -576,7 +576,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
 };
 
 export interface PublicHomeProps {
-  onNavigateDistrict?: () => void;
+  onNavigateDistrict?: (tab?: string) => void;
   onNavigatePage?: (page: string, tab?: string) => void;
   onOpenLoginModal?: () => void;
 }

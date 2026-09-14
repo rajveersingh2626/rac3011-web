@@ -212,7 +212,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
     } else if (onNavigatePage) {
       onNavigatePage('district', tab);
     } else {
-      window.location.href = `/district#${tab}`;
+      window.location.href = tab === 'map-clubs' ? '/map' : `/${tab}`;
     }
   };
 

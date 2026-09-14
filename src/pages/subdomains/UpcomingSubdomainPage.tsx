@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { Sparkles, ArrowLeft, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { mainSiteHref, portalHref } from '@/app/host';
 
 export interface UpcomingSubdomainPageProps {
   title: string;
@@ -89,13 +90,13 @@ export const UpcomingSubdomainPage: FC<UpcomingSubdomainPageProps> = ({
         {/* Navigation Action Buttons */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <a
-            href="/"
+            href={mainSiteHref()}
             className="inline-flex items-center gap-2 rounded-[12px] bg-accent px-5 py-3 text-[13.5px] font-bold text-white shadow-sm transition hover:opacity-95"
           >
             <ArrowLeft size={16} /> Return to Main District Website
           </a>
           <a
-            href="/portal"
+            href={portalHref('/portal/login')}
             className="inline-flex items-center gap-2 rounded-[12px] border border-line-accent bg-surface px-5 py-3 text-[13.5px] font-bold text-fg shadow-sm transition hover:bg-page"
           >
             <ShieldCheck size={16} /> Access Member Portal

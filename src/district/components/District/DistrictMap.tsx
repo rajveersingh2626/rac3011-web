@@ -182,6 +182,48 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
   const zoneNameById = useZoneNames();
   const activeClubs: MapClub[] = clubs && clubs.length > 0 ? clubs : rosterClubs;
 
+  const getClubZoneString = (c: MapClub | null | undefined): string => {
+    if (!c) return '';
+    let z: unknown = c.zone ?? c.zoneId ?? c.zoneName ?? '';
+    if (typeof z === 'object' && z !== null) {
+      const zObj = z as { name?: string; id?: string; title?: string };
+      z = zObj.name ?? zObj.id ?? zObj.title ?? '';
+    }
+    const raw = String(z).trim();
+    if (zoneNameById[raw]) {
+      return zoneNameById[raw].toLowerCase();
+    }
+    return raw.toLowerCase();
+  };
+
+  const clubMatchesZone = (c: MapClub | null | undefined, zoneId: string | null): boolean => {
+    if (!zoneId) return true;
+    const z = getClubZoneString(c);
+    const zid = c?.zoneId || '';
+    if (zoneId === 'zone-prithvi') {
+      return z.includes('prithvi') || z.includes('south') || z === '1' || z === 'zone 1' || z === '5' || z === 'zone 5' || zid === 'cmtn8hw19001ill1sl3gxhvjc' || zid === 'cmtn8hw0y001dll1sbp1tvm6i';
+    }
+    if (zoneId === 'zone-agni') {
+      return z.includes('agni') || z.includes('central') || z.includes('faridabad') || z === '2' || z === 'zone 2' || z === '6' || z === 'zone 6' || zid === 'cmtn8hw17001hll1sgpqjgrai' || zid === 'cmtn8hw12001ell1sdyds6zsz';
+    }
+    if (zoneId === 'zone-vayu') {
+      return z.includes('vayu') || z.includes('north') || z.includes('gurugram') || z === '3' || z === 'zone 3' || z === '7' || z === 'zone 7' || zid === 'cmtn8hw1b001jll1sidh151lv' || zid === 'cmtn8hw14001fll1s69dnbafe';
+    }
+    if (zoneId === 'zone-akash') {
+      return z.includes('akash') || z.includes('west') || z === '4' || z === 'zone 4' || z === '8' || z === 'zone 8' || zid === 'cmtn8hw1d001kll1soabcfcmd' || zid === 'cmtn8hw16001gll1sqctt3qv7';
+    }
+    return true;
+  };
+
+  const getClubNeonColor = (club: MapClub): string => {
+    const z = getClubZoneString(club);
+    if (z.includes('prithvi') || z === 'zone 1' || z === '1' || z.includes('south')) return '#10b981'; // Emerald Green (Prithvi)
+    if (z.includes('agni') || z === 'zone 2' || z === '2' || z.includes('central') || z.includes('faridabad')) return '#E11D48'; // Fire Crimson (Agni)
+    if (z.includes('vayu') || z === 'zone 3' || z === '3' || z.includes('north') || z.includes('gurugram')) return '#0284c7'; // Sky / Cyan Blue (Vayu)
+    if (z.includes('akash') || z === 'zone 4' || z === '4' || z.includes('west')) return '#4F46E5'; // Cosmic Indigo (Akash)
+    return '#D81B60';
+  };
+
   const [hoveredClub, setHoveredClub] = useState<MapClub | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; transform: string }>({ x: 0, y: 0, transform: 'translate(-50%, -100%)' });
   const [activeSlideoutClub, setActiveSlideoutClub] = useState<MapClub | null>(null);
@@ -323,48 +365,6 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubs, searchQuery, activeZoneId]);
-
-  const getClubZoneString = (c: MapClub | null | undefined): string => {
-    if (!c) return '';
-    let z: unknown = c.zone ?? c.zoneId ?? c.zoneName ?? '';
-    if (typeof z === 'object' && z !== null) {
-      const zObj = z as { name?: string; id?: string; title?: string };
-      z = zObj.name ?? zObj.id ?? zObj.title ?? '';
-    }
-    const raw = String(z).trim();
-    if (zoneNameById[raw]) {
-      return zoneNameById[raw].toLowerCase();
-    }
-    return raw.toLowerCase();
-  };
-
-  const clubMatchesZone = (c: MapClub | null | undefined, zoneId: string | null): boolean => {
-    if (!zoneId) return true;
-    const z = getClubZoneString(c);
-    const zid = c?.zoneId || '';
-    if (zoneId === 'zone-prithvi') {
-      return z.includes('prithvi') || z.includes('south') || z === '1' || z === 'zone 1' || z === '5' || z === 'zone 5' || zid === 'cmtn8hw19001ill1sl3gxhvjc' || zid === 'cmtn8hw0y001dll1sbp1tvm6i';
-    }
-    if (zoneId === 'zone-agni') {
-      return z.includes('agni') || z.includes('central') || z.includes('faridabad') || z === '2' || z === 'zone 2' || z === '6' || z === 'zone 6' || zid === 'cmtn8hw17001hll1sgpqjgrai' || zid === 'cmtn8hw12001ell1sdyds6zsz';
-    }
-    if (zoneId === 'zone-vayu') {
-      return z.includes('vayu') || z.includes('north') || z.includes('gurugram') || z === '3' || z === 'zone 3' || z === '7' || z === 'zone 7' || zid === 'cmtn8hw1b001jll1sidh151lv' || zid === 'cmtn8hw14001fll1s69dnbafe';
-    }
-    if (zoneId === 'zone-akash') {
-      return z.includes('akash') || z.includes('west') || z === '4' || z === 'zone 4' || z === '8' || z === 'zone 8' || zid === 'cmtn8hw1d001kll1soabcfcmd' || zid === 'cmtn8hw16001gll1sqctt3qv7';
-    }
-    return true;
-  };
-
-  const getClubNeonColor = (club: MapClub): string => {
-    const z = getClubZoneString(club);
-    if (z.includes('prithvi') || z === 'zone 1' || z === '1' || z.includes('south')) return '#10b981'; // Emerald Green (Prithvi)
-    if (z.includes('agni') || z === 'zone 2' || z === '2' || z.includes('central') || z.includes('faridabad')) return '#E11D48'; // Fire Crimson (Agni)
-    if (z.includes('vayu') || z === 'zone 3' || z === '3' || z.includes('north') || z.includes('gurugram')) return '#0284c7'; // Sky / Cyan Blue (Vayu)
-    if (z.includes('akash') || z === 'zone 4' || z === '4' || z.includes('west')) return '#4F46E5'; // Cosmic Indigo (Akash)
-    return '#D81B60';
-  };
 
   const renderLeafletMarkers = (Leaflet: LeafletApi | null, map: LeafletMap | null, clubsList: MapClub[]) => {
     if (!Leaflet || !map || !Array.isArray(clubsList)) return;
