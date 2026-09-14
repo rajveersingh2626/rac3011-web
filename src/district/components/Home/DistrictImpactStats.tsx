@@ -18,7 +18,7 @@ export const DistrictImpactStats: FC<DistrictImpactStatsProps> = ({ metrics }) =
   // Use either dynamic metrics or rich verified defaults
   const cards = [
     {
-      value: metrics[0]?.value || '54',
+      value: metrics[0]?.value || '49',
       suffix: metrics[0]?.suffix || 'Clubs',
       badgeText: 'Active',
       badgeType: 'arrow-up',
@@ -61,7 +61,7 @@ export const DistrictImpactStats: FC<DistrictImpactStatsProps> = ({ metrics }) =
         <div style={{ width: '54px', height: '4px', backgroundColor: '#123499', borderRadius: '2px', margin: isMobile ? '10px 0 12px' : '14px 0 16px' }} />
         
         <p style={{ color: '#475569', fontSize: isMobile ? '0.92rem' : '1.05rem', lineHeight: 1.6, margin: 0 }}>
-          Real, verified grassroots metrics driven by 54 recognized Rotaract clubs and thousands of dedicated youth leaders throughout Rotary Year 2026–27.
+          Real, verified grassroots metrics driven by 49 recognized Rotaract clubs and thousands of dedicated youth leaders throughout Rotary Year 2026–27.
         </p>
       </div>
 
