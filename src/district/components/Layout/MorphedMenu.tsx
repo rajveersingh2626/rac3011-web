@@ -345,7 +345,7 @@ export default function MorphedMenu({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '4px 0 16px 0' }}>
-              {mainLinks.map((link, idx) => {
+              {navLinks.map((link: MorphedMenuLink, idx: number) => {
                 const isHovered = hoveredNav === idx;
                 return (
                   <div key={link.id} style={{ perspective: '800px', perspectiveOrigin: 'bottom' }}>
@@ -472,7 +472,7 @@ export default function MorphedMenu({
                           paddingLeft: '12px'
                         }}
                       >
-                        {link.subTabs?.map((sub, sIdx) => {
+                        {link.subTabs?.map((sub: any, sIdx: number) => {
                           const isSubHovered = hoveredSubNav === sIdx;
                           return (
                             <div

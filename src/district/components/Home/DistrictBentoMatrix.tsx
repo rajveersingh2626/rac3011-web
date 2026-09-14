@@ -85,7 +85,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   const rclHref = useSurfaceHref('rcl');
   const careerBridgeHref = useSurfaceHref('careerbridge');
 
-  const surfaceHrefs = {
+  const surfaceHrefs: Partial<Record<Exclude<Surface, 'main'>, string | undefined>> = {
     mission3011: missionHref,
     drishti: drishtiHref,
     rcl: rclHref,

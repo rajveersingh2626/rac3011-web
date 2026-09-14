@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import L from 'leaflet';
 import type { Map as LeafletMap, Marker as LeafletMarker, LeafletMouseEvent } from 'leaflet';
@@ -529,7 +529,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
-                {filteredClubs.map((club) => {
+                {filteredClubs.map((club: MapClub) => {
                   const neonColor = getClubNeonColor(club);
                   const hasSecretary = Boolean(club.secretary && club.secretary.trim() && club.secretary.toLowerCase() !== 'n/a' && club.secretary !== 'Rtr. Club Secretary');
                   return (

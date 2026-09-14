@@ -637,11 +637,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "isDirector": "",
     "phone": "",
     "email": "",
-    "rotaryId": "None",
+    "rotaryId": "",
     "secretary": "Rtr. Happy Kumar",
     "secretaryEmail": "",
     "secretaryPhone": "",
-    "charterYear": None,
+    "charterYear": null,
     "initiatives": []
   },
   {
@@ -742,11 +742,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "isDirector": "",
     "phone": "",
     "email": "rotaractclub.galgotiasuniversity@gmail.com",
-    "rotaryId": "None",
+    "rotaryId": "",
     "secretary": "Rtr. Jahanvi Panwar",
     "secretaryEmail": "",
     "secretaryPhone": "",
-    "charterYear": None,
+    "charterYear": null,
     "initiatives": []
   },
   {
@@ -763,11 +763,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "isDirector": "",
     "phone": "",
     "email": "",
-    "rotaryId": "None",
+    "rotaryId": "",
     "secretary": "Rtr. Sai Dhinesh S",
     "secretaryEmail": "",
     "secretaryPhone": "",
-    "charterYear": None,
+    "charterYear": null,
     "initiatives": []
   },
   {
@@ -1241,11 +1241,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "lat": 28.2831,
     "lng": 77.0782,
     "location": "Sohna Road, Gurugram",
-    "address": "GD Goenka University
-
-GD Goenka Education City
-Sohna Road
-Gurgaon, 122103, India",
+    "address": "GD Goenka University, GD Goenka Education City, Sohna Road, Gurgaon, 122103, India",
     "president": "Rtr. Manav Bhardwaj",
     "isDirector": "",
     "phone": "",

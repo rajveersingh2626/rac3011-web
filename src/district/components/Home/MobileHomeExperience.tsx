@@ -156,8 +156,8 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const zonesData = useMemo(() => {
     const clubs = clubsQuery.data?.items || [];
     return DEFAULT_ZONES_CONFIG.map((z) => {
-      const liveMatching = clubs.filter((c) => {
-        const zoneStr = (c.zoneName || c.zoneId || '').toLowerCase();
+      const liveMatching = clubs.filter((c: any) => {
+        const zoneStr = ((c.zoneName as string) || (c.zoneId as string) || (c.zone as string) || '').toLowerCase();
         return zoneStr.includes(z.id) || zoneStr.includes(z.name.toLowerCase().replace('zone ', ''));
       });
       return {

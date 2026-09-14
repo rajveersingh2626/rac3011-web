@@ -4,7 +4,6 @@ import {
   Image as ImageIcon,
   Search,
   Calendar,
-  Tag,
   ExternalLink,
   X,
   ChevronLeft,
@@ -82,7 +81,7 @@ export default function EventGalleryView() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ['public', 'gallery'],
     queryFn: fetchGalleryItems,
     staleTime: 5 * 60 * 1000,
