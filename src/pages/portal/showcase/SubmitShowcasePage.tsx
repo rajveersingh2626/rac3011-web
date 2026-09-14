@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
@@ -32,6 +32,7 @@ function urlOf(value: FileUploadValue | null): string | null {
 export function SubmitShowcasePage() {
   useDocumentMeta({ title: 'Put a project on the showcase' });
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { me } = useAuth();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
 
@@ -73,9 +74,19 @@ export function SubmitShowcasePage() {
     return Object.keys(next).length === 0;
   }
 
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+  };
+
   const saveDraftMutation = useMutation({
     mutationFn: () => createProject(buildPayload()),
-    onSuccess: () => navigate('/portal/showcase/mine'),
+    onSuccess: () => {
+      invalidateAll();
+      navigate('/portal/showcase/mine');
+    },
     onError: (e: unknown) => setFormError(e instanceof ApiError ? e.message : 'Could not save the draft. Try again.'),
   });
 
@@ -84,7 +95,10 @@ export function SubmitShowcasePage() {
       const created = await createProject(buildPayload());
       return updateProject(created.id, { status: 'submitted' });
     },
-    onSuccess: () => navigate('/portal/showcase/mine'),
+    onSuccess: () => {
+      invalidateAll();
+      navigate('/portal/showcase/mine');
+    },
     onError: (e: unknown) => setFormError(e instanceof ApiError ? e.message : 'Could not send this for review. Try again.'),
   });
 

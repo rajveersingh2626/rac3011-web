@@ -14,7 +14,8 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects', 'home-preview'],
     queryFn: () => fetchProjects({ pageSize: PREVIEW_COUNT }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const projects = useMemo(() => {

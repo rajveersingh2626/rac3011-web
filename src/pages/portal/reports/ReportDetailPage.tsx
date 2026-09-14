@@ -58,6 +58,7 @@ function PushToShowcaseModal({
   };
 }) {
   const { toast } = useToast();
+  const qc = useQueryClient();
   const [title, setTitle] = useState(initialData.title);
   const [category, setCategory] = useState(initialData.category || 'community_service');
   const [date, setDate] = useState(initialData.date || new Date().toISOString().slice(0, 10));
@@ -78,6 +79,10 @@ function PushToShowcaseModal({
         consentConfirmed: true,
       }),
     onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+      void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+      void qc.invalidateQueries({ queryKey: ['public', 'home'] });
       toast({
         title: 'Project Submitted to Showcase!',
         tone: 'success',

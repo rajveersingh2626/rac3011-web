@@ -59,13 +59,17 @@ export function AdminShowcasePage() {
   const queryKey = ['projects', 'queue', status];
   const listQuery = useQuery({ queryKey, queryFn: () => fetchMyProjects({ status, pageSize: 50 }) });
 
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+    void qc.invalidateQueries({ queryKey });
+  };
+
   const deleteMutation = useMutation({
     mutationFn: deleteProject,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['projects'] });
-      void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
-      void qc.invalidateQueries({ queryKey });
-    },
+    onSuccess: invalidateAll,
   });
 
   const updateMutation = useMutation({
@@ -81,9 +85,7 @@ export function AdminShowcasePage() {
     },
     onSuccess: () => {
       setEditingProject(null);
-      void qc.invalidateQueries({ queryKey: ['projects'] });
-      void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
-      void qc.invalidateQueries({ queryKey });
+      invalidateAll();
     },
   });
 

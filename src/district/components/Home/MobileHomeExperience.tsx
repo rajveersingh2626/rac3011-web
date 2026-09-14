@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { useSurfaceHref } from '@/app/host';
 import { fetchClubs } from '@/lib/publicApi/clubs';
-import { fetchZones } from '@/lib/publicApi/zones';
 import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
 import { fetchPastDrrs } from '@/lib/publicApi/heritage';
 import { fetchAchievements } from '@/lib/publicApi/achievements';
@@ -123,12 +122,6 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
     staleTime: 60 * 1000,
   });
 
-  const zonesQuery = useQuery({
-    queryKey: ['public', 'zones'],
-    queryFn: fetchZones,
-    staleTime: 60 * 1000,
-  });
-
   const teamQuery = useQuery({
     queryKey: ['public', 'district-team'],
     queryFn: fetchDistrictTeam,
@@ -156,8 +149,17 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const zonesData = useMemo(() => {
     const clubs = clubsQuery.data?.items || [];
     return DEFAULT_ZONES_CONFIG.map((z) => {
-      const liveMatching = clubs.filter((c: any) => {
-        const zoneStr = ((c.zoneName as string) || (c.zoneId as string) || (c.zone as string) || '').toLowerCase();
+      const liveMatching = clubs.filter((c: (typeof clubs)[number]) => {
+        const clubObj = c as Record<string, unknown>;
+        const zoneRefObj = typeof clubObj.zoneRef === 'object' && clubObj.zoneRef !== null ? (clubObj.zoneRef as Record<string, unknown>) : null;
+        const zoneRefName = typeof zoneRefObj?.name === 'string' ? zoneRefObj.name : '';
+        const zoneStr = (
+          (typeof clubObj.zoneName === 'string' ? clubObj.zoneName : '') ||
+          (typeof clubObj.zoneId === 'string' ? clubObj.zoneId : '') ||
+          (typeof clubObj.zone === 'string' ? clubObj.zone : '') ||
+          zoneRefName ||
+          (c.zoneId || '')
+        ).toLowerCase();
         return zoneStr.includes(z.id) || zoneStr.includes(z.name.toLowerCase().replace('zone ', ''));
       });
       return {
@@ -168,7 +170,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
         clubs: liveMatching.length > 0 ? liveMatching.length : z.defaultCount,
       };
     });
-  }, [clubsQuery.data, zonesQuery.data]);
+  }, [clubsQuery.data]);
 
   const missionHref = useSurfaceHref('mission3011');
   const drishtiHref = useSurfaceHref('drishti');

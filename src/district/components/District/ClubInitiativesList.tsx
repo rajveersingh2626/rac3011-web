@@ -66,7 +66,8 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects'],
     queryFn: () => fetchProjects({ pageSize: 100 }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   // `body` and `beneficiaries` live only on the detail endpoint, so the modal enriches itself on open.
@@ -75,7 +76,8 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
     queryKey: ['public', 'project', activeSlug],
     queryFn: () => fetchProject(activeSlug ?? ''),
     enabled: Boolean(activeSlug),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const zoneByClubName = useMemo(() => {

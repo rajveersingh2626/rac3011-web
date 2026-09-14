@@ -42,10 +42,16 @@ export function MyShowcasePage() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+  };
 
   const deleteMutation = useMutation({
     mutationFn: deleteProject,
-    onSuccess: () => void qc.invalidateQueries({ queryKey: ['projects', 'mine'] }),
+    onSuccess: invalidateAll,
     onError: () => setDeleteError('Could not delete this draft. Try again.'),
   });
 
@@ -133,7 +139,7 @@ export function MyShowcasePage() {
             project={editing}
             onDone={() => {
               setEditingId(null);
-              void qc.invalidateQueries({ queryKey: ['projects', 'mine'] });
+              invalidateAll();
             }}
           />
         ) : null}

@@ -472,7 +472,7 @@ export default function MorphedMenu({
                           paddingLeft: '12px'
                         }}
                       >
-                        {link.subTabs?.map((sub: any, sIdx: number) => {
+                        {link.subTabs?.map((sub: MorphedMenuSubTab, sIdx: number) => {
                           const isSubHovered = hoveredSubNav === sIdx;
                           return (
                             <div

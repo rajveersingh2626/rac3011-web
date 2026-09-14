@@ -31,7 +31,13 @@ export function ShowcaseQueueCard({ project, queryKey }: ShowcaseQueueCardProps)
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const invalidate = () => void qc.invalidateQueries({ queryKey });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+    void qc.invalidateQueries({ queryKey });
+  };
 
   const publishMutation = useMutation({
     mutationFn: () =>
