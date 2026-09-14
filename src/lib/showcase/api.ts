@@ -45,7 +45,9 @@ export interface CreateProjectInput {
   photos?: string[];
   collaboratingClubIds?: string[];
   consentConfirmed?: boolean;
+  clubId?: string;
 }
+
 
 export async function createProject(input: CreateProjectInput): Promise<Project> {
   return apiFetch('/projects', { method: 'POST', body: input, schema: projectSchema });

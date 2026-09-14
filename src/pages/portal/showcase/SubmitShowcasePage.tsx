@@ -33,13 +33,18 @@ export function SubmitShowcasePage() {
   useDocumentMeta({ title: 'Put a project on the showcase' });
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { me } = useAuth();
-  const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  const { me, can } = useAuth();
+  const isSuperAdmin = Boolean(me?.roles?.some((r) => r.roleKey === 'super_admin'));
+  const canPublishOrDistrict = Boolean(can('showcase:publish') || isSuperAdmin || me?.profile?.clubId === 'DISTRICT');
+  const myClubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  const [selectedClubId, setSelectedClubId] = useState<string>(myClubId);
+
+
+  const activeHostClubId = canPublishOrDistrict && selectedClubId ? selectedClubId : myClubId;
 
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
-  const clubOptions = (clubsQuery.data ?? [])
-    .filter((c) => c.id !== clubId)
-    .map((c) => ({ value: c.id, label: c.name }));
+  const allClubsList = (clubsQuery.data ?? []).map((c) => ({ value: c.id, label: c.name }));
+  const clubOptions = allClubsList.filter((c) => c.value !== activeHostClubId);
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -61,6 +66,7 @@ export function SubmitShowcasePage() {
     photos: photos.map(urlOf).filter((u): u is string => Boolean(u)),
     collaboratingClubIds,
     consentConfirmed,
+    clubId: canPublishOrDistrict && activeHostClubId ? activeHostClubId : undefined,
   });
 
   function validate(requireConsent: boolean): boolean {
@@ -136,6 +142,20 @@ export function SubmitShowcasePage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
           <div className="flex max-w-[600px] flex-col gap-5">
+            {canPublishOrDistrict && (
+              <Field label="Host Club" required hint="District Team / Admin: Choose which club ran this project">
+                <Select
+                  value={activeHostClubId || ''}
+                  onChange={(e) => {
+                    setSelectedClubId(e.target.value);
+                    setCollaboratingClubIds((prev) => prev.filter((id) => id !== e.target.value));
+                  }}
+                  placeholder="Select Host Club"
+                  options={allClubsList}
+                />
+              </Field>
+            )}
+
             <Field label="What did the club do?" required error={errors.title}>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Blood donation camp" maxLength={200} />
             </Field>
@@ -164,7 +184,7 @@ export function SubmitShowcasePage() {
                     key={i}
                     tier="dynamic"
                     resourceType="project_photo"
-                    resourceId={clubId || undefined}
+                    resourceId={activeHostClubId || undefined}
                     value={value}
                     onChange={(v) => setPhoto(i, v)}
                     label={i === 0 ? 'Lead photo' : `Photo ${i + 1}`}
@@ -172,6 +192,7 @@ export function SubmitShowcasePage() {
                 ))}
               </div>
             </Field>
+
 
             <Field label="Tell us what happened" required hint="Four or five lines. What you did, who it was for, and anything that surprised you." error={errors.summary}>
               <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={5} maxLength={3000} />
