@@ -131,7 +131,9 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
         maxWidth: '1380px',
         margin: '0 auto',
         padding: isMobile ? '8px 12px 28px' : '20px 24px 44px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 10
       }}
     >
       {/* 4x4 Bento Matrix Grid Container */}

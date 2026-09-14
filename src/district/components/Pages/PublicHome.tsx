@@ -209,7 +209,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         alignItems: 'center',
         justifyContent: 'center',
         transformOrigin: 'center center',
-        opacity: 0.80,
+        opacity: 0.15,
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}
@@ -223,8 +223,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))',
-          pointerEvents: 'none'
+          filter: 'drop-shadow(0 0 30px rgba(216, 27, 96, 0.10))'
         }}
       />
     </div>
@@ -897,10 +896,12 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
       </section>
 
       {/* 4x4 Modular District Matrix Layout */}
-      <DistrictBentoMatrix
-        onNavigateDistrict={onNavigateDistrict}
-        onNavigatePage={onNavigatePage}
-      />
+      <section style={{ position: 'relative', zIndex: 10, width: '100%' }}>
+        <DistrictBentoMatrix
+          onNavigateDistrict={onNavigateDistrict}
+          onNavigatePage={onNavigatePage}
+        />
+      </section>
 
       <SectionDivider />
 
