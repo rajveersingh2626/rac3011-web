@@ -111,18 +111,24 @@ export default function EventGalleryView() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ['public', 'gallery'],
     queryFn: fetchGalleryItems,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   const allItems: PublicGalleryItem[] = useMemo(() => {
-    if (data?.items && data.items.length > 0) {
+    if (data && Array.isArray(data.items)) {
       return data.items;
     }
-    return FALLBACK_GALLERY_ITEMS;
-  }, [data]);
+    if (isError) {
+      return FALLBACK_GALLERY_ITEMS;
+    }
+    return data?.items ?? [];
+  }, [data, isError]);
+
 
   const categories = useMemo(() => {
     const cats = new Set<string>(['All']);
