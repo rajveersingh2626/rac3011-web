@@ -124,10 +124,19 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
   const detailBeneficiaries = projectDetailQuery.data?.beneficiaries;
   const detailBody = projectDetailQuery.data?.body;
 
-  // Chips are built from the categories the API actually returns, so no chip implies
-  // a category of work the district has not published.
+  const STANDARD_CATEGORIES: [string, string][] = [
+    ['community', 'Community Service'],
+    ['vocational', 'Vocational Service'],
+    ['international', 'International Service'],
+    ['club_service', 'Club Service'],
+    ['sports', 'Sports & Youth'],
+    ['environment', 'Environment'],
+    ['health', 'Healthcare'],
+  ];
+
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
+    for (const [k, v] of STANDARD_CATEGORIES) seen.set(k, v);
     for (const p of allProjects) seen.set(p.category, p.categoryLabel);
     return [['All', 'All'] as [string, string], ...[...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))];
   }, [allProjects]);
@@ -146,12 +155,36 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         proj.categoryLabel.toLowerCase().includes(q) ||
         proj.tags.some((t) => t.toLowerCase().includes(q));
 
-      const matchesCategory = selectedCategory === 'All' || proj.category === selectedCategory;
-      const matchesZone = selectedZone === 'All' || (proj.zone ? normZone(proj.zone) === normZone(selectedZone) : false);
+      const matchesCategory = selectedCategory === 'All' ||
+        proj.category === selectedCategory ||
+        proj.category.toLowerCase() === selectedCategory.toLowerCase() ||
+        proj.categoryLabel.toLowerCase() === selectedCategory.toLowerCase();
+
+      const matchesZone = selectedZone === 'All' || (() => {
+        if (!proj.zone) return false;
+        const pz = proj.zone.toLowerCase();
+        const sz = normZone(selectedZone);
+        if (pz.includes(sz)) return true;
+        if (sz === 'prithvi' && (pz.includes('1') || pz.includes('5') || pz.includes('south'))) return true;
+        if (sz === 'agni' && (pz.includes('2') || pz.includes('6') || pz.includes('central') || pz.includes('faridabad'))) return true;
+        if (sz === 'vayu' && (pz.includes('3') || pz.includes('7') || pz.includes('north') || pz.includes('gurugram'))) return true;
+        if (sz === 'akash' && (pz.includes('4') || pz.includes('8') || pz.includes('west'))) return true;
+        return normZone(proj.zone) === sz;
+      })();
 
       let matchesMonth = true;
       if (selectedMonth !== 'All Months' && proj.rawDate) {
-        const projMonth = new Date(proj.rawDate).toLocaleDateString('en-US', { month: 'long' });
+        const clean = proj.rawDate.split('T')[0];
+        const parts = clean.split('-');
+        let projMonth = '';
+        if (parts.length === 3) {
+          const mIdx = parseInt(parts[1], 10) - 1;
+          const allM = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          if (mIdx >= 0 && mIdx < 12) projMonth = allM[mIdx];
+        }
+        if (!projMonth) {
+          projMonth = new Date(proj.rawDate).toLocaleDateString('en-US', { month: 'long' });
+        }
         matchesMonth = projMonth.toLowerCase() === selectedMonth.toLowerCase();
       }
 

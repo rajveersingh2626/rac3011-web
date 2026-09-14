@@ -43,6 +43,21 @@ interface RegionalZone {
 // districtData copy), and exporting non-component values here trips
 // react-refresh/only-export-components. Zone polygons and colours are presentation constants,
 // so they stay in code; only the zone names/ids come from the API.
+const isRealSecretary = (sec: string | null | undefined): boolean => {
+  if (!sec) return false;
+  const s = sec.trim().toLowerCase();
+  return Boolean(
+    s &&
+    s !== 'n/a' &&
+    s !== 'rtr. club secretary' &&
+    s !== 'club secretary' &&
+    s !== 'null' &&
+    s !== 'undefined' &&
+    s !== '-' &&
+    s !== 'none'
+  );
+};
+
 const REGIONAL_ZONES: RegionalZone[] = [
   {
     id: 'zone-prithvi',
@@ -473,6 +488,72 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         transition: 'all 0.3s ease'
       }}
     >
+      {/* Top Floating View Mode Switcher */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '24px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          pointerEvents: 'auto',
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            background: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '10px',
+            padding: '4px',
+            border: '1.5px solid rgba(216, 27, 96, 0.25)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          }}
+        >
+          <button
+            onClick={() => setViewMode('map')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: viewMode === 'map' ? 'var(--rotaract-pink)' : 'transparent',
+              color: viewMode === 'map' ? '#FFFFFF' : '#1E1E24',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <MapIcon size={15} /> Map View
+          </button>
+          <button
+            onClick={() => setViewMode('cards')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: viewMode === 'cards' ? 'var(--rotaract-pink)' : 'transparent',
+              color: viewMode === 'cards' ? '#FFFFFF' : '#1E1E24',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <LayoutGrid size={15} /> Tile / Cards View
+          </button>
+        </div>
+      </div>
+
       {/* Map View Canvas */}
       <div 
         ref={mapContainerRef} 
@@ -531,7 +612,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
                 {filteredClubs.map((club: MapClub) => {
                   const neonColor = getClubNeonColor(club);
-                  const hasSecretary = Boolean(club.secretary && club.secretary.trim() && club.secretary.toLowerCase() !== 'n/a' && club.secretary !== 'Rtr. Club Secretary');
+                  const hasSecretary = isRealSecretary(club.secretary);
                   return (
                     <div
                       key={club.id}
@@ -968,7 +1049,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
               <User size={14} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
               <span style={{ wordBreak: 'break-word' }}>President: {hoveredClub.president || 'Rtr. Club President'}</span>
             </div>
-            {hoveredClub.secretary && (
+            {isRealSecretary(hoveredClub.secretary) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <UserCheck size={14} style={{ color: '#0284c7' }} />
                 <span>Secretary: {hoveredClub.secretary}</span>
@@ -1143,7 +1224,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                 </div>
 
                 {/* Club Secretary Card - omitted if empty or placeholder */}
-                {Boolean(currentSlideoutClub.secretary && currentSlideoutClub.secretary.trim() && currentSlideoutClub.secretary.toLowerCase() !== 'n/a' && currentSlideoutClub.secretary !== 'Rtr. Club Secretary') && (
+                {isRealSecretary(currentSlideoutClub.secretary) && (
                   <div 
                     style={{
                       background: '#F0FDF4',

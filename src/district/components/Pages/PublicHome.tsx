@@ -203,13 +203,13 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: 0,
+        zIndex: -1,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transformOrigin: 'center center',
-        opacity: 0.15,
+        opacity: 0.12,
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}

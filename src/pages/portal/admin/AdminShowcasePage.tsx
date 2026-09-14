@@ -8,8 +8,14 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Badge } from '@/components/ui/Badge';
-import { fetchMyProjects, deleteProject } from '@/lib/showcase/api';
-import type { ProjectStatus } from '@/lib/showcase/types';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { Field } from '@/components/ui/Field';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { fetchMyProjects, deleteProject, updateProject } from '@/lib/showcase/api';
+import type { Project, ProjectStatus } from '@/lib/showcase/types';
 import { ShowcaseQueueCard } from './ShowcaseQueueCard';
 
 const TABS: { value: ProjectStatus; label: string }[] = [
@@ -33,6 +39,12 @@ export function AdminShowcasePage() {
   useDocumentMeta({ title: 'Showcase moderation queue' });
   const qc = useQueryClient();
   const [status, setStatus] = useState<ProjectStatus>('submitted');
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editSummary, setEditSummary] = useState('');
+  const [editBody, setEditBody] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editStatus, setEditStatus] = useState<'submitted' | 'published' | 'rejected'>('published');
 
   const waitingCount = useQueueCount('submitted');
   const publishedCount = useQueueCount('published');
@@ -51,9 +63,38 @@ export function AdminShowcasePage() {
     mutationFn: deleteProject,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
       void qc.invalidateQueries({ queryKey });
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      if (!editingProject) return;
+      await updateProject(editingProject.id, {
+        publishedTitle: editTitle.trim(),
+        publishedSummary: editSummary.trim(),
+        publishedBody: editBody.trim() || null,
+        category: editCategory || undefined,
+        status: editStatus,
+      });
+    },
+    onSuccess: () => {
+      setEditingProject(null);
+      void qc.invalidateQueries({ queryKey: ['projects'] });
+      void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+      void qc.invalidateQueries({ queryKey });
+    },
+  });
+
+  function openEdit(p: Project) {
+    setEditingProject(p);
+    setEditTitle(p.publishedTitle ?? p.title);
+    setEditSummary(p.publishedSummary ?? p.summary);
+    setEditBody(p.publishedBody ?? p.body ?? '');
+    setEditCategory(p.category);
+    setEditStatus(p.status === 'draft' ? 'submitted' : p.status);
+  }
 
   return (
     <Container width="wide">
@@ -102,7 +143,7 @@ export function AdminShowcasePage() {
               const lead = p.clubs.find((c) => c.role === 'lead')?.club;
               return (
                 <div key={p.id} className="rounded-[12px] border border-line-accent p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex flex-wrap items-center gap-2">
                       <Badge tone="pink">{p.category.toUpperCase()}</Badge>
                       <span className="text-[11.5px] text-fg-3">
@@ -116,8 +157,11 @@ export function AdminShowcasePage() {
                     ) : null}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
+                    <Button variant="secondary" size="sm" onClick={() => openEdit(p)}>
+                      Edit
+                    </Button>
                     {p.status === 'published' && p.slug && (
-                      <a href={`/showcase/${p.slug}`} target="_blank" rel="noreferrer" className="text-[12.5px] font-bold text-accent hover:underline">
+                      <a href={`/showcase/${p.slug}`} target="_blank" rel="noreferrer" className="text-[12.5px] font-bold text-accent hover:underline px-2">
                         View live
                       </a>
                     )}
@@ -138,6 +182,47 @@ export function AdminShowcasePage() {
             })}
           </div>
         )}
+
+        <Modal
+          open={editingProject !== null}
+          onClose={() => setEditingProject(null)}
+          title="Edit Showcase Project"
+          size="lg"
+          footer={
+            <Button
+              loading={updateMutation.isPending}
+              disabled={!editTitle.trim() || !editSummary.trim()}
+              onClick={() => updateMutation.mutate()}
+            >
+              Save Changes
+            </Button>
+          }
+        >
+          {editingProject && (
+            <div className="flex flex-col gap-4">
+              <Field label="Published Title" required>
+                <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+              </Field>
+              <Field label="Published Summary" required>
+                <Textarea rows={3} value={editSummary} onChange={(e) => setEditSummary(e.target.value)} />
+              </Field>
+              <Field label="Detailed Body / Impact Story">
+                <Textarea rows={4} value={editBody} onChange={(e) => setEditBody(e.target.value)} />
+              </Field>
+              <Field label="Status">
+                <Select
+                  options={[
+                    { value: 'published', label: 'Published' },
+                    { value: 'submitted', label: 'Waiting (Submitted)' },
+                    { value: 'rejected', label: 'Held back' },
+                  ]}
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as 'submitted' | 'published' | 'rejected')}
+                />
+              </Field>
+            </div>
+          )}
+        </Modal>
       </Section>
     </Container>
   );
