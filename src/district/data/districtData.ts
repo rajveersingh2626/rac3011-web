@@ -1241,11 +1241,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "lat": 28.2831,
     "lng": 77.0782,
     "location": "Sohna Road, Gurugram",
-    "address": "GD Goenka University
-
-GD Goenka Education City
-Sohna Road
-Gurgaon, 122103, India",
+    "address": "GD Goenka University, GD Goenka Education City, Sohna Road, Gurgaon, 122103, India",
     "president": "Rtr. Manav Bhardwaj",
     "isDirector": "",
     "phone": "",
