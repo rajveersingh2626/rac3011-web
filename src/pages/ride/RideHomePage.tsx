@@ -140,75 +140,75 @@ export function RideHomePage() {
       </header>
 
       {/* Floating DesignBomb Cultural Badges (Scattered organically across canvas with interactive tooltips) */}
-      <div className="absolute top-[220px] left-8 lg:left-14 xl:left-24 hidden md:block animate-ride-float-1 z-20">
+      <div className="absolute top-[340px] left-4 lg:left-8 xl:left-12 hidden md:block animate-ride-float-1 z-20">
         <ChandniChowkBadge />
       </div>
-      <div className="absolute top-[240px] right-8 lg:right-14 xl:right-24 hidden md:block animate-ride-float-2 z-20">
+      <div className="absolute top-[380px] right-4 lg:right-8 xl:right-12 hidden md:block animate-ride-float-2 z-20">
         <ParantheWaliGaliBadge />
       </div>
-      <div className="absolute top-[480px] left-6 xl:left-16 hidden lg:block animate-ride-float-3 z-20">
+      <div className="absolute top-[560px] left-4 xl:left-10 hidden lg:block animate-ride-float-3 z-20">
         <MajnuKaTillaMomosBadge />
       </div>
-      <div className="absolute top-[520px] right-6 xl:right-16 hidden lg:block animate-ride-float-4 z-20">
+      <div className="absolute top-[620px] right-4 xl:right-10 hidden lg:block animate-ride-float-4 z-20">
         <SarojiniNagarBadge />
       </div>
-      <div className="absolute top-[720px] left-8 xl:left-20 hidden xl:block animate-ride-float-1 z-20">
+      <div className="absolute top-[800px] left-6 xl:left-14 hidden xl:block animate-ride-float-1 z-20">
         <DMRCTokenBadge />
       </div>
-      <div className="absolute top-[780px] right-8 xl:right-20 hidden xl:block animate-ride-float-2 z-20">
+      <div className="absolute top-[860px] right-6 xl:right-14 hidden xl:block animate-ride-float-2 z-20">
         <HauzKhasBadge />
       </div>
-      <div className="absolute top-[980px] left-10 xl:left-24 hidden xl:block animate-ride-float-3 z-20">
+      <div className="absolute top-[1060px] left-8 xl:left-18 hidden xl:block animate-ride-float-3 z-20">
         <ConnaughtPlaceBadge />
       </div>
-      <div className="absolute top-[1080px] right-10 xl:right-24 hidden xl:block animate-ride-float-4 z-20">
+      <div className="absolute top-[1140px] right-8 xl:right-18 hidden xl:block animate-ride-float-4 z-20">
         <DilliMeriJaanHeartBadge />
       </div>
 
       {/* Section 2 Flanks */}
-      <div className="absolute top-[1380px] left-6 xl:left-16 hidden xl:block animate-ride-float-1 z-30">
+      <div className="absolute top-[1420px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
         <KhariBaoliBadge />
       </div>
-      <div className="absolute top-[1560px] right-6 xl:right-16 hidden xl:block animate-ride-float-2 z-30">
+      <div className="absolute top-[1520px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
         <ChholeBhatureBadge />
       </div>
-      <div className="absolute top-[1780px] left-8 xl:left-20 hidden xl:block animate-ride-float-3 z-30">
+      <div className="absolute top-[1820px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
         <CycleRickshawBadge />
       </div>
 
       {/* Section 3 Itinerary Flanks */}
-      <div className="absolute top-[2200px] right-6 xl:right-16 hidden xl:block animate-ride-float-4 z-30">
+      <div className="absolute top-[2300px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
         <QutubMinarBadge />
       </div>
-      <div className="absolute top-[2520px] left-6 xl:left-16 hidden xl:block animate-ride-float-1 z-30">
+      <div className="absolute top-[2650px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
         <MetroCardBadge />
       </div>
-      <div className="absolute top-[2880px] right-8 xl:right-20 hidden xl:block animate-ride-float-2 z-30">
+      <div className="absolute top-[3050px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
         <LotusTempleBadge />
       </div>
-      <div className="absolute top-[3220px] left-8 xl:left-20 hidden xl:block animate-ride-float-3 z-30">
+      <div className="absolute top-[3350px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
         <LodhiArtBadge />
       </div>
 
       {/* Section 4 & 5 Flanks */}
-      <div className="absolute top-[3650px] right-6 xl:right-16 hidden xl:block animate-ride-float-4 z-30">
+      <div className="absolute top-[3800px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
         <IndiaGateIceCreamBadge />
       </div>
-      <div className="absolute top-[4020px] left-8 xl:left-20 hidden xl:block animate-ride-float-1 z-30">
+      <div className="absolute top-[4150px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
         <IndiaGateBadge />
       </div>
-      <div className="absolute top-[4480px] right-8 xl:right-20 hidden xl:block animate-ride-float-2 z-30">
+      <div className="absolute top-[4580px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
         <RedFortBadge />
       </div>
 
       {/* Section 6 Registration Flanks */}
-      <div className="absolute top-[4900px] left-6 xl:left-16 hidden xl:block animate-ride-float-3 z-30">
+      <div className="absolute top-[5050px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
         <DilliDilwalonKiBadge />
       </div>
-      <div className="absolute top-[5320px] right-8 xl:right-16 hidden xl:block animate-ride-float-4 z-30">
+      <div className="absolute top-[5420px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
         <AutoRickshawBadge />
       </div>
-      <div className="absolute top-[5680px] left-8 xl:left-20 hidden xl:block animate-ride-float-1 z-30">
+      <div className="absolute top-[5750px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
         <ChaiKulhadBadge />
       </div>
 
@@ -377,13 +377,13 @@ export function RideHomePage() {
       </section>
 
       {/* DELHI SOUVENIR COLLECTOR STRIP (Interactive across Mobile, Tablet, & Desktop) */}
-      <section className="py-7 bg-[#FBC02D] border-y-3 border-[#171515] overflow-hidden select-none relative z-20">
-        <div className="px-4 mb-4 text-center">
+      <section className="py-8 bg-[#FBC02D] border-y-3 border-[#171515] select-none relative z-20">
+        <div className="px-4 mb-2 text-center">
           <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#171515] bg-white px-4 py-1.5 rounded-full border-2 border-[#171515] ride-pop-sm inline-block">
             Delhi Cultural Souvenir Strip • Tap Any Badge For Local Quotes
           </span>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-3 px-6 sm:px-12 items-center justify-start xl:justify-center scroll-smooth">
+        <div className="flex gap-4 overflow-x-auto pt-10 pb-5 px-6 sm:px-12 items-center justify-start xl:justify-center scroll-smooth">
           <AutoRickshawBadge />
           <ChaiKulhadBadge />
           <MajnuKaTillaMomosBadge />
