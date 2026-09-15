@@ -23,7 +23,7 @@ import {
 } from '@/lib/reports/api';
 import { ApiError } from '@/lib/api';
 import type { ReportField } from '@/lib/reports/types';
-import { ReportFieldEditorModal } from './ReportFieldEditorModal';
+import { ReportFieldEditorModal, STANDARD_POINT_SOURCES } from './ReportFieldEditorModal';
 import { ReportFieldControl } from '@/pages/portal/reports/ReportFieldControl';
 
 function toInput(field: ReportFieldInput | (ReportFieldInput & { id: string })): ReportFieldInput {
@@ -243,7 +243,9 @@ export function ReportFormBuilderPage() {
                       {field.pointSourceKey && (
                         <>
                           <span>·</span>
-                          <span className="text-success font-medium">Points: {field.pointSourceKey}</span>
+                          <span className="inline-flex items-center gap-1 rounded bg-success/10 px-1.5 py-0.5 text-success font-semibold text-[10px]">
+                            🏆 {STANDARD_POINT_SOURCES.find((s) => s.key === field.pointSourceKey)?.label ?? field.pointSourceKey}
+                          </span>
                         </>
                       )}
                       {(field.type === 'select' || field.type === 'multiselect') && (

@@ -56,17 +56,22 @@ const PRESET_CHOICE_PACKS: { name: string; choices: string[] }[] = [
   },
 ];
 
-const POINT_SOURCE_SUGGESTIONS: { key: string; label: string }[] = [
-  { key: 'activities_count', label: 'Total Activities count' },
-  { key: 'members_attended', label: 'Club Members Present' },
-  { key: 'rotarians_attended', label: 'Rotarians Present' },
-  { key: 'volunteers_count', label: 'Non-Rotaract Volunteers' },
-  { key: 'funds_raised', label: 'Funds Raised (INR)' },
-  { key: 'funds_spent', label: 'Direct Expenditure (INR)' },
-  { key: 'blood_units', label: 'Blood Units Donated' },
-  { key: 'trees_planted', label: 'Saplings / Trees Planted' },
-  { key: 'hours_spent', label: 'Volunteer Hours' },
-  { key: 'beneficiaries_count', label: 'Beneficiaries Served' },
+export const STANDARD_POINT_SOURCES: {
+  key: string;
+  label: string;
+  category: string;
+  pointsDesc: string;
+}[] = [
+  { key: 'physical_meetings', label: 'Physical Club Meetings', category: 'Club Services', pointsDesc: '20 pts / meeting (max 4)' },
+  { key: 'virtual_meetings', label: 'Virtual Club Meetings', category: 'Club Services', pointsDesc: '10 pts / meeting (max 4)' },
+  { key: 'new_members', label: 'New Members Inducted', category: 'Membership', pointsDesc: '10 pts per member' },
+  { key: 'social_posts', label: 'Social Media Posts / Links', category: 'Public Image', pointsDesc: '4–7 posts: 10 pts, 8+: 20 pts' },
+  { key: 'projects_initiated', label: 'Community Projects Initiated', category: 'Community Services', pointsDesc: '20 pts flat / month' },
+  { key: 'camps_organised', label: 'Health / Blood / Polio Camps', category: 'Community Services', pointsDesc: '30 pts per camp' },
+  { key: 'vocational_workshops', label: 'Vocational Workshops', category: 'Vocational Services', pointsDesc: '1–4: 30 pts, 5+: 60 pts' },
+  { key: 'international_activities', label: 'International Activities', category: 'International Services', pointsDesc: '30 pts per activity' },
+  { key: 'flagship_continued', label: 'Flagship Projects Continued', category: 'Flagship Projects', pointsDesc: '50 pts flat / month' },
+  { key: 'max_collaborators', label: 'Inter-Club Collaboration', category: 'Club & District', pointsDesc: '2–5: 20 pts, 6–10: 40 pts, 11+: 60 pts' },
 ];
 
 export interface ReportFieldEditorModalProps {
@@ -416,33 +421,78 @@ export function ReportFieldEditorModal({
           />
         </Field>
 
-        <div className="rounded-[12px] border border-line bg-page p-4">
-          <Field
-            label="District Citation / Points Source Key"
-            hint="Connects this field value directly into the District Points engine"
-          >
+        {/* Points Rule Mapping */}
+        <div className="rounded-[12px] border border-line-accent bg-[var(--bg-subtle)] p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[12px] font-bold text-fg">
+              District Points Engine Mapping
+            </span>
+            {draft.pointSourceKey && (
+              <button
+                type="button"
+                onClick={() => set('pointSourceKey', null)}
+                className="text-[11px] font-medium text-danger hover:underline"
+              >
+                Clear mapping
+              </button>
+            )}
+          </div>
+          <p className="m-0 mb-3 text-[11px] text-fg-3 leading-relaxed">
+            Link this report field to an automated RID 3011 scoring rule. When submitted, the points engine calculates scores directly from this field.
+          </p>
+
+          <Field label="Point Source Key" hint="Select an official rule below or type a custom key">
             <Input
               value={draft.pointSourceKey ?? ''}
-              onChange={(e) => set('pointSourceKey', e.target.value || null)}
-              placeholder="e.g. activities_count, blood_units, members_attended"
+              onChange={(e) => set('pointSourceKey', e.target.value.trim() || null)}
+              placeholder="Select a rule below or type key, e.g. physical_meetings"
             />
           </Field>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Quick map:</span>
-            {POINT_SOURCE_SUGGESTIONS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => set('pointSourceKey', item.key)}
-                className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10.5px] font-medium transition-colors ${
-                  draft.pointSourceKey === item.key
-                    ? 'border-accent bg-accent/10 font-bold text-accent'
-                    : 'border-line bg-surface hover:border-accent hover:text-accent text-fg-2'
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
+
+          {draft.pointSourceKey && (
+            <div className="mt-2 rounded-[8px] border border-accent/20 bg-accent/5 p-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-accent">
+                  Active Link: {draft.pointSourceKey}
+                </span>
+                {STANDARD_POINT_SOURCES.find((s) => s.key === draft.pointSourceKey) && (
+                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
+                    {STANDARD_POINT_SOURCES.find((s) => s.key === draft.pointSourceKey)?.category}
+                  </span>
+                )}
+              </div>
+              <p className="m-0 mt-1 text-[11px] text-fg-2">
+                {STANDARD_POINT_SOURCES.find((s) => s.key === draft.pointSourceKey)?.pointsDesc ??
+                  'Custom point source key evaluated by engine'}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-3 flex flex-col gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-fg-muted">Official RID 3011 Point Rules:</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+              {STANDARD_POINT_SOURCES.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => set('pointSourceKey', item.key)}
+                  className={`flex flex-col text-left rounded-[8px] border p-2 text-[11px] transition-all ${
+                    draft.pointSourceKey === item.key
+                      ? 'border-accent bg-accent/10 shadow-sm'
+                      : 'border-line bg-page hover:border-accent/40'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-bold text-fg">{item.label}</span>
+                    <span className="font-mono text-[9.5px] text-accent font-semibold">{item.key}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1 mt-1 text-[10px] text-fg-3">
+                    <span>{item.category}</span>
+                    <span className="font-medium text-success">{item.pointsDesc}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
