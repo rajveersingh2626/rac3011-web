@@ -225,7 +225,7 @@ export const DISTRICT_ACHIEVEMENTS: Achievement[] = [
 
 export const INITIAL_CLUBS: DistrictClub[] = [
   {
-    "id": "c1",
+    "id": "c57",
     "slug": "apeejay-stya-university",
     "name": "Rotaract Club of Apeejay Stya University",
     "shortName": "Apeejay Stya University",
@@ -246,7 +246,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c2",
+    "id": "c1",
     "slug": "college-of-vocational-studies",
     "name": "Rotaract Club of College of Vocational Studies",
     "shortName": "College of Vocational Studies",
@@ -267,7 +267,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c3",
+    "id": "c58",
     "slug": "davim",
     "name": "Rotaract Club of DAVIM",
     "shortName": "DAVIM",
@@ -288,11 +288,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c4",
+    "id": "c19",
     "slug": "delhi-capital-circle",
     "name": "Rotaract Club of Delhi Capital Circle",
     "shortName": "Delhi Capital Circle",
-    "zone": "Zone Vayu",
+    "zone": "Zone Agni",
     "lat": 28.8955,
     "lng": 76.6066,
     "location": "Rohtak",
@@ -309,11 +309,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c5",
+    "id": "c48",
     "slug": "delhi-catalyst",
     "name": "Rotaract Club of Delhi Catalyst",
     "shortName": "Delhi Catalyst",
-    "zone": "Zone Agni",
+    "zone": "Zone Vayu",
     "lat": 28.6562,
     "lng": 77.2307,
     "location": "Chandni Chowk, Delhi",
@@ -330,11 +330,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c6",
+    "id": "c20",
     "slug": "delhi-dynamic-leaders",
     "name": "Rotaract Club of Delhi Dynamic Leaders",
     "shortName": "Delhi Dynamic Leaders",
-    "zone": "Zone Vayu",
+    "zone": "Zone Agni",
     "lat": 28.6852,
     "lng": 77.1352,
     "location": "Rani Bagh, Delhi",
@@ -351,11 +351,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c7",
+    "id": "c40",
     "slug": "delhi-elite",
     "name": "Rotaract Club of Delhi Elite",
     "shortName": "Delhi Elite",
-    "zone": "Zone Agni",
+    "zone": "Zone Vayu",
     "lat": 28.6289,
     "lng": 77.2065,
     "location": "Delhi",
@@ -372,11 +372,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c8",
+    "id": "c61",
     "slug": "delhi-genesis",
     "name": "Rotaract Club of Delhi Genesis",
     "shortName": "Delhi Genesis",
-    "zone": "Zone Vayu",
+    "zone": "Zone Akash",
     "lat": 28.6852,
     "lng": 77.1352,
     "location": "Rani Bagh, Delhi",
@@ -393,11 +393,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c9",
+    "id": "c62",
     "slug": "delhi-genesis-midwest",
     "name": "Rotaract Club of Delhi Genesis Midwest",
     "shortName": "Delhi Genesis Midwest",
-    "zone": "Zone Vayu",
+    "zone": "Zone Akash",
     "lat": 28.6852,
     "lng": 77.1352,
     "location": "Rani Bagh, Delhi",
@@ -414,11 +414,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c10",
+    "id": "c23",
     "slug": "delhi-heights",
     "name": "Rotaract Club of Delhi Heights",
     "shortName": "Delhi Heights",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Agni",
     "lat": 28.5726,
     "lng": 77.2223,
     "location": "Arjun Nagar, Delhi",
@@ -435,11 +435,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c11",
+    "id": "c21",
     "slug": "delhi-imperia",
     "name": "Rotaract Club of Delhi Imperia",
     "shortName": "Delhi Imperia",
-    "zone": "Zone Akash",
+    "zone": "Zone Agni",
     "lat": 28.6219,
     "lng": 77.0583,
     "location": "Uttam Nagar, Delhi",
@@ -456,11 +456,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c12",
+    "id": "c63",
     "slug": "delhi-janak",
     "name": "Rotaract Club of Delhi Janak",
     "shortName": "Delhi Janak",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Akash",
     "lat": 28.5678,
     "lng": 77.2433,
     "location": "Lajpat Nagar, Delhi",
@@ -477,11 +477,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c13",
+    "id": "c6",
     "slug": "delhi-maims",
     "name": "Rotaract Club of Delhi MAIMS",
     "shortName": "Delhi MAIMS",
-    "zone": "Zone Vayu",
+    "zone": "Zone Prithvi",
     "lat": 28.718,
     "lng": 77.068,
     "location": "Rohini, Delhi",
@@ -498,11 +498,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c14",
+    "id": "c41",
     "slug": "delhi-manthan",
     "name": "Rotaract Club of Delhi Manthan",
     "shortName": "Delhi Manthan",
-    "zone": "Zone Agni",
+    "zone": "Zone Vayu",
     "lat": 28.6139,
     "lng": 77.209,
     "location": "Delhi",
@@ -519,11 +519,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c15",
+    "id": "c7",
     "slug": "delhi-midtown-maitreyi",
     "name": "Rotaract Club of Delhi Midtown Maitreyi",
     "shortName": "Delhi Midtown Maitreyi",
-    "zone": "Zone Agni",
+    "zone": "Zone Prithvi",
     "lat": 28.5916,
     "lng": 77.1728,
     "location": "Chanakyapuri, Delhi",
@@ -540,7 +540,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c16",
+    "id": "c22",
     "slug": "delhi-rajdhani",
     "name": "Rotaract Club of Delhi Rajdhani",
     "shortName": "Delhi Rajdhani",
@@ -561,7 +561,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c17",
+    "id": "c8",
     "slug": "delhi-south",
     "name": "Rotaract Club of Delhi South",
     "shortName": "Delhi South",
@@ -582,7 +582,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c18",
+    "id": "c9",
     "slug": "delhi-south-central",
     "name": "Rotaract Club of Delhi South Central",
     "shortName": "Delhi South Central",
@@ -603,7 +603,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c19",
+    "id": "c5",
     "slug": "delhi-south-east",
     "name": "Rotaract Club of Delhi South East",
     "shortName": "Delhi South East",
@@ -624,7 +624,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c20",
+    "id": "c10",
     "slug": "delhi-southend-next",
     "name": "Rotaract Club of Delhi Southend Next",
     "shortName": "Delhi Southend Next",
@@ -645,7 +645,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c21",
+    "id": "c65",
     "slug": "delhi-yuva",
     "name": "Rotaract Club of Delhi Yuva",
     "shortName": "Delhi Yuva",
@@ -666,11 +666,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c22",
+    "id": "c31",
     "slug": "dpsru",
     "name": "Rotaract Club of DPSRU",
     "shortName": "DPSRU",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Agni",
     "lat": 28.5244,
     "lng": 77.242,
     "location": "Pushp Vihar, Delhi",
@@ -687,7 +687,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c23",
+    "id": "c39",
     "slug": "dtu-regency",
     "name": "Rotaract Club of DTU Regency",
     "shortName": "DTU Regency",
@@ -708,11 +708,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c24",
+    "id": "c59",
     "slug": "dusc",
     "name": "Rotaract Club of DUSC",
     "shortName": "DUSC",
-    "zone": "Zone Vayu",
+    "zone": "Zone Akash",
     "lat": 28.69,
     "lng": 77.21,
     "location": "Delhi University, Delhi",
@@ -729,11 +729,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c25",
+    "id": "c2",
     "slug": "galgotias-educational-institutions",
     "name": "Rotaract Club of Galgotias Educational Institutions",
     "shortName": "Galgotias Educational Institutions",
-    "zone": "Zone Agni",
+    "zone": "Zone Prithvi",
     "lat": 28.3639,
     "lng": 77.5401,
     "location": "Greater Noida",
@@ -750,11 +750,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c26",
+    "id": "c12",
     "slug": "ilmaura",
     "name": "Rotaract Club of Ilmaura",
     "shortName": "Ilmaura",
-    "zone": "Zone Agni",
+    "zone": "Zone Prithvi",
     "lat": 28.61,
     "lng": 77.23,
     "location": "Delhi",
@@ -771,11 +771,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c27",
+    "id": "c28",
     "slug": "indira-gandhi-delhi-technical-university-for-women",
     "name": "Rotaract Club of Indira Gandhi Delhi Technical University for Women",
     "shortName": "Indira Gandhi Delhi Technical University for Women",
-    "zone": "Zone Vayu",
+    "zone": "Zone Agni",
     "lat": 28.6653,
     "lng": 77.2325,
     "location": "Kashmere Gate, Delhi",
@@ -792,11 +792,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c28",
+    "id": "c3",
     "slug": "ingenious-minds",
     "name": "Rotaract Club of Ingenious Minds",
     "shortName": "Ingenious Minds",
-    "zone": "Zone Vayu",
+    "zone": "Zone Prithvi",
     "lat": 28.715,
     "lng": 77.176,
     "location": "Azadpur, Delhi",
@@ -813,7 +813,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c29",
+    "id": "c49",
     "slug": "kirori-mal-college",
     "name": "Rotaract Club of Kirori Mal College",
     "shortName": "Kirori Mal College",
@@ -838,7 +838,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "slug": "lakshmibai-college",
     "name": "Rotaract Club of Lakshmibai College",
     "shortName": "Lakshmibai College",
-    "zone": "Zone Vayu",
+    "zone": "Zone Agni",
     "lat": 28.689,
     "lng": 77.181,
     "location": "Ashok Vihar, Delhi",
@@ -855,11 +855,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c31",
+    "id": "c_maharaja_agarsain",
     "slug": "maharaja-agarsain",
     "name": "Rotaract Club of Maharaja Agarsain",
     "shortName": "Maharaja Agarsain",
-    "zone": "Zone Agni",
+    "zone": "Zone Akash",
     "lat": 28.57,
     "lng": 77.32,
     "location": "Noida",
@@ -876,7 +876,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c32",
+    "id": "c68",
     "slug": "meraki",
     "name": "Rotaract Club of Meraki",
     "shortName": "Meraki",
@@ -897,11 +897,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c33",
+    "id": "c32",
     "slug": "national-association-for-blind",
     "name": "Rotaract Club of National Association for Blind",
     "shortName": "National Association for Blind",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Agni",
     "lat": 28.5667,
     "lng": 77.175,
     "location": "RK Puram, Delhi",
@@ -918,11 +918,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c34",
+    "id": "c69",
     "slug": "ndim",
     "name": "Rotaract Club of NDIM",
     "shortName": "NDIM",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Akash",
     "lat": 28.518,
     "lng": 77.243,
     "location": "Tughlakabad / MB Road, Delhi",
@@ -939,11 +939,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c35",
+    "id": "c51",
     "slug": "new-delhi",
     "name": "Rotaract Club of New Delhi",
     "shortName": "New Delhi",
-    "zone": "Zone Akash",
+    "zone": "Zone Vayu",
     "lat": 28.632,
     "lng": 77.108,
     "location": "Hari Nagar, Delhi",
@@ -960,7 +960,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c36",
+    "id": "c66",
     "slug": "nsit-regency",
     "name": "Rotaract Club of NSIT Regency",
     "shortName": "NSIT Regency",
@@ -981,7 +981,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c37",
+    "id": "c16",
     "slug": "resilience",
     "name": "Rotaract Club of Resilience",
     "shortName": "Resilience",
@@ -1002,11 +1002,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c38",
+    "id": "c52",
     "slug": "rever",
     "name": "Rotaract Club of Rever",
     "shortName": "Rever",
-    "zone": "Zone Agni",
+    "zone": "Zone Vayu",
     "lat": 28.61,
     "lng": 77.2,
     "location": "Delhi",
@@ -1023,11 +1023,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c39",
+    "id": "c71",
     "slug": "shri-ram-college-of-commerce",
     "name": "Rotaract Club of Shri Ram College of Commerce",
     "shortName": "Shri Ram College of Commerce",
-    "zone": "Zone Vayu",
+    "zone": "Zone Akash",
     "lat": 28.689,
     "lng": 77.205,
     "location": "Maurice Nagar, Delhi",
@@ -1044,11 +1044,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c40",
+    "id": "c17",
     "slug": "sri-guru-gobind-singh-college-of-commerce",
     "name": "Rotaract Club of Sri Guru Gobind Singh College of Commerce",
     "shortName": "Sri Guru Gobind Singh College of Commerce",
-    "zone": "Zone Vayu",
+    "zone": "Zone Prithvi",
     "lat": 28.697,
     "lng": 77.142,
     "location": "Pitampura, Delhi",
@@ -1065,7 +1065,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c41",
+    "id": "c53",
     "slug": "sri-guru-teg-bahadur-khalsa-college",
     "name": "Rotaract Club of Sri Guru Teg Bahadur Khalsa College",
     "shortName": "Sri Guru Teg Bahadur Khalsa College",
@@ -1086,11 +1086,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c42",
+    "id": "c54",
     "slug": "sushant-university",
     "name": "Rotaract Club of Sushant University",
     "shortName": "Sushant University",
-    "zone": "Zone Akash",
+    "zone": "Zone Vayu",
     "lat": 28.4283,
     "lng": 77.1062,
     "location": "Gurugram",
@@ -1107,7 +1107,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c43",
+    "id": "c72",
     "slug": "the-north-cap-university",
     "name": "Rotaract Club of The North'Cap University",
     "shortName": "The North'Cap University",
@@ -1128,11 +1128,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c44",
+    "id": "c55",
     "slug": "trinity-institute-dwarka",
     "name": "Rotaract Club of Trinity Institute Dwarka",
     "shortName": "Trinity Institute Dwarka",
-    "zone": "Zone Akash",
+    "zone": "Zone Vayu",
     "lat": 28.583,
     "lng": 77.06,
     "location": "Dwarka Sector 9, Delhi",
@@ -1149,11 +1149,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c45",
+    "id": "c37",
     "slug": "unified-spirits",
     "name": "Rotaract Club of Unified Spirits",
     "shortName": "Unified Spirits",
-    "zone": "Zone Prithvi",
+    "zone": "Zone Agni",
     "lat": 28.56,
     "lng": 77.16,
     "location": "Vasant Vihar, Delhi",
@@ -1170,7 +1170,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c46",
+    "id": "c74",
     "slug": "visioners-league",
     "name": "Rotaract Club of Visioners League",
     "shortName": "Visioners League",
@@ -1191,7 +1191,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c47",
+    "id": "c75",
     "slug": "world-without-childhood-blindness",
     "name": "Rotaract Club of World Without Childhood Blindness",
     "shortName": "World Without Childhood Blindness",
@@ -1212,11 +1212,11 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c48",
+    "id": "c56",
     "slug": "young-souvenirs",
     "name": "Rotaract Club of Young Souvenirs",
     "shortName": "Young Souvenirs",
-    "zone": "Zone Agni",
+    "zone": "Zone Vayu",
     "lat": 28.63,
     "lng": 77.21,
     "location": "Delhi",
@@ -1233,15 +1233,19 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "initiatives": []
   },
   {
-    "id": "c49",
+    "id": "c11",
     "slug": "gd-goenka-university-sohna",
     "name": "Rotaract Club of GD Goenka University (Sohna)",
-    "shortName": "GD Goenka University (Sohna)",
+    "shortName": "GD Goenka University",
     "zone": "Zone Prithvi",
     "lat": 28.2831,
     "lng": 77.0782,
     "location": "Sohna Road, Gurugram",
-    "address": "GD Goenka University, GD Goenka Education City, Sohna Road, Gurgaon, 122103, India",
+    "address": "GD Goenka University
+
+GD Goenka Education City
+Sohna Road
+Gurgaon, 122103, India",
     "president": "Rtr. Manav Bhardwaj",
     "isDirector": "",
     "phone": "",
@@ -1252,7 +1256,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "secretaryPhone": "",
     "charterYear": 2024,
     "initiatives": []
-  },
+  }
 ];
 
 export const PAST_DRRS: PastDrr[] = [
