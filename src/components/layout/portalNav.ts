@@ -29,6 +29,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'announcements', label: 'Announcements', to: '/portal/announcements' },
       { key: 'resources', label: 'Resources', to: '/portal/resources' },
       { key: 'feedback', label: 'Feedback & Grievances', to: '/portal/feedback' },
+      { key: 'changelog', label: 'What\'s New (Changelog)', to: '/portal/changelog' },
     ],
   },
   {
