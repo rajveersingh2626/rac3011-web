@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Send, CheckCircle2, ShieldCheck, Clock, MessageCircleQuestion } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
