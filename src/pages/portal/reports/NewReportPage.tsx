@@ -12,7 +12,6 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
-import { useToast } from '@/components/ui/Toast';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail } from '@/lib/reports/values';
@@ -54,7 +53,6 @@ export function NewReportPage() {
   const { me } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { toast } = useToast();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
   const month = useMemo(() => currentReportMonth(), []);
   const monthLabel = formatMonthLabel(month);
@@ -229,10 +227,19 @@ export function NewReportPage() {
   const handleProceedToReview = async () => {
     setIsNavigatingToReview(true);
     try {
-      await saveMutation.mutateAsync({ values, notes });
+      autosave.flush();
+      const updated = await saveMutation.mutateAsync({ values, notes });
+      if (updated) {
+        qc.setQueryData(['reports', updated.id], updated);
+      }
       navigate(`/portal/reports/${report.id}/review`);
     } catch (err) {
       console.error('Failed to save report before reviewing:', err);
+      toast({
+        title: 'Could not save report draft',
+        body: err instanceof Error ? err.message : 'Please check your connection before reviewing.',
+        tone: 'error',
+      });
     } finally {
       setIsNavigatingToReview(false);
     }

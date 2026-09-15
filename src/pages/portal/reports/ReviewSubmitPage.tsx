@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDocumentMeta } from '@/lib/meta';
@@ -21,7 +21,12 @@ export function ReviewSubmitPage() {
   const qc = useQueryClient();
   useDocumentMeta({ title: 'Review and submit' });
 
-  const reportQuery = useQuery({ queryKey: ['reports', id], queryFn: () => fetchReport(id, []) });
+  const reportQuery = useQuery({
+    queryKey: ['reports', id],
+    queryFn: () => fetchReport(id, []),
+    refetchOnMount: 'always',
+    staleTime: 0,
+  });
   const schemaVersion = reportQuery.data?.schemaVersion;
   const schemaQuery = useQuery({
     queryKey: ['report-schema', schemaVersion ?? 'active'],
@@ -41,9 +46,42 @@ export function ReviewSubmitPage() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const reportData = reportQuery.data;
+  const storageKey = reportData?.clubId ? `rac3011_report_draft_${reportData.clubId}_${reportData.month.slice(0, 7)}` : undefined;
+
+  useEffect(() => {
+    if (storageKey && typeof window !== 'undefined' && reportData) {
+      try {
+        const cached = window.localStorage.getItem(storageKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          const cachedActivities = parsed.values?.activities;
+          const serverActivities = activitiesOf(reportData.values);
+          if (Array.isArray(cachedActivities) && cachedActivities.length > serverActivities.length) {
+            updateReport(reportData.id, { values: parsed.values, notes: parsed.notes }).then((updated) => {
+              if (updated) {
+                qc.setQueryData(['reports', reportData.id], updated);
+                qc.invalidateQueries({ queryKey: ['reports', reportData.id] });
+              }
+            });
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [storageKey, reportData?.id, qc]);
+
   const submitMutation = useMutation({
     mutationFn: () => updateReport(id, { status: 'submitted' }),
     onSuccess: () => {
+      if (storageKey && typeof window !== 'undefined') {
+        try {
+          window.localStorage.removeItem(storageKey);
+        } catch {
+          // ignore
+        }
+      }
       void qc.invalidateQueries({ queryKey: ['reports'] });
       navigate(`/portal/reports/${id}`);
     },
@@ -137,6 +175,29 @@ export function ReviewSubmitPage() {
               {reachedField && <Stat label="People reached" value={totalReached} />}
               <Stat label="Have a photo" value={`${withPhoto} of ${activities.length || 0}`} />
             </div>
+
+            {topFields.length > 0 && (
+              <div className="rounded-[12px] border border-line-accent bg-surface p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="m-0 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Monthly Club Statistics</p>
+                  <Button variant="link" size="sm" onClick={() => navigate('/portal/reports/new')} className="text-xs">
+                    Edit Stats
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {topFields.map((f) => {
+                    const rawVal = (report.values as Record<string, unknown>)?.[f.fieldKey];
+                    const displayVal = rawVal !== undefined && rawVal !== null && rawVal !== '' ? String(rawVal) : '0';
+                    return (
+                      <div key={f.id} className="rounded-lg bg-page p-3 border border-line/60">
+                        <p className="m-0 text-[11px] text-fg-3 font-medium truncate">{f.label}</p>
+                        <p className="m-0 text-base font-black text-fg mt-0.5">{displayVal}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-4 border-t border-line pt-6">
               <Button onClick={() => submitMutation.mutate()} loading={submitMutation.isPending} disabled={alreadySubmitted}>
