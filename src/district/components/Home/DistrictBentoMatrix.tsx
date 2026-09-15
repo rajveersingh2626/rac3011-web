@@ -994,7 +994,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               DISTRICT CALENDAR
             </span>
             <h4 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', margin: '2px 0 4px 0' }}>
-              Events &amp; DOLS
+              District Events
             </h4>
             <p style={{ color: 'rgba(255, 255, 255, 0.80)', fontSize: '0.82rem', lineHeight: 1.4, margin: 0 }}>
               Track official assembly dates &amp; leadership seminars.

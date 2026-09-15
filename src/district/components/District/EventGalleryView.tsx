@@ -120,13 +120,12 @@ export default function EventGalleryView() {
   });
 
   const allItems: PublicGalleryItem[] = useMemo(() => {
-    if (data && Array.isArray(data.items)) {
-      return data.items;
-    }
-    if (isError) {
-      return FALLBACK_GALLERY_ITEMS;
-    }
-    return data?.items ?? [];
+    if (isError) return FALLBACK_GALLERY_ITEMS;
+    const items = data?.items;
+    if (Array.isArray(items) && items.length > 0) return items;
+    // API returned empty array (all items deleted) or still loading — show fallbacks
+    if (!data) return []; // still loading, show nothing yet
+    return FALLBACK_GALLERY_ITEMS;
   }, [data, isError]);
 
 
@@ -337,6 +336,21 @@ export default function EventGalleryView() {
                     transition: 'transform 0.4s ease',
                   }}
                   loading="lazy"
+                  onError={(e) => {
+                    const img = e.currentTarget;
+                    const wrapper = img.parentElement;
+                    if (!wrapper) return;
+                    img.style.display = 'none';
+                    const fallback = document.createElement('div');
+                    fallback.style.cssText = [
+                      'position:absolute', 'inset:0',
+                      'background:linear-gradient(135deg,#123499 0%,#0C2470 60%,#D81B60 100%)',
+                      'display:flex', 'align-items:center', 'justify-content:center',
+                      'flex-direction:column', 'gap:8px', 'color:#fff',
+                    ].join(';');
+                    fallback.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;opacity:0.7">District 3011</span>`;
+                    wrapper.appendChild(fallback);
+                  }}
                 />
                 <div
                   style={{
