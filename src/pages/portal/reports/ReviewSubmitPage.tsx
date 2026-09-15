@@ -10,7 +10,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Stat } from '@/components/ui/Stat';
-import { fetchReport, fetchReportSchemaVersion, updateReport } from '@/lib/reports/api';
+import { fetchActiveReportSchema, fetchReport, fetchReportSchemaVersion, updateReport } from '@/lib/reports/api';
 import { formatMonthLabel } from '@/lib/reports/month';
 import { activitiesOf, activitySummaryDetail, activitySummaryLabel, splitFields } from '@/lib/reports/values';
 import { ApiError } from '@/lib/api';
@@ -24,9 +24,19 @@ export function ReviewSubmitPage() {
   const reportQuery = useQuery({ queryKey: ['reports', id], queryFn: () => fetchReport(id, []) });
   const schemaVersion = reportQuery.data?.schemaVersion;
   const schemaQuery = useQuery({
-    queryKey: ['report-schema', schemaVersion],
-    queryFn: () => fetchReportSchemaVersion(schemaVersion!, true),
-    enabled: schemaVersion !== undefined,
+    queryKey: ['report-schema', schemaVersion ?? 'active'],
+    queryFn: async () => {
+      if (schemaVersion) {
+        try {
+          const res = await fetchReportSchemaVersion(schemaVersion, true);
+          if (res && res.fields && res.fields.length > 0) return res;
+        } catch {
+          // Fall back to active schema
+        }
+      }
+      return fetchActiveReportSchema();
+    },
+    enabled: Boolean(reportQuery.data),
   });
 
   const [submitError, setSubmitError] = useState<string | null>(null);

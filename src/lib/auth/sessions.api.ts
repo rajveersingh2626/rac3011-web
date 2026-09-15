@@ -17,23 +17,23 @@ export interface ActiveSession {
 }
 
 export async function fetchActiveSessions(): Promise<ActiveSession[]> {
-  return apiFetch<ActiveSession[]>('/auth/sessions');
+  return apiFetch<ActiveSession[]>('/admin/sessions');
 }
 
 export async function revokeSession(id: string): Promise<{ success: boolean }> {
-  return apiFetch<{ success: boolean }>(`/auth/sessions/${id}`, {
+  return apiFetch<{ success: boolean }>(`/admin/sessions/${id}`, {
     method: 'DELETE',
   });
 }
 
 export async function revokeUserSessions(userId: string): Promise<{ count: number }> {
-  return apiFetch<{ count: number }>(`/auth/sessions/revoke-user/${userId}`, {
+  return apiFetch<{ count: number }>(`/admin/sessions/revoke-user/${userId}`, {
     method: 'POST',
   });
 }
 
 export async function revokeAllSessions(): Promise<{ count: number }> {
-  return apiFetch<{ count: number }>('/auth/sessions/revoke-all', {
+  return apiFetch<{ count: number }>('/admin/sessions/revoke-all', {
     method: 'POST',
   });
 }
