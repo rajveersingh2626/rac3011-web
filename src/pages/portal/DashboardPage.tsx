@@ -1,9 +1,6 @@
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Shield,
-  Activity,
-  Bell,
   Calendar,
   Award,
   Users,
@@ -13,7 +10,6 @@ import {
   FileText,
   Send,
   UserCheck,
-  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
@@ -266,7 +262,7 @@ export function DashboardPage() {
               <Card
                 eyebrow="District Operations"
                 title="Officer Action Desk"
-                rule="brand"
+                rule="accent"
                 className="bg-surface border-line-accent shadow-sm"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
