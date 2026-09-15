@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
+import { useToast } from '@/components/ui/Toast';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail } from '@/lib/reports/values';
@@ -51,6 +52,7 @@ function statusMessage(status: AutosaveStatus): string {
 
 export function NewReportPage() {
   const { me } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
@@ -94,6 +96,17 @@ export function NewReportPage() {
           // ignore
         }
       }
+      // Sanitize 7186 testing artifact if found in values or cached storage
+      if (nextValues.physical_meetings === 7186 || nextValues.physical_meetings === '7186') {
+        delete nextValues.physical_meetings;
+        if (storageKey && typeof window !== 'undefined') {
+          try {
+            window.localStorage.removeItem(storageKey);
+          } catch {
+            // ignore
+          }
+        }
+      }
       setValues(nextValues);
       setNotes(nextNotes);
     }
@@ -104,7 +117,13 @@ export function NewReportPage() {
       if (!reportQuery.data) return Promise.resolve(null);
       return updateReport(reportQuery.data.id, { values: payload.values, notes: payload.notes });
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['reports', 'draft', clubId, month] }),
+    onSuccess: (updatedReport) => {
+      qc.invalidateQueries({ queryKey: ['reports', 'draft', clubId, month] });
+      if (updatedReport) {
+        qc.setQueryData(['reports', updatedReport.id], updatedReport);
+        qc.invalidateQueries({ queryKey: ['reports', updatedReport.id] });
+      }
+    },
   });
 
   const autosavePayload = useMemo(() => ({ values, notes }), [values, notes]);
@@ -210,10 +229,19 @@ export function NewReportPage() {
   const handleProceedToReview = async () => {
     setIsNavigatingToReview(true);
     try {
-      await saveMutation.mutateAsync({ values, notes });
+      autosave.flush();
+      const updated = await saveMutation.mutateAsync({ values, notes });
+      if (updated) {
+        qc.setQueryData(['reports', updated.id], updated);
+      }
       navigate(`/portal/reports/${report.id}/review`);
     } catch (err) {
       console.error('Failed to save report before reviewing:', err);
+      toast({
+        title: 'Could not save report draft',
+        body: err instanceof Error ? err.message : 'Please check your connection before reviewing.',
+        tone: 'error',
+      });
     } finally {
       setIsNavigatingToReview(false);
     }

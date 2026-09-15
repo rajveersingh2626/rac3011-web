@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
+import { Info, Mail, Hash } from 'lucide-react';
 
 const credentialsSchema = z.object({
   email: z.string().trim().min(1, 'Enter your Rotary ID or email address'),
@@ -57,6 +58,7 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [method, setMethod] = useState<SecondFactorMethod>('email');
   const [formError, setFormError] = useState<string | null>(null);
+  const [selectedIdType, setSelectedIdType] = useState<'rotary_id' | 'email'>('rotary_id');
   const countdown = useCountdown(30);
 
   const credentials = useZodForm(credentialsSchema, { email: '', password: '' });
@@ -156,13 +158,78 @@ export function LoginPage() {
       {step === 'credentials' ? (
         <>
           <p className="m-0 mb-2.5 text-[10.5px] font-bold tracking-[1px] text-accent">STEP 1 OF 2</p>
-          <h1 className="m-0 mb-2 text-[22px] font-extrabold tracking-tight text-fg">Club portal</h1>
-          <p className="m-0 mb-6 text-[13.5px] text-fg-2">For club presidents, secretaries and district officers.</p>
+          <h1 className="m-0 mb-2 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-fg">Club portal</h1>
+          <p className="m-0 mb-5 text-[13.5px] sm:text-[14px] text-fg-2">For club presidents, secretaries and district officers.</p>
+
+          {/* Touch-Friendly Available Login IDs Guide for Mobile & Desktop */}
+          <div className="mb-5 p-3.5 sm:p-4 rounded-xl border border-line-accent bg-neutral-50/90 text-left">
+            <div className="flex items-center gap-1.5 mb-2 text-xs font-bold uppercase tracking-wider text-accent">
+              <Info size={14} />
+              <span>Available Sign-In Identifiers</span>
+            </div>
+            <p className="text-[12px] text-fg-2 mb-2.5">
+              Choose your preferred sign-in method to pre-format the keyboard:
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedIdType('rotary_id')}
+                className={`p-2.5 sm:p-3 rounded-lg border text-left transition-all min-h-[48px] cursor-pointer flex flex-col justify-between ${
+                  selectedIdType === 'rotary_id'
+                    ? 'border-accent bg-accent/10 ring-2 ring-accent/25 shadow-sm'
+                    : 'border-line bg-white hover:border-line-accent active:bg-neutral-100'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-bold text-[12px] sm:text-xs text-fg flex items-center gap-1">
+                    <Hash size={13} className="text-accent" />
+                    Rotary ID
+                  </span>
+                  <span className="text-[10px] bg-accent/15 text-accent font-bold px-1.5 py-0.5 rounded font-mono">
+                    8 Digits
+                  </span>
+                </div>
+                <div className="text-[11px] text-fg-3 mt-1">e.g. 11545987</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedIdType('email')}
+                className={`p-2.5 sm:p-3 rounded-lg border text-left transition-all min-h-[48px] cursor-pointer flex flex-col justify-between ${
+                  selectedIdType === 'email'
+                    ? 'border-accent bg-accent/10 ring-2 ring-accent/25 shadow-sm'
+                    : 'border-line bg-white hover:border-line-accent active:bg-neutral-100'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-bold text-[12px] sm:text-xs text-fg flex items-center gap-1">
+                    <Mail size={13} className="text-accent" />
+                    Email
+                  </span>
+                  <span className="text-[10px] bg-neutral-200 text-neutral-700 font-bold px-1.5 py-0.5 rounded font-mono">
+                    Mail
+                  </span>
+                </div>
+                <div className="text-[11px] text-fg-3 mt-1">Registered address</div>
+              </button>
+            </div>
+          </div>
+
           <Form onSubmit={submitCredentials} submitting={credentials.submitting}>
-            <Field label="Rotary ID or email" error={credentials.errors.email} required>
+            <Field
+              label={selectedIdType === 'rotary_id' ? 'Rotary Member ID' : 'Registered Email Address'}
+              error={credentials.errors.email}
+              required
+            >
               <Input
-                type="text"
-                autoComplete="username"
+                type={selectedIdType === 'rotary_id' ? 'text' : 'email'}
+                inputMode={selectedIdType === 'rotary_id' ? 'numeric' : 'email'}
+                autoComplete={selectedIdType === 'rotary_id' ? 'off' : 'username'}
+                placeholder={
+                  selectedIdType === 'rotary_id'
+                    ? 'Enter your 8-digit Rotary ID (e.g. 11545987)'
+                    : 'Enter your registered email address'
+                }
                 value={credentials.values.email}
                 onChange={(e) => credentials.setValue('email', e.target.value)}
               />

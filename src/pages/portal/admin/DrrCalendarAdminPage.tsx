@@ -148,19 +148,19 @@ export function DrrCalendarAdminPage() {
             <CalendarCheck className="size-3.5" />
             Official Visit Administration
           </div>
-          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white m-0">
+          <h1 className="text-2xl md:text-3xl font-black tracking-tight text-blue-600 dark:text-blue-400 m-0">
             DRR Calendar Management
           </h1>
-          <p className="mt-1 text-sm text-surface-200">
+          <p className="mt-1 text-sm text-surface-600 dark:text-surface-300">
             Review club visit booking requests, block reserved dates, and regulate the district calendar.
           </p>
         </div>
 
         {/* Capacity summary pill */}
-        <div className="flex items-center gap-3 bg-surface-800/80 border border-surface-700/60 rounded-xl p-3 px-4">
+        <div className="flex items-center gap-3 bg-surface-50 dark:bg-surface-800/80 border border-surface-200 dark:border-surface-700/60 rounded-xl p-3 px-4">
           <Info className="size-5 text-accent-light shrink-0" />
-          <div className="text-xs text-surface-200 leading-tight">
-            <span className="font-bold text-white block">Visit Capacity: 2 / day</span>
+          <div className="text-xs text-surface-600 dark:text-surface-200 leading-tight">
+            <span className="font-bold text-surface-900 dark:text-white block">Visit Capacity: 2 / day</span>
             Dates with 2 confirmed visits or active blocks appear closed to public booking.
           </div>
         </div>
@@ -216,7 +216,7 @@ export function DrrCalendarAdminPage() {
           {/* Status Filter */}
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-surface-300 font-medium">Filter by Status:</span>
+              <span className="text-xs text-surface-600 dark:text-surface-300 font-medium">Filter by Status:</span>
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}

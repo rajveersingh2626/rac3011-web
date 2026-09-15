@@ -119,7 +119,14 @@
   animation: ride-marquee-left 22s linear infinite;
 }
 
-.animate-ride-marquee:hover {
+.animate-ride-marquee-giant {
+  display: flex;
+  width: max-content;
+  animation: ride-marquee-left 36s linear infinite;
+}
+
+.animate-ride-marquee:hover,
+.animate-ride-marquee-giant:hover {
   animation-play-state: paused;
 }
 
