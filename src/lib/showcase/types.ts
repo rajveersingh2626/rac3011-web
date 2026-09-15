@@ -57,6 +57,8 @@ export const AREAS_OF_FOCUS = [
   'Basic Education and Literacy',
   'Community Economic Development',
   'Environment',
+  'Other',
+  'N/A',
 ] as const;
 export type AreaOfFocus = (typeof AREAS_OF_FOCUS)[number];
 

@@ -71,8 +71,8 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
   return (
     <div style={{ width: '100%', maxWidth: '1280px', margin: '0 auto' }}>
       
-      {/* Header aligned with Image 1 style */}
-      <div style={{ marginBottom: '40px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px' }}>
+      {/* Header */}
+      <div style={{ marginBottom: '36px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px' }}>
         <div style={{ maxWidth: '640px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <span style={{ width: '28px', height: '3px', backgroundColor: '#123499', borderRadius: '2px' }} />
@@ -115,8 +115,8 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         </div>
       </div>
 
-      {/* Desktop & Tablet Winding Road Layout (>= 860px) */}
-      <div className="hidden md:block" style={{ position: 'relative', width: '100%', minHeight: '920px', margin: '20px 0 40px' }}>
+      {/* Desktop & Wide Laptop Winding Road Layout (>= 1024px) */}
+      <div className="hidden lg:block" style={{ position: 'relative', width: '100%', maxWidth: '1040px', margin: '20px auto 40px', height: '940px' }}>
         
         {/* Background Curving Road SVG */}
         <svg
@@ -130,19 +130,15 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
               <stop offset="50%" stopColor="#1E293B" />
               <stop offset="100%" stopColor="#0F172A" />
             </linearGradient>
-            <filter id="roadGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feComposite in="SourceGraphic" in2="blur" operator="over" />
-            </filter>
           </defs>
 
           {/* Road Asphalt Track */}
           <path
             d="M 120 40 
-               C 380 40, 480 180, 480 230 
-               C 480 340, 680 360, 720 440 
-               C 760 540, 360 560, 380 670 
-               C 400 780, 720 800, 840 880"
+               C 380 40, 480 160, 480 210 
+               C 480 320, 620 340, 640 420 
+               C 660 520, 460 550, 480 650 
+               C 500 760, 620 780, 740 880"
             fill="none"
             stroke="url(#roadGradient)"
             strokeWidth="48"
@@ -153,10 +149,10 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
           {/* Road Center Dashed Line */}
           <path
             d="M 120 40 
-               C 380 40, 480 180, 480 230 
-               C 480 340, 680 360, 720 440 
-               C 760 540, 360 560, 380 670 
-               C 400 780, 720 800, 840 880"
+               C 380 40, 480 160, 480 210 
+               C 480 320, 620 340, 640 420 
+               C 660 520, 460 550, 480 650 
+               C 500 760, 620 780, 740 880"
             fill="none"
             stroke="#FFFFFF"
             strokeWidth="3"
@@ -169,7 +165,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         {/* Milestone Node 1 (Top Left) */}
         {coreSteps[0] && (
           <>
-            <div style={{ position: 'absolute', top: '50px', left: '40px', width: '380px' }}>
+            <div style={{ position: 'absolute', top: '40px', left: '20px', width: '360px', zIndex: 5 }}>
               <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(18, 52, 153, 0.12)', border: '1px solid rgba(18, 52, 153, 0.16)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#123499', letterSpacing: '0.8px' }}>{coreSteps[0].tag}</span>
@@ -177,24 +173,29 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
                     {coreSteps[0].metric}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[0].title}</h3>
+                <h3 style={{ fontSize: '1.18rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0', lineHeight: 1.3 }}>{coreSteps[0].title}</h3>
                 <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[0].desc}</p>
               </div>
             </div>
-            <div style={{ position: 'absolute', top: '198px', left: '445px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: '190px', left: '475px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '58px',
+                height: '58px',
+                minWidth: '58px',
+                minHeight: '58px',
+                aspectRatio: '1 / 1',
+                boxSizing: 'border-box',
+                flexShrink: 0,
                 background: 'linear-gradient(135deg, #123499 0%, #1D4ED8 100%)',
-                borderRadius: '18px',
+                borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 0 30px rgba(18, 52, 153, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                boxShadow: '0 0 28px rgba(18, 52, 153, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
                 border: '3px solid #FFFFFF'
               }}>
-                <Award size={28} />
+                <Award size={26} style={{ flexShrink: 0 }} />
               </div>
             </div>
           </>
@@ -203,7 +204,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         {/* Milestone Node 2 (Upper Right) */}
         {coreSteps[1] && (
           <>
-            <div style={{ position: 'absolute', top: '270px', right: '40px', width: '380px' }}>
+            <div style={{ position: 'absolute', top: '240px', right: '20px', width: '360px', zIndex: 5 }}>
               <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.16)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0284C7', letterSpacing: '0.8px' }}>{coreSteps[1].tag}</span>
@@ -211,24 +212,29 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
                     {coreSteps[1].metric}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[1].title}</h3>
+                <h3 style={{ fontSize: '1.18rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0', lineHeight: 1.3 }}>{coreSteps[1].title}</h3>
                 <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[1].desc}</p>
               </div>
             </div>
-            <div style={{ position: 'absolute', top: '422px', left: '710px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: '400px', left: '595px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '58px',
+                height: '58px',
+                minWidth: '58px',
+                minHeight: '58px',
+                aspectRatio: '1 / 1',
+                boxSizing: 'border-box',
+                flexShrink: 0,
                 background: 'linear-gradient(135deg, #0284C7 0%, #38BDF8 100%)',
-                borderRadius: '18px',
+                borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 0 30px rgba(2, 132, 199, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                boxShadow: '0 0 28px rgba(2, 132, 199, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
                 border: '3px solid #FFFFFF'
               }}>
-                <CheckCircle2 size={28} />
+                <CheckCircle2 size={26} style={{ flexShrink: 0 }} />
               </div>
             </div>
           </>
@@ -237,7 +243,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         {/* Milestone Node 3 (Lower Left) */}
         {coreSteps[2] && (
           <>
-            <div style={{ position: 'absolute', top: '510px', left: '40px', width: '380px' }}>
+            <div style={{ position: 'absolute', top: '480px', left: '20px', width: '360px', zIndex: 5 }}>
               <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(79, 70, 229, 0.12)', border: '1px solid rgba(79, 70, 229, 0.16)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#4F46E5', letterSpacing: '0.8px' }}>{coreSteps[2].tag}</span>
@@ -245,24 +251,29 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
                     {coreSteps[2].metric}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[2].title}</h3>
+                <h3 style={{ fontSize: '1.18rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0', lineHeight: 1.3 }}>{coreSteps[2].title}</h3>
                 <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[2].desc}</p>
               </div>
             </div>
-            <div style={{ position: 'absolute', top: '652px', left: '388px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: '635px', left: '475px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '58px',
+                height: '58px',
+                minWidth: '58px',
+                minHeight: '58px',
+                aspectRatio: '1 / 1',
+                boxSizing: 'border-box',
+                flexShrink: 0,
                 background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-                borderRadius: '18px',
+                borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 0 30px rgba(79, 70, 229, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                boxShadow: '0 0 28px rgba(79, 70, 229, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
                 border: '3px solid #FFFFFF'
               }}>
-                <Users size={28} />
+                <Users size={26} style={{ flexShrink: 0 }} />
               </div>
             </div>
           </>
@@ -271,7 +282,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         {/* Milestone Node 4 (Bottom Right) */}
         {coreSteps[3] && (
           <>
-            <div style={{ position: 'absolute', bottom: '20px', right: '40px', width: '380px' }}>
+            <div style={{ position: 'absolute', top: '690px', right: '20px', width: '360px', zIndex: 5 }}>
               <div style={{ background: '#FFFFFF', borderRadius: '20px', padding: '22px 24px', boxShadow: '0 12px 35px rgba(12, 36, 112, 0.12)', border: '1px solid rgba(12, 36, 112, 0.16)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <span style={{ fontSize: '0.80rem', fontWeight: 900, color: '#0C2470', letterSpacing: '0.8px' }}>{coreSteps[3].tag}</span>
@@ -279,24 +290,29 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
                     {coreSteps[3].metric}
                   </span>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{coreSteps[3].title}</h3>
+                <h3 style={{ fontSize: '1.18rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0', lineHeight: 1.3 }}>{coreSteps[3].title}</h3>
                 <p style={{ fontSize: '0.88rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{coreSteps[3].desc}</p>
               </div>
             </div>
-            <div style={{ position: 'absolute', bottom: '15px', left: '810px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: '835px', left: '685px', transform: 'translate(-50%, -50%)', zIndex: 10 }}>
               <div style={{
-                width: '64px',
-                height: '64px',
+                width: '58px',
+                height: '58px',
+                minWidth: '58px',
+                minHeight: '58px',
+                aspectRatio: '1 / 1',
+                boxSizing: 'border-box',
+                flexShrink: 0,
                 background: 'linear-gradient(135deg, #0C2470 0%, #1E3A8A 100%)',
-                borderRadius: '18px',
+                borderRadius: '16px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#FFFFFF',
-                boxShadow: '0 0 30px rgba(12, 36, 112, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
+                boxShadow: '0 0 28px rgba(12, 36, 112, 0.55), 0 8px 20px rgba(0,0,0,0.25)',
                 border: '3px solid #FFFFFF'
               }}>
-                <GraduationCap size={28} />
+                <GraduationCap size={26} style={{ flexShrink: 0 }} />
               </div>
             </div>
           </>
@@ -306,7 +322,7 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
 
       {/* Extra Milestones for Desktop if > 4 */}
       {extraSteps.length > 0 && (
-        <div className="hidden md:grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '30px' }}>
+        <div className="hidden lg:grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '30px' }}>
           {extraSteps.map((step, idx) => {
             const Icon = step.icon;
             return (
@@ -324,8 +340,8 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: step.accent, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Icon size={18} />
+                    <div style={{ width: '36px', height: '36px', minWidth: '36px', minHeight: '36px', aspectRatio: '1 / 1', borderRadius: '10px', background: step.accent, color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon size={18} style={{ flexShrink: 0 }} />
                     </div>
                     <span style={{ fontSize: '0.80rem', fontWeight: 900, color: step.accent }}>{step.tag}</span>
                   </div>
@@ -341,69 +357,52 @@ export const DistrictRoadmap: FC<DistrictRoadmapProps> = ({ achievements = [] })
         </div>
       )}
 
-      {/* Mobile Vertical Timeline Road (< 860px) */}
-      <div className="block md:hidden" style={{ position: 'relative', paddingLeft: '32px', margin: '20px 0 32px' }}>
-        
-        {/* Vertical Track */}
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          bottom: '20px',
-          left: '12px',
-          width: '12px',
-          backgroundColor: '#0F172A',
-          borderRadius: '10px'
-        }}>
-          {/* Dashed center */}
-          <div style={{
-            position: 'absolute',
-            inset: 0,
-            borderLeft: '2px dashed #FFFFFF',
-            marginLeft: '5px',
-            opacity: 0.8
-          }} />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* Mobile & Tablet Vertical Timeline Road (< 1024px) */}
+      <div className="block lg:hidden" style={{ position: 'relative', margin: '20px 0 32px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {dynamicSteps.map((step, idx) => {
             const Icon = step.icon;
             return (
-              <div key={idx} style={{ position: 'relative', paddingLeft: '24px' }}>
-                {/* Glowing Node */}
+              <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                {/* Undistorted Milestone Node Badge */}
                 <div style={{
-                  position: 'absolute',
-                  top: '16px',
-                  left: '-28px',
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: step.accent,
+                  width: '52px',
+                  height: '52px',
+                  minWidth: '52px',
+                  minHeight: '52px',
+                  aspectRatio: '1 / 1',
+                  boxSizing: 'border-box',
+                  borderRadius: '16px',
+                  background: `linear-gradient(135deg, ${step.accent} 0%, #0F172A 100%)`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#FFFFFF',
-                  boxShadow: `0 0 16px ${step.glow}`,
+                  boxShadow: `0 8px 20px ${step.glow}`,
                   border: '2px solid #FFFFFF',
-                  zIndex: 2
+                  flexShrink: 0,
+                  marginTop: '4px',
                 }}>
-                  <Icon size={18} />
+                  <Icon size={24} style={{ flexShrink: 0 }} />
                 </div>
 
+                {/* Milestone Card */}
                 <div style={{
+                  flex: 1,
                   background: '#FFFFFF',
-                  borderRadius: '16px',
+                  borderRadius: '18px',
                   padding: '18px 20px',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-                  border: `1px solid ${step.accent}25`
+                  boxShadow: '0 8px 24px rgba(18, 52, 153, 0.08)',
+                  border: `1.5px solid ${step.accent}25`,
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 900, color: step.accent }}>DATA {step.num}</span>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 800, color: step.accent, backgroundColor: `${step.accent}12`, padding: '2px 6px', borderRadius: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 900, color: step.accent, letterSpacing: '0.6px' }}>{step.tag}</span>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 800, color: step.accent, backgroundColor: `${step.accent}14`, padding: '2px 8px', borderRadius: '6px' }}>
                       {step.metric}
                     </span>
                   </div>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0' }}>{step.title}</h4>
-                  <p style={{ fontSize: '0.84rem', color: '#64748B', lineHeight: 1.45, margin: 0 }}>{step.desc}</p>
+                  <h4 style={{ fontSize: '1.08rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px 0', lineHeight: 1.3 }}>{step.title}</h4>
+                  <p style={{ fontSize: '0.86rem', color: '#64748B', lineHeight: 1.5, margin: 0 }}>{step.desc}</p>
                 </div>
               </div>
             );

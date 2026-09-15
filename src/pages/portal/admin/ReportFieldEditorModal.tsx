@@ -35,6 +35,8 @@ const PRESET_CHOICE_PACKS: { name: string; choices: string[] }[] = [
       'Basic Education and Literacy',
       'Community Economic Development',
       'Supporting the Environment',
+      'Other',
+      'N/A',
     ],
   },
   {

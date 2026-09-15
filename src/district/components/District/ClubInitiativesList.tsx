@@ -69,6 +69,8 @@ const AREAS_OF_FOCUS_LIST: [string, string][] = [
   ['Basic Education and Literacy', 'Basic Education & Literacy'],
   ['Community Economic Development', 'Community Economic Development'],
   ['Environment', 'Environment'],
+  ['Other', 'Other'],
+  ['N/A', 'N/A'],
 ];
 
 const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ clubs = [] }) => {
