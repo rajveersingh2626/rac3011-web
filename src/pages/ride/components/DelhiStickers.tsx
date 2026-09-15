@@ -80,3 +80,85 @@ export function DilliDilwalonKiBadge({ className = '', style }: { className?: st
     </div>
   );
 }
+
+export function DMRCTokenBadge({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border-2 sm:border-3 border-[#171515] bg-[#0084B4] text-white font-black text-xs uppercase tracking-wider ride-pop-sm select-none hover:scale-105 transition-transform duration-200 cursor-default ${className}`}
+    >
+      <div className="w-4 h-4 rounded-full border border-white flex items-center justify-center text-[9px] font-bold">M</div>
+      <span>DMRC TOKEN • UNLIMITED</span>
+    </div>
+  );
+}
+
+export function ChandniChowkBadge({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#FBC02D] text-[#171515] font-black text-xs uppercase tracking-wider ride-pop-sm select-none hover:scale-105 transition-transform duration-200 cursor-default ${className}`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m10 15 5-3-5-3v6Z" />
+      </svg>
+      <span>CHANDNI CHOWK • JALEBI</span>
+    </div>
+  );
+}
+
+export function ParantheWaliGaliBadge({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white font-black text-xs uppercase tracking-wider ride-pop-sm select-none hover:scale-105 transition-transform duration-200 cursor-default ${className}`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+        <line x1="6" y1="1" x2="6" y2="4" />
+        <line x1="10" y1="1" x2="10" y2="4" />
+        <line x1="14" y1="1" x2="14" y2="4" />
+      </svg>
+      <span>PARANTHE WALI GALI</span>
+    </div>
+  );
+}
+
+export function QutubMinarBadge({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#C72425] text-white font-black text-xs uppercase tracking-wider ride-pop-sm select-none hover:scale-105 transition-transform duration-200 cursor-default ${className}`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="22" x2="16" y2="22" />
+        <line x1="9" y1="18" x2="15" y2="18" />
+        <line x1="10" y1="14" x2="14" y2="14" />
+        <line x1="11" y1="10" x2="13" y2="10" />
+        <polygon points="12 2 10 22 14 22" />
+      </svg>
+      <span>QUTUB MINAR • 1192 AD</span>
+    </div>
+  );
+}
+
+export function HauzKhasBadge({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={style}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#19539D] text-white font-black text-xs uppercase tracking-wider ride-pop-sm select-none hover:scale-105 transition-transform duration-200 cursor-default ${className}`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 22h16" />
+        <path d="M4 18h16" />
+        <path d="M9 14v4" />
+        <path d="M15 14v4" />
+        <path d="M4 14h16V6l-8-4-8 4v8z" />
+      </svg>
+      <span>HAUZ KHAS • SUNSET</span>
+    </div>
+  );
+}
+
