@@ -54,7 +54,7 @@ export function RideHomePage() {
         <div className="relative my-4 group cursor-pointer">
           <div className="p-4 sm:p-6 rounded-3xl border-3 border-[#171515] bg-white ride-pop-lg transition-transform duration-300 group-hover:scale-105 inline-block">
             <img
-              src="/ride/logos/2026_logo_coloured.png"
+              src="/ride/logos/2026_logo_coloured.png?v=2"
               alt="Delhi Meri Jaan Official 2026 Logo"
               className="h-32 sm:h-44 md:h-52 w-auto object-contain drop-shadow-sm"
             />

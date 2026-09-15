@@ -46,7 +46,7 @@ const EDITIONS: Edition[] = [
     year: '2026',
     theme: 'Delhi Meri Jaan',
     tagline: 'The Heartbeat of Rotaract Exchange',
-    logo: '/ride/logos/2026_logo_coloured.png',
+    logo: '/ride/logos/2026_logo_coloured.png?v=2',
     dates: 'Coming Soon • RID 3011',
     stats: { delegates: 100, districts: 30, clubs: 60 },
     summary:
