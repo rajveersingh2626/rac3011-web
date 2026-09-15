@@ -41,6 +41,9 @@ const PortalEventsPage = lazy(() =>
 const DrrCalendarAdminPage = lazy(() =>
   import('@/pages/portal/admin/DrrCalendarAdminPage').then((m) => ({ default: m.DrrCalendarAdminPage })),
 );
+const ChangelogPage = lazy(() =>
+  import('@/pages/portal/ChangelogPage').then((m) => ({ default: m.ChangelogPage })),
+);
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
@@ -70,4 +73,5 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('drr_calendar:manage', '/portal/admin/drr-calendar', <DrrCalendarAdminPage />),
   guarded('public_content:manage', '/portal/admin/public-content/:kind?', <PublicContentPage />),
   guarded('audit:view', '/portal/admin/audit', <AdminAuditPage />),
+  guarded('audit:view', '/portal/admin/changelog', <ChangelogPage />),
 ];

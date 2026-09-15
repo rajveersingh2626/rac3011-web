@@ -29,7 +29,6 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'announcements', label: 'Announcements', to: '/portal/announcements' },
       { key: 'resources', label: 'Resources', to: '/portal/resources' },
       { key: 'feedback', label: 'Feedback & Grievances', to: '/portal/feedback' },
-      { key: 'changelog', label: 'What\'s New (Changelog)', to: '/portal/changelog' },
     ],
   },
   {
@@ -68,7 +67,6 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'me-overview', label: 'Overview', to: '/portal/me' },
       { key: 'profile', label: 'Profile', to: '/portal/me/profile' },
-      { key: 'changelog', label: "What's New (Changelog)", to: '/portal/changelog' },
       { key: 'contributions', label: 'Contributions', to: '/portal/me/contributions' },
       { key: 'certificates', label: 'Certificates', to: '/portal/me/certificates' },
       { key: 'settings', label: 'Settings', to: '/portal/me/settings' },
@@ -95,6 +93,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-public-content', label: 'Public content', to: '/portal/admin/public-content', perm: 'public_content:manage' },
       { key: 'admin-settings', label: 'Settings', to: '/portal/admin/settings', perm: 'settings:manage' },
       { key: 'admin-audit', label: 'Audit', to: '/portal/admin/audit', perm: 'audit:view' },
+      { key: 'admin-changelog', label: 'Platform Changelog', to: '/portal/admin/changelog', perm: 'audit:view' },
     ],
   },
 ];

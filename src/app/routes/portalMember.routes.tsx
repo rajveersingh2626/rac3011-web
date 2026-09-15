@@ -30,10 +30,6 @@ const PortalFeedbackPage = lazy(() =>
 const PortalEventsPage = lazy(() =>
   import('@/pages/portal/PortalEventsPage').then((m) => ({ default: m.PortalEventsPage })),
 );
-const ChangelogPage = lazy(() =>
-  import('@/pages/portal/ChangelogPage').then((m) => ({ default: m.ChangelogPage })),
-);
-
 
 export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/dashboard', element: <DashboardPage /> },
@@ -54,5 +50,4 @@ export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/me/certificates', element: <ComingSoon title="Certificates" /> },
   { path: '/portal/directory', element: <DirectoryPage /> },
   { path: '/portal/feedback', element: <PortalFeedbackPage /> },
-  { path: '/portal/changelog', element: <ChangelogPage /> },
 ];

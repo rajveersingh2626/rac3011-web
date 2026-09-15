@@ -223,3 +223,43 @@ export function EnquiryRoutingSection({ settings }: { settings: SettingsMap }) {
     </Card>
   );
 }
+
+export function EmailDeliverySection({ settings }: { settings: SettingsMap }) {
+  const [outgoingEmailsEnabled, setOutgoingEmailsEnabled] = useState(
+    settings['notifications.outgoingEmailsEnabled'] !== false,
+  );
+  const save = useSaveSection('Email delivery settings');
+
+  return (
+    <Card eyebrow="Communications" title="Email Notification Delivery">
+      <p className="text-xs text-surface-600 dark:text-surface-400 mt-1 mb-4 leading-relaxed">
+        Control whether non-critical notification emails (Showcase submissions, DRR booking alerts, reports, announcements, feedback) are dispatched to club officers and members.
+      </p>
+      <div className="p-3.5 rounded-xl border border-surface-200 dark:border-surface-700/60 bg-surface-50 dark:bg-surface-800/40">
+        <Switch
+          checked={outgoingEmailsEnabled}
+          onChange={setOutgoingEmailsEnabled}
+          label="Enable Outgoing Notification Emails"
+          description={
+            outgoingEmailsEnabled
+              ? 'Active: All notification emails are delivered normally.'
+              : 'Muted / Silenced: All automatic project, booking, and announcement notification emails are suppressed. Note: Essential security emails (Login OTPs and Password Resets) will ALWAYS continue to work.'
+          }
+        />
+      </div>
+      <Button
+        className="mt-4"
+        size="sm"
+        loading={save.isPending}
+        onClick={() =>
+          save.mutate({
+            'notifications.outgoingEmailsEnabled': outgoingEmailsEnabled,
+          })
+        }
+      >
+        Save Email Settings
+      </Button>
+    </Card>
+  );
+}
+

@@ -94,8 +94,8 @@ export function AudienceBuilder({ value, onChange }: AudienceBuilderProps) {
         <MultiSelect options={clubOptions} values={value.clubIds ?? []} onChange={setClubIds} placeholder="Search clubs…" />
       </Field>
 
-      <Field label="Member IDs (advanced)" hint="Optional — comma-separated member IDs, for reaching specific people">
-        <Input value={memberIdsText} onChange={(e) => onMemberIdsChange(e.target.value)} placeholder="mem_abc, mem_def" />
+      <Field label="Specific Members (by Rotary ID or Member ID)" hint="Optional — comma-separated Rotary IDs or member IDs to target specific people">
+        <Input value={memberIdsText} onChange={(e) => onMemberIdsChange(e.target.value)} placeholder="e.g. 10391101, 11952661, mem_abc" />
       </Field>
 
       <Card tone={empty ? 'dashed' : 'action'} className="py-3.5">

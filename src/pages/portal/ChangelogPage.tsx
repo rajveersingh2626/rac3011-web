@@ -34,12 +34,8 @@ function parseMessage(raw: string) {
   const title = first.trim();
   const body = rest.filter(Boolean).join('\n').trim();
   const m = title.match(/^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\(.+?\))?[!:]?\s*/i);
-  const type = m?.[1]?.toLowerCase() ?? 'other';
-  const emojis: Record<string, string> = {
-    feat: '✨', fix: '🐛', chore: '🔧', docs: '📝', style: '💅',
-    refactor: '♻️', perf: '⚡', test: '🧪', build: '🏗️', ci: '🚀', revert: '⏪', other: '📌',
-  };
-  return { title, body, type, emoji: emojis[type] ?? '📌' };
+  const type = m?.[1]?.toLowerCase() ?? 'update';
+  return { title, body, type };
 }
 
 function typeTone(type: string): 'green' | 'red' | 'blue' | 'amber' | 'neutral' {
@@ -62,7 +58,7 @@ function timeAgo(iso: string): string {
 }
 
 function CommitCard({ commit, accentColor }: { commit: GitHubCommit; accentColor: string }) {
-  const { title, body, type, emoji } = parseMessage(commit.commit.message);
+  const { title, body, type } = parseMessage(commit.commit.message);
   const sha7 = commit.sha.slice(0, 7);
   const when = timeAgo(commit.commit.author.date);
   return (
@@ -75,13 +71,15 @@ function CommitCard({ commit, accentColor }: { commit: GitHubCommit; accentColor
         {commit.author?.avatar_url ? (
           <img src={commit.author.avatar_url} alt={commit.author.login} style={{ width: '32px', height: '32px', borderRadius: '50%', border: `2px solid ${accentColor}33` }} />
         ) : (
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${accentColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px' }}>{emoji}</div>
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${accentColor}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: accentColor }}>
+            <GitCommit size={16} />
+          </div>
         )}
         <div style={{ width: '2px', flex: 1, background: `${accentColor}22`, minHeight: '8px' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '4px' }}>
-          <Badge tone={typeTone(type)}>{emoji} {type}</Badge>
+          <Badge tone={typeTone(type)}>{type.toUpperCase()}</Badge>
           <span style={{ fontFamily: 'monospace', fontSize: '0.72rem', color: '#94a3b8', background: '#f1f5f9', padding: '2px 7px', borderRadius: '6px' }}>{sha7}</span>
           <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: 'auto' }}>{when}</span>
         </div>
