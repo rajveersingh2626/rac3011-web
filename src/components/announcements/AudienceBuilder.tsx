@@ -30,7 +30,7 @@ export function AudienceBuilder({ value, onChange }: AudienceBuilderProps) {
   const directoryQuery = useQuery({
     queryKey: ['user-directory', debouncedSearch],
     queryFn: () => fetchUserDirectory(debouncedSearch),
-    enabled: debouncedSearch.trim().length >= 2,
+    enabled: debouncedSearch.trim().length >= 2 && !debouncedSearch.includes(',') && !debouncedSearch.includes(';'),
   });
 
   const zoneOptions = (zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }));
@@ -47,18 +47,36 @@ export function AudienceBuilder({ value, onChange }: AudienceBuilderProps) {
 
   const selectedMemberIds = value.memberIds ?? [];
 
-  const addMemberId = (idOrRotaryId: string) => {
-    const trimmed = idOrRotaryId.trim();
-    if (!trimmed || selectedMemberIds.includes(trimmed)) return;
-    const next = [...selectedMemberIds, trimmed];
+  const handleAddTokens = (rawText: string) => {
+    const tokens = rawText
+      .split(/[,;\n\r]+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+
+    if (tokens.length === 0) return;
+
+    const next = [...selectedMemberIds];
+    for (const tok of tokens) {
+      if (!next.includes(tok)) {
+        next.push(tok);
+      }
+    }
     onChange({ ...value, memberIds: next });
     setSearchTerm('');
     setIsDropdownOpen(false);
   };
 
+  const addMemberId = (idOrRotaryId: string) => {
+    handleAddTokens(idOrRotaryId);
+  };
+
   const removeMemberId = (idOrRotaryId: string) => {
     const next = selectedMemberIds.filter((id) => id !== idOrRotaryId);
     onChange({ ...value, memberIds: next.length ? next : undefined });
+  };
+
+  const clearAllMembers = () => {
+    onChange({ ...value, memberIds: undefined });
   };
 
   const empty = isAudienceEmpty(value);
@@ -110,34 +128,46 @@ export function AudienceBuilder({ value, onChange }: AudienceBuilderProps) {
       </Field>
 
       <Field
-        label="Specific Members (Name or Rotary ID Lookup)"
-        hint="Search by name, Rotary ID, or enter custom IDs to target individual members"
+        label="Specific Members (Name, Rotary ID, or Comma-Separated List)"
+        hint="Search by name/Rotary ID, or paste/type multiple comma-separated IDs (e.g. 10234, 10567, Himanshu)"
       >
         <div className="relative flex flex-col gap-2">
           <div className="relative">
             <Input
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setIsDropdownOpen(true);
+                const val = e.target.value;
+                if (val.includes(',') || val.includes(';') || val.includes('\n')) {
+                  handleAddTokens(val);
+                } else {
+                  setSearchTerm(val);
+                  setIsDropdownOpen(true);
+                }
+              }}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData('text');
+                if (pasted.includes(',') || pasted.includes(';') || pasted.includes('\n')) {
+                  e.preventDefault();
+                  handleAddTokens(pasted);
+                }
               }}
               onFocus={() => setIsDropdownOpen(true)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   if (searchTerm.trim()) {
-                    addMemberId(searchTerm.trim());
+                    handleAddTokens(searchTerm);
                   }
                 }
               }}
-              placeholder="Search member name or type Rotary ID / Member ID and press Enter…"
+              placeholder="Search member name or paste comma-separated Rotary IDs / names…"
               className="pl-9"
             />
             <Search className="absolute left-3 top-3.5 size-4 text-fg-3" />
           </div>
 
           {/* Autocomplete Dropdown */}
-          {isDropdownOpen && debouncedSearch.trim().length >= 2 && (
+          {isDropdownOpen && debouncedSearch.trim().length >= 2 && !debouncedSearch.includes(',') && (
             <div className="absolute top-[48px] z-50 max-h-60 w-full overflow-y-auto rounded-xl border border-line-accent bg-surface p-1 shadow-lg">
               {directoryQuery.isPending && (
                 <div className="p-3 text-center text-xs text-fg-3">Searching members…</div>
@@ -181,25 +211,41 @@ export function AudienceBuilder({ value, onChange }: AudienceBuilderProps) {
             </div>
           )}
 
-          {/* Selected Member Chips */}
+          {/* Selected Member Chips & Clear All */}
           {selectedMemberIds.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {selectedMemberIds.map((id) => (
-                <span
-                  key={id}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-line-accent bg-page px-3 py-1 text-xs font-semibold text-fg"
-                >
-                  <span>{id}</span>
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-fg-3">
+                  {selectedMemberIds.length} {selectedMemberIds.length === 1 ? 'member' : 'members'} selected
+                </span>
+                {selectedMemberIds.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => removeMemberId(id)}
-                    className="rounded-full p-0.5 text-fg-3 hover:bg-surface hover:text-danger-fg"
-                    title="Remove"
+                    onClick={clearAllMembers}
+                    className="text-[11px] font-semibold text-danger-fg hover:underline"
                   >
-                    <X size={12} />
+                    Clear all
                   </button>
-                </span>
-              ))}
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedMemberIds.map((id) => (
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-line-accent bg-page px-3 py-1 text-xs font-semibold text-fg"
+                  >
+                    <span>{id}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeMemberId(id)}
+                      className="rounded-full p-0.5 text-fg-3 hover:bg-surface hover:text-danger-fg"
+                      title="Remove"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>

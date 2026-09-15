@@ -47,7 +47,10 @@ describe('AudienceBuilder', () => {
     renderPage(<Harness onAudience={onAudience} />);
 
     const user = userEvent.setup();
-    await user.type(screen.getByPlaceholderText('mem_abc, mem_def'), 'mem_1, mem_1, mem_2');
+    await user.type(
+      screen.getByPlaceholderText(/Search member name or paste comma-separated/i),
+      'mem_1, mem_1, mem_2,',
+    );
 
     const calls = onAudience.mock.calls;
     const last = calls[calls.length - 1]?.[0] as Audience;
