@@ -8,10 +8,15 @@ export interface UseAutosaveResult {
   flush: () => void;
 }
 
-const DEBOUNCE_MS = 10_000;
+const DEBOUNCE_MS = 2_000;
 
-// Debounces a save call by DEBOUNCE_MS after every change, flushing immediately on blur/unmount/manual flush.
-export function useAutosave<T>(value: T, save: (value: T) => Promise<unknown>, enabled = true): UseAutosaveResult {
+// Debounces a save call by DEBOUNCE_MS after every change, with localStorage fallback and flushing immediately on blur/unmount/beforeunload.
+export function useAutosave<T>(
+  value: T,
+  save: (value: T) => Promise<unknown>,
+  enabled = true,
+  storageKey?: string,
+): UseAutosaveResult {
   const [status, setStatus] = useState<AutosaveStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -31,22 +36,53 @@ export function useAutosave<T>(value: T, save: (value: T) => Promise<unknown>, e
         savedValue.current = toSave;
         setStatus('saved');
         setError(null);
+        if (storageKey && typeof window !== 'undefined') {
+          try {
+            window.localStorage.removeItem(storageKey);
+          } catch {
+            // ignore localStorage quota errors
+          }
+        }
       })
       .catch((e: unknown) => {
         setStatus('error');
         setError(e instanceof Error ? e.message : 'Save failed');
       });
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!enabled || value === savedValue.current) return;
     setStatus('pending');
+
+    // Immediate backup to localStorage so work is never lost even if browser crashes before network save
+    if (storageKey && typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(value));
+      } catch {
+        // ignore localStorage quota errors
+      }
+    }
+
     clearTimeout(timer.current);
     timer.current = setTimeout(runSave, DEBOUNCE_MS);
     return () => clearTimeout(timer.current);
-  }, [value, enabled, runSave]);
+  }, [value, enabled, storageKey, runSave]);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      runSave();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      }
+      clearTimeout(timer.current);
+      runSave();
+    };
+  }, [runSave]);
 
   return { status, error, flush: runSave };
 }

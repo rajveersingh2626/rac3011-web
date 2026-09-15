@@ -33,6 +33,8 @@ import {
 } from '@/lib/ride/api';
 import type { Delegation, DelegationStatus, GalleryItem, GalleryItemKind, SupportClub } from '@/lib/ride/types';
 import { ApiError } from '@/lib/api';
+import { DelhiMeriJaanAdminTab } from './components/DelhiMeriJaanAdminTab';
+import { RideEmailStudioTab } from './components/RideEmailStudioTab';
 
 const DELEGATIONS_KEY = ['ride', 'admin', 'delegations'];
 const SUPPORT_CLUBS_KEY = ['ride', 'admin', 'support-clubs'];
@@ -377,6 +379,7 @@ function GalleryAdminSection() {
 
 export function RideAdminPage() {
   useDocumentMeta({ title: 'RIDE admin' });
+  const [activeTab, setActiveTab] = useState<'dmj' | 'delegations' | 'gallery' | 'email'>('dmj');
   const qc = useQueryClient();
   const delegationsQuery = useQuery({
     queryKey: DELEGATIONS_KEY,
@@ -426,27 +429,56 @@ export function RideAdminPage() {
   ];
 
   return (
-    <Container width="wide">
-      <Section
-        eyebrow="RIDE admin"
-        title="Delegations"
-        description="Add incoming delegations and assign the district clubs hosting each one."
-        action={<Button onClick={() => setCreating(true)}>Add delegation</Button>}
-      >
-        {delegationsQuery.isPending ? (
-          <Skeleton shape="rect" className="h-64" />
-        ) : delegationsQuery.isError ? (
-          <ErrorState title="Couldn't load delegations" onRetry={() => void delegationsQuery.refetch()} />
-        ) : delegationsQuery.data.items.length === 0 ? (
-          <EmptyState title="No delegations yet" body="Add the first incoming delegation above." />
-        ) : (
-          <Card rule="accent" padding="compact" className="overflow-x-auto">
-            <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
-          </Card>
-        )}
-      </Section>
+    <Container width="wide" className="py-6 space-y-6">
+      {/* Top Admin Section Tabs */}
+      <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-neutral-200">
+        {[
+          { id: 'dmj', label: 'Delhi Meri Jaan 2026' },
+          { id: 'delegations', label: 'Delegations & Hosts' },
+          { id: 'gallery', label: 'Snap Gallery' },
+          { id: 'email', label: 'Email Studio' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+              activeTab === tab.id
+                ? 'bg-[#19539D] text-white ride-pop-sm'
+                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      <GalleryAdminSection />
+      {activeTab === 'dmj' && <DelhiMeriJaanAdminTab />}
+
+      {activeTab === 'delegations' && (
+        <Section
+          eyebrow="RIDE admin"
+          title="Delegations"
+          description="Add incoming delegations and assign the district clubs hosting each one."
+          action={<Button onClick={() => setCreating(true)}>Add delegation</Button>}
+        >
+          {delegationsQuery.isPending ? (
+            <Skeleton shape="rect" className="h-64" />
+          ) : delegationsQuery.isError ? (
+            <ErrorState title="Couldn't load delegations" onRetry={() => void delegationsQuery.refetch()} />
+          ) : delegationsQuery.data.items.length === 0 ? (
+            <EmptyState title="No delegations yet" body="Add the first incoming delegation above." />
+          ) : (
+            <Card rule="accent" padding="compact" className="overflow-x-auto">
+              <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
+            </Card>
+          )}
+        </Section>
+      )}
+
+      {activeTab === 'gallery' && <GalleryAdminSection />}
+
+      {activeTab === 'email' && <RideEmailStudioTab />}
 
       <CreateDelegationModal open={creating} onClose={() => setCreating(false)} onCreated={invalidateDelegations} />
       <HostAssignmentDrawer

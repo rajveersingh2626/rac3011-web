@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
-import { Plane, Handshake, Images, ShieldCheck } from 'lucide-react';
+import { Plane, Handshake, Images, ShieldCheck, Compass } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useAuth } from '@/app/auth';
@@ -8,6 +8,7 @@ import { RequirePermission } from './guards';
 import { RequireSubdomainAuth } from './subdomainGuards';
 import { SurfaceLoading } from './SurfaceLoading';
 
+const RideHomePage = lazy(() => import('@/pages/ride/RideHomePage').then((m) => ({ default: m.RideHomePage })));
 const RideIncomingPage = lazy(() => import('@/pages/ride/RideIncomingPage').then((m) => ({ default: m.RideIncomingPage })));
 const SupportClubPage = lazy(() => import('@/pages/ride/SupportClubPage').then((m) => ({ default: m.SupportClubPage })));
 const RideGalleryPage = lazy(() => import('@/pages/ride/RideGalleryPage').then((m) => ({ default: m.RideGalleryPage })));
@@ -18,6 +19,7 @@ const MANAGE_SCOPE = { type: 'project', id: 'ride' } as const;
 function Layout() {
   const { can } = useAuth();
   const nav = [
+    { label: 'Delhi Meri Jaan', to: '/', icon: <Compass size={18} /> },
     { label: 'Incoming', to: '/incoming', icon: <Plane size={18} /> },
     { label: 'Support club', to: '/support-club', icon: <Handshake size={18} /> },
     { label: 'Gallery', to: '/gallery', icon: <Images size={18} /> },
@@ -26,7 +28,7 @@ function Layout() {
       : []),
   ];
   return (
-    <SubdomainShell surface="ride" title="RIDE" nav={nav}>
+    <SubdomainShell surface="ride" title="RIDE: Delhi Meri Jaan" nav={nav}>
       <Suspense fallback={<SurfaceLoading />}>
         <Outlet />
       </Suspense>
@@ -38,7 +40,8 @@ const routes: RouteObject[] = [
   {
     element: <Layout />,
     children: [
-      { index: true, element: <RideIncomingPage /> },
+      { index: true, element: <RideHomePage /> },
+      { path: '/delhi-meri-jaan', element: <RideHomePage /> },
       { path: '/incoming', element: <RideIncomingPage /> },
       { path: '/gallery', element: <RideGalleryPage /> },
       {

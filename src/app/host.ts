@@ -27,11 +27,13 @@ export function resolveSurface(hostname: string, search = ''): Surface {
   const host = hostname.toLowerCase().replace(/\.$/, '');
   const labels = host.split('.');
   const first = labels[0] ?? '';
+  if (first === 'delhimerijaan') return 'ride';
   const byPrefix = PROJECT_SURFACES.find((s) => s === first);
   if (byPrefix) return byPrefix;
   // testing.<surface>.rotaract3011.org mirrors testing.rotaract3011.org (main's staging host)
   // for the project subdomains, so each surface gets its own staging URL.
   if (first === 'testing') {
+    if (labels[1] === 'delhimerijaan') return 'ride';
     const byTestingPrefix = PROJECT_SURFACES.find((s) => s === labels[1]);
     if (byTestingPrefix) return byTestingPrefix;
   }

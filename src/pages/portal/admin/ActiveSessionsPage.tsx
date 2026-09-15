@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Laptop,
@@ -43,6 +43,12 @@ export function ActiveSessionsPage() {
   const [sessionToRevoke, setSessionToRevoke] = useState<ActiveSession | null>(null);
   const [userToRevoke, setUserToRevoke] = useState<ActiveSession | null>(null);
   const [confirmRevokeAll, setConfirmRevokeAll] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const {
     data: sessions = [],
@@ -193,9 +199,11 @@ export function ActiveSessionsPage() {
       cell: (row: ActiveSession) => {
         const loginDate = new Date(row.createdAt);
         const expiresDate = new Date(row.expiresAt);
-        const diffMinutes = Math.max(0, Math.round((expiresDate.getTime() - Date.now()) / 60000));
-        const hoursLeft = Math.floor(diffMinutes / 60);
-        const minsLeft = diffMinutes % 60;
+        const diffSeconds = Math.max(0, Math.floor((expiresDate.getTime() - now) / 1000));
+        const hoursLeft = Math.floor(diffSeconds / 3600);
+        const minsLeft = Math.floor((diffSeconds % 3600) / 60);
+        const secsLeft = diffSeconds % 60;
+        const isExpired = diffSeconds <= 0;
 
         return (
           <div className="flex flex-col gap-0.5 py-1 text-[12px]">
@@ -205,10 +213,14 @@ export function ActiveSessionsPage() {
             </span>
             <span className="text-fg-3 text-[11px]">
               Expires in:{' '}
-              <strong className={cn(hoursLeft === 0 ? 'text-amber-500 font-semibold' : 'text-fg-2')}>
-                {hoursLeft > 0 ? `${hoursLeft}h ` : ''}
-                {minsLeft}m
-              </strong>
+              {isExpired ? (
+                <strong className="text-danger font-semibold">Expired</strong>
+              ) : (
+                <strong className={cn(minsLeft < 5 && hoursLeft === 0 ? 'text-amber-500 font-semibold' : 'text-fg-2')}>
+                  {hoursLeft > 0 ? `${hoursLeft}h ` : ''}
+                  {minsLeft}m {secsLeft < 10 ? '0' : ''}{secsLeft}s
+                </strong>
+              )}
             </span>
           </div>
         );
@@ -302,7 +314,7 @@ export function ActiveSessionsPage() {
               <Clock className="h-6 w-6" />
             </div>
             <div>
-              <div className="text-[24px] font-extrabold tracking-tight text-fg">5 Hours</div>
+              <div className="text-[24px] font-extrabold tracking-tight text-fg">2 Hours</div>
               <div className="text-[12px] font-medium text-fg-3">Max Session Timeout</div>
             </div>
           </Card>

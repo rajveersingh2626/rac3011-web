@@ -20,6 +20,7 @@
     "@zxing/browser": "^0.2.1",
     "date-fns": "^4.4.0",
     "leaflet": "^1.9.4",
+    "lightningcss-win32-x64-msvc": "^1.33.0",
     "lucide-react": "^1.40.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",

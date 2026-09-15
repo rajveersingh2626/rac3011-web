@@ -135,8 +135,17 @@ export function LoginPage() {
     }
   };
 
+  const isExpired = searchParams.get('reason') === 'expired';
+
   return (
     <div>
+      {isExpired && !formError ? (
+        <div className="mb-4">
+          <Alert tone="info" title="Session expired">
+            Your session expired after 2 hours of inactivity. Please sign in to continue.
+          </Alert>
+        </div>
+      ) : null}
       {formError ? (
         <div className="mb-4">
           <Alert tone="error" title="Sign-in problem">
@@ -230,7 +239,7 @@ export function LoginPage() {
             ) : null}
             {method === 'email' ? (
               <Checkbox
-                label="Stay signed in on this device for 5 hours"
+                label="Stay signed in on this device for 2 hours"
                 checked={secondFactor.values.rememberDevice}
                 onChange={(e) => secondFactor.setValue('rememberDevice', e.target.checked)}
               />

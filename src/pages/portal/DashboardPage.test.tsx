@@ -85,4 +85,40 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('District conference dates announced')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'See all' })).toBeInTheDocument();
   });
+
+  it('renders Super Admin Command Hub when user has roles:manage permission', async () => {
+    server.use(
+      http.get('/me', () =>
+        HttpResponse.json({
+          ...ME,
+          grants: { 'roles:manage': [{ type: 'none' }] },
+        }),
+      ),
+      http.get('/reports', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 1 })),
+      NO_ANNOUNCEMENTS,
+    );
+    renderPage(<DashboardPage />);
+
+    expect(await screen.findByText('Super Admin Command Hub')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Give / Revoke Access' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Active Sessions' })).toBeInTheDocument();
+  });
+
+  it('renders District Operations Action Desk when user has reports:review permission', async () => {
+    server.use(
+      http.get('/me', () =>
+        HttpResponse.json({
+          ...ME,
+          grants: { 'reports:review': [{ type: 'none' }] },
+        }),
+      ),
+      http.get('/reports', () => HttpResponse.json({ items: [], total: 0, page: 1, pageSize: 1 })),
+      NO_ANNOUNCEMENTS,
+    );
+    renderPage(<DashboardPage />);
+
+    expect(await screen.findByText('Officer Action Desk')).toBeInTheDocument();
+    expect(screen.getByText('Review Reports')).toBeInTheDocument();
+  });
 });
+

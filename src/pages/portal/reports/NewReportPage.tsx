@@ -70,12 +70,34 @@ export function NewReportPage() {
   const [notes, setNotes] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const storageKey = clubId ? `rac3011_report_draft_${clubId}_${month}` : undefined;
+
   useEffect(() => {
     if (reportQuery.data) {
-      setValues((reportQuery.data.values as Record<string, unknown>) ?? { activities: [] });
-      setNotes(reportQuery.data.notes ?? '');
+      let nextValues = (reportQuery.data.values as Record<string, unknown>) ?? { activities: [] };
+      let nextNotes = reportQuery.data.notes ?? '';
+      if (storageKey && typeof window !== 'undefined') {
+        try {
+          const cached = window.localStorage.getItem(storageKey);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object') {
+              const cachedActivities = parsed.values?.activities;
+              const serverActivities = (nextValues.activities as unknown[]) ?? [];
+              if (Array.isArray(cachedActivities) && cachedActivities.length >= serverActivities.length) {
+                nextValues = parsed.values;
+                if (typeof parsed.notes === 'string') nextNotes = parsed.notes;
+              }
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+      setValues(nextValues);
+      setNotes(nextNotes);
     }
-  }, [reportQuery.data]);
+  }, [reportQuery.data, storageKey]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: { values: Record<string, unknown>; notes: string }) => {
@@ -150,7 +172,7 @@ export function NewReportPage() {
     return empty;
   }, [editingIndex, activities, activityFields, activeAvenue]);
 
-  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data));
+  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data), storageKey);
 
   if (!clubId) {
     return (

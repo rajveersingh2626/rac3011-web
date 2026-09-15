@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, NavLink } from 'react-router';
-import { Globe, ExternalLink, ArrowRight, Menu as MenuIcon, X as XIcon } from 'lucide-react';
+import { Globe, ExternalLink, ArrowRight, Menu as MenuIcon, X as XIcon, Clock } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useTheme } from '@/app/theme';
 import { Avatar } from '@/components/ui/Avatar';
@@ -163,6 +163,27 @@ function ScopeSwitcher() {
   );
 }
 
+function SessionCountdownBadge() {
+  const { me, formattedRemaining, remainingSeconds } = useAuth();
+  if (!me) return null;
+  const isWarning = remainingSeconds < 300; // less than 5 mins
+
+  return (
+    <div
+      title="Automatic security logout after 30 minutes of session duration"
+      className={cn(
+        'hidden sm:inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-mono font-semibold transition-colors',
+        isWarning
+          ? 'border-amber-400/40 bg-amber-500/20 text-amber-300 animate-pulse'
+          : 'border-white/15 bg-white/5 text-white/80',
+      )}
+    >
+      <Clock size={12} className={isWarning ? 'text-amber-400' : 'text-white/60'} />
+      <span>{formattedRemaining}</span>
+    </div>
+  );
+}
+
 function UserMenu() {
   const { me, signOut, can } = useAuth();
   const { theme, toggle } = useTheme();
@@ -255,6 +276,7 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
 
         {/* Right: User Scope & Profile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <SessionCountdownBadge />
           <ScopeSwitcher />
           <UserMenu />
         </div>

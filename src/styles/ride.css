@@ -1,0 +1,144 @@
+/* RIDE: Delhi Meri Jaan - DesignBomb Inspired Theme & Styles */
+
+@font-face {
+  font-family: 'Amita';
+  src: url('/ride/fonts/AMITA-REGULAR.TTF') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Amita';
+  src: url('/ride/fonts/AMITA-BOLD.TTF') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Encode Sans SC';
+  src: url('/ride/fonts/ENCODESANSSC[WDTH,WGHT].TTF') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --ride-blue: #19539D;
+  --ride-red: #C72425;
+  --ride-orange: #EA6623;
+  --ride-green: #59A835;
+  --ride-cyan: #0084B4;
+  --ride-cream: #FDFBF7;
+  --ride-paper: #F7F3E9;
+  --ride-yellow: #FBC02D;
+  --ride-ink: #171515;
+  --ride-border: #171515;
+}
+
+.font-amita {
+  font-family: 'Amita', cursive, sans-serif;
+}
+
+.font-ride-sans {
+  font-family: 'Encode Sans SC', system-ui, -apple-system, sans-serif;
+}
+
+/* DesignBomb Pop Brutalism Shadows */
+.ride-pop {
+  box-shadow: 4px 4px 0px var(--ride-ink);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ride-pop-sm {
+  box-shadow: 2px 2px 0px var(--ride-ink);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ride-pop-lg {
+  box-shadow: 7px 7px 0px var(--ride-ink);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ride-pop-hover:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px var(--ride-ink);
+}
+
+.ride-pop-sm-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px var(--ride-ink);
+}
+
+.ride-pop-active:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px var(--ride-ink);
+}
+
+/* Floating Animations */
+@keyframes ride-float-1 {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rot, -3deg));
+  }
+  50% {
+    transform: translateY(-9px) rotate(var(--rot, -1deg));
+  }
+}
+
+@keyframes ride-float-2 {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rot, 4deg));
+  }
+  50% {
+    transform: translateY(-11px) rotate(var(--rot, 6deg));
+  }
+}
+
+.animate-ride-float-1 {
+  animation: ride-float-1 4.5s ease-in-out infinite;
+}
+
+.animate-ride-float-2 {
+  animation: ride-float-2 5.2s ease-in-out infinite;
+}
+
+/* Marquee Ribbon */
+@keyframes ride-marquee-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ride-marquee {
+  display: flex;
+  width: max-content;
+  animation: ride-marquee-left 22s linear infinite;
+}
+
+.animate-ride-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Snap Scroll for NativeContent Gallery Reel */
+.ride-snap-feed {
+  scroll-snap-type: y mandatory;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ride-snap-card {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* Organic Paper Texture */
+.ride-paper-bg {
+  background-color: var(--ride-cream);
+  background-image: radial-gradient(#171515 0.75px, transparent 0.75px);
+  background-size: 16px 16px;
+}

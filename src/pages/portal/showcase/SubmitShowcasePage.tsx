@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
@@ -39,7 +40,6 @@ export function SubmitShowcasePage() {
   const myClubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
   const [selectedClubId, setSelectedClubId] = useState<string>(myClubId);
 
-
   const activeHostClubId = canPublishOrDistrict && selectedClubId ? selectedClubId : myClubId;
 
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
@@ -57,6 +57,62 @@ export function SubmitShowcasePage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+  const DRAFT_KEY = `rac3011_showcase_draft_${me?.user?.id || 'current'}`;
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const cached = window.localStorage.getItem(DRAFT_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.avenueOfService) setAvenueOfService(parsed.avenueOfService);
+        if (Array.isArray(parsed.areasOfFocus)) setAreasOfFocus(parsed.areasOfFocus);
+        if (parsed.date) setDate(parsed.date);
+        if (parsed.summary) setSummary(parsed.summary);
+        if (parsed.beneficiaries) setBeneficiaries(String(parsed.beneficiaries));
+        if (Array.isArray(parsed.collaboratingClubIds)) setCollaboratingClubIds(parsed.collaboratingClubIds);
+        if (parsed.selectedClubId) setSelectedClubId(parsed.selectedClubId);
+        setRestoredDraft(true);
+        if (parsed.savedAt) setDraftSavedAt(parsed.savedAt);
+      }
+    } catch {
+      // ignore
+    }
+  }, [DRAFT_KEY]);
+
+  // Debounced auto-save draft to localStorage
+  useEffect(() => {
+    if (!title && !summary && !date && areasOfFocus.length === 0) return;
+    const timer = setTimeout(() => {
+      if (typeof window === 'undefined') return;
+      try {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        window.localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({
+            title,
+            avenueOfService,
+            areasOfFocus,
+            date,
+            summary,
+            beneficiaries,
+            collaboratingClubIds,
+            selectedClubId,
+            savedAt: timeStr,
+          }),
+        );
+        setDraftSavedAt(timeStr);
+      } catch {
+        // ignore
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [title, avenueOfService, areasOfFocus, date, summary, beneficiaries, collaboratingClubIds, selectedClubId, DRAFT_KEY]);
 
   const buildPayload = () => ({
     title: title.trim(),
@@ -94,6 +150,7 @@ export function SubmitShowcasePage() {
   const saveDraftMutation = useMutation({
     mutationFn: () => createProject(buildPayload()),
     onSuccess: () => {
+      try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
       invalidateAll();
       navigate('/portal/showcase/mine');
     },
@@ -106,6 +163,7 @@ export function SubmitShowcasePage() {
       return updateProject(created.id, { status: 'submitted' });
     },
     onSuccess: () => {
+      try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
       invalidateAll();
       navigate('/portal/showcase/mine');
     },
@@ -149,6 +207,13 @@ export function SubmitShowcasePage() {
         title="Put a project on the showcase"
         description="You ran it, so you write it. A district officer checks it and publishes — usually within a week."
       >
+        {restoredDraft && !formError && (
+          <div className="mb-5">
+            <Alert tone="info" title="Draft restored">
+              We restored your project showcase draft from your last session. You can continue editing where you left off.
+            </Alert>
+          </div>
+        )}
         {formError && (
           <div className="mb-5">
             <Alert tone="error" title="Something went wrong">
@@ -280,13 +345,18 @@ export function SubmitShowcasePage() {
               {errors.consent && <p className="mt-1 text-[11px] font-semibold text-danger-fg">{errors.consent}</p>}
             </Card>
 
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap items-center gap-3">
               <Button onClick={onSendForReview} loading={submitMutation.isPending} disabled={busy}>
                 Send for review
               </Button>
               <Button variant="secondary" onClick={onSaveDraft} loading={saveDraftMutation.isPending} disabled={busy}>
                 Save a draft
               </Button>
+              {draftSavedAt && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Auto-saved draft ({draftSavedAt})
+                </span>
+              )}
             </div>
           </div>
 
