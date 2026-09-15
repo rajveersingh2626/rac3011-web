@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
+import { useToast } from '@/components/ui/Toast';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail } from '@/lib/reports/values';
@@ -51,6 +52,7 @@ function statusMessage(status: AutosaveStatus): string {
 
 export function NewReportPage() {
   const { me } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
