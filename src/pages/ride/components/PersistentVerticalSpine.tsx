@@ -59,7 +59,7 @@ export function PersistentVerticalSpine() {
       {/* Desktop/Tablet Persistent Vertical Spine (Left Flank - Delhi Metro Route Schematic) */}
       <aside
         aria-label="Delhi Metro scroll navigation line"
-        className="fixed top-0 bottom-0 left-3 sm:left-6 lg:left-8 z-40 hidden md:flex flex-col items-center justify-between py-10 pointer-events-none select-none"
+        className="fixed top-28 sm:top-36 bottom-6 left-3 sm:left-6 lg:left-8 z-30 hidden md:flex flex-col items-center justify-between py-4 pointer-events-none select-none"
       >
         {/* DMRC Top Station Indicator Badge */}
         <div className="bg-[#0084B4] text-white px-2.5 py-1 rounded-lg border-2 border-[#171515] text-[10px] font-black uppercase tracking-wider ride-pop-sm flex items-center gap-1.5 pointer-events-auto shadow-md">

@@ -140,28 +140,28 @@ export function RideHomePage() {
       </header>
 
       {/* Floating DesignBomb Cultural Badges (Scattered organically across canvas with interactive tooltips) */}
-      <div className="absolute top-28 left-6 lg:left-12 xl:left-20 hidden md:block animate-ride-float-1 z-30">
+      <div className="absolute top-[220px] left-8 lg:left-14 xl:left-24 hidden md:block animate-ride-float-1 z-20">
         <ChandniChowkBadge />
       </div>
-      <div className="absolute top-36 right-6 lg:right-12 xl:right-20 hidden md:block animate-ride-float-2 z-30">
+      <div className="absolute top-[240px] right-8 lg:right-14 xl:right-24 hidden md:block animate-ride-float-2 z-20">
         <ParantheWaliGaliBadge />
       </div>
-      <div className="absolute top-[460px] left-6 xl:left-16 hidden lg:block animate-ride-float-3 z-30">
+      <div className="absolute top-[480px] left-6 xl:left-16 hidden lg:block animate-ride-float-3 z-20">
         <MajnuKaTillaMomosBadge />
       </div>
-      <div className="absolute top-[520px] right-6 xl:right-16 hidden lg:block animate-ride-float-4 z-30">
+      <div className="absolute top-[520px] right-6 xl:right-16 hidden lg:block animate-ride-float-4 z-20">
         <SarojiniNagarBadge />
       </div>
-      <div className="absolute top-[690px] left-8 xl:left-20 hidden xl:block animate-ride-float-1 z-30">
+      <div className="absolute top-[720px] left-8 xl:left-20 hidden xl:block animate-ride-float-1 z-20">
         <DMRCTokenBadge />
       </div>
-      <div className="absolute top-[780px] right-8 xl:right-20 hidden xl:block animate-ride-float-2 z-30">
+      <div className="absolute top-[780px] right-8 xl:right-20 hidden xl:block animate-ride-float-2 z-20">
         <HauzKhasBadge />
       </div>
-      <div className="absolute top-[960px] left-10 xl:left-24 hidden xl:block animate-ride-float-3 z-30">
+      <div className="absolute top-[980px] left-10 xl:left-24 hidden xl:block animate-ride-float-3 z-20">
         <ConnaughtPlaceBadge />
       </div>
-      <div className="absolute top-[1080px] right-10 xl:right-24 hidden xl:block animate-ride-float-4 z-30">
+      <div className="absolute top-[1080px] right-10 xl:right-24 hidden xl:block animate-ride-float-4 z-20">
         <DilliMeriJaanHeartBadge />
       </div>
 
