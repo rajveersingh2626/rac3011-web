@@ -74,7 +74,7 @@ export function HeroCarousel({ slides, onPrimaryClick, onSecondaryClick }: HeroC
                   </span>
                 ) : null}
                 <h1 className="m-0 max-w-[18ch] text-[34px] font-extrabold leading-[1.1] text-fg md:text-[46px] lg:text-[56px]">
-                  {s.title ?? 'Rotaract District 3011'}
+                  {s.title ?? 'Rotaract District Organisation'}
                 </h1>
                 {s.subtitle ? <p className="m-0 max-w-[54ch] text-[15px] text-fg-2 md:text-[17px]">{s.subtitle}</p> : null}
                 <div className="flex flex-wrap gap-3">

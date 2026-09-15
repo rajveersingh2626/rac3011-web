@@ -6,7 +6,7 @@ interface Meta {
   ogImage?: string;
 }
 
-const SITE = 'Rotaract District 3011';
+const SITE = 'Rotaract District Organisation';
 
 function setMeta(attr: 'name' | 'property', key: string, value: string | undefined): void {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);

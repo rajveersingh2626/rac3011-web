@@ -21,7 +21,7 @@ describe('HeroCarousel', () => {
 
   it('falls back to the district name when a slide has no title', () => {
     render(<HeroCarousel slides={[{ badge: null, title: null, subtitle: null, ctaPrimary: null, ctaSecondary: null }]} />);
-    expect(screen.getByText('Rotaract District 3011')).toBeInTheDocument();
+    expect(screen.getByText('Rotaract District Organisation')).toBeInTheDocument();
   });
 
   it('invokes the primary and secondary CTA callbacks', async () => {

@@ -21,7 +21,7 @@ export default function DistrictLogo({ size = 'medium', className = '' }: Distri
     >
       <img
         src={logoImg}
-        alt="Rotaract District 3011 Logo"
+        alt="Rotaract District Organisation Logo"
         style={{
           height: '100%',
           width: 'auto',
