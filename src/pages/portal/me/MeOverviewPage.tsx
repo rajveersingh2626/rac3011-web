@@ -72,7 +72,7 @@ export function MeOverviewPage() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link to="/portal/me/profile">
             <Button variant="secondary" block>
               Edit profile
@@ -81,6 +81,11 @@ export function MeOverviewPage() {
           <Link to="/portal/my-club">
             <Button variant="secondary" block>
               My club
+            </Button>
+          </Link>
+          <Link to="/portal/changelog">
+            <Button variant="secondary" block>
+              What&apos;s New (Changelog)
             </Button>
           </Link>
           <Link to="/portal/me/settings">

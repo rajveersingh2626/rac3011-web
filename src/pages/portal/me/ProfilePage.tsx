@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { useAuth } from '@/app/auth';
@@ -219,6 +220,18 @@ export function ProfilePage() {
                 ]}
               />
             </div>
+          </Card>
+
+          <Card>
+            <p className="m-0 mb-2 text-[10.5px] font-bold tracking-[1px] text-fg-3">PLATFORM UPDATES &amp; FIXES</p>
+            <p className="m-0 mb-3 text-[13px] text-fg-2">
+              See the latest features, improvements, and fixes rolled out across the Rotaract 3011 portal and website.
+            </p>
+            <Link to="/portal/changelog">
+              <Button variant="secondary" size="sm" block>
+                View Platform Changelog
+              </Button>
+            </Link>
           </Card>
         </div>
       </Section>

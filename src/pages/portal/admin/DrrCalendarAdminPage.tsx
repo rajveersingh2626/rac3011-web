@@ -39,7 +39,7 @@ export function DrrCalendarAdminPage() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'bookings' | 'blocks'>('bookings');
-  const [statusFilter, setStatusFilter] = useState<string>('requested');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Decision Modal State
   const [decisionTarget, setDecisionTarget] = useState<DrrBooking | null>(null);

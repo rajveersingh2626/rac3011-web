@@ -68,6 +68,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'me-overview', label: 'Overview', to: '/portal/me' },
       { key: 'profile', label: 'Profile', to: '/portal/me/profile' },
+      { key: 'changelog', label: "What's New (Changelog)", to: '/portal/changelog' },
       { key: 'contributions', label: 'Contributions', to: '/portal/me/contributions' },
       { key: 'certificates', label: 'Certificates', to: '/portal/me/certificates' },
       { key: 'settings', label: 'Settings', to: '/portal/me/settings' },
