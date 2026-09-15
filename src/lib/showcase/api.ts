@@ -7,6 +7,7 @@ export interface ProjectListParams {
   status?: ProjectStatus;
   clubId?: string;
   category?: string;
+  avenueOfService?: string;
   page?: number;
   pageSize?: number;
 }
@@ -25,6 +26,7 @@ export async function fetchMyProjects(params: ProjectListParams = {}) {
     'filter[status]': params.status,
     'filter[clubId]': params.clubId,
     'filter[category]': params.category,
+    'filter[avenueOfService]': params.avenueOfService,
     page: params.page,
     pageSize: params.pageSize,
   });
@@ -37,7 +39,9 @@ export async function fetchProject(id: string): Promise<Project> {
 
 export interface CreateProjectInput {
   title: string;
-  category: string;
+  category?: string;
+  avenueOfService?: string | null;
+  areasOfFocus?: string[];
   date: string;
   summary: string;
   body?: string | null;
@@ -56,6 +60,8 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
 export interface UpdateProjectInput {
   title?: string;
   category?: string;
+  avenueOfService?: string | null;
+  areasOfFocus?: string[];
   date?: string;
   summary?: string;
   body?: string | null;

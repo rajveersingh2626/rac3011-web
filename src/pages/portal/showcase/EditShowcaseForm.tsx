@@ -37,7 +37,6 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
       ? project.areasOfFocus
       : (project.category ? [project.category] : [])
   );
-  const [category, setCategory] = useState(project.category);
   const [date, setDate] = useState(project.date.slice(0, 10));
   const [summary, setSummary] = useState(project.summary);
   const [beneficiaries, setBeneficiaries] = useState(project.beneficiaries != null ? String(project.beneficiaries) : '');
@@ -56,7 +55,7 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
 
   const buildPayload = () => ({
     title: title.trim(),
-    category: areasOfFocus[0] || avenueOfService || category || '',
+    category: areasOfFocus[0] || avenueOfService || '',
     avenueOfService,
     areasOfFocus,
     date,

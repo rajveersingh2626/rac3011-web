@@ -49,7 +49,6 @@ export function SubmitShowcasePage() {
   const [title, setTitle] = useState('');
   const [avenueOfService, setAvenueOfService] = useState<string>('Community Services');
   const [areasOfFocus, setAreasOfFocus] = useState<string[]>([]);
-  const [category, setCategory] = useState('');
   const [date, setDate] = useState('');
   const [photos, setPhotos] = useState<(FileUploadValue | null)[]>(Array(PHOTO_SLOTS).fill(null));
   const [summary, setSummary] = useState('');
@@ -61,9 +60,9 @@ export function SubmitShowcasePage() {
 
   const buildPayload = () => ({
     title: title.trim(),
-    category: areasOfFocus[0] || avenueOfService || category || '',
+    category: areasOfFocus[0] || avenueOfService || '',
     avenueOfService,
-    areasOfFocus: areasOfFocus.length > 0 ? areasOfFocus : (category ? [category] : []),
+    areasOfFocus,
     date,
     summary: summary.trim(),
     beneficiaries: beneficiaries ? Number(beneficiaries) : null,
@@ -77,7 +76,7 @@ export function SubmitShowcasePage() {
     const next: Record<string, string> = {};
     if (!title.trim()) next.title = 'Say what the club did';
     if (!avenueOfService) next.avenueOfService = 'Pick an avenue of service';
-    if (areasOfFocus.length === 0 && !category) next.areasOfFocus = 'Select at least one area of focus';
+    if (areasOfFocus.length === 0) next.areasOfFocus = 'Select at least one area of focus';
     if (!date) next.date = 'Pick a date';
     if (!summary.trim()) next.summary = 'Tell us what happened';
     if (requireConsent && !consentConfirmed) next.consent = 'Confirm consent before sending for review';
