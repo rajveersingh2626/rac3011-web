@@ -118,7 +118,7 @@ export function PostOpportunityPage() {
               <Field label="Title" required error={errors.title}>
                 <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Marketing Intern" maxLength={200} />
               </Field>
-              <Field label="Company / organisation" required error={errors.company}>
+              <Field label="Company / organization" required error={errors.company}>
                 <Input value={company} onChange={(e) => setCompany(e.target.value)} maxLength={200} />
               </Field>
             </div>

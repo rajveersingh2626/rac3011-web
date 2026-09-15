@@ -88,11 +88,13 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-feedback', label: 'Feedback', to: '/portal/admin/feedback', perm: 'feedback:review' },
       { key: 'admin-content', label: 'Content', to: '/portal/content', perm: 'content:edit' },
       { key: 'admin-users', label: 'Give / Revoke Access', to: '/portal/admin/users', perm: 'roles:manage' },
+      { key: 'admin-sessions', label: 'Active Logins', to: '/portal/admin/sessions', perm: 'roles:manage' },
       { key: 'admin-roles', label: 'Role Capabilities (39)', to: '/portal/admin/roles', perm: 'roles:manage' },
       { key: 'admin-announcements', label: 'Announcements', to: '/portal/admin/announcements', perm: 'announcements:send' },
       { key: 'admin-public-content', label: 'Public content', to: '/portal/admin/public-content', perm: 'public_content:manage' },
       { key: 'admin-settings', label: 'Settings', to: '/portal/admin/settings', perm: 'settings:manage' },
       { key: 'admin-audit', label: 'Audit', to: '/portal/admin/audit', perm: 'audit:view' },
+      { key: 'admin-changelog', label: 'Platform Changelog', to: '/portal/admin/changelog', perm: 'audit:view' },
     ],
   },
 ];

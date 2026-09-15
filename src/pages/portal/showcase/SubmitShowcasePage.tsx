@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
@@ -19,7 +20,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Timeline } from '@/components/ui/Timeline';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { createProject, updateProject } from '@/lib/showcase/api';
-import { SHOWCASE_CATEGORIES } from '@/lib/showcase/types';
+import { AVENUES_OF_SERVICE, AREAS_OF_FOCUS } from '@/lib/showcase/types';
 import { ApiError } from '@/lib/api';
 
 const PHOTO_SLOTS = 4;
@@ -32,16 +33,22 @@ function urlOf(value: FileUploadValue | null): string | null {
 export function SubmitShowcasePage() {
   useDocumentMeta({ title: 'Put a project on the showcase' });
   const navigate = useNavigate();
-  const { me } = useAuth();
-  const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  const qc = useQueryClient();
+  const { me, can } = useAuth();
+  const isSuperAdmin = Boolean(me?.roles?.some((r) => r.roleKey === 'super_admin'));
+  const canPublishOrDistrict = Boolean(can('showcase:publish') || isSuperAdmin || me?.profile?.clubId === 'DISTRICT');
+  const myClubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  const [selectedClubId, setSelectedClubId] = useState<string>(myClubId);
+
+  const activeHostClubId = canPublishOrDistrict && selectedClubId ? selectedClubId : myClubId;
 
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
-  const clubOptions = (clubsQuery.data ?? [])
-    .filter((c) => c.id !== clubId)
-    .map((c) => ({ value: c.id, label: c.name }));
+  const allClubsList = (clubsQuery.data ?? []).map((c) => ({ value: c.id, label: c.name }));
+  const clubOptions = allClubsList.filter((c) => c.value !== activeHostClubId);
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
+  const [avenueOfService, setAvenueOfService] = useState<string>('Community Services');
+  const [areasOfFocus, setAreasOfFocus] = useState<string[]>([]);
   const [date, setDate] = useState('');
   const [photos, setPhotos] = useState<(FileUploadValue | null)[]>(Array(PHOTO_SLOTS).fill(null));
   const [summary, setSummary] = useState('');
@@ -50,22 +57,82 @@ export function SubmitShowcasePage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [restoredDraft, setRestoredDraft] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+  const DRAFT_KEY = `rac3011_showcase_draft_${me?.user?.id || 'current'}`;
+
+  // Restore draft from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const cached = window.localStorage.getItem(DRAFT_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.avenueOfService) setAvenueOfService(parsed.avenueOfService);
+        if (Array.isArray(parsed.areasOfFocus)) setAreasOfFocus(parsed.areasOfFocus);
+        if (parsed.date) setDate(parsed.date);
+        if (parsed.summary) setSummary(parsed.summary);
+        if (parsed.beneficiaries) setBeneficiaries(String(parsed.beneficiaries));
+        if (Array.isArray(parsed.collaboratingClubIds)) setCollaboratingClubIds(parsed.collaboratingClubIds);
+        if (parsed.selectedClubId) setSelectedClubId(parsed.selectedClubId);
+        setRestoredDraft(true);
+        if (parsed.savedAt) setDraftSavedAt(parsed.savedAt);
+      }
+    } catch {
+      // ignore
+    }
+  }, [DRAFT_KEY]);
+
+  // Debounced auto-save draft to localStorage
+  useEffect(() => {
+    if (!title && !summary && !date && areasOfFocus.length === 0) return;
+    const timer = setTimeout(() => {
+      if (typeof window === 'undefined') return;
+      try {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        window.localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({
+            title,
+            avenueOfService,
+            areasOfFocus,
+            date,
+            summary,
+            beneficiaries,
+            collaboratingClubIds,
+            selectedClubId,
+            savedAt: timeStr,
+          }),
+        );
+        setDraftSavedAt(timeStr);
+      } catch {
+        // ignore
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [title, avenueOfService, areasOfFocus, date, summary, beneficiaries, collaboratingClubIds, selectedClubId, DRAFT_KEY]);
 
   const buildPayload = () => ({
     title: title.trim(),
-    category,
+    category: areasOfFocus[0] || avenueOfService || '',
+    avenueOfService,
+    areasOfFocus,
     date,
     summary: summary.trim(),
     beneficiaries: beneficiaries ? Number(beneficiaries) : null,
     photos: photos.map(urlOf).filter((u): u is string => Boolean(u)),
     collaboratingClubIds,
     consentConfirmed,
+    clubId: canPublishOrDistrict && activeHostClubId ? activeHostClubId : undefined,
   });
 
   function validate(requireConsent: boolean): boolean {
     const next: Record<string, string> = {};
     if (!title.trim()) next.title = 'Say what the club did';
-    if (!category) next.category = 'Pick an area of focus';
+    if (!avenueOfService) next.avenueOfService = 'Pick an avenue of service';
+    if (areasOfFocus.length === 0) next.areasOfFocus = 'Select at least one area of focus';
     if (!date) next.date = 'Pick a date';
     if (!summary.trim()) next.summary = 'Tell us what happened';
     if (requireConsent && !consentConfirmed) next.consent = 'Confirm consent before sending for review';
@@ -73,9 +140,20 @@ export function SubmitShowcasePage() {
     return Object.keys(next).length === 0;
   }
 
+  const invalidateAll = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+  };
+
   const saveDraftMutation = useMutation({
     mutationFn: () => createProject(buildPayload()),
-    onSuccess: () => navigate('/portal/showcase/mine'),
+    onSuccess: () => {
+      try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
+      invalidateAll();
+      navigate('/portal/showcase/mine');
+    },
     onError: (e: unknown) => setFormError(e instanceof ApiError ? e.message : 'Could not save the draft. Try again.'),
   });
 
@@ -84,7 +162,11 @@ export function SubmitShowcasePage() {
       const created = await createProject(buildPayload());
       return updateProject(created.id, { status: 'submitted' });
     },
-    onSuccess: () => navigate('/portal/showcase/mine'),
+    onSuccess: () => {
+      try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
+      invalidateAll();
+      navigate('/portal/showcase/mine');
+    },
     onError: (e: unknown) => setFormError(e instanceof ApiError ? e.message : 'Could not send this for review. Try again.'),
   });
 
@@ -104,6 +186,19 @@ export function SubmitShowcasePage() {
     setPhotos((prev) => prev.map((p, i) => (i === index ? value : p)));
   };
 
+  const toggleAreaOfFocus = (focus: string) => {
+    setAreasOfFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+    if (errors.areasOfFocus) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.areasOfFocus;
+        return copy;
+      });
+    }
+  };
+
   const busy = saveDraftMutation.isPending || submitMutation.isPending;
 
   return (
@@ -112,6 +207,13 @@ export function SubmitShowcasePage() {
         title="Put a project on the showcase"
         description="You ran it, so you write it. A district officer checks it and publishes — usually within a week."
       >
+        {restoredDraft && !formError && (
+          <div className="mb-5">
+            <Alert tone="info" title="Draft restored">
+              We restored your project showcase draft from your last session. You can continue editing where you left off.
+            </Alert>
+          </div>
+        )}
         {formError && (
           <div className="mb-5">
             <Alert tone="error" title="Something went wrong">
@@ -122,6 +224,20 @@ export function SubmitShowcasePage() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
           <div className="flex max-w-[600px] flex-col gap-5">
+            {canPublishOrDistrict && (
+              <Field label="Host Club" required hint="District Team / Admin: Choose which club ran this project">
+                <Select
+                  value={activeHostClubId || ''}
+                  onChange={(e) => {
+                    setSelectedClubId(e.target.value);
+                    setCollaboratingClubIds((prev) => prev.filter((id) => id !== e.target.value));
+                  }}
+                  placeholder="Select Host Club"
+                  options={allClubsList}
+                />
+              </Field>
+            )}
+
             <Field label="What did the club do?" required error={errors.title}>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Blood donation camp" maxLength={200} />
             </Field>
@@ -130,15 +246,51 @@ export function SubmitShowcasePage() {
               <Field label="When" required error={errors.date}>
                 <DateInput value={date} onChange={setDate} />
               </Field>
-              <Field label="Area of focus" required error={errors.category}>
+              <Field label="Avenue of service" required error={errors.avenueOfService}>
                 <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Choose one"
-                  options={SHOWCASE_CATEGORIES.map((c) => ({ value: c, label: c }))}
+                  value={avenueOfService}
+                  onChange={(e) => setAvenueOfService(e.target.value)}
+                  placeholder="Choose an avenue"
+                  options={AVENUES_OF_SERVICE.map((a) => ({ value: a, label: a }))}
                 />
               </Field>
             </div>
+
+            <Field
+              label="Areas of focus"
+              required
+              hint="Select all Rotary areas of focus that apply to this project (Multi-choice)"
+              error={errors.areasOfFocus}
+            >
+              <div className="flex flex-wrap gap-2 pt-1">
+                {AREAS_OF_FOCUS.map((focus) => {
+                  const isSelected = areasOfFocus.includes(focus);
+                  return (
+                    <button
+                      key={focus}
+                      type="button"
+                      onClick={() => toggleAreaOfFocus(focus)}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all border text-left ${
+                        isSelected
+                          ? 'bg-accent/10 border-accent text-accent shadow-sm font-bold ring-1 ring-accent/30'
+                          : 'bg-page border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                      }`}
+                    >
+                      <span
+                        className={`flex size-4 shrink-0 items-center justify-center rounded border text-[10px] font-black transition-colors ${
+                          isSelected
+                            ? 'border-accent bg-accent text-white'
+                            : 'border-line-accent bg-page text-transparent'
+                        }`}
+                      >
+                        ✓
+                      </span>
+                      <span>{focus}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
 
             <Field
               label="Photographs"
@@ -150,7 +302,7 @@ export function SubmitShowcasePage() {
                     key={i}
                     tier="dynamic"
                     resourceType="project_photo"
-                    resourceId={clubId || undefined}
+                    resourceId={activeHostClubId || undefined}
                     value={value}
                     onChange={(v) => setPhoto(i, v)}
                     label={i === 0 ? 'Lead photo' : `Photo ${i + 1}`}
@@ -158,6 +310,7 @@ export function SubmitShowcasePage() {
                 ))}
               </div>
             </Field>
+
 
             <Field label="Tell us what happened" required hint="Four or five lines. What you did, who it was for, and anything that surprised you." error={errors.summary}>
               <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={5} maxLength={3000} />
@@ -173,7 +326,7 @@ export function SubmitShowcasePage() {
                   placeholder="120"
                 />
               </Field>
-              <Field label="Other clubs or organisations" hint="Optional">
+              <Field label="Other clubs or organizations" hint="Optional">
                 <MultiSelect
                   options={clubOptions}
                   values={collaboratingClubIds}
@@ -192,13 +345,18 @@ export function SubmitShowcasePage() {
               {errors.consent && <p className="mt-1 text-[11px] font-semibold text-danger-fg">{errors.consent}</p>}
             </Card>
 
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap items-center gap-3">
               <Button onClick={onSendForReview} loading={submitMutation.isPending} disabled={busy}>
                 Send for review
               </Button>
               <Button variant="secondary" onClick={onSaveDraft} loading={saveDraftMutation.isPending} disabled={busy}>
                 Save a draft
               </Button>
+              {draftSavedAt && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Auto-saved draft ({draftSavedAt})
+                </span>
+              )}
             </div>
           </div>
 

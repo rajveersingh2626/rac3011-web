@@ -3,12 +3,12 @@ import { apiFetch } from '@/lib/api';
 
 export const achievementSchema = z.object({
   id: z.string(),
-  type: z.enum(['chartered_club', 'award', 'milestone']),
+  type: z.string(),
   title: z.string(),
-  clubId: z.string().nullable(),
+  clubId: z.string().nullable().optional(),
   date: z.string(),
-  certificateUrl: z.string().nullable(),
-  description: z.string().nullable(),
+  certificateUrl: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
 });
 export type Achievement = z.infer<typeof achievementSchema>;
 

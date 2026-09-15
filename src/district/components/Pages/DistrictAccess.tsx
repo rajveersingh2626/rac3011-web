@@ -5,11 +5,11 @@ import ClubInitiativesList from '../District/ClubInitiativesList';
 import PastDRRShowcase from '../District/PastDRRShowcase';
 import DistrictResourcesView from '../District/DistrictResourcesView';
 import DistrictCalendarView from '../District/DistrictCalendarView';
-import { DISTRICT_LEADERSHIP } from '../../data/districtData';
-import type { DistrictClub } from '../../data/districtData';
-import { findLeaderPhoto } from '../../data/leadershipImages';
+import EventGalleryView from '../District/EventGalleryView';
+import { DISTRICT_LEADERSHIP, type DistrictClub } from '../../data/districtData';
+import { findLeaderPhoto, resolveLeaderPhotoUrl } from '../../data/leadershipImages';
 import { fetchDistrictTeam } from '@/lib/publicApi/leadership';
-import { Mail, Phone, Copy, Check, Search } from 'lucide-react';
+import { Mail, Phone, Copy, Check, Search, Lock } from 'lucide-react';
 
 // Superset of DistrictLeader: the API-backed branch adds `club` and drops `order`.
 interface LeadershipEntry {
@@ -62,14 +62,28 @@ export default function DistrictAccess({
   });
 
   const leadersList = useMemo<LeadershipEntry[]>(() => {
+    const clean = (s: string) => s.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*|Dr\.?\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const deduplicate = (list: LeadershipEntry[]): LeadershipEntry[] => {
+      const seen = new Set<string>();
+      return list.filter((item) => {
+        const cName = clean(item.name);
+        const cEmail = item.email.trim().toLowerCase();
+        const key = cEmail ? `email:${cEmail}` : `name:${cName}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+
     if (!teamQuery.data?.items || teamQuery.data.items.length === 0) {
-      return DISTRICT_LEADERSHIP.map(l => ({
+      return deduplicate(DISTRICT_LEADERSHIP.map(l => ({
         ...l,
-        photo: l.photo || findLeaderPhoto(l.name, l.email, l.id) || ''
-      }));
+        photo: resolveLeaderPhotoUrl(l.photo, l.name, l.email, l.id) || ''
+      })));
     }
-    return teamQuery.data.items.map((member) => {
-      const clean = (s: string) => s.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*|Dr\.?\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    const mapped = teamQuery.data.items.map((member) => {
       const mClean = clean(member.name);
       const local = DISTRICT_LEADERSHIP.find(
         (l) =>
@@ -92,7 +106,7 @@ export default function DistrictAccess({
         }
       }
 
-      const photo = member.photoUrl || local?.photo || findLeaderPhoto(member.name, member.email, member.id) || '';
+      const photo = resolveLeaderPhotoUrl(member.photoUrl, member.name, member.email, member.id) || resolveLeaderPhotoUrl(local?.photo, member.name, member.email, member.id) || '';
 
       return {
         id: member.id,
@@ -105,6 +119,8 @@ export default function DistrictAccess({
         club: 'Rotaract District 3011',
       };
     });
+
+    return deduplicate(mapped);
   }, [teamQuery.data]);
 
   const handleCopyEmail = (email: string) => {
@@ -179,6 +195,10 @@ export default function DistrictAccess({
           <DistrictResourcesView />
         )}
 
+        {activeDistrictTab === 'gallery' && (
+          <EventGalleryView />
+        )}
+
         {activeDistrictTab === 'calendar' && (
           <DistrictCalendarView
             isLoggedIn={isLoggedIn}
@@ -201,6 +221,51 @@ export default function DistrictAccess({
                 Guided by passion, fellowship, and visionary leadership — 50 dedicated leaders steering Rotaract District Organization 3011.
               </p>
             </div>
+
+            {!isLoggedIn && (
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                borderRadius: '16px',
+                padding: isMobile ? '12px 16px' : '14px 22px',
+                marginBottom: isMobile ? '20px' : '26px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+                flexWrap: 'wrap',
+                color: '#FFFFFF'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Lock size={18} style={{ color: '#FBBF24', flexShrink: 0 }} />
+                  <span style={{ fontSize: isMobile ? '0.82rem' : '0.88rem', fontWeight: 600, lineHeight: 1.4 }}>
+                    To get the contact of DAC members, the president, and the secretary of the club, we must log in
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenLoginModal) onOpenLoginModal();
+                    else window.location.href = '/portal/login';
+                  }}
+                  style={{
+                    background: '#FFFFFF',
+                    color: '#123499',
+                    border: 'none',
+                    padding: '7px 18px',
+                    borderRadius: '100px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    transition: 'transform 0.15s ease'
+                  }}
+                >
+                  Log in
+                </button>
+              </div>
+            )}
 
             {/* Controls Bar: Category Pills & Search */}
             <div style={{ 
@@ -321,9 +386,14 @@ export default function DistrictAccess({
                             alt={leader.name}
                             loading="lazy"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
-                              if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                              const fallbackAsset = findLeaderPhoto(leader.name, leader.email, leader.id);
+                              if (fallbackAsset && !e.currentTarget.src.includes(fallbackAsset)) {
+                                e.currentTarget.src = fallbackAsset;
+                              } else {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
+                                if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                              }
                             }}
                             style={{
                               width: '96px',
@@ -385,78 +455,120 @@ export default function DistrictAccess({
 
                     {/* Email Card & Contact Information */}
                     <div style={{ marginTop: '16px' }}>
-                      {leader.email && (
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '6px',
-                          background: '#F8FAFC',
-                          border: '1px solid #E2E8F0',
-                          borderRadius: '10px',
-                          padding: '7px 10px',
-                          fontSize: '0.78rem'
-                        }}>
-                          <a 
-                            href={`mailto:${leader.email}`}
-                            title={`Send email to ${leader.name}`}
-                            style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '6px', 
-                              color: '#1E293B', 
-                              textDecoration: 'none',
-                              fontWeight: 600,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              flex: 1
-                            }}
-                          >
-                            <Mail size={14} style={{ color: '#D81B60', flexShrink: 0 }} />
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {leader.email}
-                            </span>
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyEmail(leader.email)}
-                            title="Copy email address"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: copiedEmail === leader.email ? '#10B981' : '#64748B',
+                      {isLoggedIn ? (
+                        <>
+                          {leader.email && (
+                            <div style={{
                               display: 'flex',
                               alignItems: 'center',
-                              padding: '2px',
-                              borderRadius: '4px',
-                              flexShrink: 0
-                            }}
-                          >
-                            {copiedEmail === leader.email ? <Check size={14} /> : <Copy size={14} />}
-                          </button>
-                        </div>
-                      )}
+                              justifyContent: 'space-between',
+                              gap: '6px',
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              borderRadius: '10px',
+                              padding: '7px 10px',
+                              fontSize: '0.78rem'
+                            }}>
+                              <a 
+                                href={`mailto:${leader.email}`}
+                                title={`Send email to ${leader.name}`}
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '6px', 
+                                  color: '#1E293B', 
+                                  textDecoration: 'none',
+                                  fontWeight: 600,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  flex: 1
+                                }}
+                              >
+                                <Mail size={14} style={{ color: '#D81B60', flexShrink: 0 }} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {leader.email}
+                                </span>
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyEmail(leader.email)}
+                                title="Copy email address"
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  color: copiedEmail === leader.email ? '#10B981' : '#64748B',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  padding: '2px',
+                                  borderRadius: '4px',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {copiedEmail === leader.email ? <Check size={14} /> : <Copy size={14} />}
+                              </button>
+                            </div>
+                          )}
 
-                      {leader.phone && (
-                        <div style={{ marginTop: '8px' }}>
-                          <a 
-                            href={`tel:${leader.phone}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              color: '#64748B',
-                              textDecoration: 'none',
-                              fontSize: '0.75rem',
-                              fontWeight: 600
-                            }}
-                          >
-                            <Phone size={12} style={{ color: '#0284C7' }} />
-                            +91 {leader.phone}
-                          </a>
-                        </div>
+                          {leader.phone && (
+                            <div style={{ marginTop: '8px' }}>
+                              <a 
+                                href={`tel:${leader.phone}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  color: '#64748B',
+                                  textDecoration: 'none',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600
+                                }}
+                              >
+                                <Phone size={12} style={{ color: '#0284C7' }} />
+                                +91 {leader.phone}
+                              </a>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onOpenLoginModal) onOpenLoginModal();
+                            else window.location.href = '/portal/login';
+                          }}
+                          title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
+                          style={{
+                            width: '100%',
+                            padding: '9px 12px',
+                            borderRadius: '10px',
+                            background: '#F8FAFC',
+                            border: '1px dashed #CBD5E1',
+                            color: '#475569',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#FFF1F2';
+                            e.currentTarget.style.borderColor = '#FECDD3';
+                            e.currentTarget.style.color = '#D81B60';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#F8FAFC';
+                            e.currentTarget.style.borderColor = '#CBD5E1';
+                            e.currentTarget.style.color = '#475569';
+                          }}
+                        >
+                          <Lock size={13} style={{ color: '#D81B60' }} />
+                          <span>Log in to view contact</span>
+                        </button>
                       )}
                     </div>
                   </div>

@@ -3,7 +3,7 @@ import {
   ArrowRight, Sparkles, MapPin, Award, Globe, 
   ExternalLink, LogOut, UserCheck, ChevronRight, 
   ChevronDown, Home, Users, LayoutDashboard, X, LogIn,
-  FolderOpen, Calendar
+  FolderOpen, Calendar, Image as ImageIcon
 } from 'lucide-react';
 import DistrictLogo from './DistrictLogo';
 
@@ -102,7 +102,7 @@ export default function MorphedMenu({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const mainLinks: MorphedMenuLink[] = [
+  const navLinks: MorphedMenuLink[] = [
     {
       id: 'home',
       title: 'Home',
@@ -140,7 +140,7 @@ export default function MorphedMenu({
         }
         setIsOpen(false);
       },
-      active: activePage === 'district' && ['map-clubs', 'heritage', 'leadership'].includes(activeDistrictTab),
+      active: activePage === 'district' && ['map-clubs', 'heritage', 'leadership', 'gallery'].includes(activeDistrictTab),
       subTabs: [
         {
           id: 'map-clubs',
@@ -169,6 +169,20 @@ export default function MorphedMenu({
             setIsOpen(false);
           },
           active: activePage === 'district' && activeDistrictTab === 'heritage'
+        },
+        {
+          id: 'gallery',
+          title: 'Event Gallery & Moments',
+          icon: <ImageIcon size={15} />,
+          action: () => {
+            if (setActiveDistrictTab) {
+              setActiveDistrictTab('gallery');
+            } else {
+              setActivePage('district', 'gallery');
+            }
+            setIsOpen(false);
+          },
+          active: activePage === 'district' && activeDistrictTab === 'gallery'
         },
         {
           id: 'leadership',
@@ -260,21 +274,21 @@ export default function MorphedMenu({
         <div
           style={{
             position: isMobile && isOpen ? 'fixed' : 'absolute',
-            top: isMobile && isOpen ? '12px' : '-7px',
+            top: isMobile && isOpen ? '16px' : '-7px',
             left: isMobile && isOpen ? '50%' : 'auto',
             right: isMobile && isOpen ? 'auto' : '-18px',
             transform: isMobile && isOpen ? 'translateX(-50%)' : 'none',
             width: isOpen ? (isMobile ? 'calc(100vw - 24px)' : 'min(420px, 92vw)') : (isMobile ? '64px' : '60px'),
             maxWidth: '420px',
-            height: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'min(640px, 90vh)') : (isMobile ? '44px' : '36px'),
-            backgroundColor: 'rgba(15, 18, 26, 0.88)',
-            backdropFilter: 'blur(28px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-            backgroundImage: 'radial-gradient(circle at 85% 15%, rgba(216, 27, 96, 0.16) 0%, rgba(197, 160, 89, 0.08) 40%, transparent 75%)',
-            borderRadius: isMobile ? '20px' : '24px',
-            border: '1px solid rgba(255, 255, 255, 0.22)',
+            height: isOpen ? (isMobile ? 'min(660px, calc(100dvh - 32px))' : 'min(640px, 90vh)') : (isMobile ? '44px' : '36px'),
+            backgroundColor: 'rgba(15, 18, 26, 0.94)',
+            backdropFilter: 'blur(32px) saturate(190%)',
+            WebkitBackdropFilter: 'blur(32px) saturate(190%)',
+            backgroundImage: 'radial-gradient(circle at 85% 15%, rgba(216, 27, 96, 0.22) 0%, rgba(197, 160, 89, 0.10) 40%, transparent 75%)',
+            borderRadius: isMobile ? '28px' : '24px',
+            border: '1.5px solid rgba(255, 255, 255, 0.22)',
             boxShadow: isOpen 
-              ? '0 30px 80px rgba(0, 0, 0, 0.8), 0 0 30px rgba(216, 27, 96, 0.25)' 
+              ? '0 32px 90px rgba(0, 0, 0, 0.9), 0 0 45px rgba(216, 27, 96, 0.3)' 
               : '0 4px 15px rgba(0, 0, 0, 0.2)',
             overflow: 'hidden',
             transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -331,7 +345,7 @@ export default function MorphedMenu({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '4px 0 16px 0' }}>
-              {mainLinks.map((link, idx) => {
+              {navLinks.map((link: MorphedMenuLink, idx: number) => {
                 const isHovered = hoveredNav === idx;
                 return (
                   <div key={link.id} style={{ perspective: '800px', perspectiveOrigin: 'bottom' }}>
@@ -458,7 +472,7 @@ export default function MorphedMenu({
                           paddingLeft: '12px'
                         }}
                       >
-                        {link.subTabs?.map((sub, sIdx) => {
+                        {link.subTabs?.map((sub: MorphedMenuSubTab, sIdx: number) => {
                           const isSubHovered = hoveredSubNav === sIdx;
                           return (
                             <div
@@ -717,10 +731,10 @@ export default function MorphedMenu({
             zIndex: 10000,
             outline: 'none',
             opacity: isOpen ? 0 : 1,
-            pointerEvents: isOpen ? 'none' : 'auto',
+            pointerEvents: (isOpen || isMobile) ? 'none' : 'auto',
             transform: isOpen ? 'scale(0.85)' : 'scale(1)',
             transition: 'opacity 0.3s ease, transform 0.3s ease',
-            display: 'flex',
+            display: isMobile ? 'none' : 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}

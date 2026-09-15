@@ -32,5 +32,11 @@ export const meSchema = z.object({
   grants: z.record(z.string(), z.array(scopeSchema)),
   clubs: z.array(z.object({ id: z.string(), name: z.string(), shortName: z.string().nullable(), zoneId: z.string().nullable() })),
   theme: z.enum(['light', 'dark', 'system']).nullable().optional(),
+  session: z
+    .object({
+      id: z.string().optional(),
+      expiresAt: z.string().nullable().optional(),
+    })
+    .optional(),
 });
 export type Me = z.infer<typeof meSchema>;

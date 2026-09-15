@@ -3,6 +3,7 @@ import {
   achievementSchema,
   districtTeamMemberSchema,
   enquirySchema,
+  galleryItemSchema,
   partnerSchema,
   pastDrrSchema,
   publicationSchema,
@@ -11,6 +12,7 @@ import {
 } from './types';
 
 export const achievementsApi = makeCrud('/achievements', achievementSchema);
+export const galleryApi = makeCrud('/gallery', galleryItemSchema);
 export const partnersApi = makeCrud('/partners', partnerSchema);
 export const publicationsApi = makeCrud('/publications', publicationSchema);
 export const resourcesApi = makeCrud('/resources', resourceSchema);
@@ -18,3 +20,4 @@ export const pastDrrsApi = makeCrud('/past-drrs', pastDrrSchema);
 export const districtTeamApi = makeCrud('/district-team', districtTeamMemberSchema);
 export const enquiriesApi = makeCrud('/enquiries', enquirySchema);
 export const sisterClubRequestsApi = makeCrud('/sister-club-requests', sisterClubRequestSchema);
+

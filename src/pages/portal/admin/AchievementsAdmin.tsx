@@ -65,7 +65,11 @@ export function AchievementsAdmin({ canWrite }: { canWrite: boolean }) {
             />
           </Field>
           <Field label="Date" required>
-            <Input type="date" value={values.date ?? ''} onChange={(e) => setValues({ date: e.target.value })} />
+            <Input
+              type="date"
+              value={values.date ? values.date.slice(0, 10) : ''}
+              onChange={(e) => setValues({ date: e.target.value })}
+            />
           </Field>
           <Field label="Description">
             <Textarea

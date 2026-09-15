@@ -69,7 +69,7 @@ export function NewClubPage() {
             <Field label="Phone" hint="Optional">
               <Input type="tel" value={form.values.phone} onChange={(e) => form.setValue('phone', e.target.value)} />
             </Field>
-            <Field label="College or organisation" error={form.errors.organisation} required>
+            <Field label="College or organization" error={form.errors.organisation} required>
               <Input value={form.values.organisation} onChange={(e) => form.setValue('organisation', e.target.value)} />
             </Field>
             <Field label="Tell us about your group" error={form.errors.message} required>

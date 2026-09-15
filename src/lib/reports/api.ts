@@ -109,8 +109,12 @@ export async function fetchReportSchemas(): Promise<ReportSchemaSummary[]> {
   return apiFetch('/report-schemas', { schema: schemaListSummary.transform((v) => v.items) });
 }
 
-export async function createReportSchemaDraft(): Promise<ReportSchemaWithFields> {
-  return apiFetch('/report-schemas', { method: 'POST', schema: reportSchemaWithFieldsSchema });
+export async function createReportSchemaDraft(baseVersion?: number): Promise<ReportSchemaWithFields> {
+  return apiFetch('/report-schemas', {
+    method: 'POST',
+    body: baseVersion ? { baseVersion } : undefined,
+    schema: reportSchemaWithFieldsSchema,
+  });
 }
 
 export interface ReportFieldInput {
@@ -132,6 +136,14 @@ export async function saveReportSchemaFields(version: number, fields: ReportFiel
 
 export async function publishReportSchema(version: number): Promise<ReportSchemaWithFields> {
   return apiFetch(`/report-schemas/${version}`, { method: 'PATCH', body: { status: 'active' }, schema: reportSchemaWithFieldsSchema });
+}
+
+export async function unpublishReportSchema(version: number): Promise<ReportSchemaWithFields> {
+  return apiFetch(`/report-schemas/${version}`, { method: 'PATCH', body: { status: 'draft' }, schema: reportSchemaWithFieldsSchema });
+}
+
+export async function deleteReportSchemaDraft(version: number): Promise<void> {
+  await apiFetch(`/report-schemas/${version}`, { method: 'DELETE' });
 }
 
 const requestList = z.object({ items: z.array(reportRequestSchema) });

@@ -54,9 +54,22 @@ export function ShowcaseDetailPage() {
         <Container width="narrow" className="py-12">
           <div className="reveal">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
-                {categoryLabelOf(data.category)}
-              </span>
+              {data.avenueOfService && (
+                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
+                  {data.avenueOfService}
+                </span>
+              )}
+              {data.areasOfFocus && data.areasOfFocus.length > 0 ? (
+                data.areasOfFocus.map((focus, i) => (
+                  <span key={i} className="pill-gold" style={{ fontSize: '0.78rem' }}>
+                    {focus}
+                  </span>
+                ))
+              ) : (
+                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>
+                  {categoryLabelOf(data.category)}
+                </span>
+              )}
               <span className="pill-gold" style={{ fontSize: '0.78rem' }}>
                 <Calendar aria-hidden size={13} /> {data.date}
               </span>

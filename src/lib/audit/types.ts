@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const auditRowSchema = z.object({
   id: z.string(),
   actorId: z.string().nullable(),
+  actorName: z.string().nullable().optional(),
+  actorEmail: z.string().nullable().optional(),
   action: z.string(),
   resourceType: z.string(),
   resourceId: z.string().nullable(),

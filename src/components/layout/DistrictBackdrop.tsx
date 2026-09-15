@@ -2,7 +2,7 @@
 // bleeding off the right edge. Pure CSS sizing so the markup is identical at every width.
 export function DistrictBackdrop() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
       <div
         className="absolute inset-0"
         style={{
@@ -11,7 +11,7 @@ export function DistrictBackdrop() {
           backgroundSize: '28px 28px',
         }}
       />
-      <div className="wide-only absolute top-1/2 left-[92%] -translate-x-1/2 -translate-y-1/2 opacity-80 [width:clamp(680px,58vw,1080px)] [height:clamp(680px,58vw,1080px)]">
+      <div className="wide-only absolute top-1/2 left-[92%] -translate-x-1/2 -translate-y-1/2 opacity-15 [width:clamp(680px,58vw,1080px)] [height:clamp(680px,58vw,1080px)]">
         <img
           src="/images.webp"
           alt=""

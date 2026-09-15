@@ -39,7 +39,7 @@ export function DrrCalendarAdminPage() {
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<'bookings' | 'blocks'>('bookings');
-  const [statusFilter, setStatusFilter] = useState<string>('requested');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Decision Modal State
   const [decisionTarget, setDecisionTarget] = useState<DrrBooking | null>(null);
@@ -168,32 +168,32 @@ export function DrrCalendarAdminPage() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4 bg-surface-800/40 border-surface-700/50">
-          <div className="text-xs text-surface-300 font-medium">Pending Requests</div>
-          <div className="text-2xl font-black text-amber-400 mt-1">{requestedCount}</div>
+        <Card className="p-4 bg-surface-50 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/50">
+          <div className="text-xs text-surface-600 dark:text-surface-300 font-medium">Pending Requests</div>
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{requestedCount}</div>
         </Card>
-        <Card className="p-4 bg-surface-800/40 border-surface-700/50">
-          <div className="text-xs text-surface-300 font-medium">Confirmed Visits</div>
-          <div className="text-2xl font-black text-emerald-400 mt-1">{confirmedCount}</div>
+        <Card className="p-4 bg-surface-50 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/50">
+          <div className="text-xs text-surface-600 dark:text-surface-300 font-medium">Confirmed Visits</div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{confirmedCount}</div>
         </Card>
-        <Card className="p-4 bg-surface-800/40 border-surface-700/50">
-          <div className="text-xs text-surface-300 font-medium">Blocked Dates</div>
-          <div className="text-2xl font-black text-rose-400 mt-1">{blocks.length}</div>
+        <Card className="p-4 bg-surface-50 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/50">
+          <div className="text-xs text-surface-600 dark:text-surface-300 font-medium">Blocked Dates</div>
+          <div className="text-2xl font-black text-rose-600 dark:text-rose-400 mt-1">{blocks.length}</div>
         </Card>
-        <Card className="p-4 bg-surface-800/40 border-surface-700/50">
-          <div className="text-xs text-surface-300 font-medium">Total Bookings</div>
-          <div className="text-2xl font-black text-white mt-1">{bookings.length}</div>
+        <Card className="p-4 bg-surface-50 dark:bg-surface-800/40 border-surface-200 dark:border-surface-700/50">
+          <div className="text-xs text-surface-600 dark:text-surface-300 font-medium">Total Bookings</div>
+          <div className="text-2xl font-black text-surface-900 dark:text-white mt-1">{bookings.length}</div>
         </Card>
       </div>
 
       {/* Nav Tabs */}
-      <div className="flex items-center gap-3 border-b border-surface-700/60 pb-3 mb-6">
+      <div className="flex items-center gap-2 border-b border-surface-200 dark:border-surface-700/60 pb-3 mb-6">
         <button
           onClick={() => setActiveTab('bookings')}
           className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${
             activeTab === 'bookings'
               ? 'bg-primary text-white shadow-sm'
-              : 'text-surface-300 hover:text-white hover:bg-surface-800/50'
+              : 'text-surface-700 dark:text-surface-300 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800/50'
           }`}
         >
           Presence Requests ({bookings.length})
@@ -203,7 +203,7 @@ export function DrrCalendarAdminPage() {
           className={`px-4 py-2 text-sm font-bold rounded-lg transition-all ${
             activeTab === 'blocks'
               ? 'bg-primary text-white shadow-sm'
-              : 'text-surface-300 hover:text-white hover:bg-surface-800/50'
+              : 'text-surface-700 dark:text-surface-300 hover:text-surface-900 dark:hover:text-white hover:bg-surface-100 dark:hover:bg-surface-800/50'
           }`}
         >
           Date Blocks ({blocks.length})

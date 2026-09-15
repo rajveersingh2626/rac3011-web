@@ -3,7 +3,7 @@ import {
   Award, Users, Sparkles, Calendar, 
   ArrowUpRight, ChevronRight, Activity, Compass, ChevronLeft
 } from 'lucide-react';
-import { useSurfaceHref } from '@/app/host';
+import { useSurfaceHref, surfaceHref, type Surface } from '@/app/host';
 
 export interface DistrictBentoMatrixProps {
   onNavigateDistrict?: (tab: string) => void;
@@ -85,11 +85,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   const rclHref = useSurfaceHref('rcl');
   const careerBridgeHref = useSurfaceHref('careerbridge');
 
-  const surfaceHrefs = {
+  const surfaceHrefs: Partial<Record<Exclude<Surface, 'main'>, string | undefined>> = {
     mission3011: missionHref,
     drishti: drishtiHref,
     rcl: rclHref,
     careerbridge: careerBridgeHref
+  };
+
+  const getSafeSurfaceHref = (key: Exclude<Surface, 'main'>): string => {
+    return surfaceHrefs[key] || surfaceHref(key) || `/?surface=${key}`;
   };
 
   useEffect(() => {
@@ -111,12 +115,12 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   }, []);
 
   const navigateTo = (tab: string) => {
-    if (onNavigateDistrict) {
-      onNavigateDistrict(tab);
-    } else if (onNavigatePage) {
+    if (onNavigatePage) {
       onNavigatePage('district', tab);
+    } else if (onNavigateDistrict) {
+      onNavigateDistrict(tab);
     } else {
-      window.location.href = `/district#${tab}`;
+      window.location.href = `/${tab === 'map-clubs' ? 'map' : tab}`;
     }
   };
 
@@ -127,7 +131,9 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
         maxWidth: '1380px',
         margin: '0 auto',
         padding: isMobile ? '8px 12px 28px' : '20px 24px 44px',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 10
       }}
     >
       {/* 4x4 Bento Matrix Grid Container */}
@@ -199,7 +205,10 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
           })}
 
           {/* Top Live Pill */}
-          <div
+          <button
+            type="button"
+            onClick={() => navigateTo('gallery')}
+            title="Explore District Gallery"
             style={{
               position: 'absolute',
               top: isMobile ? '14px' : '20px',
@@ -213,7 +222,19 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               WebkitBackdropFilter: 'blur(12px)',
               border: '1px solid rgba(255, 255, 255, 0.18)',
               borderRadius: '999px',
-              padding: '5px 12px'
+              padding: '5px 12px',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(15, 18, 24, 0.9)';
+              e.currentTarget.style.borderColor = 'var(--rotaract-pink)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(15, 18, 24, 0.65)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
             <span
@@ -236,7 +257,8 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             >
               OFFICIAL DISTRICT MOMENTS
             </span>
-          </div>
+            <ChevronRight size={13} color="#FFFFFF" style={{ opacity: 0.8 }} />
+          </button>
 
           {/* Quick Arrow Jump */}
           <div
@@ -250,7 +272,10 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             }}
           >
             <button
-              onClick={() => setSlideIdx((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1))}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSlideIdx((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1));
+              }}
               style={{
                 width: '32px',
                 height: '32px',
@@ -269,7 +294,10 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               <ChevronLeft size={16} />
             </button>
             <button
-              onClick={() => setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+              }}
               style={{
                 width: '32px',
                 height: '32px',
@@ -321,7 +349,10 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                 return (
                   <button
                     key={dotIdx}
-                    onClick={() => setSlideIdx(dotIdx)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSlideIdx(dotIdx);
+                    }}
                     style={{
                       width: isDotActive ? '24px' : '6px',
                       height: '6px',
@@ -344,7 +375,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             TILE 2: 2x1 SPAN (Interactive Delhi NCR Map & Club Radar)
            =================================================================== */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => navigateTo('map-clubs')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigateTo('map-clubs');
+            }
+          }}
           style={{
             gridColumn: isMobile ? '1' : isTablet ? 'span 2' : 'span 2',
             position: 'relative',
@@ -365,8 +404,8 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-3px)';
-            e.currentTarget.style.borderColor = '#123499';
-            e.currentTarget.style.boxShadow = '0 18px 40px rgba(18, 52, 153, 0.18)';
+            e.currentTarget.style.borderColor = '#38BDF8';
+            e.currentTarget.style.boxShadow = '0 18px 40px rgba(18, 52, 153, 0.28)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
@@ -401,20 +440,37 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               </div>
             </div>
 
-            <div
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateTo('map-clubs');
+              }}
               style={{
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFFFFF'
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease, transform 0.2s ease'
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              aria-label="Open Map Directory"
             >
               <ArrowUpRight size={16} />
-            </div>
+            </button>
           </div>
 
           <p style={{ color: 'rgba(255, 255, 255, 0.80)', fontSize: '0.86rem', lineHeight: 1.45, margin: '10px 0' }}>
@@ -423,20 +479,42 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
 
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {['Zone Prithvi', 'Zone Agni', 'Zone Vayu', 'Zone Akash'].map((zone) => (
-              <span
+              <button
                 key={zone}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigateTo('map-clubs');
+                }}
                 style={{
                   fontSize: '0.70rem',
                   fontWeight: 800,
                   color: '#BFDBFE',
-                  backgroundColor: 'rgba(30, 58, 138, 0.55)',
-                  padding: '3px 9px',
+                  backgroundColor: 'rgba(30, 58, 138, 0.6)',
+                  padding: '4px 10px',
                   borderRadius: '6px',
-                  border: '1px solid rgba(147, 197, 253, 0.25)'
+                  border: '1px solid rgba(147, 197, 253, 0.3)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.6)';
+                  e.currentTarget.style.borderColor = '#93C5FD';
+                  e.currentTarget.style.color = '#FFFFFF';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(30, 58, 138, 0.6)';
+                  e.currentTarget.style.borderColor = 'rgba(147, 197, 253, 0.3)';
+                  e.currentTarget.style.color = '#BFDBFE';
+                  e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
                 {zone}
-              </span>
+              </button>
             ))}
           </div>
         </div>
@@ -445,7 +523,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             TILE 3: 1x1 SPAN (DAC Leadership Council)
            =================================================================== */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => navigateTo('leadership')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigateTo('leadership');
+            }
+          }}
           style={{
             position: 'relative',
             borderRadius: isMobile ? '18px' : '24px',
@@ -460,14 +546,16 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             padding: isMobile ? '18px' : '24px',
             boxSizing: 'border-box',
             cursor: 'pointer',
-            transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+            transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-3px)';
-            e.currentTarget.style.boxShadow = '0 16px 36px rgba(18, 52, 153, 0.12)';
+            e.currentTarget.style.borderColor = '#123499';
+            e.currentTarget.style.boxShadow = '0 16px 36px rgba(18, 52, 153, 0.16)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.borderColor = 'rgba(226, 232, 240, 0.9)';
             e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.05)';
           }}
         >
@@ -486,20 +574,37 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             >
               <Users size={20} />
             </div>
-            <div
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateTo('leadership');
+              }}
               style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
                 backgroundColor: '#F8FAFC',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#64748B'
+                color: '#64748B',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease, color 0.2s ease'
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#EEF2FF';
+                e.currentTarget.style.color = '#123499';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#F8FAFC';
+                e.currentTarget.style.color = '#64748B';
+              }}
+              aria-label="View District Leadership Council"
             >
               <ChevronRight size={16} />
-            </div>
+            </button>
           </div>
 
           <div>
@@ -519,7 +624,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             TILE 4: 1x1 SPAN (Council of Past DRRs & Heritage Vault)
            =================================================================== */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => navigateTo('heritage')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigateTo('heritage');
+            }
+          }}
           style={{
             position: 'relative',
             borderRadius: isMobile ? '18px' : '24px',
@@ -563,20 +676,35 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             >
               <Award size={20} />
             </div>
-            <div
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateTo('heritage');
+              }}
               style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFFFFF'
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease'
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+              aria-label="View Past DRR Legacy"
             >
               <ArrowUpRight size={16} />
-            </div>
+            </button>
           </div>
 
           <div>
@@ -632,6 +760,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             </div>
 
             <button
+              type="button"
               onClick={() => navigateTo('initiatives')}
               style={{
                 background: 'none',
@@ -643,7 +772,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '2px',
-                padding: '4px'
+                padding: '4px 8px',
+                borderRadius: '6px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#EFF6FF';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
               View All <ChevronRight size={14} />
@@ -659,11 +796,17 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             }}
           >
             {FLAGSHIP_ITEMS.map((item) => {
-              const href = surfaceHrefs[item.surface];
+              const href = getSafeSurfaceHref(item.surface);
               return (
                 <a
                   key={item.id}
-                  href={href ?? '#'}
+                  href={href}
+                  onClick={(e) => {
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                      e.preventDefault();
+                      window.location.href = href;
+                    }
+                  }}
                   style={{
                     textDecoration: 'none',
                     backgroundColor: '#F8FAFC',
@@ -674,17 +817,20 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     minHeight: '74px',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#EFF6FF';
                     e.currentTarget.style.borderColor = '#BFDBFE';
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(18, 52, 153, 0.08)';
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '#F8FAFC';
                     e.currentTarget.style.borderColor = '#E2E8F0';
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
                   <span style={{ fontSize: '0.66rem', fontWeight: 800, color: item.color, textTransform: 'uppercase' }}>
@@ -703,6 +849,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             TILE 6: 1x1 SPAN (Live Grassroots Metrics)
            =================================================================== */}
         <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigateTo('map-clubs')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigateTo('map-clubs');
+            }
+          }}
           style={{
             position: 'relative',
             borderRadius: isMobile ? '18px' : '24px',
@@ -713,7 +868,19 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             boxSizing: 'border-box',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            cursor: 'pointer',
+            transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.borderColor = '#123499';
+            e.currentTarget.style.boxShadow = '0 16px 36px rgba(18, 52, 153, 0.12)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.borderColor = 'rgba(226, 232, 240, 0.9)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.05)';
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -727,8 +894,9 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             <div style={{ fontSize: '2.4rem', fontWeight: 900, color: '#0F172A', lineHeight: 1, letterSpacing: '-1px' }}>
               54
             </div>
-            <div style={{ fontSize: '0.90rem', fontWeight: 800, color: '#1E293B', marginTop: '4px' }}>
-              Active Verified Clubs
+            <div style={{ fontSize: '0.90rem', fontWeight: 800, color: '#1E293B', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Active Verified Clubs</span>
+              <ChevronRight size={14} color="#64748B" />
             </div>
             <div style={{ fontSize: '0.76rem', color: '#64748B', marginTop: '2px' }}>
               4 Zonal Demarcations
@@ -740,7 +908,15 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             TILE 7: 1x1 SPAN (District Calendar & Events)
            =================================================================== */}
         <div
+          role="button"
+          tabIndex={0}
           onClick={() => navigateTo('calendar')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigateTo('calendar');
+            }
+          }}
           style={{
             position: 'relative',
             borderRadius: isMobile ? '18px' : '24px',
@@ -754,13 +930,17 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             justifyContent: 'space-between',
             cursor: 'pointer',
             color: '#FFFFFF',
-            transition: 'transform 0.25s ease'
+            transition: 'transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.borderColor = '#38BDF8';
+            e.currentTarget.style.boxShadow = '0 16px 36px rgba(0, 0, 0, 0.25)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.14)';
+            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.12)';
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -778,20 +958,35 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             >
               <Calendar size={20} />
             </div>
-            <div
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateTo('calendar');
+              }}
               style={{
                 width: '28px',
                 height: '28px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#FFFFFF'
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease'
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+              }}
+              aria-label="Open District Calendar"
             >
               <ArrowUpRight size={16} />
-            </div>
+            </button>
           </div>
 
           <div>
@@ -799,7 +994,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               DISTRICT CALENDAR
             </span>
             <h4 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', margin: '2px 0 4px 0' }}>
-              Events &amp; DOLS
+              District Events
             </h4>
             <p style={{ color: 'rgba(255, 255, 255, 0.80)', fontSize: '0.82rem', lineHeight: 1.4, margin: 0 }}>
               Track official assembly dates &amp; leadership seminars.
@@ -813,3 +1008,4 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
 };
 
 export default DistrictBentoMatrix;
+

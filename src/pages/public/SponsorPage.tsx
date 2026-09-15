@@ -98,7 +98,7 @@ export function SponsorPage() {
             <Field label="Email" error={form.errors.email} required>
               <Input type="email" value={form.values.email} onChange={(e) => form.setValue('email', e.target.value)} />
             </Field>
-            <Field label="Organisation" hint="Optional">
+            <Field label="Organization" hint="Optional">
               <Input value={form.values.organisation} onChange={(e) => form.setValue('organisation', e.target.value)} />
             </Field>
             <Field label="Tell us about your interest" error={form.errors.message} required>

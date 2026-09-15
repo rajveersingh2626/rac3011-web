@@ -70,12 +70,34 @@ export function NewReportPage() {
   const [notes, setNotes] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+  const storageKey = clubId ? `rac3011_report_draft_${clubId}_${month}` : undefined;
+
   useEffect(() => {
     if (reportQuery.data) {
-      setValues((reportQuery.data.values as Record<string, unknown>) ?? { activities: [] });
-      setNotes(reportQuery.data.notes ?? '');
+      let nextValues = (reportQuery.data.values as Record<string, unknown>) ?? { activities: [] };
+      let nextNotes = reportQuery.data.notes ?? '';
+      if (storageKey && typeof window !== 'undefined') {
+        try {
+          const cached = window.localStorage.getItem(storageKey);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && typeof parsed === 'object') {
+              const cachedActivities = parsed.values?.activities;
+              const serverActivities = (nextValues.activities as unknown[]) ?? [];
+              if (Array.isArray(cachedActivities) && cachedActivities.length >= serverActivities.length) {
+                nextValues = parsed.values;
+                if (typeof parsed.notes === 'string') nextNotes = parsed.notes;
+              }
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+      setValues(nextValues);
+      setNotes(nextNotes);
     }
-  }, [reportQuery.data]);
+  }, [reportQuery.data, storageKey]);
 
   const saveMutation = useMutation({
     mutationFn: (payload: { values: Record<string, unknown>; notes: string }) => {
@@ -89,6 +111,7 @@ export function NewReportPage() {
 
   const [activeAvenue, setActiveAvenue] = useState<string | null>(null);
   const [isAddingOrEditing, setIsAddingOrEditing] = useState(false);
+  const [isNavigatingToReview, setIsNavigatingToReview] = useState(false);
 
   // Memoised, not just hoisted above the guards: splitFields returns fresh arrays, so an
   // unmemoised call makes ActivityForm reset mid-edit on every autosave tick.
@@ -149,7 +172,7 @@ export function NewReportPage() {
     return empty;
   }, [editingIndex, activities, activityFields, activeAvenue]);
 
-  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data));
+  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data), storageKey);
 
   if (!clubId) {
     return (
@@ -183,6 +206,18 @@ export function NewReportPage() {
 
   const report = reportQuery.data!;
   const clubOptions = (clubsQuery.data ?? []).filter((c) => c.id !== clubId).map((c) => ({ value: c.id, label: c.name }));
+
+  const handleProceedToReview = async () => {
+    setIsNavigatingToReview(true);
+    try {
+      await saveMutation.mutateAsync({ values, notes });
+      navigate(`/portal/reports/${report.id}/review`);
+    } catch (err) {
+      console.error('Failed to save report before reviewing:', err);
+    } finally {
+      setIsNavigatingToReview(false);
+    }
+  };
 
   const setTopField = (key: string, value: unknown) => setValues((v) => ({ ...v, [key]: value }));
 
@@ -237,7 +272,7 @@ export function NewReportPage() {
         title="Monthly Avenue Reporting"
         description="6 avenues to report club activities and impact. Add events and projects under each respective avenue below."
         action={
-          <Button variant="secondary" onClick={() => navigate(`/portal/reports/${report.id}/review`)}>
+          <Button variant="secondary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
             Review and submit →
           </Button>
         }
@@ -397,7 +432,7 @@ export function NewReportPage() {
             >
               {statusMessage(autosave.status)}
             </p>
-            <Button variant="primary" onClick={() => navigate(`/portal/reports/${report.id}/review`)}>
+            <Button variant="primary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
               Proceed to Review &amp; Submit ({activities.length} Projects) →
             </Button>
           </div>

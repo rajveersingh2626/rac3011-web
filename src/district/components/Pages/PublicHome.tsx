@@ -17,7 +17,7 @@ import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
 import { fetchAchievements } from '@/lib/publicApi/achievements';
 import { fetchPartners } from '@/lib/publicApi/partners';
-import { useSurfaceHref } from '@/app/host';
+import { useSurfaceHref, surfaceHref } from '@/app/host';
 
 const impactStatsSchema = z.array(
   z.object({
@@ -203,13 +203,13 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         maxWidth: '95vw',
         maxHeight: '95vw',
         pointerEvents: 'none',
-        zIndex: 1,
+        zIndex: 0,
         willChange: 'transform',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transformOrigin: 'center center',
-        opacity: 0.80,
+        opacity: 0.70,
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}
@@ -223,8 +223,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
           width: '100%',
           height: '100%',
           objectFit: 'contain',
-          filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))',
-          pointerEvents: 'none'
+          filter: 'drop-shadow(0 15px 30px rgba(0,0,0,0.035))'
         }}
       />
     </div>
@@ -320,6 +319,11 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const getSafeSurfaceHref = (surface?: FlagshipSurface): string | undefined => {
+    if (!surface) return undefined;
+    return surfaceHrefs[surface] || surfaceHref(surface) || `/?surface=${surface}`;
+  };
+
   if (isMobile) {
     return (
       <div
@@ -337,7 +341,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
         }}
       >
         {DISTRICT_UPCOMING_PROJECTS.map((proj) => {
-          const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+          const href = getSafeSurfaceHref(proj.surface);
           const Card = proj.surface ? 'a' : 'div';
           return (
             <Card
@@ -443,7 +447,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     >
       {DISTRICT_UPCOMING_PROJECTS.map((proj, idx) => {
         const isActive = idx === selectedIndex;
-        const href = proj.surface ? surfaceHrefs[proj.surface] : undefined;
+        const href = getSafeSurfaceHref(proj.surface);
         const Card = proj.surface ? 'a' : 'div';
         return (
           <Card
@@ -572,7 +576,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
 };
 
 export interface PublicHomeProps {
-  onNavigateDistrict?: () => void;
+  onNavigateDistrict?: (tab?: string) => void;
   onNavigatePage?: (page: string, tab?: string) => void;
   onOpenLoginModal?: () => void;
 }
@@ -855,7 +859,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
               whiteSpace: 'pre-line'
             }}
           >
-            {"ROTARACT\nDISTRICT\nORGANISATION"}
+            {"ROTARACT\nDISTRICT\nORGANIZATION"}
           </h1>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '20px', flexWrap: 'wrap' }}>
@@ -892,10 +896,12 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
       </section>
 
       {/* 4x4 Modular District Matrix Layout */}
-      <DistrictBentoMatrix
-        onNavigateDistrict={onNavigateDistrict}
-        onNavigatePage={onNavigatePage}
-      />
+      <section style={{ position: 'relative', zIndex: 10, width: '100%' }}>
+        <DistrictBentoMatrix
+          onNavigateDistrict={onNavigateDistrict}
+          onNavigatePage={onNavigatePage}
+        />
+      </section>
 
       <SectionDivider />
 

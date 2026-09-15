@@ -56,6 +56,7 @@ const ROUTE_MAP: Record<string, RouteState> = {
   '/showcase': { page: 'district', tab: 'initiatives' },
   '/initiatives': { page: 'district', tab: 'initiatives' },
   '/heritage': { page: 'district', tab: 'heritage' },
+  '/gallery': { page: 'district', tab: 'gallery' },
   '/resources': { page: 'district', tab: 'resources' },
   '/calendar': { page: 'district', tab: 'calendar' },
   '/governance': { page: 'district', tab: 'leadership' },
@@ -91,6 +92,7 @@ function getPathFromState(page: DistrictPage, tab: string): string {
   if (page === 'home') return '/';
   if (tab === 'heritage') return '/heritage';
   if (tab === 'initiatives' || tab === 'showcase') return '/showcase';
+  if (tab === 'gallery') return '/gallery';
   if (tab === 'leadership') return '/governance';
   if (tab === 'resources') return '/resources';
   if (tab === 'calendar') return '/calendar';
@@ -284,7 +286,7 @@ export default function DistrictApp() {
       <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: isMobile ? '76px' : '0px' }}>
         {activePage === 'home' && (
           <PublicHome
-            onNavigateDistrict={() => handlePageChange('district', 'map-clubs')}
+            onNavigateDistrict={(tab?: string) => handlePageChange('district', tab || 'map-clubs')}
             onNavigatePage={handlePageChange}
             onOpenLoginModal={handleOpenLogin}
           />

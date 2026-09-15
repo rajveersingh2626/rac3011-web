@@ -33,6 +33,33 @@ export const PDRR_PHOTOS = {
 
 export type PdrrPhotoKey = keyof typeof PDRR_PHOTOS;
 
+export function resolvePdrrPhotoUrl(
+  photoUrl?: string | null,
+  name?: string | null,
+  slug?: string | null
+): string | null {
+  if (photoUrl && photoUrl.trim()) {
+    const trimmed = photoUrl.trim();
+    if (
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('data:') ||
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('/uploads/')
+    ) {
+      return trimmed;
+    }
+    if (trimmed.startsWith('/pdrr/') || trimmed.startsWith('/leadership/')) {
+      return trimmed.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+    }
+    if (!trimmed.startsWith('/') && trimmed.includes('.')) {
+      return `/leadership/${trimmed.replace(/\.(jpg|jpeg|png)$/i, '.webp')}`;
+    }
+    return trimmed;
+  }
+  return name ? findPdrrPhoto(name, slug || undefined) : null;
+}
+
 export function findPdrrPhoto(name: string, slug?: string): string | null {
   const clean = (s: string) =>
     s.replace(/^(Rtn\.|Rtr\.|PDRR\s*|DRR\s*)+/gi, '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -53,3 +80,4 @@ export function findPdrrPhoto(name: string, slug?: string): string | null {
   }
   return null;
 }
+

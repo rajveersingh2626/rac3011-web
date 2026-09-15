@@ -25,7 +25,8 @@ export function useZoneNames(): Record<string, string> {
   }, [data]);
 }
 
-const norm = (s: string | null | undefined): string => (s || '').toLowerCase().trim();
+const norm = (s: string | null | undefined): string =>
+  (s || '').toLowerCase().replace(/^(rotaract\s+(club\s+of\s+)?|rac\s+)/i, '').replace(/[^a-z0-9]/g, '');
 
 function findStatic(api: ClubSummary): DistrictClub | undefined {
   const byId = INITIAL_CLUBS.find((c) => c.id === api.id);
@@ -35,16 +36,17 @@ function findStatic(api: ClubSummary): DistrictClub | undefined {
   return INITIAL_CLUBS.find((c) => {
     const cName = norm(c.name);
     const cShort = norm(c.shortName);
-    return (
-      (apiName && cName && (apiName === cName || apiName.includes(cName) || cName.includes(apiName))) ||
-      (apiShort && cShort && apiShort === cShort)
-    );
+    return (apiName && cName && apiName === cName) || (apiShort && cShort && apiShort === cShort);
   });
 }
 
 function toDistrictClub(api: ClubSummary, zoneNameById: Record<string, string>): DistrictClubLive {
   const s = findStatic(api);
   const zoneName = (api.zoneId && zoneNameById[api.zoneId]) || s?.zone || '';
+  const charterYear = api.charterDate
+    ? parseInt(api.charterDate.slice(0, 4), 10) || s?.charterYear
+    : s?.charterYear;
+
   return {
     id: api.id,
     name: api.name,
@@ -52,20 +54,22 @@ function toDistrictClub(api: ClubSummary, zoneNameById: Record<string, string>):
     zone: zoneName,
     zoneId: api.zoneId ?? undefined,
     zoneName,
-    lat: api.lat ?? s?.lat ?? 0,
-    lng: api.lng ?? s?.lng ?? 0,
+    lat: api.lat != null && api.lat !== 0 ? api.lat : (s?.lat ?? 28.6139),
+    lng: api.lng != null && api.lng !== 0 ? api.lng : (s?.lng ?? 77.2090),
+    location: s?.location || 'Delhi NCR',
+    address: api.meetingInfo || s?.address || '',
     president: api.president || s?.president || '',
     isDirector: s?.isDirector || '',
     phone: api.phone || s?.phone || '',
     email: api.email || s?.email || '',
     presidentEmail: api.email ?? undefined,
-    rotaryId: s?.rotaryId || '',
-    secretary: s?.secretary || '',
-    secretaryEmail: s?.secretaryEmail || '',
-    secretaryPhone: s?.secretaryPhone || '',
+    rotaryId: api.rotaryId || s?.rotaryId || '',
+    secretary: api.secretary || s?.secretary || '',
+    secretaryEmail: api.secretaryEmail || s?.secretaryEmail || '',
+    secretaryPhone: api.secretaryPhone || s?.secretaryPhone || '',
     initiatives: s?.initiatives ?? [],
     brief: s?.brief,
-    charterYear: s?.charterYear,
+    charterYear,
     members: s?.members,
     memberCount: api.memberCount || s?.memberCount,
   };
@@ -77,7 +81,8 @@ export function useDistrictClubs(): { clubs: DistrictClubLive[]; isLive: boolean
   const { data } = useQuery({ queryKey: CLUBS_QUERY_KEY, queryFn: () => fetchClubs() });
 
   return useMemo(() => {
-    const items = data?.items ?? [];
+    const rawItems = data?.items ?? [];
+    const items = rawItems.filter((c) => c.id !== 'DISTRICT');
     if (items.length === 0) return { clubs: INITIAL_CLUBS as DistrictClubLive[], isLive: false };
 
     const mapById = new Map<string, DistrictClubLive>();
@@ -85,20 +90,10 @@ export function useDistrictClubs(): { clubs: DistrictClubLive[]; isLive: boolean
     for (const api of items) {
       const s = findStatic(api);
       const clubLive = toDistrictClub(api, zoneNameById);
-      if (s) {
-        mapById.set(s.id, {
-          ...s,
-          ...clubLive,
-          lat: clubLive.lat !== 0 ? clubLive.lat : s.lat,
-          lng: clubLive.lng !== 0 ? clubLive.lng : s.lng,
-          president: clubLive.president || s.president,
-          secretary: clubLive.secretary || s.secretary,
-          phone: clubLive.phone || s.phone,
-          email: clubLive.email || s.email,
-        });
-      } else {
-        mapById.set(api.id, clubLive);
-      }
+      mapById.set(api.id, {
+        ...(s || {}),
+        ...clubLive,
+      });
     }
 
     return { clubs: Array.from(mapById.values()), isLive: true };

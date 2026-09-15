@@ -13,9 +13,12 @@ interface DisplayProject {
   title: string;
   clubName: string | null;
   zone: string | null;
+  avenueOfService: string | null;
+  areasOfFocus: string[];
   category: string;
   categoryLabel: string;
   date: string;
+  rawDate: string;
   summary: string;
   photo: string | null;
   tags: string[];
@@ -34,21 +37,60 @@ interface ClubInitiativesListProps {
 
 const PAGE_SIZE = 12;
 
+const MONTHS = [
+  'All Months',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+];
+
+const AVENUES_OF_SERVICE_LIST = [
+  'Community Services',
+  'Club Services',
+  'International Services',
+  'Vocational Services',
+  'Youth Services',
+] as const;
+
+const AREAS_OF_FOCUS_LIST: [string, string][] = [
+  ['Peacebuilding and Conflict Prevention', 'Peacebuilding & Conflict Prevention'],
+  ['Disease Prevention and Treatment', 'Disease Prevention & Treatment'],
+  ['Water, Sanitation, and Hygiene', 'Water, Sanitation & Hygiene'],
+  ['Maternal and Child Health', 'Maternal & Child Health'],
+  ['Basic Education and Literacy', 'Basic Education & Literacy'],
+  ['Community Economic Development', 'Community Economic Development'],
+  ['Environment', 'Environment'],
+  ['Other', 'Other'],
+  ['N/A', 'N/A'],
+];
+
 const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ clubs = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedAvenue, setSelectedAvenue] = useState('All');
+  const [selectedAreaOfFocus, setSelectedAreaOfFocus] = useState('All');
   const [selectedZone, setSelectedZone] = useState('All');
+  const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [activeProjectModal, setActiveProjectModal] = useState<DisplayProject | null>(null);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [searchTerm, selectedCategory, selectedZone]);
+  }, [searchTerm, selectedAvenue, selectedAreaOfFocus, selectedZone, selectedMonth]);
 
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects'],
     queryFn: () => fetchProjects({ pageSize: 100 }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   // `body` and `beneficiaries` live only on the detail endpoint, so the modal enriches itself on open.
@@ -57,59 +99,142 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
     queryKey: ['public', 'project', activeSlug],
     queryFn: () => fetchProject(activeSlug ?? ''),
     enabled: Boolean(activeSlug),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
-  const zoneByClubId = useMemo(() => {
-    return new Map(clubs.map((c) => [c.id, c.zone]));
+  const zoneByClubName = useMemo(() => {
+    const clean = (s: string) => s.toLowerCase().replace(/^(rotaract club of|rac)\s+/i, '').trim();
+    const map = new Map<string, string>();
+    for (const c of clubs) {
+      if (c.zone) {
+        map.set(c.id, c.zone);
+        map.set(clean(c.name), c.zone);
+      }
+    }
+    return map;
   }, [clubs]);
 
   const allProjects = useMemo<DisplayProject[]>(() => {
     const items = projectsQuery.data?.items ?? [];
-    return items.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title || 'Rotaract Initiative',
-      clubName: p.leadClub?.name ?? null,
-      zone: (p.leadClub && zoneByClubId.get(p.leadClub.id)) || null,
-      category: p.category,
-      categoryLabel: categoryLabelOf(p.category),
-      date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      summary: p.summary || '',
-      photo: p.photos?.[0] ?? null,
-      tags: [categoryLabelOf(p.category)],
-    }));
-  }, [projectsQuery.data, zoneByClubId]);
+    const clean = (s: string) => s.toLowerCase().replace(/^(rotaract club of|rac)\s+/i, '').trim();
+
+    return items.map((p) => {
+      const leadClubObj = p.leadClub as { id?: string; name?: string; slug?: string; zone?: string | null } | null;
+      let zoneName = leadClubObj?.zone ?? null;
+      if (!zoneName && leadClubObj?.name) {
+        zoneName = zoneByClubName.get(clean(leadClubObj.name)) || (leadClubObj.id ? zoneByClubName.get(leadClubObj.id) : null) || null;
+      }
+      if (zoneName && !zoneName.toLowerCase().startsWith('zone')) {
+        zoneName = `Zone ${zoneName}`;
+      }
+
+      const avenueOfService = p.avenueOfService || null;
+      const areasOfFocus = (p.areasOfFocus && p.areasOfFocus.length > 0) ? p.areasOfFocus : (p.category ? [p.category] : []);
+      const tags = [...areasOfFocus];
+
+      return {
+        id: p.id,
+        slug: p.slug,
+        title: p.title || 'Rotaract Initiative',
+        clubName: p.leadClub?.name ?? null,
+        zone: zoneName,
+        avenueOfService,
+        areasOfFocus,
+        category: p.category,
+        categoryLabel: avenueOfService || categoryLabelOf(p.category),
+        date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        rawDate: p.date,
+        summary: p.summary || '',
+        photo: p.photos?.[0] ?? null,
+        tags,
+      };
+    });
+  }, [projectsQuery.data, zoneByClubName]);
 
   const detailBeneficiaries = projectDetailQuery.data?.beneficiaries;
   const detailBody = projectDetailQuery.data?.body;
-
-  // Chips are built from the categories the API actually returns, so no chip implies
-  // a category of work the district has not published.
-  const categories = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const p of allProjects) seen.set(p.category, p.categoryLabel);
-    return [['All', 'All'] as [string, string], ...[...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))];
-  }, [allProjects]);
 
   const zones = ['All', 'Zone Prithvi', 'Zone Agni', 'Zone Vayu', 'Zone Akash'];
 
   const filteredProjects = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
+    const normZone = (z: string) => z.toLowerCase().replace(/^zone\s+/i, '').trim();
+
     return allProjects.filter((proj) => {
       const matchesSearch = !q ||
         proj.title.toLowerCase().includes(q) ||
         (proj.clubName ?? '').toLowerCase().includes(q) ||
         proj.summary.toLowerCase().includes(q) ||
+        (proj.avenueOfService ?? '').toLowerCase().includes(q) ||
+        proj.areasOfFocus.some((f) => f.toLowerCase().includes(q)) ||
         proj.categoryLabel.toLowerCase().includes(q) ||
         proj.tags.some((t) => t.toLowerCase().includes(q));
 
-      const matchesCategory = selectedCategory === 'All' || proj.category === selectedCategory;
-      const matchesZone = selectedZone === 'All' || proj.zone === selectedZone;
+      const matchesAvenue = selectedAvenue === 'All' || (() => {
+        const selNorm = selectedAvenue.toLowerCase().replace(/services?$/i, '').trim();
+        const aveNorm = (proj.avenueOfService ?? '').toLowerCase().replace(/services?$/i, '').trim();
+        const catNorm = (proj.category ?? '').toLowerCase().replace(/services?$/i, '').trim();
+        return aveNorm.includes(selNorm) || catNorm.includes(selNorm) || proj.avenueOfService === selectedAvenue;
+      })();
 
-      return matchesSearch && matchesCategory && matchesZone;
+      const matchesAreaOfFocus = selectedAreaOfFocus === 'All' || (() => {
+        const selNorm = selectedAreaOfFocus.toLowerCase();
+        const matchesFocusArray = proj.areasOfFocus.some((f) => {
+          const fNorm = f.toLowerCase();
+          return fNorm.includes(selNorm) || selNorm.includes(fNorm);
+        });
+        const matchesCat = (proj.category ?? '').toLowerCase().includes(selNorm) || selNorm.includes((proj.category ?? '').toLowerCase());
+        return matchesFocusArray || matchesCat;
+      })();
+
+      const matchesZone = selectedZone === 'All' || (() => {
+        if (!proj.zone) return false;
+        const pz = proj.zone.toLowerCase();
+        const sz = normZone(selectedZone);
+        if (pz.includes(sz)) return true;
+        if (sz === 'prithvi' && (pz.includes('1') || pz.includes('5') || pz.includes('south'))) return true;
+        if (sz === 'agni' && (pz.includes('2') || pz.includes('6') || pz.includes('central') || pz.includes('faridabad'))) return true;
+        if (sz === 'vayu' && (pz.includes('3') || pz.includes('7') || pz.includes('north') || pz.includes('gurugram'))) return true;
+        if (sz === 'akash' && (pz.includes('4') || pz.includes('8') || pz.includes('west'))) return true;
+        return normZone(proj.zone) === sz;
+      })();
+
+      let matchesMonth = true;
+      if (selectedMonth !== 'All Months' && proj.rawDate) {
+        const cleanDate = proj.rawDate.split('T')[0];
+        const parts = cleanDate.split('-');
+        let projMonth = '';
+        if (parts.length === 3) {
+          const mIdx = parseInt(parts[1], 10) - 1;
+          const allM = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          if (mIdx >= 0 && mIdx < 12) projMonth = allM[mIdx];
+        }
+        if (!projMonth) {
+          projMonth = new Date(proj.rawDate).toLocaleDateString('en-US', { month: 'long' });
+        }
+        matchesMonth = projMonth.toLowerCase() === selectedMonth.toLowerCase();
+      }
+
+      return matchesSearch && matchesAvenue && matchesAreaOfFocus && matchesZone && matchesMonth;
     });
-  }, [allProjects, searchTerm, selectedCategory, selectedZone]);
+  }, [allProjects, searchTerm, selectedAvenue, selectedAreaOfFocus, selectedZone, selectedMonth]);
+
+  const hasActiveFilters = Boolean(
+    searchTerm.trim() ||
+    selectedAvenue !== 'All' ||
+    selectedAreaOfFocus !== 'All' ||
+    selectedZone !== 'All' ||
+    selectedMonth !== 'All Months'
+  );
+
+  const resetAllFilters = () => {
+    setSearchTerm('');
+    setSelectedAvenue('All');
+    setSelectedAreaOfFocus('All');
+    setSelectedZone('All');
+    setSelectedMonth('All Months');
+  };
 
   const visibleProjects = useMemo(() => {
     return filteredProjects.slice(0, visibleCount);
@@ -153,7 +278,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         </div>
       </div>
 
-      {/* Controls: Search & Zone Filter */}
+      {/* Controls: Search, Avenues, Areas of Focus, Zone & Month Filter */}
       <div
         style={{
           background: 'rgba(255, 255, 255, 0.82)',
@@ -165,17 +290,17 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           margin: '-8px 16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
-          gap: '16px',
+          gap: '14px',
           alignItems: 'center',
           justifyContent: 'space-between',
           boxShadow: '0 14px 35px rgba(18, 52, 153, 0.16)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 320px', background: 'rgba(255,255,255,0.72)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(18, 52, 153, 0.14)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: '1 1 280px', background: 'rgba(255,255,255,0.72)', padding: '10px 16px', borderRadius: '10px', border: '1px solid rgba(18, 52, 153, 0.14)' }}>
           <Search size={18} style={{ color: '#123499' }} />
           <input
             type="text"
-            placeholder="Search by project name, club, cause, or keywords..."
+            placeholder="Search projects, clubs, causes, or keywords..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{
@@ -190,57 +315,180 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Filter Zone:</span>
-          <select
-            value={selectedZone}
-            onChange={(e) => setSelectedZone(e.target.value)}
-            style={{
-              padding: '10px 16px',
-              borderRadius: '10px',
-              border: '1px solid rgba(18, 52, 153, 0.2)',
-              backgroundColor: '#FFFFFF',
-              color: '#123499',
-              fontWeight: 700,
-              fontSize: '0.88rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            {zones.map((z, idx) => (
-              <option key={idx} value={z}>{z}</option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Month:</span>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '10px',
+                border: '1px solid rgba(18, 52, 153, 0.2)',
+                backgroundColor: '#FFFFFF',
+                color: '#123499',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {MONTHS.map((m, idx) => (
+                <option key={idx} value={m}>{m}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Zone:</span>
+            <select
+              value={selectedZone}
+              onChange={(e) => setSelectedZone(e.target.value)}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '10px',
+                border: '1px solid rgba(18, 52, 153, 0.2)',
+                backgroundColor: '#FFFFFF',
+                color: '#123499',
+                fontWeight: 700,
+                fontSize: '0.84rem',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              {zones.map((z, idx) => (
+                <option key={idx} value={z}>{z}</option>
+              ))}
+            </select>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetAllFilters}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(225, 29, 72, 0.2)',
+                backgroundColor: '#FFF1F2',
+                color: '#E11D48',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Clear All
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Category Chips Bar */}
-      <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '0 16px 14px', marginBottom: '24px', scrollbarWidth: 'none' }}>
-        {categories.map(([cat, label]) => {
-          const isSelected = selectedCategory === cat;
-          return (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              style={{
-                padding: '7px 16px',
-                borderRadius: '100px',
-                fontSize: '0.80rem',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                border: isSelected ? '1px solid #123499' : '1px solid rgba(18, 52, 153, 0.16)',
-                backgroundColor: isSelected ? '#123499' : '#FFFFFF',
-                color: isSelected ? '#FFFFFF' : '#123499',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(8px)',
-                boxShadow: isSelected ? '0 4px 14px rgba(0,0,0,0.15)' : 'none'
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
+      {/* Avenues of Service Pill Bar */}
+      <div style={{ padding: '0 16px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#123499' }}>
+            Avenues of Service
+          </span>
+          <span style={{ height: '1px', flex: 1, background: 'rgba(18, 52, 153, 0.12)' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+          <button
+            onClick={() => setSelectedAvenue('All')}
+            style={{
+              padding: '7px 16px',
+              borderRadius: '100px',
+              fontSize: '0.80rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              border: selectedAvenue === 'All' ? '1px solid #123499' : '1px solid rgba(18, 52, 153, 0.16)',
+              backgroundColor: selectedAvenue === 'All' ? '#123499' : '#FFFFFF',
+              color: selectedAvenue === 'All' ? '#FFFFFF' : '#123499',
+              transition: 'all 0.2s ease',
+              boxShadow: selectedAvenue === 'All' ? '0 4px 14px rgba(18, 52, 153, 0.25)' : 'none'
+            }}
+          >
+            All Avenues
+          </button>
+          {AVENUES_OF_SERVICE_LIST.map((ave) => {
+            const isSelected = selectedAvenue === ave;
+            return (
+              <button
+                key={ave}
+                onClick={() => setSelectedAvenue(isSelected ? 'All' : ave)}
+                style={{
+                  padding: '7px 16px',
+                  borderRadius: '100px',
+                  fontSize: '0.80rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  border: isSelected ? '1px solid #123499' : '1px solid rgba(18, 52, 153, 0.16)',
+                  backgroundColor: isSelected ? '#123499' : '#FFFFFF',
+                  color: isSelected ? '#FFFFFF' : '#123499',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected ? '0 4px 14px rgba(18, 52, 153, 0.25)' : 'none'
+                }}
+              >
+                {ave}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Areas of Focus Pill Bar */}
+      <div style={{ padding: '0 16px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '0.74rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: '#0C2470' }}>
+            Rotary Areas of Focus
+          </span>
+          <span style={{ height: '1px', flex: 1, background: 'rgba(12, 36, 112, 0.12)' }} />
+        </div>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
+          <button
+            onClick={() => setSelectedAreaOfFocus('All')}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '100px',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+              border: selectedAreaOfFocus === 'All' ? '1px solid #0C2470' : '1px solid rgba(12, 36, 112, 0.16)',
+              backgroundColor: selectedAreaOfFocus === 'All' ? '#0C2470' : '#FFFFFF',
+              color: selectedAreaOfFocus === 'All' ? '#FFFFFF' : '#0C2470',
+              transition: 'all 0.2s ease',
+              boxShadow: selectedAreaOfFocus === 'All' ? '0 4px 14px rgba(12, 36, 112, 0.25)' : 'none'
+            }}
+          >
+            All Focus Areas
+          </button>
+          {AREAS_OF_FOCUS_LIST.map(([key, label]) => {
+            const isSelected = selectedAreaOfFocus === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setSelectedAreaOfFocus(isSelected ? 'All' : key)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '100px',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  border: isSelected ? '1px solid #0C2470' : '1px solid rgba(12, 36, 112, 0.16)',
+                  backgroundColor: isSelected ? '#0C2470' : '#FFFFFF',
+                  color: isSelected ? '#FFFFFF' : '#0C2470',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isSelected ? '0 4px 14px rgba(12, 36, 112, 0.25)' : 'none'
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Projects Grid */}
@@ -253,11 +501,11 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', maxWidth: '480px', margin: '0 auto 20px' }}>
             {allProjects.length === 0
               ? 'Project stories appear here once clubs publish them to the district showcase.'
-              : 'Try resetting your search query or selecting "All" categories to view all published district initiatives.'}
+              : 'Try resetting your search query or selecting "All" to view all published district initiatives.'}
           </p>
           {allProjects.length > 0 && (
             <button
-              onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedZone('All'); }}
+              onClick={resetAllFilters}
               className="btn-rotaract"
               style={{ padding: '10px 24px', fontSize: '0.88rem' }}
             >
@@ -470,9 +718,14 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
 
             <div style={{ padding: '30px' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>{activeProjectModal.categoryLabel}</span>
+                {activeProjectModal.avenueOfService && (
+                  <span className="pill-pink" style={{ fontSize: '0.78rem' }}>{activeProjectModal.avenueOfService}</span>
+                )}
+                {activeProjectModal.areasOfFocus && activeProjectModal.areasOfFocus.map((f, i) => (
+                  <span key={i} className="pill-gold" style={{ fontSize: '0.74rem' }}>{f}</span>
+                ))}
                 {activeProjectModal.zone && (
-                  <span className="pill-gold" style={{ fontSize: '0.78rem' }}>{activeProjectModal.zone}</span>
+                  <span className="pill-gold" style={{ fontSize: '0.74rem' }}>{activeProjectModal.zone}</span>
                 )}
               </div>
 

@@ -5,7 +5,7 @@ import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { DrrCalendarSection, EnquiryRoutingSection, RclCareerbridgeSection, ReportingSection } from './SettingsSections';
+import { DrrCalendarSection, EmailDeliverySection, EnquiryRoutingSection, RclCareerbridgeSection, ReportingSection } from './SettingsSections';
 import { SubdomainsSection } from './SubdomainsSection';
 import { HomeAndSponsorSection } from './HomeAndSponsorSection';
 
@@ -34,6 +34,7 @@ export function SettingsPage() {
     <Container width="wide">
       <Section title="District settings" description="Every change here is audited and takes effect immediately.">
         <div className="flex flex-col gap-5">
+          <EmailDeliverySection settings={settings} />
           <SubdomainsSection settings={settings} />
           <ReportingSection settings={settings} />
           <DrrCalendarSection settings={settings} />

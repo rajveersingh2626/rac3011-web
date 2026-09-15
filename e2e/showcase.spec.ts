@@ -29,7 +29,8 @@ test('a member can save a draft, then see it in their own list', async ({ page }
 
   await page.getByLabel(/What did the club do\?/).fill('Digital literacy lab handover');
   await page.getByLabel('When').fill('2026-08-19');
-  await page.getByLabel('Area of focus').selectOption('Basic Education');
+  await page.getByLabel('Avenue of service').selectOption('Community Services');
+  await page.getByRole('button', { name: 'Basic Education and Literacy' }).click();
   await page.getByLabel(/Tell us what happened/).fill('Handed over a refurbished computer lab to a government school.');
   await page.getByRole('button', { name: 'Save a draft' }).click();
 
@@ -44,7 +45,8 @@ test('sending for review without the consent tick is blocked client-side', async
 
   await page.getByLabel(/What did the club do\?/).fill('Yamuna bank clean-up');
   await page.getByLabel('When').fill('2026-08-17');
-  await page.getByLabel('Area of focus').selectOption('Environment');
+  await page.getByLabel('Avenue of service').selectOption('Community Services');
+  await page.getByRole('button', { name: 'Environment' }).click();
   await page.getByLabel(/Tell us what happened/).fill('A joint clean-up drive along the Yamuna floodplain.');
   await page.getByRole('button', { name: 'Send for review' }).click();
 

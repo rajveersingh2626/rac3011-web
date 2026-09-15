@@ -27,11 +27,13 @@ export function resolveSurface(hostname: string, search = ''): Surface {
   const host = hostname.toLowerCase().replace(/\.$/, '');
   const labels = host.split('.');
   const first = labels[0] ?? '';
+  if (first === 'delhimerijaan') return 'ride';
   const byPrefix = PROJECT_SURFACES.find((s) => s === first);
   if (byPrefix) return byPrefix;
   // testing.<surface>.rotaract3011.org mirrors testing.rotaract3011.org (main's staging host)
   // for the project subdomains, so each surface gets its own staging URL.
   if (first === 'testing') {
+    if (labels[1] === 'delhimerijaan') return 'ride';
     const byTestingPrefix = PROJECT_SURFACES.find((s) => s === labels[1]);
     if (byTestingPrefix) return byTestingPrefix;
   }
@@ -40,20 +42,23 @@ export function resolveSurface(hostname: string, search = ''): Surface {
 
 export function mainSiteHref(): string {
   const url = new URL(window.location.href);
+  url.searchParams.delete('surface');
+  url.search = '';
+  url.pathname = '/';
   if (isLocalHost(url.hostname)) {
-    url.searchParams.delete('surface');
-    url.pathname = '/';
     return url.toString();
   }
   const prefix = currentEnvPrefix(url.hostname);
   url.hostname = prefix ? `${prefix}${APEX}` : APEX;
-  url.pathname = '/';
   return url.toString();
 }
 
 // The portal only exists on the main site, so subdomains must always link cross-origin to it.
 export function portalHref(path: '/portal/login' | '/portal/dashboard' = '/portal/login'): string {
-  return `${new URL(mainSiteHref()).origin}${path}`;
+  const url = new URL(mainSiteHref());
+  url.pathname = path;
+  url.search = '';
+  return url.toString();
 }
 
 export function surfaceHref(key: Exclude<Surface, 'main'>): string {

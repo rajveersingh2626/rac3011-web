@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import L from 'leaflet';
 import type { Map as LeafletMap, Marker as LeafletMarker, LeafletMouseEvent } from 'leaflet';
@@ -16,7 +16,12 @@ import {
   Layers,
   Phone,
   Mail,
-  UserCheck
+  UserCheck,
+  Map as MapIcon,
+  LayoutGrid,
+  MapPin,
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { useDistrictClubs, useZoneNames, type DistrictClubLive } from '../../hooks/useDistrictClubs';
 
@@ -39,6 +44,21 @@ interface RegionalZone {
 // districtData copy), and exporting non-component values here trips
 // react-refresh/only-export-components. Zone polygons and colours are presentation constants,
 // so they stay in code; only the zone names/ids come from the API.
+const isRealSecretary = (sec: string | null | undefined): boolean => {
+  if (!sec) return false;
+  const s = sec.trim().toLowerCase();
+  return Boolean(
+    s &&
+    s !== 'n/a' &&
+    s !== 'rtr. club secretary' &&
+    s !== 'club secretary' &&
+    s !== 'null' &&
+    s !== 'undefined' &&
+    s !== '-' &&
+    s !== 'none'
+  );
+};
+
 const REGIONAL_ZONES: RegionalZone[] = [
   {
     id: 'zone-prithvi',
@@ -146,14 +166,21 @@ interface DistrictMapProps {
   selectedClubId?: string | null;
   onSelectClub?: (clubId: string | null) => void;
   onOpenPostInitiativeModal?: (clubId: string) => void;
-  // Passed by DistrictAccess but unused by this component (as in the source JSX).
-  isLoggedIn?: unknown;
-  userRole?: unknown;
-  onOpenLoginModal?: unknown;
-  onOpenUploadClubModal?: unknown;
+  isLoggedIn?: boolean;
+  userRole?: string | null;
+  onOpenLoginModal?: () => void;
+  onOpenUploadClubModal?: () => void;
 }
 
-export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, onOpenPostInitiativeModal }: DistrictMapProps) {
+export default function DistrictMap({
+  clubs = [],
+  selectedClubId,
+  onSelectClub,
+  onOpenPostInitiativeModal,
+  isLoggedIn = false,
+  userRole: _userRole,
+  onOpenLoginModal,
+}: DistrictMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<LeafletMarker[]>([]);
@@ -163,12 +190,69 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
   const zoneNameById = useZoneNames();
   const activeClubs: MapClub[] = clubs && clubs.length > 0 ? clubs : rosterClubs;
 
+  const getClubZoneString = (c: MapClub | null | undefined): string => {
+    if (!c) return '';
+    let z: unknown = c.zone ?? c.zoneId ?? c.zoneName ?? '';
+    if (typeof z === 'object' && z !== null) {
+      const zObj = z as { name?: string; id?: string; title?: string };
+      z = zObj.name ?? zObj.id ?? zObj.title ?? '';
+    }
+    const raw = String(z).trim();
+    if (zoneNameById[raw]) {
+      return zoneNameById[raw].toLowerCase();
+    }
+    return raw.toLowerCase();
+  };
+
+  const clubMatchesZone = (c: MapClub | null | undefined, zoneId: string | null): boolean => {
+    if (!zoneId) return true;
+    const z = getClubZoneString(c);
+    const zid = c?.zoneId || '';
+    if (zoneId === 'zone-prithvi') {
+      return z.includes('prithvi') || z.includes('south') || z === '1' || z === 'zone 1' || z === '5' || z === 'zone 5' || zid === 'cmtn8hw19001ill1sl3gxhvjc' || zid === 'cmtn8hw0y001dll1sbp1tvm6i';
+    }
+    if (zoneId === 'zone-agni') {
+      return z.includes('agni') || z.includes('central') || z.includes('faridabad') || z === '2' || z === 'zone 2' || z === '6' || z === 'zone 6' || zid === 'cmtn8hw17001hll1sgpqjgrai' || zid === 'cmtn8hw12001ell1sdyds6zsz';
+    }
+    if (zoneId === 'zone-vayu') {
+      return z.includes('vayu') || z.includes('north') || z.includes('gurugram') || z === '3' || z === 'zone 3' || z === '7' || z === 'zone 7' || zid === 'cmtn8hw1b001jll1sidh151lv' || zid === 'cmtn8hw14001fll1s69dnbafe';
+    }
+    if (zoneId === 'zone-akash') {
+      return z.includes('akash') || z.includes('west') || z === '4' || z === 'zone 4' || z === '8' || z === 'zone 8' || zid === 'cmtn8hw1d001kll1soabcfcmd' || zid === 'cmtn8hw16001gll1sqctt3qv7';
+    }
+    return true;
+  };
+
+  const getClubNeonColor = (club: MapClub): string => {
+    const z = getClubZoneString(club);
+    if (z.includes('prithvi') || z === 'zone 1' || z === '1' || z.includes('south')) return '#10b981'; // Emerald Green (Prithvi)
+    if (z.includes('agni') || z === 'zone 2' || z === '2' || z.includes('central') || z.includes('faridabad')) return '#E11D48'; // Fire Crimson (Agni)
+    if (z.includes('vayu') || z === 'zone 3' || z === '3' || z.includes('north') || z.includes('gurugram')) return '#0284c7'; // Sky / Cyan Blue (Vayu)
+    if (z.includes('akash') || z === 'zone 4' || z === '4' || z.includes('west')) return '#4F46E5'; // Cosmic Indigo (Akash)
+    return '#D81B60';
+  };
+
   const [hoveredClub, setHoveredClub] = useState<MapClub | null>(null);
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number; transform: string }>({ x: 0, y: 0, transform: 'translate(-50%, -100%)' });
   const [activeSlideoutClub, setActiveSlideoutClub] = useState<MapClub | null>(null);
   const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
+
+  const filteredClubs = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    return activeClubs.filter((c) => {
+      const matchesSearch = !query || 
+        (c.name || '').toLowerCase().includes(query) || 
+        (c.president || '').toLowerCase().includes(query) ||
+        (c.shortName || '').toLowerCase().includes(query) ||
+        (c.location || '').toLowerCase().includes(query) ||
+        (c.address || '').toLowerCase().includes(query);
+      const matchesZone = clubMatchesZone(c, activeZoneId);
+      return matchesSearch && matchesZone;
+    });
+  }, [activeClubs, searchQuery, activeZoneId]);
 
   const updateTooltipPos = (clientX: number, clientY: number) => {
     const tooltipWidth = 320;
@@ -289,48 +373,6 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeClubs, searchQuery, activeZoneId]);
-
-  const getClubZoneString = (c: MapClub | null | undefined): string => {
-    if (!c) return '';
-    let z: unknown = c.zone ?? c.zoneId ?? c.zoneName ?? '';
-    if (typeof z === 'object' && z !== null) {
-      const zObj = z as { name?: string; id?: string; title?: string };
-      z = zObj.name ?? zObj.id ?? zObj.title ?? '';
-    }
-    const raw = String(z).trim();
-    if (zoneNameById[raw]) {
-      return zoneNameById[raw].toLowerCase();
-    }
-    return raw.toLowerCase();
-  };
-
-  const clubMatchesZone = (c: MapClub | null | undefined, zoneId: string | null): boolean => {
-    if (!zoneId) return true;
-    const z = getClubZoneString(c);
-    const zid = c?.zoneId || '';
-    if (zoneId === 'zone-prithvi') {
-      return z.includes('prithvi') || z.includes('south') || z === '1' || z === 'zone 1' || z === '5' || z === 'zone 5' || zid === 'cmtn8hw19001ill1sl3gxhvjc' || zid === 'cmtn8hw0y001dll1sbp1tvm6i';
-    }
-    if (zoneId === 'zone-agni') {
-      return z.includes('agni') || z.includes('central') || z.includes('faridabad') || z === '2' || z === 'zone 2' || z === '6' || z === 'zone 6' || zid === 'cmtn8hw17001hll1sgpqjgrai' || zid === 'cmtn8hw12001ell1sdyds6zsz';
-    }
-    if (zoneId === 'zone-vayu') {
-      return z.includes('vayu') || z.includes('north') || z.includes('gurugram') || z === '3' || z === 'zone 3' || z === '7' || z === 'zone 7' || zid === 'cmtn8hw1b001jll1sidh151lv' || zid === 'cmtn8hw14001fll1s69dnbafe';
-    }
-    if (zoneId === 'zone-akash') {
-      return z.includes('akash') || z.includes('west') || z === '4' || z === 'zone 4' || z === '8' || z === 'zone 8' || zid === 'cmtn8hw1d001kll1soabcfcmd' || zid === 'cmtn8hw16001gll1sqctt3qv7';
-    }
-    return true;
-  };
-
-  const getClubNeonColor = (club: MapClub): string => {
-    const z = getClubZoneString(club);
-    if (z.includes('prithvi') || z === 'zone 1' || z === '1' || z.includes('south')) return '#10b981'; // Emerald Green (Prithvi)
-    if (z.includes('agni') || z === 'zone 2' || z === '2' || z.includes('central') || z.includes('faridabad')) return '#E11D48'; // Fire Crimson (Agni)
-    if (z.includes('vayu') || z === 'zone 3' || z === '3' || z.includes('north') || z.includes('gurugram')) return '#0284c7'; // Sky / Cyan Blue (Vayu)
-    if (z.includes('akash') || z === 'zone 4' || z === '4' || z.includes('west')) return '#4F46E5'; // Cosmic Indigo (Akash)
-    return '#D81B60';
-  };
 
   const renderLeafletMarkers = (Leaflet: LeafletApi | null, map: LeafletMap | null, clubsList: MapClub[]) => {
     if (!Leaflet || !map || !Array.isArray(clubsList)) return;
@@ -454,10 +496,288 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         transition: 'all 0.3s ease'
       }}
     >
+      {/* Top Floating View Mode Switcher */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '24px',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          pointerEvents: 'auto',
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            background: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: '10px',
+            padding: '4px',
+            border: '1.5px solid rgba(216, 27, 96, 0.25)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          }}
+        >
+          <button
+            onClick={() => setViewMode('map')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: viewMode === 'map' ? 'var(--rotaract-pink)' : 'transparent',
+              color: viewMode === 'map' ? '#FFFFFF' : '#1E1E24',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <MapIcon size={15} /> Map View
+          </button>
+          <button
+            onClick={() => setViewMode('cards')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: viewMode === 'cards' ? 'var(--rotaract-pink)' : 'transparent',
+              color: viewMode === 'cards' ? '#FFFFFF' : '#1E1E24',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <LayoutGrid size={15} /> Tile / Cards View
+          </button>
+        </div>
+      </div>
+
+      {/* Map View Canvas */}
       <div 
         ref={mapContainerRef} 
-        style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, zIndex: 1 }}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          position: 'absolute', 
+          inset: 0, 
+          zIndex: 1,
+          display: viewMode === 'map' ? 'block' : 'none'
+        }}
       />
+
+      {/* Tiles / Cards View Grid */}
+      {viewMode === 'cards' && (
+        <div 
+          style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            zIndex: 1, 
+            overflowY: 'auto', 
+            padding: '90px 24px 100px 24px',
+            backgroundColor: '#FAF5F7'
+          }}
+        >
+          <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1E1E24', margin: '0 0 4px 0' }}>
+                  Directory of Rotaract Clubs (District 3011)
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, fontWeight: 600 }}>
+                  Showing {filteredClubs.length} verified clubs across Delhi NCR • Click any card for official club details and leadership contact
+                </p>
+              </div>
+            </div>
+
+            {!isLoggedIn && (
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #FFF1F2 0%, #FFE4E6 100%)',
+                  border: '1.5px solid #FECDD3',
+                  borderRadius: '14px',
+                  padding: '12px 18px',
+                  marginBottom: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Lock size={17} style={{ color: '#D81B60', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#9F1239' }}>
+                    To get the contact of DAC members, the president, and the secretary of the club, we must log in
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenLoginModal) onOpenLoginModal();
+                    else window.location.href = '/portal/login';
+                  }}
+                  style={{
+                    background: '#D81B60',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '6px 16px',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 3px 10px rgba(216, 27, 96, 0.2)',
+                  }}
+                >
+                  Log in
+                </button>
+              </div>
+            )}
+
+            {filteredClubs.length === 0 ? (
+              <div style={{ background: '#FFFFFF', borderRadius: '18px', padding: '60px 24px', textAlign: 'center', boxShadow: '0 8px 30px rgba(0,0,0,0.06)' }}>
+                <Sparkles size={48} style={{ color: 'var(--rotaract-pink)', margin: '0 auto 16px' }} />
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#1E1E24', marginBottom: '8px' }}>
+                  No clubs found matching "{searchQuery}"
+                </h3>
+                <p style={{ color: '#64748B', fontSize: '0.9rem', maxWidth: '420px', margin: '0 auto 16px' }}>
+                  Try resetting your search query or selecting "All Zones" to view all active clubs.
+                </p>
+                <button
+                  onClick={() => { setSearchQuery(''); setActiveZoneId(null); }}
+                  className="btn-rotaract"
+                  style={{ padding: '8px 20px', fontSize: '0.84rem' }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+                {filteredClubs.map((club: MapClub) => {
+                  const neonColor = getClubNeonColor(club);
+                  const hasSecretary = isRealSecretary(club.secretary);
+                  return (
+                    <div
+                      key={club.id}
+                      onClick={() => {
+                        setActiveSlideoutClub(club);
+                        if (onSelectClub) onSelectClub(club.id);
+                      }}
+                      className="rotaract-card"
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: '16px',
+                        padding: '20px 22px',
+                        border: `1.5px solid ${neonColor}35`,
+                        boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        transition: 'all 0.22s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-4px)';
+                        e.currentTarget.style.borderColor = neonColor;
+                        e.currentTarget.style.boxShadow = `0 12px 28px ${neonColor}25`;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = `${neonColor}35`;
+                        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.04)';
+                      }}
+                    >
+                      <div>
+                        {/* Zone Badge & Rotary ID */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '3px 10px',
+                              borderRadius: '100px',
+                              background: `${neonColor}15`,
+                              border: `1px solid ${neonColor}40`,
+                              color: neonColor,
+                              fontSize: '0.72rem',
+                              fontWeight: 800,
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: neonColor }} />
+                            {club.zone || 'District 3011'}
+                          </span>
+
+                          {club.rotaryId && club.rotaryId !== 'N/A' && (
+                            <span style={{ fontSize: '0.70rem', color: '#71717A', fontWeight: 700, background: '#F4F4F5', padding: '2px 8px', borderRadius: '6px' }}>
+                              ID: {club.rotaryId}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Club Name */}
+                        <h4 style={{ fontSize: '1.08rem', fontWeight: 900, color: '#0F172A', margin: '0 0 10px 0', lineHeight: 1.35 }}>
+                          {club.name}
+                        </h4>
+
+                        {/* Location / Address */}
+                        {(club.address || club.location) && (
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.78rem', color: '#64748B', marginBottom: '12px', fontWeight: 600 }}>
+                            <MapPin size={13} style={{ color: neonColor, flexShrink: 0, marginTop: '2px' }} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                              {club.address || club.location}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Leadership */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: '#334155', fontWeight: 700, background: '#F8FAFC', padding: '10px 12px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <User size={13} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              Pres: <strong>{club.president || 'Rtr. Club President'}</strong>
+                            </span>
+                          </div>
+
+                          {/* Only render secretary if present */}
+                          {hasSecretary && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <UserCheck size={13} style={{ color: '#059669', flexShrink: 0 }} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                Sec: <strong>{club.secretary}</strong>
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer: Charter year & View Details button */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.76rem' }}>
+                        <span style={{ color: '#94A3B8', fontWeight: 700 }}>
+                          {club.charterYear ? `Chartered ${club.charterYear}` : 'Verified Club'}
+                        </span>
+                        <span style={{ color: 'var(--rotaract-pink)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          View Details <ChevronRight size={13} />
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Floating Active Zone ZRR / ZRS Info Box (Top Left) */}
       {activeZoneObj && (
@@ -593,6 +913,58 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto', flexWrap: 'wrap' }}>
+          {/* Segmented View Mode Control: Map View vs Cards/Tiles View */}
+          <div
+            style={{
+              display: 'inline-flex',
+              background: 'rgba(255, 255, 255, 0.96)',
+              backdropFilter: 'blur(16px)',
+              borderRadius: '8px',
+              padding: '3px',
+              border: '1.5px solid rgba(216, 27, 96, 0.25)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.06)'
+            }}
+          >
+            <button
+              onClick={() => setViewMode('map')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: viewMode === 'map' ? 'var(--rotaract-pink)' : 'transparent',
+                color: viewMode === 'map' ? '#FFFFFF' : '#1E1E24',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <MapIcon size={14} /> Map View
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: viewMode === 'cards' ? 'var(--rotaract-pink)' : 'transparent',
+                color: viewMode === 'cards' ? '#FFFFFF' : '#1E1E24',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <LayoutGrid size={14} /> Cards / Tiles View
+            </button>
+          </div>
+
           <div 
             style={{
               position: 'relative',
@@ -729,7 +1101,7 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
               <User size={14} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
               <span style={{ wordBreak: 'break-word' }}>President: {hoveredClub.president || 'Rtr. Club President'}</span>
             </div>
-            {hoveredClub.secretary && (
+            {isRealSecretary(hoveredClub.secretary) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <UserCheck size={14} style={{ color: '#0284c7' }} />
                 <span>Secretary: {hoveredClub.secretary}</span>
@@ -854,57 +1226,105 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
 
                   {/* President Contact Actions */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                    <a
-                      href="/portal/directory"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '7px 12px',
-                        borderRadius: '8px',
-                        background: '#FFF1F2',
-                        border: '1px solid #FECDD3',
-                        color: '#D81B60',
-                        fontSize: '0.8rem',
-                        fontWeight: 700,
-                        textDecoration: 'none',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      <Phone size={12} /> Get President's Contact
-                    </a>
+                    {isLoggedIn ? (
+                      <>
+                        {currentSlideoutClub.phone && (
+                          <a
+                            href={`tel:${currentSlideoutClub.phone}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '7px 12px',
+                              borderRadius: '8px',
+                              background: '#FFF1F2',
+                              border: '1px solid #FECDD3',
+                              color: '#D81B60',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <Phone size={12} /> +91 {currentSlideoutClub.phone}
+                          </a>
+                        )}
 
-                    {currentSlideoutClub.email && (
-                      <a
-                        href={`mailto:${currentSlideoutClub.email}`}
+                        {currentSlideoutClub.email && (
+                          <a
+                            href={`mailto:${currentSlideoutClub.email}`}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '6px 11px',
+                              borderRadius: '8px',
+                              background: '#FFFFFF',
+                              border: '1px solid #E4E4E7',
+                              color: '#D81B60',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              maxWidth: '100%',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            <Mail size={12} /> {currentSlideoutClub.email}
+                          </a>
+                        )}
+
+                        <a
+                          href="/portal/directory"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            padding: '6px 11px',
+                            borderRadius: '8px',
+                            background: '#F8FAFC',
+                            border: '1px solid #E2E8F0',
+                            color: '#475569',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <User size={12} /> View in Directory
+                        </a>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onOpenLoginModal) onOpenLoginModal();
+                          else window.location.href = '/portal/login';
+                        }}
+                        title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '5px',
-                          padding: '6px 11px',
+                          gap: '6px',
+                          padding: '7px 14px',
                           borderRadius: '8px',
-                          background: '#FFFFFF',
-                          border: '1px solid #E4E4E7',
+                          background: '#FFF1F2',
+                          border: '1px dashed #FECDD3',
                           color: '#D81B60',
                           fontSize: '0.78rem',
                           fontWeight: 700,
-                          textDecoration: 'none',
-                          maxWidth: '100%',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
                         }}
                       >
-                        <Mail size={12} /> {currentSlideoutClub.email}
-                      </a>
+                        <Lock size={12} /> Log in to view President's contact
+                      </button>
                     )}
                   </div>
                 </div>
 
-                {/* Club Secretary Card */}
-                {(currentSlideoutClub.secretary || currentSlideoutClub.secretaryEmail) && (
+                {/* Club Secretary Card - omitted if empty or placeholder */}
+                {isRealSecretary(currentSlideoutClub.secretary) && (
                   <div 
                     style={{
                       background: '#F0FDF4',
@@ -919,56 +1339,104 @@ export default function DistrictMap({ clubs = [], selectedClubId, onSelectClub, 
                     </div>
 
                     <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#18181B' }}>
-                      {currentSlideoutClub.secretary || 'Rtr. Club Secretary'}
+                      {currentSlideoutClub.secretary}
                     </div>
 
                     {/* Secretary Contact Actions */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                      <a
-                        href="/portal/directory"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '7px 12px',
-                          borderRadius: '8px',
-                          background: '#F0FDF4',
-                          border: '1px solid #BBF7D0',
-                          color: '#059669',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          textDecoration: 'none',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                      >
-                        <Phone size={12} /> Get Secretary's Contact
-                      </a>
+                      {isLoggedIn ? (
+                        <>
+                          {currentSlideoutClub.secretaryPhone && (
+                            <a
+                              href={`tel:${currentSlideoutClub.secretaryPhone}`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '7px 12px',
+                                borderRadius: '8px',
+                                background: '#F0FDF4',
+                                border: '1px solid #BBF7D0',
+                                color: '#059669',
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <Phone size={12} /> +91 {currentSlideoutClub.secretaryPhone}
+                            </a>
+                          )}
 
-                      {currentSlideoutClub.secretaryEmail && (
-                        <a
-                          href={`mailto:${currentSlideoutClub.secretaryEmail}`}
+                          {currentSlideoutClub.secretaryEmail && (
+                            <a
+                              href={`mailto:${currentSlideoutClub.secretaryEmail}`}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '6px 11px',
+                                borderRadius: '8px',
+                                background: '#FFFFFF',
+                                border: '1px solid #D1FAE5',
+                                color: '#059669',
+                                fontSize: '0.78rem',
+                                fontWeight: 700,
+                                textDecoration: 'none',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              <Mail size={12} /> {currentSlideoutClub.secretaryEmail}
+                            </a>
+                          )}
+
+                          <a
+                            href="/portal/directory"
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '6px 11px',
+                              borderRadius: '8px',
+                              background: '#F8FAFC',
+                              border: '1px solid #E2E8F0',
+                              color: '#475569',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            <UserCheck size={12} /> View in Directory
+                          </a>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onOpenLoginModal) onOpenLoginModal();
+                            else window.location.href = '/portal/login';
+                          }}
+                          title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '5px',
-                            padding: '6px 11px',
+                            gap: '6px',
+                            padding: '7px 14px',
                             borderRadius: '8px',
-                            background: '#FFFFFF',
-                            border: '1px solid #D1FAE5',
+                            background: '#F0FDF4',
+                            border: '1px dashed #BBF7D0',
                             color: '#059669',
                             fontSize: '0.78rem',
                             fontWeight: 700,
-                            textDecoration: 'none',
-                            maxWidth: '100%',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
                           }}
                         >
-                          <Mail size={12} /> {currentSlideoutClub.secretaryEmail}
-                        </a>
+                          <Lock size={12} /> Log in to view Secretary's contact
+                        </button>
                       )}
                     </div>
                   </div>

@@ -47,7 +47,7 @@ export function GuestKitPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {guests.map((guest) => {
-              const bio = guest.bio ?? `${guest.name}, ${guest.designation}, Rotaract District 3011.`;
+              const bio = guest.bio ?? `${guest.name}, ${guest.designation}, Rotaract District Organisation.`;
               const contact = [guest.phone, guest.email].filter(Boolean).join(' · ');
               return (
                 <div key={guest.id} className="flex flex-col gap-3 rounded-[16px] border border-line-accent bg-surface p-5 sm:flex-row">

@@ -7,6 +7,7 @@ import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { AchievementsAdmin } from './AchievementsAdmin';
 import { DistrictTeamAdmin } from './DistrictTeamAdmin';
 import { EnquiriesAdmin } from './EnquiriesAdmin';
+import { GalleryAdmin } from './GalleryAdmin';
 import { PartnersAdmin } from './PartnersAdmin';
 import { PastDrrsAdmin } from './PastDrrsAdmin';
 import { PublicationsAdmin } from './PublicationsAdmin';
@@ -15,6 +16,7 @@ import { SisterClubRequestsAdmin } from './SisterClubRequestsAdmin';
 
 const TABS: TabItem[] = [
   { id: 'achievements', label: 'Achievements' },
+  { id: 'gallery', label: 'Event Gallery' },
   { id: 'partners', label: 'Partners' },
   { id: 'publications', label: 'Publications' },
   { id: 'resources', label: 'Resources' },
@@ -33,7 +35,7 @@ export function PublicContentPage() {
 
   return (
     <Container width="wide">
-      <Section title="Public content" description="Simple CRUD tables for the public-facing content that lives outside pages: achievements, partners, publications, resources, past DRRs, district team, enquiries and sister-club requests.">
+      <Section title="Public content" description="Simple CRUD tables for the public-facing content that lives outside pages: achievements, event gallery, partners, publications, resources, past DRRs, district team, enquiries and sister-club requests.">
         <Tabs
           tabs={TABS}
           value={kind}
@@ -42,6 +44,7 @@ export function PublicContentPage() {
         />
         <div className="mt-5">
           {kind === 'achievements' && <AchievementsAdmin canWrite={canWrite} />}
+          {kind === 'gallery' && <GalleryAdmin canWrite={canWrite} />}
           {kind === 'partners' && <PartnersAdmin canWrite={canWrite} />}
           {kind === 'publications' && <PublicationsAdmin canWrite={canWrite} />}
           {kind === 'resources' && <ResourcesAdmin canWrite={canWrite} />}

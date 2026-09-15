@@ -2,7 +2,7 @@ import { memo, useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PAST_DRRS } from '../../data/districtData';
 import type { PastDrr } from '../../data/districtData';
-import { findPdrrPhoto } from '../../data/pdrrImages';
+import { findPdrrPhoto, resolvePdrrPhotoUrl } from '../../data/pdrrImages';
 import { fetchPastDrrs } from '@/lib/publicApi/heritage';
 import { Award, Calendar, MapPin, Search, User, Shield } from 'lucide-react';
 
@@ -26,6 +26,22 @@ interface DRRCardProps {
 const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, isMobile }: DRRCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState<string | null>(drr.photo || null);
+
+  useEffect(() => {
+    setCurrentSrc(drr.photo || null);
+    setImgFailed(false);
+  }, [drr.photo]);
+
+  const handleImageError = () => {
+    // If a portal path or normalized path failed, try local bundled asset
+    const localAsset = findPdrrPhoto(drr.name, drr.id);
+    if (localAsset && currentSrc !== localAsset) {
+      setCurrentSrc(localAsset);
+    } else {
+      setImgFailed(true);
+    }
+  };
 
   return (
     <div
@@ -62,13 +78,13 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
           backgroundColor: '#1E1E24'
         }}
       >
-        {drr.photo && !imgFailed ? (
+        {currentSrc && !imgFailed ? (
           <img
-            src={drr.photo}
+            src={currentSrc}
             alt={drr.name}
             loading="lazy"
             decoding="async"
-            onError={() => setImgFailed(true)}
+            onError={handleImageError}
             style={{
               width: '100%',
               height: '100%',
@@ -350,10 +366,10 @@ export default function PastDRRShowcase() {
 
     if (!pastDrrQuery.data?.items || pastDrrQuery.data.items.length === 0) {
       return PAST_DRRS.map((drr) => {
-        const photo = drr.photo || findPdrrPhoto(drr.name, drr.id);
+        const photo = resolvePdrrPhotoUrl(drr.photo, drr.name, drr.id);
         return {
           ...drr,
-          photo,
+          photo: photo || '',
           hasPhoto: Boolean(photo),
         };
       });
@@ -366,32 +382,43 @@ export default function PastDRRShowcase() {
         if (matchedLiveIds.has(p.id)) return false;
         const pClean = clean(p.name);
         const pSlugClean = clean(p.slug || '');
-        return (
+        const nameMatch = (
           p.id === localDrr.id ||
           pClean === localClean ||
           (pSlugClean && pSlugClean === localClean) ||
           p.name.trim().toLowerCase() === localDrr.name.trim().toLowerCase()
         );
+        if (!nameMatch) return false;
+        // If multiple entries have the same name, prefer the one with matching term/year
+        if (p.terms && p.terms.length > 0) {
+          return p.terms.includes(localDrr.year) || p.terms[0] === localDrr.year;
+        }
+        return true;
+      }) || pastDrrQuery.data.items.find((p) => {
+        if (matchedLiveIds.has(p.id)) return false;
+        const pClean = clean(p.name);
+        return pClean === localClean || p.name.trim().toLowerCase() === localDrr.name.trim().toLowerCase();
       });
 
       if (!live) {
-        const photo = localDrr.photo || findPdrrPhoto(localDrr.name, localDrr.id);
+        const photo = resolvePdrrPhotoUrl(localDrr.photo, localDrr.name, localDrr.id);
         return {
           ...localDrr,
-          photo,
+          photo: photo || '',
           hasPhoto: Boolean(photo),
         };
       }
 
       matchedLiveIds.add(live.id);
-      const photo = live.photoUrl || localDrr.photo || findPdrrPhoto(live.name, live.slug);
+      const photo = resolvePdrrPhotoUrl(live.photoUrl, live.name, live.slug) || resolvePdrrPhotoUrl(localDrr.photo, localDrr.name, localDrr.id);
+      const matchedYear = live.terms?.find((t) => t === localDrr.year) || localDrr.year || live.terms?.[0];
       return {
         ...localDrr,
         name: live.name || localDrr.name,
-        photo,
+        photo: photo || '',
         hasPhoto: Boolean(photo),
-        year: live.terms?.[0] || localDrr.year,
-        tenure: live.terms?.[0] ? `RY ${live.terms[0]}` : localDrr.tenure,
+        year: matchedYear,
+        tenure: `RY ${matchedYear}`,
       };
     });
 
@@ -399,7 +426,7 @@ export default function PastDRRShowcase() {
     const extraLive: PastDrr[] = unmappedLive.map((live, idx) => {
       const yearStr = live.terms?.[0] || '2026-27';
       const tenureStr = live.terms?.[0] ? `RY ${live.terms[0]}` : 'RY 2026-27';
-      const photo = live.photoUrl || findPdrrPhoto(live.name, live.slug);
+      const photo = resolvePdrrPhotoUrl(live.photoUrl, live.name, live.slug);
       return {
         id: live.id,
         srNo: PAST_DRRS.length + idx + 1,
@@ -409,7 +436,7 @@ export default function PastDRRShowcase() {
         district: '3011',
         districtEra: 'District 3011',
         homeClub: 'Rotaract District 3011',
-        photo,
+        photo: photo || '',
         hasPhoto: Boolean(photo),
       };
     });

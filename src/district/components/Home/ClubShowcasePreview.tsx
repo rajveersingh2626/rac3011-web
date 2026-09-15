@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Award, Sparkles } from 'lucide-react';
-import { categoryLabelOf, fetchProjects } from '@/lib/publicApi/showcase';
+import { Sparkles, Calendar, Award } from 'lucide-react';
+import { fetchProjects } from '@/lib/publicApi/showcase';
 
-const PREVIEW_COUNT = 3;
+const PREVIEW_COUNT = 6;
 
 export interface ClubShowcasePreviewProps {
   onOpenShowcase?: () => void;
@@ -14,20 +14,23 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
   const projectsQuery = useQuery({
     queryKey: ['public', 'projects', 'home-preview'],
     queryFn: () => fetchProjects({ pageSize: PREVIEW_COUNT }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
+    refetchOnMount: 'always',
   });
 
   const projects = useMemo(() => {
     const items = projectsQuery.data?.items ?? [];
-    return items.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title || 'Rotaract Initiative',
-      clubName: p.leadClub?.name ?? null,
-      categoryLabel: categoryLabelOf(p.category),
-      date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      summary: p.summary || '',
-    }));
+    return [...items]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3)
+      .map((p) => ({
+        id: p.id,
+        slug: p.slug,
+        title: p.title || 'Rotaract Initiative',
+        clubName: p.leadClub?.name ?? null,
+        photo: p.photos && p.photos.length > 0 ? p.photos[0] : null,
+        date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      }));
   }, [projectsQuery.data]);
 
   // The page has no skeletons anywhere, so an unloaded or empty showcase shows no section at all.
@@ -50,68 +53,88 @@ export default function ClubShowcasePreview({ onOpenShowcase }: ClubShowcasePrev
             Projects Our Clubs Have Delivered
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.02rem', maxWidth: '720px', margin: '6px auto 0' }}>
-            Project stories published by Rotaract clubs across District 3011.
+            Latest project stories published by Rotaract clubs across District 3011.
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
           {projects.map((proj) => {
             const body = (
               <>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#123499', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {proj.categoryLabel}
-                    </span>
-                    <span style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                      {proj.date}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '8px', lineHeight: 1.25 }}>
-                    {proj.title}
-                  </h3>
-
-                  {proj.clubName && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#0C2470', marginBottom: '10px' }}>
-                      <Award size={15} style={{ flexShrink: 0, color: '#123499' }} />
-                      <span>{proj.clubName}</span>
+                {/* 1. Project Image */}
+                <div style={{ width: '100%', height: '200px', position: 'relative', overflow: 'hidden', backgroundColor: '#F1F5F9' }}>
+                  {proj.photo ? (
+                    <img
+                      src={proj.photo}
+                      alt={proj.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s ease' }}
+                      loading="lazy"
+                      onError={(e) => {
+                        // Fallback on broken image link
+                        (e.currentTarget.parentNode as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: 'linear-gradient(135deg, #123499 0%, #0C2470 100%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#FFFFFF',
+                        gap: '8px',
+                      }}
+                    >
+                      <Sparkles size={28} style={{ opacity: 0.8 }} />
+                      <span style={{ fontSize: '0.80rem', fontWeight: 700, letterSpacing: '0.5px' }}>District 3011 Project</span>
                     </div>
-                  )}
-
-                  {proj.summary && (
-                    <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>
-                      {proj.summary}
-                    </p>
                   )}
                 </div>
 
-                {proj.slug && (
-                  <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'flex-end' }}>
-                    <span style={{ fontSize: '0.80rem', fontWeight: 800, color: '#123499' }}>
-                      Read Project Story →
-                    </span>
+                {/* 2. Content: Title, Club Name, Date */}
+                <div style={{ padding: '20px 20px 22px', display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
+                  <div>
+                    {/* Title */}
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--text-primary)', marginBottom: '10px', lineHeight: 1.3 }}>
+                      {proj.title}
+                    </h3>
+
+                    {/* Club Name */}
+                    {proj.clubName && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.86rem', fontWeight: 700, color: '#123499', marginBottom: '8px' }}>
+                        <Award size={15} style={{ flexShrink: 0 }} />
+                        <span>{proj.clubName}</span>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {/* Date */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '8px', paddingTop: '10px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <Calendar size={13} style={{ flexShrink: 0 }} />
+                    <span>{proj.date}</span>
+                  </div>
+                </div>
               </>
             );
 
             const cardStyle = {
-              padding: '24px 20px',
               display: 'flex',
               flexDirection: 'column' as const,
-              justifyContent: 'space-between',
-              borderTop: '4px solid #123499',
               background: '#FFFFFF',
               borderRadius: '16px',
-              boxShadow: '0 4px 20px rgba(18, 52, 153, 0.06)',
+              overflow: 'hidden',
+              boxShadow: '0 4px 20px rgba(18, 52, 153, 0.07)',
               border: '1px solid rgba(18, 52, 153, 0.12)',
               textDecoration: 'none',
               color: 'inherit',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
             };
 
             return proj.slug ? (
-              <Link key={proj.id} to={`/showcase/${proj.slug}`} className="rotaract-card" style={cardStyle}>
+              <Link key={proj.id} to={`/showcase/${proj.slug}`} className="rotaract-card hover:shadow-lg transition-all" style={cardStyle}>
                 {body}
               </Link>
             ) : (

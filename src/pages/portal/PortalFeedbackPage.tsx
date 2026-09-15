@@ -32,6 +32,45 @@ export function PortalFeedbackPage() {
   const [anonymous, setAnonymous] = useState(true);
   const [formSuccess, setFormSuccess] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+  const FEEDBACK_DRAFT_KEY = 'rac3011_feedback_draft';
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const cached = window.localStorage.getItem(FEEDBACK_DRAFT_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.message) setMessage(parsed.message);
+        if (parsed.category) setCategory(parsed.category);
+        if (typeof parsed.anonymous === 'boolean') setAnonymous(parsed.anonymous);
+        if (parsed.savedAt) setDraftSavedAt(parsed.savedAt);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Debounced auto-save draft to localStorage
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => {
+      if (typeof window === 'undefined') return;
+      try {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        window.localStorage.setItem(
+          FEEDBACK_DRAFT_KEY,
+          JSON.stringify({ category, message, anonymous, savedAt: timeStr }),
+        );
+        setDraftSavedAt(timeStr);
+      } catch {
+        // ignore
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [category, message, anonymous]);
 
   const mineQuery = useQuery<{ items: FeedbackItem[]; total: number }>({
     queryKey: ['my-feedback'],
@@ -42,6 +81,8 @@ export function PortalFeedbackPage() {
     mutationFn: (body: { category: string; message: string; anonymous?: boolean }) =>
       apiFetch('/feedback', { method: 'POST', body }),
     onSuccess: () => {
+      try { window.localStorage.removeItem(FEEDBACK_DRAFT_KEY); } catch {}
+      setDraftSavedAt(null);
       setFormSuccess(true);
       setMessage('');
       setFormError(null);
@@ -146,16 +187,23 @@ export function PortalFeedbackPage() {
               }
             />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="sm"
-              disabled={submitMutation.isPending || !message.trim()}
-              className="gap-2 shadow-lg shadow-accent/25"
-            >
-              <Send className="size-3.5" />
-              {submitMutation.isPending ? 'Submitting...' : 'Send Feedback'}
-            </Button>
+            <div className="flex items-center gap-3">
+              {draftSavedAt && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                  <CheckCircle2 className="size-3.5" /> Draft saved ({draftSavedAt})
+                </span>
+              )}
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={submitMutation.isPending || !message.trim()}
+                className="gap-2 shadow-lg shadow-accent/25"
+              >
+                <Send className="size-3.5" />
+                {submitMutation.isPending ? 'Submitting...' : 'Send Feedback'}
+              </Button>
+            </div>
           </div>
         </form>
       </Card>

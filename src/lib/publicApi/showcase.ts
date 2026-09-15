@@ -11,7 +11,9 @@ export const projectSummarySchema = z.object({
   slug: z.string().nullable(),
   title: z.string().nullable(),
   summary: z.string().nullable(),
-  category: z.string(),
+  category: z.string().default(''),
+  avenueOfService: z.string().nullable().optional(),
+  areasOfFocus: z.array(z.string()).default([]),
   date: z.string(),
   photos: z.array(z.string()),
   leadClub: clubRefSchema.nullable(),
@@ -36,6 +38,7 @@ export type ProjectListResult = z.infer<typeof projectListSchema>;
 
 export interface ProjectListParams {
   category?: string;
+  avenueOfService?: string;
   clubSlug?: string;
   page?: number;
   pageSize?: number;
@@ -44,6 +47,7 @@ export interface ProjectListParams {
 export function fetchProjects(params: ProjectListParams = {}): Promise<ProjectListResult> {
   const search = new URLSearchParams();
   if (params.category) search.set('filter[category]', params.category);
+  if (params.avenueOfService) search.set('filter[avenueOfService]', params.avenueOfService);
   if (params.clubSlug) search.set('filter[clubSlug]', params.clubSlug);
   search.set('page', String(params.page ?? 1));
   search.set('pageSize', String(params.pageSize ?? 12));

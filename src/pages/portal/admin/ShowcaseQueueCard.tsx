@@ -31,7 +31,13 @@ export function ShowcaseQueueCard({ project, queryKey }: ShowcaseQueueCardProps)
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const invalidate = () => void qc.invalidateQueries({ queryKey });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ['projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'projects'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'project'] });
+    void qc.invalidateQueries({ queryKey: ['public', 'home'] });
+    void qc.invalidateQueries({ queryKey });
+  };
 
   const publishMutation = useMutation({
     mutationFn: () =>
@@ -69,8 +75,19 @@ export function ShowcaseQueueCard({ project, queryKey }: ShowcaseQueueCardProps)
       </div>
 
       <div>
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <Badge tone="pink">{project.category.toUpperCase()}</Badge>
+        <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          {project.avenueOfService ? (
+            <Badge tone="pink">{project.avenueOfService.toUpperCase()}</Badge>
+          ) : (
+            <Badge tone="pink">{project.category.toUpperCase()}</Badge>
+          )}
+          {project.areasOfFocus && project.areasOfFocus.length > 0 ? (
+            project.areasOfFocus.map((f, i) => (
+              <span key={i} className="rounded-md bg-accent-soft px-2 py-0.5 text-[10.5px] font-bold text-accent">
+                {f}
+              </span>
+            ))
+          ) : null}
           <span className="text-[11.5px] text-fg-3">
             {lead?.name ?? 'Unknown club'} · {formatDate(project.date)}
           </span>

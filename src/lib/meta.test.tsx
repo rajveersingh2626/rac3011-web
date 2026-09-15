@@ -9,7 +9,7 @@ function Page({ title, description }: { title: string; description?: string }) {
 describe('useDocumentMeta', () => {
   it('sets title with site suffix and description meta', () => {
     render(<Page title="Showcase" description="Projects" />);
-    expect(document.title).toBe('Showcase · Rotaract District 3011');
+    expect(document.title).toBe('Showcase · Rotaract District Organisation');
     expect(document.head.querySelector('meta[name="description"]')?.getAttribute('content')).toBe('Projects');
   });
   it('removes description when absent', () => {

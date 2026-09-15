@@ -41,6 +41,12 @@ const PortalEventsPage = lazy(() =>
 const DrrCalendarAdminPage = lazy(() =>
   import('@/pages/portal/admin/DrrCalendarAdminPage').then((m) => ({ default: m.DrrCalendarAdminPage })),
 );
+const ActiveSessionsPage = lazy(() =>
+  import('@/pages/portal/admin/ActiveSessionsPage').then((m) => ({ default: m.ActiveSessionsPage })),
+);
+const ChangelogPage = lazy(() =>
+  import('@/pages/portal/ChangelogPage').then((m) => ({ default: m.ChangelogPage })),
+);
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
@@ -52,6 +58,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('club_facts:edit', '/portal/admin/clubs/:clubId/facts', <ClubFactsPage />),
   guarded('point_rules:manage', '/portal/admin/point-rules', <PointRulesPage />),
   guarded('requests:manage', '/portal/admin/report-form', <ReportFormBuilderPage />),
+  guarded('requests:manage', '/portal/admin/form-builder', <ReportFormBuilderPage />),
   guarded('requests:manage', '/portal/admin/requests/new', <NewRequestPage />),
   guarded('requests:manage', '/portal/admin/requests', <AdminRequestsPage />),
   guarded('content:edit', '/portal/content', <ContentEditorPage />),
@@ -65,8 +72,10 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('feedback:review', '/portal/admin/feedback', <AdminFeedbackPage />),
   guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
   guarded('roles:manage', '/portal/admin/users', <AdminUsersPage />),
+  guarded('roles:manage', '/portal/admin/sessions', <ActiveSessionsPage />),
   guarded('events:manage', '/portal/admin/events', <PortalEventsPage />),
   guarded('drr_calendar:manage', '/portal/admin/drr-calendar', <DrrCalendarAdminPage />),
   guarded('public_content:manage', '/portal/admin/public-content/:kind?', <PublicContentPage />),
   guarded('audit:view', '/portal/admin/audit', <AdminAuditPage />),
+  guarded('audit:view', '/portal/admin/changelog', <ChangelogPage />),
 ];
