@@ -13,6 +13,8 @@ interface DisplayProject {
   title: string;
   clubName: string | null;
   zone: string | null;
+  avenueOfService: string | null;
+  areasOfFocus: string[];
   category: string;
   categoryLabel: string;
   date: string;
@@ -106,19 +108,25 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         zoneName = `Zone ${zoneName}`;
       }
 
+      const avenueOfService = p.avenueOfService || null;
+      const areasOfFocus = (p.areasOfFocus && p.areasOfFocus.length > 0) ? p.areasOfFocus : (p.category ? [p.category] : []);
+      const tags = [...areasOfFocus];
+
       return {
         id: p.id,
         slug: p.slug,
         title: p.title || 'Rotaract Initiative',
         clubName: p.leadClub?.name ?? null,
         zone: zoneName,
+        avenueOfService,
+        areasOfFocus,
         category: p.category,
-        categoryLabel: categoryLabelOf(p.category),
+        categoryLabel: avenueOfService || categoryLabelOf(p.category),
         date: new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         rawDate: p.date,
         summary: p.summary || '',
         photo: p.photos?.[0] ?? null,
-        tags: [categoryLabelOf(p.category)],
+        tags,
       };
     });
   }, [projectsQuery.data, zoneByClubName]);
@@ -127,20 +135,29 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
   const detailBody = projectDetailQuery.data?.body;
 
   const STANDARD_CATEGORIES: [string, string][] = [
-    ['community', 'Community Service'],
-    ['vocational', 'Vocational Service'],
-    ['international', 'International Service'],
-    ['club_service', 'Club Service'],
-    ['sports', 'Sports & Youth'],
-    ['environment', 'Environment'],
-    ['health', 'Healthcare'],
+    ['Community Services', 'Community Services'],
+    ['Club Services', 'Club Services'],
+    ['International Services', 'International Services'],
+    ['Vocational Services', 'Vocational Services'],
+    ['Youth Services', 'Youth Services'],
+    ['Peacebuilding and Conflict Prevention', 'Peacebuilding'],
+    ['Disease Prevention and Treatment', 'Disease Prevention'],
+    ['Water, Sanitation, and Hygiene', 'WASH'],
+    ['Maternal and Child Health', 'Maternal & Child Health'],
+    ['Basic Education and Literacy', 'Basic Education'],
+    ['Community Economic Development', 'Economic Development'],
+    ['Environment', 'Environment'],
   ];
 
   const categories = useMemo(() => {
     const seen = new Map<string, string>();
     for (const [k, v] of STANDARD_CATEGORIES) seen.set(k, v);
-    for (const p of allProjects) seen.set(p.category, p.categoryLabel);
-    return [['All', 'All'] as [string, string], ...[...seen.entries()].sort((a, b) => a[1].localeCompare(b[1]))];
+    for (const p of allProjects) {
+      if (p.avenueOfService) seen.set(p.avenueOfService, p.avenueOfService);
+      for (const focus of p.areasOfFocus) seen.set(focus, focus);
+      seen.set(p.category, p.categoryLabel);
+    }
+    return [['All', 'All'] as [string, string], ...[...seen.entries()]];
   }, [allProjects]);
 
   const zones = ['All', 'Zone Prithvi', 'Zone Agni', 'Zone Vayu', 'Zone Akash'];
@@ -154,10 +171,17 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         proj.title.toLowerCase().includes(q) ||
         (proj.clubName ?? '').toLowerCase().includes(q) ||
         proj.summary.toLowerCase().includes(q) ||
+        (proj.avenueOfService ?? '').toLowerCase().includes(q) ||
+        proj.areasOfFocus.some((f) => f.toLowerCase().includes(q)) ||
         proj.categoryLabel.toLowerCase().includes(q) ||
         proj.tags.some((t) => t.toLowerCase().includes(q));
 
       const matchesCategory = selectedCategory === 'All' ||
+        (proj.avenueOfService && proj.avenueOfService.toLowerCase() === selectedCategory.toLowerCase()) ||
+        proj.areasOfFocus.some((f) => f.toLowerCase() === selectedCategory.toLowerCase()) ||
+        proj.category === selectedCategory ||
+        proj.category.toLowerCase() === selectedCategory.toLowerCase() ||
+        proj.categoryLabel.toLowerCase() === selectedCategory.toLowerCase();
         proj.category === selectedCategory ||
         proj.category.toLowerCase() === selectedCategory.toLowerCase() ||
         proj.categoryLabel.toLowerCase() === selectedCategory.toLowerCase();
@@ -578,9 +602,14 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
 
             <div style={{ padding: '30px' }}>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-                <span className="pill-pink" style={{ fontSize: '0.78rem' }}>{activeProjectModal.categoryLabel}</span>
+                {activeProjectModal.avenueOfService && (
+                  <span className="pill-pink" style={{ fontSize: '0.78rem' }}>{activeProjectModal.avenueOfService}</span>
+                )}
+                {activeProjectModal.areasOfFocus && activeProjectModal.areasOfFocus.map((f, i) => (
+                  <span key={i} className="pill-gold" style={{ fontSize: '0.74rem' }}>{f}</span>
+                ))}
                 {activeProjectModal.zone && (
-                  <span className="pill-gold" style={{ fontSize: '0.78rem' }}>{activeProjectModal.zone}</span>
+                  <span className="pill-gold" style={{ fontSize: '0.74rem' }}>{activeProjectModal.zone}</span>
                 )}
               </div>
 

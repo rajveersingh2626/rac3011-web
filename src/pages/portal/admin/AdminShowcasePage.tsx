@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { fetchMyProjects, deleteProject, updateProject } from '@/lib/showcase/api';
-import type { Project, ProjectStatus } from '@/lib/showcase/types';
+import { AVENUES_OF_SERVICE, AREAS_OF_FOCUS, type Project, type ProjectStatus } from '@/lib/showcase/types';
 import { ShowcaseQueueCard } from './ShowcaseQueueCard';
 
 const TABS: { value: ProjectStatus; label: string }[] = [
@@ -25,12 +25,12 @@ const TABS: { value: ProjectStatus; label: string }[] = [
 ];
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
 function useQueueCount(status: ProjectStatus) {
   return useQuery({
-    queryKey: ['projects', 'queue', 'count', status],
+    queryKey: ['projects', 'queue-count', status],
     queryFn: () => fetchMyProjects({ status, pageSize: 1 }),
   });
 }
@@ -43,6 +43,8 @@ export function AdminShowcasePage() {
   const [editTitle, setEditTitle] = useState('');
   const [editSummary, setEditSummary] = useState('');
   const [editBody, setEditBody] = useState('');
+  const [editAvenueOfService, setEditAvenueOfService] = useState('Community Services');
+  const [editAreasOfFocus, setEditAreasOfFocus] = useState<string[]>([]);
   const [editCategory, setEditCategory] = useState('');
   const [editStatus, setEditStatus] = useState<'submitted' | 'published' | 'rejected'>('published');
 
@@ -79,7 +81,9 @@ export function AdminShowcasePage() {
         publishedTitle: editTitle.trim(),
         publishedSummary: editSummary.trim(),
         publishedBody: editBody.trim() || null,
-        category: editCategory || undefined,
+        avenueOfService: editAvenueOfService,
+        areasOfFocus: editAreasOfFocus,
+        category: editAreasOfFocus[0] || editAvenueOfService || editCategory || undefined,
         status: editStatus,
       });
     },
@@ -94,9 +98,17 @@ export function AdminShowcasePage() {
     setEditTitle(p.publishedTitle ?? p.title);
     setEditSummary(p.publishedSummary ?? p.summary);
     setEditBody(p.publishedBody ?? p.body ?? '');
+    setEditAvenueOfService(p.avenueOfService || 'Community Services');
+    setEditAreasOfFocus(p.areasOfFocus && p.areasOfFocus.length > 0 ? p.areasOfFocus : (p.category ? [p.category] : []));
     setEditCategory(p.category);
     setEditStatus(p.status === 'draft' ? 'submitted' : p.status);
   }
+
+  const toggleEditAreaOfFocus = (focus: string) => {
+    setEditAreasOfFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+  };
 
   return (
     <Container width="wide">
@@ -146,8 +158,19 @@ export function AdminShowcasePage() {
               return (
                 <div key={p.id} className="rounded-[12px] border border-line-accent p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                      <Badge tone="pink">{p.category.toUpperCase()}</Badge>
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                      {p.avenueOfService ? (
+                        <Badge tone="pink">{p.avenueOfService.toUpperCase()}</Badge>
+                      ) : (
+                        <Badge tone="pink">{p.category.toUpperCase()}</Badge>
+                      )}
+                      {p.areasOfFocus && p.areasOfFocus.length > 0 ? (
+                        p.areasOfFocus.map((f, i) => (
+                          <span key={i} className="rounded-md bg-accent-soft px-2 py-0.5 text-[10.5px] font-bold text-accent">
+                            {f}
+                          </span>
+                        ))
+                      ) : null}
                       <span className="text-[11.5px] text-fg-3">
                         {lead?.name ?? 'Unknown club'} · {formatDate(p.date)}
                       </span>
@@ -210,6 +233,41 @@ export function AdminShowcasePage() {
               </Field>
               <Field label="Detailed Body / Impact Story">
                 <Textarea rows={4} value={editBody} onChange={(e) => setEditBody(e.target.value)} />
+              </Field>
+              <Field label="Avenue of Service" required>
+                <Select
+                  options={AVENUES_OF_SERVICE.map((a) => ({ value: a, label: a }))}
+                  value={editAvenueOfService}
+                  onChange={(e) => setEditAvenueOfService(e.target.value)}
+                />
+              </Field>
+              <Field label="Areas of Focus" hint="Select all that apply (Multi-choice)">
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {AREAS_OF_FOCUS.map((focus) => {
+                    const isSelected = editAreasOfFocus.includes(focus);
+                    return (
+                      <button
+                        key={focus}
+                        type="button"
+                        onClick={() => toggleEditAreaOfFocus(focus)}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold transition-all border text-left ${
+                          isSelected
+                            ? 'bg-accent/10 border-accent text-accent font-bold ring-1 ring-accent/30'
+                            : 'bg-page border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                        }`}
+                      >
+                        <span
+                          className={`flex size-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-black ${
+                            isSelected ? 'border-accent bg-accent text-white' : 'border-line-accent bg-page text-transparent'
+                          }`}
+                        >
+                          ✓
+                        </span>
+                        <span>{focus}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </Field>
               <Field label="Status">
                 <Select

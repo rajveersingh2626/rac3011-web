@@ -13,7 +13,9 @@ export const projectSchema = z.object({
   id: z.string(),
   slug: z.string().nullable(),
   title: z.string(),
-  category: z.string(),
+  category: z.string().default(''),
+  avenueOfService: z.string().nullable().optional(),
+  areasOfFocus: z.array(z.string()).default([]),
   date: z.string(),
   summary: z.string(),
   body: z.string().nullable(),
@@ -38,4 +40,24 @@ export function paginatedSchema<T extends z.ZodTypeAny>(item: T) {
   return z.object({ items: z.array(item), total: z.number(), page: z.number(), pageSize: z.number() });
 }
 
-export const SHOWCASE_CATEGORIES = ['Disease Prevention', 'Basic Education', 'Environment', 'WASH', 'Community Service'] as const;
+export const AVENUES_OF_SERVICE = [
+  'Community Services',
+  'Club Services',
+  'International Services',
+  'Vocational Services',
+  'Youth Services',
+] as const;
+export type AvenueOfService = (typeof AVENUES_OF_SERVICE)[number];
+
+export const AREAS_OF_FOCUS = [
+  'Peacebuilding and Conflict Prevention',
+  'Disease Prevention and Treatment',
+  'Water, Sanitation, and Hygiene',
+  'Maternal and Child Health',
+  'Basic Education and Literacy',
+  'Community Economic Development',
+  'Environment',
+] as const;
+export type AreaOfFocus = (typeof AREAS_OF_FOCUS)[number];
+
+export const SHOWCASE_CATEGORIES = AREAS_OF_FOCUS;

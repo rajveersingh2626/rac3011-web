@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Alert } from '@/components/ui/Alert';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { updateProject } from '@/lib/showcase/api';
-import { SHOWCASE_CATEGORIES, type Project } from '@/lib/showcase/types';
+import { AVENUES_OF_SERVICE, AREAS_OF_FOCUS, type Project } from '@/lib/showcase/types';
 import { ApiError } from '@/lib/api';
 
 export interface EditShowcaseFormProps {
@@ -31,6 +31,12 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
     .map((c) => ({ value: c.id, label: c.name }));
 
   const [title, setTitle] = useState(project.title);
+  const [avenueOfService, setAvenueOfService] = useState(project.avenueOfService || 'Community Services');
+  const [areasOfFocus, setAreasOfFocus] = useState<string[]>(
+    project.areasOfFocus && project.areasOfFocus.length > 0
+      ? project.areasOfFocus
+      : (project.category ? [project.category] : [])
+  );
   const [category, setCategory] = useState(project.category);
   const [date, setDate] = useState(project.date.slice(0, 10));
   const [summary, setSummary] = useState(project.summary);
@@ -42,9 +48,17 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [consentError, setConsentError] = useState<string | null>(null);
 
+  const toggleAreaOfFocus = (focus: string) => {
+    setAreasOfFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+  };
+
   const buildPayload = () => ({
     title: title.trim(),
-    category,
+    category: areasOfFocus[0] || avenueOfService || category || '',
+    avenueOfService,
+    areasOfFocus,
     date,
     summary: summary.trim(),
     beneficiaries: beneficiaries ? Number(beneficiaries) : null,
@@ -93,14 +107,44 @@ export function EditShowcaseForm({ project, onDone }: EditShowcaseFormProps) {
         <Field label="When" required>
           <DateInput value={date} onChange={setDate} />
         </Field>
-        <Field label="Area of focus" required>
+        <Field label="Avenue of service" required>
           <Select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            options={SHOWCASE_CATEGORIES.map((c) => ({ value: c, label: c }))}
+            value={avenueOfService}
+            onChange={(e) => setAvenueOfService(e.target.value)}
+            options={AVENUES_OF_SERVICE.map((a) => ({ value: a, label: a }))}
           />
         </Field>
       </div>
+      <Field label="Areas of focus" hint="Select all that apply (Multi-choice)" required>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {AREAS_OF_FOCUS.map((focus) => {
+            const isSelected = areasOfFocus.includes(focus);
+            return (
+              <button
+                key={focus}
+                type="button"
+                onClick={() => toggleAreaOfFocus(focus)}
+                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all border text-left ${
+                  isSelected
+                    ? 'bg-accent/10 border-accent text-accent shadow-sm font-bold ring-1 ring-accent/30'
+                    : 'bg-page border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                }`}
+              >
+                <span
+                  className={`flex size-4 shrink-0 items-center justify-center rounded border text-[10px] font-black transition-colors ${
+                    isSelected
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-line-accent bg-page text-transparent'
+                  }`}
+                >
+                  ✓
+                </span>
+                <span>{focus}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Field>
       <Field label="Tell us what happened" required>
         <Textarea value={summary} onChange={(e) => setSummary(e.target.value)} rows={4} maxLength={3000} />
       </Field>

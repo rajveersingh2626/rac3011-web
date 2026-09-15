@@ -19,7 +19,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Timeline } from '@/components/ui/Timeline';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { createProject, updateProject } from '@/lib/showcase/api';
-import { SHOWCASE_CATEGORIES } from '@/lib/showcase/types';
+import { AVENUES_OF_SERVICE, AREAS_OF_FOCUS } from '@/lib/showcase/types';
 import { ApiError } from '@/lib/api';
 
 const PHOTO_SLOTS = 4;
@@ -47,6 +47,8 @@ export function SubmitShowcasePage() {
   const clubOptions = allClubsList.filter((c) => c.value !== activeHostClubId);
 
   const [title, setTitle] = useState('');
+  const [avenueOfService, setAvenueOfService] = useState<string>('Community Services');
+  const [areasOfFocus, setAreasOfFocus] = useState<string[]>([]);
   const [category, setCategory] = useState('');
   const [date, setDate] = useState('');
   const [photos, setPhotos] = useState<(FileUploadValue | null)[]>(Array(PHOTO_SLOTS).fill(null));
@@ -59,7 +61,9 @@ export function SubmitShowcasePage() {
 
   const buildPayload = () => ({
     title: title.trim(),
-    category,
+    category: areasOfFocus[0] || avenueOfService || category || '',
+    avenueOfService,
+    areasOfFocus: areasOfFocus.length > 0 ? areasOfFocus : (category ? [category] : []),
     date,
     summary: summary.trim(),
     beneficiaries: beneficiaries ? Number(beneficiaries) : null,
@@ -72,7 +76,8 @@ export function SubmitShowcasePage() {
   function validate(requireConsent: boolean): boolean {
     const next: Record<string, string> = {};
     if (!title.trim()) next.title = 'Say what the club did';
-    if (!category) next.category = 'Pick an area of focus';
+    if (!avenueOfService) next.avenueOfService = 'Pick an avenue of service';
+    if (areasOfFocus.length === 0 && !category) next.areasOfFocus = 'Select at least one area of focus';
     if (!date) next.date = 'Pick a date';
     if (!summary.trim()) next.summary = 'Tell us what happened';
     if (requireConsent && !consentConfirmed) next.consent = 'Confirm consent before sending for review';
@@ -124,6 +129,19 @@ export function SubmitShowcasePage() {
     setPhotos((prev) => prev.map((p, i) => (i === index ? value : p)));
   };
 
+  const toggleAreaOfFocus = (focus: string) => {
+    setAreasOfFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+    if (errors.areasOfFocus) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy.areasOfFocus;
+        return copy;
+      });
+    }
+  };
+
   const busy = saveDraftMutation.isPending || submitMutation.isPending;
 
   return (
@@ -164,15 +182,51 @@ export function SubmitShowcasePage() {
               <Field label="When" required error={errors.date}>
                 <DateInput value={date} onChange={setDate} />
               </Field>
-              <Field label="Area of focus" required error={errors.category}>
+              <Field label="Avenue of service" required error={errors.avenueOfService}>
                 <Select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Choose one"
-                  options={SHOWCASE_CATEGORIES.map((c) => ({ value: c, label: c }))}
+                  value={avenueOfService}
+                  onChange={(e) => setAvenueOfService(e.target.value)}
+                  placeholder="Choose an avenue"
+                  options={AVENUES_OF_SERVICE.map((a) => ({ value: a, label: a }))}
                 />
               </Field>
             </div>
+
+            <Field
+              label="Areas of focus"
+              required
+              hint="Select all Rotary areas of focus that apply to this project (Multi-choice)"
+              error={errors.areasOfFocus}
+            >
+              <div className="flex flex-wrap gap-2 pt-1">
+                {AREAS_OF_FOCUS.map((focus) => {
+                  const isSelected = areasOfFocus.includes(focus);
+                  return (
+                    <button
+                      key={focus}
+                      type="button"
+                      onClick={() => toggleAreaOfFocus(focus)}
+                      className={`flex items-center gap-2 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all border text-left ${
+                        isSelected
+                          ? 'bg-accent/10 border-accent text-accent shadow-sm font-bold ring-1 ring-accent/30'
+                          : 'bg-page border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                      }`}
+                    >
+                      <span
+                        className={`flex size-4 shrink-0 items-center justify-center rounded border text-[10px] font-black transition-colors ${
+                          isSelected
+                            ? 'border-accent bg-accent text-white'
+                            : 'border-line-accent bg-page text-transparent'
+                        }`}
+                      >
+                        ✓
+                      </span>
+                      <span>{focus}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
 
             <Field
               label="Photographs"

@@ -315,6 +315,8 @@ app.post('/projects', (req, res) => {
     slug: null,
     title: body.title,
     category: body.category,
+    avenueOfService: body.avenueOfService ?? 'Community Services',
+    areasOfFocus: body.areasOfFocus ?? [body.category],
     date: body.date,
     summary: body.summary,
     body: body.body ?? null,

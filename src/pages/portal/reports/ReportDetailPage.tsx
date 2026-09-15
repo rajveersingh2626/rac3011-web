@@ -32,15 +32,7 @@ const STATUS_TONE: Record<ReportStatus, BadgeTone> = {
   scored: 'green',
 };
 
-const SHOWCASE_CATEGORIES = [
-  { value: 'community_service', label: 'Community Service' },
-  { value: 'club_service', label: 'Club Service' },
-  { value: 'professional_development', label: 'Professional Development' },
-  { value: 'international_service', label: 'International Service' },
-  { value: 'youth_service', label: 'Youth Service' },
-  { value: 'environment', label: 'Environment & Sustainability' },
-  { value: 'sports_fellowship', label: 'Sports & Fellowship' },
-];
+import { AVENUES_OF_SERVICE, AREAS_OF_FOCUS } from '@/lib/showcase/types';
 
 function PushToShowcaseModal({
   open,
@@ -52,6 +44,8 @@ function PushToShowcaseModal({
   initialData: {
     title: string;
     category?: string;
+    avenueOfService?: string;
+    areasOfFocus?: string[];
     date: string;
     summary: string;
     beneficiaries?: number;
@@ -60,19 +54,32 @@ function PushToShowcaseModal({
   const { toast } = useToast();
   const qc = useQueryClient();
   const [title, setTitle] = useState(initialData.title);
-  const [category, setCategory] = useState(initialData.category || 'community_service');
+  const [avenueOfService, setAvenueOfService] = useState(initialData.avenueOfService || 'Community Services');
+  const [areasOfFocus, setAreasOfFocus] = useState<string[]>(
+    initialData.areasOfFocus && initialData.areasOfFocus.length > 0
+      ? initialData.areasOfFocus
+      : (initialData.category ? [initialData.category] : ['Community Economic Development'])
+  );
   const [date, setDate] = useState(initialData.date || new Date().toISOString().slice(0, 10));
   const [summary, setSummary] = useState(initialData.summary);
   const [beneficiaries, setBeneficiaries] = useState<number | undefined>(initialData.beneficiaries);
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
 
+  const toggleAreaOfFocus = (focus: string) => {
+    setAreasOfFocus((prev) =>
+      prev.includes(focus) ? prev.filter((f) => f !== focus) : [...prev, focus]
+    );
+  };
+
   const submitMutation = useMutation({
     mutationFn: () =>
       createProject({
         title,
-        category,
-        date: date ? new Date(date).toISOString() : new Date().toISOString(),
+        category: areasOfFocus[0] || avenueOfService || '',
+        avenueOfService,
+        areasOfFocus,
+        date: date ? new Date(date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
         summary,
         beneficiaries: beneficiaries ? Number(beneficiaries) : null,
         photos: photos.filter(Boolean),
@@ -116,7 +123,7 @@ function PushToShowcaseModal({
           </Button>
           <Button
             loading={submitMutation.isPending}
-            disabled={!title.trim() || !summary.trim()}
+            disabled={!title.trim() || !summary.trim() || areasOfFocus.length === 0}
             onClick={() => submitMutation.mutate()}
           >
             Submit to Showcase
@@ -139,11 +146,11 @@ function PushToShowcaseModal({
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[12px] font-bold text-fg">Avenue / Category *</span>
+            <span className="text-[12px] font-bold text-fg">Avenue of Service *</span>
             <Select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              options={SHOWCASE_CATEGORIES}
+              value={avenueOfService}
+              onChange={(e) => setAvenueOfService(e.target.value)}
+              options={AVENUES_OF_SERVICE.map((a) => ({ value: a, label: a }))}
             />
           </label>
 
@@ -151,6 +158,36 @@ function PushToShowcaseModal({
             <span className="text-[12px] font-bold text-fg">Execution Date *</span>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[12px] font-bold text-fg">Areas of Focus * (Multi-choice)</span>
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
+            {AREAS_OF_FOCUS.map((focus) => {
+              const isSelected = areasOfFocus.includes(focus);
+              return (
+                <button
+                  key={focus}
+                  type="button"
+                  onClick={() => toggleAreaOfFocus(focus)}
+                  className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold transition-all border text-left ${
+                    isSelected
+                      ? 'bg-accent/10 border-accent text-accent font-bold ring-1 ring-accent/30'
+                      : 'bg-page border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                  }`}
+                >
+                  <span
+                    className={`flex size-3.5 shrink-0 items-center justify-center rounded border text-[9px] font-black ${
+                      isSelected ? 'border-accent bg-accent text-white' : 'border-line-accent bg-page text-transparent'
+                    }`}
+                  >
+                    ✓
+                  </span>
+                  <span>{focus}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <label className="flex flex-col gap-1.5">
