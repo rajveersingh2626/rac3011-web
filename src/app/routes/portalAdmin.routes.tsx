@@ -41,6 +41,9 @@ const PortalEventsPage = lazy(() =>
 const DrrCalendarAdminPage = lazy(() =>
   import('@/pages/portal/admin/DrrCalendarAdminPage').then((m) => ({ default: m.DrrCalendarAdminPage })),
 );
+const ActiveSessionsPage = lazy(() =>
+  import('@/pages/portal/admin/ActiveSessionsPage').then((m) => ({ default: m.ActiveSessionsPage })),
+);
 const ChangelogPage = lazy(() =>
   import('@/pages/portal/ChangelogPage').then((m) => ({ default: m.ChangelogPage })),
 );
@@ -69,6 +72,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('feedback:review', '/portal/admin/feedback', <AdminFeedbackPage />),
   guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
   guarded('roles:manage', '/portal/admin/users', <AdminUsersPage />),
+  guarded('roles:manage', '/portal/admin/sessions', <ActiveSessionsPage />),
   guarded('events:manage', '/portal/admin/events', <PortalEventsPage />),
   guarded('drr_calendar:manage', '/portal/admin/drr-calendar', <DrrCalendarAdminPage />),
   guarded('public_content:manage', '/portal/admin/public-content/:kind?', <PublicContentPage />),
