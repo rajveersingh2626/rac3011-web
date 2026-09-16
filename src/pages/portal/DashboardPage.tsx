@@ -58,7 +58,7 @@ function ReportStatusWidget({ clubId }: { clubId: string }) {
   });
 
   if (query.isPending) return <Skeleton shape="rect" className="h-40" />;
-  if (query.isError) return null;
+  if (query.isError || !query.data?.items) return null;
 
   const report = query.data.items[0];
 
@@ -101,7 +101,7 @@ function AnnouncementsWidget() {
   });
 
   if (query.isPending) return <Skeleton shape="rect" className="h-40" />;
-  if (query.isError) return null;
+  if (query.isError || !query.data?.items) return null;
 
   const items = query.data.items;
 

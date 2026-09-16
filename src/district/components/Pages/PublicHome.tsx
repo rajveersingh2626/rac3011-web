@@ -230,7 +230,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
   );
 }
 
-type FlagshipSurface = 'mission3011' | 'drishti' | 'rcl' | 'careerbridge';
+type FlagshipSurface = 'mission3011' | 'drishti' | 'rcl' | 'careerbridge' | 'ride';
 
 interface UpcomingProject {
   id: number;
@@ -247,6 +247,16 @@ interface UpcomingProject {
 const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
   {
     id: 1,
+    title: 'The RIDE: Delhi Meri Jaan',
+    surface: 'ride',
+    category: 'Youth Exchange & Fellowship',
+    subtitle: 'National & International Youth Exchange 2026',
+    image: '/ride/logos/2026_logo_coloured.png',
+    metric: 'Flagship Youth Exchange',
+    description: 'Rotaract Inter-District Youth Exchange hosting delegates from across India and international Rotary districts for an immersive 4-day fellowship, heritage tour, and homestay experience.'
+  },
+  {
+    id: 2,
     title: 'Mission 3011',
     surface: 'mission3011',
     category: 'Healthcare & Life',
@@ -256,7 +266,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     description: 'A district-wide blood donation campaign running across the year, with clubs in all 4 zones holding their own camps toward a district target of 3,011 certified life-saving units, in partnership with accredited blood banks.'
   },
   {
-    id: 2,
+    id: 3,
     title: 'Project Drishti',
     surface: 'drishti',
     category: 'Vision Care & Surgery',
@@ -266,7 +276,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     description: 'Combating avoidable blindness across Delhi NCR through comprehensive screening clinics, prescription spectacles distribution, and a target of 100 fully sponsored cataract surgeries for underprivileged elders.'
   },
   {
-    id: 3,
+    id: 4,
     title: 'Rotaract Cricket League (RCL)',
     surface: 'rcl',
     category: 'District Fellowship & Sports',
@@ -276,7 +286,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     description: 'District 3011’s marquee sports tournament fostering camaraderie, athletic grit, and inter-club fellowship across Delhi, Gurgaon, and Faridabad on the cricket pitch.'
   },
   {
-    id: 4,
+    id: 5,
     title: 'Career Bridge',
     surface: 'careerbridge',
     category: 'Youth Vocational Development',
@@ -286,7 +296,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     description: 'A live bridge connecting Rotarians and corporate leaders with aspiring Rotaractors for executive coaching, corporate internships, CV masterclasses, and verified job placements.'
   },
   {
-    id: 5,
+    id: 6,
     title: 'Project Ownership Bidding',
     category: 'Club Leadership & Merit Allocation',
     subtitle: 'Host District Projects Through Merit-Based Bidding',
@@ -305,6 +315,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
     drishti: useSurfaceHref('drishti'),
     rcl: useSurfaceHref('rcl'),
     careerbridge: useSurfaceHref('careerbridge'),
+    ride: useSurfaceHref('ride'),
   };
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);

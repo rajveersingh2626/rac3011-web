@@ -119,6 +119,23 @@ export function LoginPage() {
         });
       }
       await refresh();
+      if (next.startsWith('http://') || next.startsWith('https://')) {
+        try {
+          const parsed = new URL(next);
+          // Only allow safe redirections to rotaract3011.org domains or localhost
+          if (
+            parsed.hostname === 'localhost' ||
+            parsed.hostname === '127.0.0.1' ||
+            parsed.hostname.endsWith('rotaract3011.org') ||
+            parsed.hostname.includes('delhimerijaan')
+          ) {
+            window.location.assign(next);
+            return;
+          }
+        } catch {
+          // Fallback to internal navigate below
+        }
+      }
       navigate(next, { replace: true });
     } catch (e) {
       if (e instanceof ApiError && e.details) secondFactor.setServerErrors(e.details);

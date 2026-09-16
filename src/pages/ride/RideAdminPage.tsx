@@ -35,6 +35,9 @@ import type { Delegation, DelegationStatus, GalleryItem, GalleryItemKind, Suppor
 import { ApiError } from '@/lib/api';
 import { DelhiMeriJaanAdminTab } from './components/DelhiMeriJaanAdminTab';
 import { RideEmailStudioTab } from './components/RideEmailStudioTab';
+import { RideFormBuilderTab } from './components/RideFormBuilderTab';
+import { RideResourcesPortalTab } from './components/RideResourcesPortalTab';
+import { RideActiveLoginsTab } from './components/RideActiveLoginsTab';
 
 const DELEGATIONS_KEY = ['ride', 'admin', 'delegations'];
 const SUPPORT_CLUBS_KEY = ['ride', 'admin', 'support-clubs'];
@@ -379,7 +382,7 @@ function GalleryAdminSection() {
 
 export function RideAdminPage() {
   useDocumentMeta({ title: 'RIDE admin' });
-  const [activeTab, setActiveTab] = useState<'dmj' | 'delegations' | 'gallery' | 'email'>('dmj');
+  const [activeTab, setActiveTab] = useState<'dmj' | 'forms' | 'email' | 'resources' | 'logins' | 'delegations' | 'gallery'>('dmj');
   const qc = useQueryClient();
   const delegationsQuery = useQuery({
     queryKey: DELEGATIONS_KEY,
@@ -434,15 +437,18 @@ export function RideAdminPage() {
       <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-neutral-200">
         {[
           { id: 'dmj', label: 'Delhi Meri Jaan 2026' },
+          { id: 'forms', label: 'Form Builder' },
+          { id: 'email', label: 'Email Studio' },
+          { id: 'resources', label: 'Resources Portal' },
+          { id: 'logins', label: 'Active Logins (Live)' },
           { id: 'delegations', label: 'Delegations & Hosts' },
           { id: 'gallery', label: 'Snap Gallery' },
-          { id: 'email', label: 'Email Studio' },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
               activeTab === tab.id
                 ? 'bg-[#19539D] text-white ride-pop-sm'
                 : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
@@ -454,6 +460,14 @@ export function RideAdminPage() {
       </div>
 
       {activeTab === 'dmj' && <DelhiMeriJaanAdminTab />}
+
+      {activeTab === 'forms' && <RideFormBuilderTab />}
+
+      {activeTab === 'email' && <RideEmailStudioTab />}
+
+      {activeTab === 'resources' && <RideResourcesPortalTab />}
+
+      {activeTab === 'logins' && <RideActiveLoginsTab />}
 
       {activeTab === 'delegations' && (
         <Section
@@ -477,8 +491,6 @@ export function RideAdminPage() {
       )}
 
       {activeTab === 'gallery' && <GalleryAdminSection />}
-
-      {activeTab === 'email' && <RideEmailStudioTab />}
 
       <CreateDelegationModal open={creating} onClose={() => setCreating(false)} onCreated={invalidateDelegations} />
       <HostAssignmentDrawer

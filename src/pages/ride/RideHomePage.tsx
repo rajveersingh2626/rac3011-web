@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router';
 import { ArrowRight, Sparkles, MapPin, HeartHandshake, Compass, Camera, Award } from 'lucide-react';
 import {
   AutoRickshawBadge,
@@ -120,12 +121,12 @@ export function RideHomePage() {
             >
               Register
             </button>
-            <a
-              href="/admin"
+            <Link
+              to="/dashboard"
               className="text-[#19539D] font-extrabold hover:text-blue-800 transition-colors inline-flex items-center gap-1.5"
             >
-              <span>Admin Portal</span>
-            </a>
+              <span>Participant Portal</span>
+            </Link>
           </nav>
 
           {/* Right Action Button */}
@@ -492,9 +493,9 @@ export function RideHomePage() {
             <button type="button" onClick={() => scrollToSection('register')} className="hover:text-[#EA6623] cursor-pointer">
               Register
             </button>
-            <a href="/admin" className="text-[#19539D] font-extrabold hover:underline">
+            <Link to="/admin" className="text-[#19539D] font-extrabold hover:underline">
               Admin Portal
-            </a>
+            </Link>
           </div>
 
           <div className="text-xs sm:text-sm text-neutral-500 font-semibold text-center md:text-right">

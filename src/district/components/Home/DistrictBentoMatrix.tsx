@@ -69,6 +69,14 @@ const FLAGSHIP_ITEMS = [
     category: 'Vocational Development',
     target: 'Rotary Mentorship',
     color: '#7C3AED'
+  },
+  {
+    id: 'ride',
+    surface: 'ride' as const,
+    title: 'The RIDE: Delhi Meri Jaan',
+    category: 'District Conference',
+    target: 'Annual Conference & Fellowship',
+    color: '#EA6623'
   }
 ];
 
@@ -84,12 +92,14 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   const drishtiHref = useSurfaceHref('drishti');
   const rclHref = useSurfaceHref('rcl');
   const careerBridgeHref = useSurfaceHref('careerbridge');
+  const rideHref = useSurfaceHref('ride');
 
   const surfaceHrefs: Partial<Record<Exclude<Surface, 'main'>, string | undefined>> = {
     mission3011: missionHref,
     drishti: drishtiHref,
     rcl: rclHref,
-    careerbridge: careerBridgeHref
+    careerbridge: careerBridgeHref,
+    ride: rideHref
   };
 
   const getSafeSurfaceHref = (key: Exclude<Surface, 'main'>): string => {

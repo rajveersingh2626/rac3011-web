@@ -31,6 +31,11 @@ const routes: RouteObject[] = [
   ...districtSitePaths.map((path) => ({ path, element: <DistrictApp /> })),
   { element: <PublicLayout />, children: publicMainRouteObjects },
   { path: '/login', element: <Navigate to="/portal/login" replace /> },
+  { path: '/admin/ride', element: <Navigate to="/portal/admin/ride" replace /> },
+  { path: '/portal/ride', element: <Navigate to="/portal/admin/ride" replace /> },
+  { path: '/ride', element: <Navigate to="/portal/admin/ride" replace /> },
+  { path: '/admin', element: <Navigate to="/portal/admin/clubs" replace /> },
+  { path: '/portal/admin', element: <Navigate to="/portal/admin/clubs" replace /> },
   { path: '/forgot-password', element: <Navigate to="/portal/forgot-password" replace /> },
   { path: '/reset-password', element: <Navigate to="/portal/reset-password" replace /> },
   {

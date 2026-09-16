@@ -70,13 +70,15 @@ const PERMISSION_DOMAINS = [
       { key: 'content:edit', name: 'Draft Website Content', desc: 'Draft articles, announcements, and district leadership profiles.' },
       { key: 'content:publish', name: 'Publish Website Content', desc: 'Make web updates live on the public District 3011 portal.' },
       { key: 'public_content:manage', name: 'Manage Public Pages', desc: 'Direct control over public landing pages and assets.' },
-      { key: 'resources:manage', name: 'Manage Document Vault', desc: 'Upload and manage forms, guidelines, templates, and certificates.' },
+      { key: 'resources:manage', name: 'Manage Resource & Drive Vault', desc: 'Upload, manage, and relationally map Google Drive resources and guidelines to clubs and members.' },
+      { key: 'forms:manage', name: 'Manage Registration Forms', desc: 'Build, configure, and publish dynamic registration forms and delegate intake schemas.' },
     ],
   },
   {
     name: 'Communication & Feedback',
-    description: 'District-wide broadcasts, push alerts, and enquiry resolution.',
+    description: 'District-wide broadcasts, push alerts, bespoke email studios, and enquiry resolution.',
     permissions: [
+      { key: 'comms:send', name: 'Send Bespoke Email Broadcasts', desc: 'Dispatch emails to delegates and clubs using the bespoke yellow-accent template.' },
       { key: 'announcements:send', name: 'Send Club Announcements', desc: 'Broadcast notices and updates to club members.' },
       { key: 'announcements:send_all', name: 'District-Wide Broadcast', desc: 'Send alerts to all active members across every club in 3011.' },
       { key: 'feedback:submit', name: 'Submit Feedback & Enquiries', desc: 'Send inquiries and feedback to the district council.' },
@@ -443,7 +445,7 @@ export function AdminUsersPage() {
               onClick={() => setIsMatrixOpen(true)}
             >
               <Key size={14} className="text-accent" />
-              Explore Extensive Permissions Matrix (All 39 Capabilities)
+              Explore Extensive Permissions Matrix (All 41 Capabilities)
             </Button>
           </div>
         </div>
@@ -475,6 +477,7 @@ export function AdminUsersPage() {
                   { value: 'president', label: 'Club President' },
                   { value: 'secretary', label: 'Club Secretary' },
                   { value: 'member', label: 'Club Member' },
+                  { value: 'project_admin:ride', label: 'The RIDE Admin' },
                   { value: 'editing_team', label: 'Website Editing Team' },
                 ]}
               />
