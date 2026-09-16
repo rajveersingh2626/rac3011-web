@@ -58,7 +58,7 @@ export function ActiveSessionsPage() {
     isRefetching,
   } = useQuery<ActiveSession[]>({
     queryKey: ['active-sessions'],
-    queryFn: fetchActiveSessions,
+    queryFn: () => fetchActiveSessions(),
     refetchInterval: 30_000,
   });
 

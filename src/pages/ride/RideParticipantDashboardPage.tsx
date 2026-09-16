@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
@@ -6,6 +7,7 @@ import {
   MapPin, Building, QrCode
 } from 'lucide-react';
 import { useAuth } from '@/app/auth';
+import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -64,22 +66,22 @@ interface AnnouncementMessage {
   tag: string;
 }
 
-const INBOX_MESSAGES: AnnouncementMessage[] = [
+const DEFAULT_ANNOUNCEMENTS: AnnouncementMessage[] = [
   {
     id: 'msg-1',
-    subject: 'Welcome to Delhi Meri Jaan 2026 • Your Official Delegate Pass [DMJ-902144]',
-    date: '14 Sep 2026',
+    subject: 'Welcome to Delhi Meri Jaan 2026 • Official Delegate Instructions',
+    date: 'Official Briefing',
     sender: 'Host Organizing Committee • RID 3011',
     tag: 'Official Pass',
-    body: 'Dear Delegate,\n\nNamaste from Rotary International District 3011!\n\nWe are thrilled to welcome you to the capital for "THE RIDE: DELHI MERI JAAN 2026". Your registration from RID 3141 has been successfully verified. Please keep your digital QR code handy upon arriving at IGI Airport Terminal 3.\n\nOur hospitality leads will receive you with authentic Dilli refreshments.\n\nWarm regards,\nDistrict Exchange Committee',
+    body: 'Dear Delegate,\n\nNamaste from Rotary International District 3011!\n\nWe are delighted to welcome you to the capital for "THE RIDE: DELHI MERI JAAN 2026". Please ensure you have completed all questionnaires in the "Pending Forms" section of this portal to help us coordinate your arrival and accommodations smoothly.\n\nOur hospitality leads will receive you with authentic Dilli refreshments.\n\nWarm regards,\nDistrict Exchange Committee',
   },
   {
     id: 'msg-2',
-    subject: 'Host Family Allocation & Dilli Darshan Trail Update',
-    date: '12 Sep 2026',
+    subject: 'Host Family & Transit Hub Coordination',
+    date: 'Hospitality Desk',
     sender: 'Homestay & Hospitality Team',
     tag: 'Hospitality',
-    body: 'Greetings!\n\nYour host club match has been confirmed with the Rotaract Club of Delhi South Central. Host families have been briefed on dietary preferences and arrival timings. Shuttle departures from the transit hub will commence at 10:00 AM.\n\nSee you soon on the metro line!',
+    body: 'Greetings!\n\nHost families and club leads have been briefed on dietary preferences and arrival schedules. Transit desks at IGI Airport and New Delhi Railway Station will be equipped to provide your transit kits.\n\nSee you soon on the metro line!',
   },
 ];
 
@@ -87,6 +89,17 @@ export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
   const { me, signOut } = useAuth();
   const user = me?.user;
+
+  const { data: participantData } = useQuery({
+    queryKey: ['ride', 'participants', 'me'],
+    queryFn: async () => {
+      try {
+        return await apiFetch<any>('/ride/participants/me');
+      } catch {
+        return null;
+      }
+    },
+  });
 
   const [activeTab, setActiveTab] = useState<'status' | 'forms' | 'resources' | 'inbox' | 'sessions'>('status');
   const [allForms, setAllForms] = useState<FormDefinition[]>(() => getStoredForms());
@@ -97,9 +110,6 @@ export function RideParticipantDashboardPage() {
   const [formFieldValues, setFormFieldValues] = useState<Record<string, any>>({});
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
-
-  // Active Sessions Mock State
-  const [allLoggedOut, setAllLoggedOut] = useState(false);
   const [copiedResId, setCopiedResId] = useState<string | null>(null);
 
   // Sync with storage updates
@@ -115,9 +125,13 @@ export function RideParticipantDashboardPage() {
   }, []);
 
   // Compute pending forms: active forms for which this participant hasn't submitted yet
-  const userEmail = user?.email || 'rohan.m@rotaract3141.org';
-  const userName = user?.name || 'Rtr. Rohan Malhotra';
-  const userDistrict = '3141';
+  const userEmail = participantData?.email || user?.email || '';
+  const userName = participantData?.fullName || user?.name || 'Registered Delegate';
+  const userDistrict = participantData?.homeDistrict || '';
+  const userClub = participantData?.homeClubName || '';
+  const userRef = participantData?.id 
+    ? `DMJ-${participantData.id.slice(0, 6).toUpperCase()}` 
+    : (user?.id ? `DMJ-${user.id.slice(0, 6).toUpperCase()}` : 'DMJ-DELEGATE');
 
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
   const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
@@ -165,11 +179,6 @@ export function RideParticipantDashboardPage() {
     setTimeout(() => setCopiedResId(null), 2500);
   };
 
-  const handleLogOutAll = () => {
-    setAllLoggedOut(true);
-    setTimeout(() => setAllLoggedOut(false), 4000);
-  };
-
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#171515] py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -188,7 +197,7 @@ export function RideParticipantDashboardPage() {
                 <Badge tone="green">Verified Delegate</Badge>
               </div>
               <p className="text-xs text-neutral-600 font-semibold mt-0.5">
-                RID {userDistrict} · Rotaract Club of Bombay Midtown · {userEmail}
+                {userDistrict ? `RID ${userDistrict} · ` : ''}{userClub ? `${userClub} · ` : ''}{userEmail}
               </p>
             </div>
           </div>
@@ -196,7 +205,7 @@ export function RideParticipantDashboardPage() {
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <div className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Official Reference</div>
-              <div className="text-sm font-black text-[#19539D] font-mono">DMJ-902144</div>
+              <div className="text-sm font-black text-[#19539D] font-mono">{userRef}</div>
             </div>
             <Button
               variant="secondary"
@@ -215,7 +224,7 @@ export function RideParticipantDashboardPage() {
             { id: 'status', label: 'Approval Status', count: undefined },
             { id: 'forms', label: 'Pending Forms', count: pendingForms.length },
             { id: 'resources', label: 'Drive Resources', count: RESOURCES_LIST.length },
-            { id: 'inbox', label: 'Inbox & Announcements', count: INBOX_MESSAGES.length },
+            { id: 'inbox', label: 'Inbox & Announcements', count: DEFAULT_ANNOUNCEMENTS.length },
             { id: 'sessions', label: 'Active Sessions', count: undefined },
           ].map((tab) => (
             <button
@@ -294,15 +303,19 @@ export function RideParticipantDashboardPage() {
                     <span>Assigned Host Club & Family</span>
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-[#171515]">Rotaract Club of Delhi South Central</h4>
+                    <h4 className="text-sm font-black text-[#171515]">
+                      {participantData?.hostFamilyName || 'Host Allocation in Progress'}
+                    </h4>
                     <p className="text-xs text-neutral-600 mt-1">
-                      Host Rotaractor: <strong className="text-[#171515]">Rtr. Kabir Mehra</strong><br />
-                      Neighborhood: Hauz Khas Enclave, South Delhi<br />
-                      WhatsApp Contact: +91 98101 23456
+                      {participantData?.hostFamilyName
+                        ? `Host Assignment: ${participantData.hostFamilyName}`
+                        : 'Your host Rotaract club and homestay coordinator will be assigned prior to arrivals.'}
                     </p>
                   </div>
                   <div className="pt-2 text-[11px] text-neutral-500 font-bold border-t border-neutral-200">
-                    Host family is notified of your vegetarian meal preference.
+                    {participantData?.dietaryPref
+                      ? `Dietary preference recorded: ${participantData.dietaryPref}`
+                      : 'Dietary preferences logged with exchange committee.'}
                   </div>
                 </div>
 
@@ -313,18 +326,20 @@ export function RideParticipantDashboardPage() {
                     <span>Arrival Transit Hub</span>
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-[#171515]">IGI Airport Terminal 3 / NDLS Welcome Desk</h4>
+                    <h4 className="text-sm font-black text-[#171515]">
+                      {participantData?.cityState || participantData?.arrivalLocation || 'IGI Airport / NDLS Welcome Desk'}
+                    </h4>
                     <p className="text-xs text-neutral-600 mt-1">
-                      Desk Hours: 24 Hours Active across exchange dates<br />
-                      Transport: DMRC Airport Express Smart Token Provided<br />
-                      Coordinator: Rtr. Tushar (+91 99990 12345)
+                      Mode of Arrival: {participantData?.arrivalMode || 'Standard Transit'}<br />
+                      Transport: DMRC Metro Transit Pass Supported<br />
+                      Secretariat Desk: Active 24 Hours on check-in days
                     </p>
                   </div>
                   <div className="pt-2 flex items-center justify-between border-t border-neutral-200">
-                    <span className="text-[11px] font-bold text-neutral-500 font-mono">Pass: DMJ-902144</span>
+                    <span className="text-[11px] font-bold text-neutral-500 font-mono">Pass: {userRef}</span>
                     <button
                       type="button"
-                      onClick={() => alert('Digital Pass QR Code: DMJ-902144\nStatus: Verified\nShow this code at arrival desk.')}
+                      onClick={() => alert(`Digital Pass: ${userRef}\nDelegate: ${userName}\nStatus: Verified\nShow this code at arrival desk.`)}
                       className="px-3 py-1 rounded-xl bg-[#19539D] text-white text-[11px] font-black flex items-center gap-1.5 hover:bg-blue-800"
                     >
                       <QrCode size={13} />
@@ -520,7 +535,7 @@ export function RideParticipantDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {INBOX_MESSAGES.map((msg) => (
+              {DEFAULT_ANNOUNCEMENTS.map((msg) => (
                 <div
                   key={msg.id}
                   className="rounded-2xl border-2 border-[#171515] bg-white overflow-hidden ride-pop-sm"
@@ -568,61 +583,53 @@ export function RideParticipantDashboardPage() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={handleLogOutAll}
+                  onClick={signOut}
                   leading={<LogOut size={14} />}
                 >
-                  Log Out of All Devices
+                  Log Out
                 </Button>
               </div>
 
-              {allLoggedOut && (
-                <div className="p-3 rounded-xl bg-green-50 border-2 border-green-600 text-green-900 text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 size={16} className="text-green-700 shrink-0" />
-                  <span>All other active participant sessions have been successfully terminated.</span>
-                </div>
-              )}
-
               {/* Devices List */}
               <div className="space-y-3">
-                {[
-                  { id: 'sess-1', device: 'Chrome on Windows 11', ip: '103.21.124.89 (Delhi NCR)', current: true, time: 'Active now' },
-                  { id: 'sess-2', device: 'Mobile Safari on iPhone 15 Pro', ip: '157.34.82.11 (Mumbai)', current: false, time: '2 hours ago' },
-                  { id: 'sess-3', device: 'Chrome on Android Phone', ip: '49.207.210.45 (Bangalore)', current: false, time: 'Yesterday' },
-                ].map((sess) => (
-                  <div
-                    key={sess.id}
-                    className="p-4 rounded-xl border border-neutral-200 bg-[#FDFBF7] flex items-center justify-between gap-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-white border border-neutral-300 text-[#171515]">
-                        {sess.device.includes('iPhone') || sess.device.includes('Android') ? (
-                          <Smartphone size={18} />
-                        ) : (
-                          <Monitor size={18} />
-                        )}
+                <div className="p-4 rounded-xl border border-neutral-200 bg-[#FDFBF7] flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-white border border-neutral-300 text-[#171515]">
+                      {typeof navigator !== 'undefined' && navigator.userAgent.includes('Mobile') ? (
+                        <Smartphone size={18} />
+                      ) : (
+                        <Monitor size={18} />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-[#171515]">
+                          {typeof navigator !== 'undefined' && navigator.userAgent.includes('Windows')
+                            ? 'Chrome / Edge on Windows'
+                            : typeof navigator !== 'undefined' && navigator.userAgent.includes('Mac')
+                              ? 'Safari / Chrome on macOS'
+                              : typeof navigator !== 'undefined' && navigator.userAgent.includes('iPhone')
+                                ? 'Mobile Safari on iOS'
+                                : typeof navigator !== 'undefined' && navigator.userAgent.includes('Android')
+                                  ? 'Chrome on Android'
+                                  : 'Web Browser Session'}
+                        </span>
+                        <Badge tone="green">Current Device</Badge>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#171515]">{sess.device}</span>
-                          {sess.current && <Badge tone="green">Current Device</Badge>}
-                        </div>
-                        <div className="text-[11px] text-neutral-500 mt-0.5">
-                          IP: {sess.ip} · {sess.time}
-                        </div>
+                      <div className="text-[11px] text-neutral-500 mt-0.5">
+                        Authenticated as {userEmail || userName} · Active now
                       </div>
                     </div>
-
-                    {!sess.current && (
-                      <button
-                        type="button"
-                        onClick={() => alert(`Revoked session: ${sess.device}`)}
-                        className="text-xs text-red-600 font-bold hover:underline"
-                      >
-                        Revoke
-                      </button>
-                    )}
                   </div>
-                ))}
+
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={signOut}
+                  >
+                    Log Out
+                  </Button>
+                </div>
               </div>
             </Card>
           </div>

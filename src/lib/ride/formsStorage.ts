@@ -57,8 +57,8 @@ export const DEFAULT_FORMS: FormDefinition[] = [
     isPublic: true,
     createdAt: '2026-08-15',
     fields: [
-      { id: 'f1', name: 'fullName', label: 'Full Legal Name', type: 'text', required: true, placeholder: 'e.g. Rtr. Rohan Malhotra' },
-      { id: 'f2', name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'rohan@example.com' },
+      { id: 'f1', name: 'fullName', label: 'Full Legal Name', type: 'text', required: true, placeholder: 'Enter your full legal name' },
+      { id: 'f2', name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'delegate@rotaract.org' },
       { id: 'f3', name: 'phone', label: 'WhatsApp / Mobile Number', type: 'phone', required: true, placeholder: '+91 98765 43210' },
       { id: 'f4', name: 'homeDistrict', label: 'Home Rotary District', type: 'text', required: true, placeholder: 'e.g. 3141' },
       { id: 'f5', name: 'homeClubName', label: 'Home Rotaract Club', type: 'text', required: true, placeholder: 'e.g. RAC Bombay Midtown' },
@@ -102,40 +102,7 @@ export const DEFAULT_FORMS: FormDefinition[] = [
   },
 ];
 
-export const DEFAULT_SUBMISSIONS: FormSubmissionRecord[] = [
-  {
-    id: 'sub-1',
-    formId: 'form-2',
-    formTitle: 'Homestay & Hospitality Allocation Preferences',
-    participantId: 'p-1',
-    participantName: 'Rtr. Rohan Malhotra',
-    participantEmail: 'rohan.m@rotaract3141.org',
-    homeDistrict: '3141',
-    values: {
-      passRef: 'DMJ-902144',
-      hostPreferenceZone: 'Zone Vayu (South Delhi/Noida)',
-      petAllergies: 'No allergies',
-      specialNeeds: 'Requires early morning vegetarian breakfast before district transit bus departure.',
-    },
-    submittedAt: '2026-09-14T11:20:00Z',
-  },
-  {
-    id: 'sub-2',
-    formId: 'form-3',
-    formTitle: 'Cultural Night & DJ Gala Performer Application',
-    participantId: 'p-2',
-    participantName: 'Rtr. Ananya Sharma',
-    participantEmail: 'ananya.s@rotaract3190.org',
-    homeDistrict: '3190',
-    values: {
-      actTitle: 'Classical Kathak Jugalbandi',
-      performerCount: '3',
-      audioTrackUrl: 'https://drive.google.com/file/d/1exampleAudioTrack',
-      specialEquipment: 'Two wireless boundary mics and monitor speakers near center stage.',
-    },
-    submittedAt: '2026-09-15T15:45:00Z',
-  },
-];
+export const DEFAULT_SUBMISSIONS: FormSubmissionRecord[] = [];
 
 export function getStoredForms(): FormDefinition[] {
   if (typeof window === 'undefined') return DEFAULT_FORMS;

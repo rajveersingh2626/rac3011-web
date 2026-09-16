@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 
-// Extensive breakdown of all 39 District 3011 capabilities
+// Extensive breakdown of all 41 District 3011 capabilities
 const PERMISSION_DOMAINS = [
   {
     name: 'Reporting & Scoring',
@@ -39,6 +39,7 @@ const PERMISSION_DOMAINS = [
       { key: 'reports:submit', name: 'Submit Club Reports', desc: 'Can compile, edit, and submit the monthly club report.' },
       { key: 'reports:review', name: 'Review & Query Reports', desc: 'Can review submissions from clubs and raise official queries.' },
       { key: 'reports:score', name: 'Score Reports & Points', desc: 'Can evaluate reports, verify achievements, and award official district points.' },
+      { key: 'requests:manage', name: 'Manage Report Schemas & Requests', desc: 'Can design and dispatch monthly reporting schemas to clubs.' },
     ],
   },
   {
@@ -98,14 +99,16 @@ const PERMISSION_DOMAINS = [
     ],
   },
   {
-    name: 'District Flagship Subdomains',
-    description: 'Special administrative capabilities for District 3011 subdomains.',
+    name: 'District Flagships & RIDE Youth Exchange',
+    description: 'Special administrative capabilities for District 3011 subdomains and youth exchanges.',
     permissions: [
       { key: 'subdomain:mission3011:manage', name: 'Mission 3011 Admin', desc: 'Manage blood donation drives, camps, and donor registries.' },
       { key: 'subdomain:drishti:manage', name: 'Drishti Admin', desc: 'Manage eye care drives, screening camps, and spectacles distribution.' },
       { key: 'subdomain:rcl:manage', name: 'RCL Admin', desc: 'Manage the Rotaract Cricket League fixtures, teams, and scores.' },
       { key: 'subdomain:careerbridge:manage', name: 'CareerBridge Admin', desc: 'Manage career fairs, job listings, and mentorship programs.' },
-      { key: 'subdomain:ride:manage', name: 'RIDE Admin', desc: 'Manage the Rotaract Inter-District Exchange delegates and hosts.' },
+      { key: 'subdomain:ride:manage', name: 'RIDE Subdomain Admin', desc: 'Access and oversee the RIDE subdomain infrastructure.' },
+      { key: 'ride:manage', name: 'RIDE Youth Exchange Admin', desc: 'Full administration of The RIDE Youth Exchange and Delhi Meri Jaan portal.' },
+      { key: 'ride:delegates:manage', name: 'Manage RIDE Delegates & Homestays', desc: 'Manage incoming exchange participants, delegations, homestay families and host club allocations.' },
     ],
   },
   {
@@ -588,7 +591,7 @@ export function AdminUsersPage() {
                       <Crown size={16} className="text-rose-500" /> Super Admin Access
                     </h4>
                     <p className="m-0 text-[12px] text-fg-3 mt-0.5">
-                      Promote {liveManagingUser.name} to District Super Admin with unscoped access across all 39 capabilities.
+                      Promote {liveManagingUser.name} to District Super Admin with unscoped access across all 41 capabilities.
                     </p>
                   </div>
                   <Button
@@ -630,8 +633,14 @@ export function AdminUsersPage() {
                     <Select
                       value={grantRoleId}
                       onChange={(e) => {
-                        setGrantRoleId(e.target.value);
-                        setGrantScopeId('');
+                        const nextId = e.target.value;
+                        setGrantRoleId(nextId);
+                        const matched = roles.find((r) => r.id === nextId);
+                        if (matched?.key.includes('ride')) {
+                          setGrantScopeId('ride');
+                        } else {
+                          setGrantScopeId('');
+                        }
                       }}
                       placeholder="Select a role…"
                       options={roles.map((r) => ({
@@ -664,11 +673,18 @@ export function AdminUsersPage() {
                   )}
 
                   {grantScopeType === 'project' && (
-                    <Field label="Target Project Key">
-                      <Input
-                        placeholder="e.g. mission3011, drishti, rcl"
+                    <Field label="Target Project Scope" hint="Select the project this role oversees">
+                      <Select
                         value={grantScopeId}
                         onChange={(e) => setGrantScopeId(e.target.value)}
+                        placeholder="Choose project…"
+                        options={[
+                          { value: 'ride', label: 'The RIDE: Delhi Meri Jaan (ride)' },
+                          { value: 'mission3011', label: 'Mission 3011 Blood Registry (mission3011)' },
+                          { value: 'drishti', label: 'Drishti Vision Care (drishti)' },
+                          { value: 'rcl', label: 'Rotaract Cricket League (rcl)' },
+                          { value: 'careerbridge', label: 'CareerBridge Fellowship (careerbridge)' },
+                        ]}
                       />
                     </Field>
                   )}
@@ -733,7 +749,7 @@ export function AdminUsersPage() {
           <div className="flex flex-col gap-6">
             <p className="m-0 text-[13.5px] text-fg-2">
               District 3011 employs a granular role-based access control (RBAC) architecture. Every API route and
-              portal capability is guarded by one of these 39 specific permission keys.
+              portal capability is guarded by one of these 41 specific permission keys.
             </p>
 
             <div className="flex flex-col gap-6">

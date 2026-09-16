@@ -39,78 +39,16 @@ export function RideActiveLoginsTab() {
     refetch,
     isRefetching,
   } = useQuery<ActiveSession[]>({
-    queryKey: ['active-sessions'],
+    queryKey: ['ride-active-sessions'],
     queryFn: async () => {
       try {
-        const live = await fetchActiveSessions();
-        if (Array.isArray(live) && live.length > 0) return live;
+        const live = await fetchActiveSessions('ride');
+        return Array.isArray(live) ? live : [];
       } catch {
-        // fallback to pre-populated participant sessions if offline or demo
+        return [];
       }
-      return [
-        {
-          id: 'sess-p1',
-          userId: 'usr-1',
-          name: 'Rtr. Rohan Malhotra',
-          email: 'rohan.m@rotaract3141.org',
-          rotaryId: '1154890',
-          clubName: 'Rotaract Club of Bombay Midtown (RID 3141)',
-          roles: ['participant', 'member'],
-          ipAddress: '103.21.124.89 (Delhi NCR Hub)',
-          userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0.0.0',
-          device: 'Chrome on Windows 11',
-          createdAt: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 115 * 60 * 1000).toISOString(),
-          isCurrent: false,
-        },
-        {
-          id: 'sess-p2',
-          userId: 'usr-2',
-          name: 'Rtr. Ananya Sharma',
-          email: 'ananya.s@rotaract3190.org',
-          rotaryId: '1209341',
-          clubName: 'Rotaract Club of Bangalore Central (RID 3190)',
-          roles: ['participant', 'member'],
-          ipAddress: '49.207.210.45 (Bangalore Hub)',
-          userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
-          device: 'Mobile Safari on iPhone 15 Pro',
-          createdAt: new Date(Date.now() - 42 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 98 * 60 * 1000).toISOString(),
-          isCurrent: false,
-        },
-        {
-          id: 'sess-p3',
-          userId: 'usr-3',
-          name: 'Rtr. Kabir Mehra',
-          email: 'kabir.mehra@rotaract3011.org',
-          rotaryId: '1098234',
-          clubName: 'Rotaract Club of Delhi South Central (RID 3011 Host)',
-          roles: ['host_lead', 'member'],
-          ipAddress: '157.34.82.11 (Delhi NCR)',
-          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/127.0.0.0',
-          device: 'Chrome on macOS Sonoma',
-          createdAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 132 * 60 * 1000).toISOString(),
-          isCurrent: true,
-        },
-        {
-          id: 'sess-p4',
-          userId: 'usr-4',
-          name: 'Rtr. Tanya Sen',
-          email: 'tanya.sen@rotaract3291.org',
-          rotaryId: '1340912',
-          clubName: 'Rotaract Club of Calcutta Midtown (RID 3291)',
-          roles: ['participant', 'member'],
-          ipAddress: '115.187.34.78 (Kolkata Transit)',
-          userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/126.0.0.0',
-          device: 'Chrome Mobile on Android 14',
-          createdAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-          isCurrent: false,
-        },
-      ];
     },
-    refetchInterval: 15_000,
+    refetchInterval: 10000,
   });
 
   const revokeMutation = useMutation({
