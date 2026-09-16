@@ -42,9 +42,9 @@ export function RideHomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#171515] selection:bg-[#EA6623] selection:text-white relative overflow-x-hidden font-ride-sans">
-      {/* 0. CONTINUOUS YELLOW HORIZONTAL ELEMENT (Very First Element, 100vw, Zero Margins, Highest Z-Index, -10.5% size) */}
-      <div className="w-full w-screen bg-[#FBC02D] border-b-3 border-[#171515] overflow-hidden select-none shadow-md relative z-50 py-3 sm:py-4 md:py-5">
+    <div className="min-h-screen bg-[#FDFBF7] text-[#171515] selection:bg-[#EA6623] selection:text-white relative [overflow-x:clip] overflow-x-clip font-ride-sans">
+      {/* 0. CONTINUOUS YELLOW HORIZONTAL ELEMENT (Very First Element, 100vw, Zero Margins, High Z-Index, -10.5% size) */}
+      <div className="w-full w-screen bg-[#FBC02D] border-b-3 border-[#171515] overflow-hidden select-none shadow-md relative z-30 py-3 sm:py-4 md:py-5">
         <div className="animate-ride-marquee-giant whitespace-nowrap font-black text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-[#171515] uppercase flex gap-8 sm:gap-12 items-center">
           <span>DELHI MERI JAAN • RID 3011</span>
           <span className="text-[#C72425]">•</span>
@@ -71,8 +71,8 @@ export function RideHomePage() {
       {/* 1. Persistent Vertical Scroll Spine (Left Flank - Delhi Metro Route Line) */}
       <PersistentVerticalSpine />
 
-      {/* 2. Top Navigation Bar */}
-      <header className="sticky top-0 left-0 right-0 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b-2 border-[#171515]/15 transition-all">
+      {/* 2. Frozen Top Navigation Bar (Excel freeze panes style, sticky at top:0) */}
+      <header className="sticky top-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 backdrop-blur-md border-b-2 border-[#171515]/15 shadow-sm transition-all">
         <div className="w-full px-4 sm:px-8 lg:px-14 py-3 flex items-center justify-between">
           {/* Brand Emblem & Text */}
           <button
@@ -272,12 +272,6 @@ export function RideHomePage() {
           </button>
         </div>
 
-        {/* Playful Floating Souvenirs Callout */}
-        <div className="inline-flex items-center gap-2.5 px-5 py-2.5 mt-8 rounded-2xl border-2 sm:border-3 border-[#171515] bg-[#FDFBF7] text-[#171515] text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm z-10">
-          <Sparkles size={16} className="text-[#EA6623]" />
-          <span>Tap any floating Delhi souvenir badge to reveal authentic local one-liners</span>
-        </div>
-
         {/* Full-Width Metrics Banner */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mt-10 sm:mt-14 w-full max-w-6xl z-10">
           <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-3 border-[#171515] bg-[#19539D] text-white text-center ride-pop-sm">
@@ -380,7 +374,7 @@ export function RideHomePage() {
       <section className="py-8 bg-[#FBC02D] border-y-3 border-[#171515] select-none relative z-20">
         <div className="px-4 mb-2 text-center">
           <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#171515] bg-white px-4 py-1.5 rounded-full border-2 border-[#171515] ride-pop-sm inline-block">
-            Delhi Cultural Souvenir Strip • Tap Any Badge For Local Quotes
+            Delhi Cultural Souvenir Strip
           </span>
         </div>
         <div className="flex gap-4 overflow-x-auto pt-10 pb-5 px-6 sm:px-12 items-center justify-start xl:justify-center scroll-smooth">
