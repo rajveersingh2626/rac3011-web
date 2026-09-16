@@ -1,33 +1,25 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router';
-import { ArrowRight, Sparkles, MapPin, HeartHandshake, Compass, Camera, Award } from 'lucide-react';
+import { ArrowRight, Sparkles, MapPin, HeartHandshake, Award } from 'lucide-react';
 import {
   AutoRickshawBadge,
   ChaiKulhadBadge,
-  MetroCardBadge,
-  IndiaGateBadge,
   DilliDilwalonKiBadge,
   DMRCTokenBadge,
   ChandniChowkBadge,
   ParantheWaliGaliBadge,
-  QutubMinarBadge,
-  HauzKhasBadge,
   MajnuKaTillaMomosBadge,
   SarojiniNagarBadge,
   ConnaughtPlaceBadge,
   KhariBaoliBadge,
-  LodhiArtBadge,
   ChholeBhatureBadge,
   LotusTempleBadge,
   RedFortBadge,
   IndiaGateIceCreamBadge,
-  CycleRickshawBadge,
-  DilliMeriJaanHeartBadge,
 } from './components/DelhiStickers';
 import { EditionHistory } from './components/EditionHistory';
-import { RideItinerary } from './components/RideItinerary';
-import { SnapGalleryReel } from './components/SnapGalleryReel';
-import { DelegateRegistrationWizard } from './components/DelegateRegistrationWizard';
+import { NativePhotoShowcase } from './components/NativePhotoShowcase';
+import { RideTeamSection } from './components/RideTeamSection';
 import { PersistentVerticalSpine } from './components/PersistentVerticalSpine';
 
 export function RideHomePage() {
@@ -44,7 +36,7 @@ export function RideHomePage() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#171515] selection:bg-[#EA6623] selection:text-white relative [overflow-x:clip] overflow-x-clip font-ride-sans">
-      {/* 0. CONTINUOUS YELLOW HORIZONTAL ELEMENT (Very First Element, 100vw, Zero Margins, High Z-Index, -10.5% size) */}
+      {/* 0. CONTINUOUS YELLOW HORIZONTAL TICKER */}
       <div className="w-full w-screen bg-[#FBC02D] border-b-3 border-[#171515] overflow-hidden select-none shadow-md relative z-30 py-3 sm:py-4 md:py-5">
         <div className="animate-ride-marquee-giant whitespace-nowrap font-black text-2xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tight text-[#171515] uppercase flex gap-8 sm:gap-12 items-center">
           <span>DELHI MERI JAAN • RID 3011</span>
@@ -69,11 +61,11 @@ export function RideHomePage() {
         </div>
       </div>
 
-      {/* 1. Persistent Vertical Scroll Spine (Left Flank - Delhi Metro Route Line) */}
+      {/* 1. Persistent Vertical Scroll Spine (Delhi Metro Route Schematic) */}
       <PersistentVerticalSpine />
 
-      {/* 2. Frozen Top Navigation Bar (Excel freeze panes style, sticky at top:0) */}
-      <header className="sticky top-0 left-0 right-0 z-50 bg-[#FDFBF7]/95 backdrop-blur-md border-b-2 border-[#171515]/15 shadow-sm transition-all">
+      {/* 2. Top Navigation Bar */}
+      <header className="sticky top-0 left-0 right-0 z-40 bg-[#FDFBF7]/95 backdrop-blur-md border-b-2 border-[#171515]/15 shadow-sm transition-all">
         <div className="w-full px-4 sm:px-8 lg:px-14 py-3 flex items-center justify-between">
           {/* Brand Emblem & Text */}
           <button
@@ -91,21 +83,21 @@ export function RideHomePage() {
             </span>
           </button>
 
-          {/* Center Navigation Links (Exact items from user reference snippet) */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-10 text-base lg:text-lg font-bold text-neutral-700">
+          {/* Center Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm lg:text-base font-bold text-neutral-700">
             <button
               type="button"
-              onClick={() => scrollToSection('itinerary')}
+              onClick={() => scrollToSection('four-pillars')}
               className="hover:text-[#EA6623] transition-colors cursor-pointer"
             >
-              Itinerary
+              Experience
             </button>
             <button
               type="button"
               onClick={() => scrollToSection('gallery')}
               className="hover:text-[#EA6623] transition-colors cursor-pointer"
             >
-              Snap Gallery
+              Gallery
             </button>
             <button
               type="button"
@@ -116,10 +108,10 @@ export function RideHomePage() {
             </button>
             <button
               type="button"
-              onClick={() => scrollToSection('register')}
+              onClick={() => scrollToSection('our-team')}
               className="hover:text-[#EA6623] transition-colors cursor-pointer"
             >
-              Register
+              Our Team
             </button>
             <Link
               to="/dashboard"
@@ -129,376 +121,272 @@ export function RideHomePage() {
             </Link>
           </nav>
 
-          {/* Right Action Button */}
-          <button
-            type="button"
-            onClick={() => scrollToSection('register')}
-            className="px-4 sm:px-6 py-2 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white font-black text-xs sm:text-sm uppercase tracking-wider ride-pop-sm hover:bg-orange-600 transition-all cursor-pointer"
+          {/* Right Action Button -> Directly to /dashboard */}
+          <Link
+            to="/dashboard"
+            className="px-4 sm:px-6 py-2 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white font-black text-xs sm:text-sm uppercase tracking-wider ride-pop-sm hover:bg-orange-600 transition-all inline-flex items-center gap-1.5"
           >
-            Join The Ride
-          </button>
+            <span>Join The Ride</span>
+          </Link>
         </div>
       </header>
 
-      {/* Floating DesignBomb Cultural Badges (Scattered organically across canvas with interactive tooltips) */}
-      <div className="absolute top-[340px] left-4 lg:left-8 xl:left-12 hidden md:block animate-ride-float-1 z-20">
+      {/* Reduced-density Floating Badges (strictly placed in extreme margins with low z-index) */}
+      <div className="absolute top-[380px] left-2 xl:left-6 hidden 2xl:block animate-ride-float-1 z-10 pointer-events-none opacity-80">
         <ChandniChowkBadge />
       </div>
-      <div className="absolute top-[380px] right-4 lg:right-8 xl:right-12 hidden md:block animate-ride-float-2 z-20">
+      <div className="absolute top-[420px] right-2 xl:right-6 hidden 2xl:block animate-ride-float-2 z-10 pointer-events-none opacity-80">
         <ParantheWaliGaliBadge />
       </div>
-      <div className="absolute top-[560px] left-4 xl:left-10 hidden lg:block animate-ride-float-3 z-20">
-        <MajnuKaTillaMomosBadge />
-      </div>
-      <div className="absolute top-[620px] right-4 xl:right-10 hidden lg:block animate-ride-float-4 z-20">
-        <SarojiniNagarBadge />
-      </div>
-      <div className="absolute top-[800px] left-6 xl:left-14 hidden xl:block animate-ride-float-1 z-20">
+      <div className="absolute top-[1350px] left-2 xl:left-6 hidden 2xl:block animate-ride-float-3 z-10 pointer-events-none opacity-80">
         <DMRCTokenBadge />
       </div>
-      <div className="absolute top-[860px] right-6 xl:right-14 hidden xl:block animate-ride-float-2 z-20">
-        <HauzKhasBadge />
-      </div>
-      <div className="absolute top-[1060px] left-8 xl:left-18 hidden xl:block animate-ride-float-3 z-20">
+      <div className="absolute top-[1450px] right-2 xl:right-6 hidden 2xl:block animate-ride-float-4 z-10 pointer-events-none opacity-80">
         <ConnaughtPlaceBadge />
       </div>
-      <div className="absolute top-[1140px] right-8 xl:right-18 hidden xl:block animate-ride-float-4 z-20">
-        <DilliMeriJaanHeartBadge />
-      </div>
 
-      {/* Section 2 Flanks */}
-      <div className="absolute top-[1420px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
-        <KhariBaoliBadge />
-      </div>
-      <div className="absolute top-[1520px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
-        <ChholeBhatureBadge />
-      </div>
-      <div className="absolute top-[1820px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
-        <CycleRickshawBadge />
-      </div>
-
-      {/* Section 3 Itinerary Flanks */}
-      <div className="absolute top-[2300px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
-        <QutubMinarBadge />
-      </div>
-      <div className="absolute top-[2650px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
-        <MetroCardBadge />
-      </div>
-      <div className="absolute top-[3050px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
-        <LotusTempleBadge />
-      </div>
-      <div className="absolute top-[3350px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
-        <LodhiArtBadge />
-      </div>
-
-      {/* Section 4 & 5 Flanks */}
-      <div className="absolute top-[3800px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
-        <IndiaGateIceCreamBadge />
-      </div>
-      <div className="absolute top-[4150px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
-        <IndiaGateBadge />
-      </div>
-      <div className="absolute top-[4580px] right-4 xl:right-8 hidden xl:block animate-ride-float-2 z-20">
-        <RedFortBadge />
-      </div>
-
-      {/* Section 6 Registration Flanks */}
-      <div className="absolute top-[5050px] left-4 xl:left-8 hidden xl:block animate-ride-float-3 z-20">
-        <DilliDilwalonKiBadge />
-      </div>
-      <div className="absolute top-[5420px] right-4 xl:right-8 hidden xl:block animate-ride-float-4 z-20">
-        <AutoRickshawBadge />
-      </div>
-      <div className="absolute top-[5750px] left-4 xl:left-8 hidden xl:block animate-ride-float-1 z-20">
-        <ChaiKulhadBadge />
-      </div>
-
-      {/* SECTION 1: HERO (NativeContent Full-Viewport Layout & Scaled Transparent Logo) */}
+      {/* SECTION 1: HERO */}
       <section
         id="hero"
-        className="relative min-h-[90vh] sm:min-h-screen w-full flex flex-col justify-center items-center text-center pt-16 pb-16 px-4 sm:px-8 lg:px-20 overflow-hidden"
+        className="relative min-h-[85vh] sm:min-h-[90vh] w-full flex flex-col justify-center items-center text-center pt-12 pb-16 px-4 sm:px-8 lg:px-20 overflow-hidden"
       >
-        {/* Subtle Heritage Delhi Pattern Overlay */}
+        {/* Heritage Delhi Pattern Overlay */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#171515_1px,transparent_1px)] [background-size:24px_24px]" />
 
-        {/* Top Badges & Edition Pill (Matching user screenshot with Auto & Kulhad Chai) */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 mb-4 sm:mb-6 z-10">
-          <AutoRickshawBadge className="scale-90 sm:scale-100 -rotate-2" />
+        {/* Top Badges & Edition Pill */}
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6 z-10">
+          <AutoRickshawBadge className="scale-85 sm:scale-95 -rotate-2" />
           <DilliDilwalonKiBadge className="rotate-1" />
-          <div className="px-4 py-1.5 rounded-full border-2 sm:border-3 border-[#171515] bg-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
+          <div className="px-3.5 py-1 rounded-full border-2 border-[#171515] bg-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
             Rotary International District 3011
           </div>
-          <div className="px-3.5 py-1.5 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
+          <div className="px-3 py-1 rounded-xl border-2 border-[#171515] bg-[#EA6623] text-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
             Edition 2026
           </div>
-          <ChaiKulhadBadge className="scale-90 sm:scale-100 rotate-2" />
+          <ChaiKulhadBadge className="scale-85 sm:scale-95 rotate-2" />
         </div>
 
-        {/* Transparent & Significantly Larger Official Logo */}
-        <div className="relative my-2 sm:my-6 w-full max-w-2xl sm:max-w-4xl lg:max-w-5xl px-4 z-10">
+        {/* Centered Transparent Official Logo */}
+        <div className="relative my-3 sm:my-6 w-full max-w-xl sm:max-w-3xl lg:max-w-4xl px-4 flex justify-center items-center mx-auto z-10">
           <img
             src="/ride/logos/2026_logo_coloured.png?v=2"
             alt="Delhi Meri Jaan Official 2026 Emblem"
-            className="w-full h-auto max-h-[260px] sm:max-h-[380px] md:max-h-[460px] lg:max-h-[520px] object-contain mx-auto drop-shadow-2xl transition-transform duration-500 hover:scale-[1.02]"
+            className="w-full h-auto max-h-[240px] sm:max-h-[340px] md:max-h-[420px] lg:max-h-[460px] object-contain mx-auto drop-shadow-xl transition-transform duration-500 hover:scale-[1.02]"
           />
         </div>
 
-        {/* Grand Headline & Drastically Enlarged Bold Typography */}
-        <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-[7.5rem] xl:text-[8.5rem] font-black tracking-tighter text-[#171515] leading-[0.92] uppercase mt-2 sm:mt-4 mb-4 sm:mb-6 max-w-7xl z-10">
+        {/* Grand Headline */}
+        <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-[#171515] leading-[0.94] uppercase mt-2 sm:mt-4 mb-4 sm:mb-6 max-w-6xl z-10">
           THE RIDE <span className="text-[#C72425]">•</span> DELHI MERI JAAN
         </h1>
 
-        <p className="text-lg sm:text-2xl md:text-3xl font-extrabold text-neutral-800 max-w-5xl leading-snug sm:leading-relaxed mb-8 sm:mb-10 px-4 z-10">
+        <p className="text-base sm:text-xl md:text-2xl font-extrabold text-neutral-800 max-w-4xl leading-relaxed mb-8 px-4 z-10">
           The flagship Rotaract Youth & National District Exchange. 4 days of timeless monument trails, authentic culinary safaris, host family warmth, and lifelong global fellowship.
         </p>
 
-        {/* Magnetic Action Buttons */}
+        {/* Action Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 z-10">
-          <button
-            type="button"
-            onClick={() => scrollToSection('register')}
-            className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl border-3 border-[#171515] bg-[#EA6623] text-white text-base sm:text-xl font-black uppercase tracking-wider ride-pop-lg hover:bg-orange-600 transition-all ride-pop-active cursor-pointer"
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl border-3 border-[#171515] bg-[#EA6623] text-white text-base sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-orange-600 transition-all ride-pop-active cursor-pointer"
           >
-            <span>Register as Delegate</span>
-            <ArrowRight size={22} />
-          </button>
+            <span>Join The Ride</span>
+            <ArrowRight size={20} />
+          </Link>
 
           <button
             type="button"
-            onClick={() => scrollToSection('itinerary')}
-            className="inline-flex items-center gap-3 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl border-3 border-[#171515] bg-white text-[#171515] text-base sm:text-xl font-black uppercase tracking-wider ride-pop-lg hover:bg-neutral-100 transition-all ride-pop-active cursor-pointer"
+            onClick={() => scrollToSection('four-pillars')}
+            className="inline-flex items-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl border-3 border-[#171515] bg-white text-[#171515] text-base sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-neutral-100 transition-all ride-pop-active cursor-pointer"
           >
-            <Compass size={22} className="text-[#19539D]" />
-            <span>Explore 4-Day Trail</span>
+            <span>Explore Experience</span>
           </button>
-        </div>
-
-        {/* Full-Width Metrics Banner */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mt-10 sm:mt-14 w-full max-w-6xl z-10">
-          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-3 border-[#171515] bg-[#19539D] text-white text-center ride-pop-sm">
-            <div className="text-3xl sm:text-5xl font-black">100+</div>
-            <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-blue-100 mt-1">Delegates</div>
-          </div>
-          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-3 border-[#171515] bg-[#C72425] text-white text-center ride-pop-sm">
-            <div className="text-3xl sm:text-5xl font-black">30+</div>
-            <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-100 mt-1">Districts</div>
-          </div>
-          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-3 border-[#171515] bg-[#59A835] text-white text-center ride-pop-sm">
-            <div className="text-3xl sm:text-5xl font-black">4 Days</div>
-            <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-green-100 mt-1">Heritage Trail</div>
-          </div>
-          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-3xl border-3 border-[#171515] bg-[#0084B4] text-white text-center ride-pop-sm">
-            <div className="text-3xl sm:text-5xl font-black">100%</div>
-            <div className="text-xs sm:text-sm font-bold uppercase tracking-wider text-cyan-100 mt-1">Dilli Dilwalon Ki</div>
-          </div>
         </div>
       </section>
 
-      {/* SECTION 2: 4 PILLARS OF EXPERIENCE (Full-Width Responsive Layout) */}
-      <section className="py-20 sm:py-28 px-4 sm:px-10 lg:px-20 xl:px-28 w-full">
-        <div className="text-center mb-14 sm:mb-20">
-          <span className="text-sm sm:text-base font-black uppercase tracking-widest text-[#EA6623]">
+      {/* SECTION 2: 4 PILLARS OF EXPERIENCE (Scaled Down & Balanced) */}
+      <section id="four-pillars" className="py-16 sm:py-24 px-4 sm:px-8 lg:px-16 xl:px-24 w-full">
+        <div className="text-center mb-10 sm:mb-14">
+          <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#EA6623]">
             What To Expect
           </span>
-          <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#171515] tracking-tight mt-2 uppercase">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#171515] tracking-tight mt-1.5 uppercase">
             The 4 Pillars of Delhi Meri Jaan
           </h2>
-          <p className="text-base sm:text-xl md:text-2xl text-neutral-600 max-w-4xl mx-auto mt-4 font-semibold">
+          <p className="text-sm sm:text-base md:text-lg text-neutral-600 max-w-3xl mx-auto mt-2.5 font-semibold">
             Every moment curated for cultural depth, culinary delight, and diplomatic international youth camaraderie.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          <div className="p-8 sm:p-10 rounded-3xl border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
+          <div className="p-6 sm:p-7 rounded-2xl border-2 sm:border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
             <div>
-              <div className="w-16 h-16 rounded-2xl border-3 border-[#171515] bg-[#C72425] text-white flex items-center justify-center mb-6 ride-pop-sm">
-                <MapPin size={32} />
+              <div className="w-12 h-12 rounded-xl border-2 border-[#171515] bg-[#C72425] text-white flex items-center justify-center mb-4 ride-pop-sm">
+                <MapPin size={24} />
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-[#171515]">Heritage Odyssey</h3>
-              <p className="text-base sm:text-lg text-neutral-600 mt-3 leading-relaxed font-medium">
+              <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Heritage Odyssey</h3>
+              <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
                 Step into the sandstone poetry of Lal Qila, Humayun’s Tomb, and Jama Masjid guided by certified Delhi historians.
               </p>
             </div>
-            <span className="mt-6 text-xs sm:text-sm font-black text-[#C72425] uppercase tracking-wider">
+            <span className="mt-5 text-xs font-black text-[#C72425] uppercase tracking-wider">
               Mughal & Lutyens Splendor
             </span>
           </div>
 
-          <div className="p-8 sm:p-10 rounded-3xl border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
+          <div className="p-6 sm:p-7 rounded-2xl border-2 sm:border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
             <div>
-              <div className="w-16 h-16 rounded-2xl border-3 border-[#171515] bg-[#EA6623] text-white flex items-center justify-center mb-6 ride-pop-sm">
-                <Sparkles size={32} />
+              <div className="w-12 h-12 rounded-xl border-2 border-[#171515] bg-[#EA6623] text-white flex items-center justify-center mb-4 ride-pop-sm">
+                <Sparkles size={24} />
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-[#171515]">Culinary Safari</h3>
-              <p className="text-base sm:text-lg text-neutral-600 mt-3 leading-relaxed font-medium">
+              <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Culinary Safari</h3>
+              <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
                 Taste the world-famous street delicacies - butter paranthas, piping hot jalebis, momos, and cutting chai at vintage tapris.
               </p>
             </div>
-            <span className="mt-6 text-xs sm:text-sm font-black text-[#EA6623] uppercase tracking-wider">
+            <span className="mt-5 text-xs font-black text-[#EA6623] uppercase tracking-wider">
               Chandni Chowk to Khan Market
             </span>
           </div>
 
-          <div className="p-8 sm:p-10 rounded-3xl border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
+          <div className="p-6 sm:p-7 rounded-2xl border-2 sm:border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
             <div>
-              <div className="w-16 h-16 rounded-2xl border-3 border-[#171515] bg-[#19539D] text-white flex items-center justify-center mb-6 ride-pop-sm">
-                <HeartHandshake size={32} />
+              <div className="w-12 h-12 rounded-xl border-2 border-[#171515] bg-[#19539D] text-white flex items-center justify-center mb-4 ride-pop-sm">
+                <HeartHandshake size={24} />
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-[#171515]">Homestay Warmth</h3>
-              <p className="text-base sm:text-lg text-neutral-600 mt-3 leading-relaxed font-medium">
+              <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Homestay Warmth</h3>
+              <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
                 Experience authentic Dilli hospitality residing with vetted host families of Rotaract District 3011.
               </p>
             </div>
-            <span className="mt-6 text-xs sm:text-sm font-black text-[#19539D] uppercase tracking-wider">
+            <span className="mt-5 text-xs font-black text-[#19539D] uppercase tracking-wider">
               A Home Away From Home
             </span>
           </div>
 
-          <div className="p-8 sm:p-10 rounded-3xl border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
+          <div className="p-6 sm:p-7 rounded-2xl border-2 sm:border-3 border-[#171515] bg-white ride-pop-hover flex flex-col justify-between">
             <div>
-              <div className="w-16 h-16 rounded-2xl border-3 border-[#171515] bg-[#59A835] text-white flex items-center justify-center mb-6 ride-pop-sm">
-                <Award size={32} />
+              <div className="w-12 h-12 rounded-xl border-2 border-[#171515] bg-[#59A835] text-white flex items-center justify-center mb-4 ride-pop-sm">
+                <Award size={24} />
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black text-[#171515]">Exchange Summit</h3>
-              <p className="text-base sm:text-lg text-neutral-600 mt-3 leading-relaxed font-medium">
+              <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Exchange Summit</h3>
+              <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
                 Inter-district leadership panels, diplomatic flag exchanges, collaborative community projects, and the Grand Gala Ball.
               </p>
             </div>
-            <span className="mt-6 text-xs sm:text-sm font-black text-[#59A835] uppercase tracking-wider">
+            <span className="mt-5 text-xs font-black text-[#59A835] uppercase tracking-wider">
               Diplomacy & Lifelong Bonds
             </span>
           </div>
         </div>
       </section>
 
-      {/* DELHI SOUVENIR COLLECTOR STRIP (Interactive across Mobile, Tablet, & Desktop) */}
-      <section className="py-8 bg-[#FBC02D] border-y-3 border-[#171515] select-none relative z-20">
-        <div className="px-4 mb-2 text-center">
+      {/* CONTINUOUS AUTO-SCROLLING SOUVENIR MARQUEE STRIP */}
+      <section className="py-6 bg-[#FBC02D] border-y-3 border-[#171515] select-none relative z-20 overflow-hidden">
+        <div className="px-4 mb-3 text-center">
           <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#171515] bg-white px-4 py-1.5 rounded-full border-2 border-[#171515] ride-pop-sm inline-block">
             Delhi Cultural Souvenir Strip
           </span>
         </div>
-        <div className="flex gap-4 overflow-x-auto pt-10 pb-5 px-6 sm:px-12 items-center justify-start xl:justify-center scroll-smooth">
-          <AutoRickshawBadge />
-          <ChaiKulhadBadge />
-          <MajnuKaTillaMomosBadge />
-          <SarojiniNagarBadge />
-          <DMRCTokenBadge />
-          <ChandniChowkBadge />
-          <ParantheWaliGaliBadge />
-          <ConnaughtPlaceBadge />
-          <KhariBaoliBadge />
-          <ChholeBhatureBadge />
-          <LotusTempleBadge />
-          <RedFortBadge />
-          <IndiaGateIceCreamBadge />
-        </div>
-      </section>
-
-      {/* SECTION 3: ITINERARY (Full-Width, Removed Horizontal Dividing Lines) */}
-      <section id="itinerary" className="py-20 sm:py-28 px-4 sm:px-10 lg:px-20 xl:px-28 w-full bg-[#F7F3E9]/80">
-        <div className="w-full">
-          <div className="text-center mb-14 sm:mb-20">
-            <span className="text-sm sm:text-base font-black uppercase tracking-widest text-[#19539D]">
-              Curated Schedule
-            </span>
-            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#171515] tracking-tight mt-2 uppercase">
-              4 Days of Delhi Unveiled
-            </h2>
-            <p className="text-base sm:text-xl md:text-2xl text-neutral-600 max-w-4xl mx-auto mt-4 font-semibold">
-              Every hour planned to ensure maximum cultural immersion, safety, and unforgettable memories across the capital.
-            </p>
+        <div className="animate-ride-marquee flex items-center gap-6 sm:gap-8 py-2">
+          {/* First loop of souvenir badges */}
+          <div className="flex items-center gap-6 sm:gap-8 shrink-0">
+            <AutoRickshawBadge />
+            <ChaiKulhadBadge />
+            <MajnuKaTillaMomosBadge />
+            <SarojiniNagarBadge />
+            <DMRCTokenBadge />
+            <ChandniChowkBadge />
+            <ParantheWaliGaliBadge />
+            <ConnaughtPlaceBadge />
+            <KhariBaoliBadge />
+            <ChholeBhatureBadge />
+            <LotusTempleBadge />
+            <RedFortBadge />
+            <IndiaGateIceCreamBadge />
           </div>
-          <RideItinerary />
-        </div>
-      </section>
-
-      {/* SECTION 4: NATIVECONTENT SNAP REEL GALLERY */}
-      <section id="gallery" className="py-20 sm:py-28 px-4 sm:px-10 lg:px-20 xl:px-28 w-full">
-        <div className="text-center mb-14 sm:mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border-2 sm:border-3 border-[#171515] bg-[#C72425] text-white text-xs sm:text-sm font-bold uppercase mb-3">
-            <Camera size={16} />
-            <span>Native Reel Scroll</span>
+          {/* Duplicated loop for infinite seamless scroll */}
+          <div className="flex items-center gap-6 sm:gap-8 shrink-0" aria-hidden="true">
+            <AutoRickshawBadge />
+            <ChaiKulhadBadge />
+            <MajnuKaTillaMomosBadge />
+            <SarojiniNagarBadge />
+            <DMRCTokenBadge />
+            <ChandniChowkBadge />
+            <ParantheWaliGaliBadge />
+            <ConnaughtPlaceBadge />
+            <KhariBaoliBadge />
+            <ChholeBhatureBadge />
+            <LotusTempleBadge />
+            <RedFortBadge />
+            <IndiaGateIceCreamBadge />
           </div>
-          <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#171515] tracking-tight uppercase">
-            Delhi Through Our Lens
-          </h2>
-          <p className="text-base sm:text-xl md:text-2xl text-neutral-600 max-w-4xl mx-auto mt-4 font-semibold">
-            Scroll down the vertical snap feed to witness raw, vibrant glimpses of previous exchange editions and Delhi monuments.
-          </p>
         </div>
-        <SnapGalleryReel />
       </section>
 
-      {/* SECTION 5: EDITION HISTORY (2024, 2025, 2026) */}
-      <section id="editions" className="py-20 sm:py-28 px-4 sm:px-10 lg:px-20 xl:px-28 w-full bg-[#F7F3E9]/80">
+      {/* SECTION 3: NATIVECONTENT PHOTO SHOWCASE */}
+      <NativePhotoShowcase />
+
+      {/* SECTION 4: EDITION HISTORY (2024: Delhi, 2025: Darshan Delhi, 2026: Delhi Meri Jaan) */}
+      <section id="editions" className="py-16 sm:py-24 px-4 sm:px-8 lg:px-16 xl:px-24 w-full bg-[#F7F3E9]/80">
         <div className="w-full">
-          <div className="text-center mb-14 sm:mb-20">
-            <span className="text-sm sm:text-base font-black uppercase tracking-widest text-[#EA6623]">
+          <div className="text-center mb-12 sm:mb-16">
+            <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#EA6623]">
               Legacy & Growth
             </span>
-            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#171515] tracking-tight mt-2 uppercase">
+            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#171515] tracking-tight mt-1.5 uppercase">
               The Evolution of The RIDE
             </h2>
-            <p className="text-base sm:text-xl md:text-2xl text-neutral-600 max-w-4xl mx-auto mt-4 font-semibold">
-              From Dastaan-e-Delhi to Dekho Dilli, explore how RID 3011 pioneered India's most celebrated Rotaract exchange tradition.
+            <p className="text-sm sm:text-base md:text-lg text-neutral-600 max-w-3xl mx-auto mt-2.5 font-semibold">
+              From Delhi to Darshan Delhi and Delhi Meri Jaan, explore how RID 3011 pioneered India's most celebrated Rotaract exchange tradition.
             </p>
           </div>
           <EditionHistory />
         </div>
       </section>
 
-      {/* SECTION 6: DELEGATE REGISTRATION WIZARD HUB */}
-      <section id="register" className="py-20 sm:py-28 px-4 sm:px-10 lg:px-20 xl:px-28 w-full">
-        <div className="text-center mb-14 sm:mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white text-xs sm:text-sm font-black uppercase mb-3">
-            <Sparkles size={16} />
-            <span>Limited Delegate Quota</span>
-          </div>
-          <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-[#171515] tracking-tight uppercase">
-            Reserve Your Delegate Pass
-          </h2>
-          <p className="text-base sm:text-xl md:text-2xl text-neutral-600 max-w-4xl mx-auto mt-4 font-semibold">
-            Open to all Rotaractors across India and worldwide. Complete your registration dossier to secure your homestay and welcome kit.
-          </p>
-        </div>
-        <DelegateRegistrationWizard />
+      {/* SECTION 5: OUR TEAM SECTION */}
+      <section id="our-team" className="py-16 sm:py-24 px-4 sm:px-8 lg:px-16 xl:px-24 w-full">
+        <RideTeamSection />
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t-3 border-[#171515] bg-white py-14 px-6 sm:px-12 lg:px-20">
+      <footer className="border-t-3 border-[#171515] bg-white py-12 px-6 sm:px-12 lg:px-20">
         <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-4">
             <img
               src="/ride/logos/2026_logo_not_coloured.png"
               alt="Delhi Meri Jaan Monochrome"
-              className="h-14 sm:h-16 w-auto object-contain"
+              className="h-12 sm:h-14 w-auto object-contain"
             />
             <div>
-              <div className="font-black text-base sm:text-lg text-[#171515]">THE RIDE: DELHI MERI JAAN 2026</div>
-              <div className="text-xs sm:text-sm text-neutral-500 font-bold">Rotary International District 3011</div>
+              <div className="font-black text-sm sm:text-base text-[#171515]">THE RIDE: DELHI MERI JAAN 2026</div>
+              <div className="text-xs text-neutral-500 font-bold">Rotary International District 3011</div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm sm:text-base font-bold text-neutral-700">
-            <button type="button" onClick={() => scrollToSection('itinerary')} className="hover:text-[#EA6623] cursor-pointer">
-              Itinerary
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-bold text-neutral-700">
+            <button type="button" onClick={() => scrollToSection('four-pillars')} className="hover:text-[#EA6623] cursor-pointer">
+              Experience
             </button>
             <button type="button" onClick={() => scrollToSection('gallery')} className="hover:text-[#EA6623] cursor-pointer">
-              Snap Gallery
+              Gallery
             </button>
             <button type="button" onClick={() => scrollToSection('editions')} className="hover:text-[#EA6623] cursor-pointer">
               Editions
             </button>
-            <button type="button" onClick={() => scrollToSection('register')} className="hover:text-[#EA6623] cursor-pointer">
-              Register
+            <button type="button" onClick={() => scrollToSection('our-team')} className="hover:text-[#EA6623] cursor-pointer">
+              Our Team
             </button>
-            <Link to="/admin" className="text-[#19539D] font-extrabold hover:underline">
+            <Link to="/dashboard" className="text-[#19539D] font-extrabold hover:underline">
+              Participant Portal
+            </Link>
+            <Link to="/admin" className="text-neutral-500 hover:text-neutral-900 font-bold">
               Admin Portal
             </Link>
           </div>
 
-          <div className="text-xs sm:text-sm text-neutral-500 font-semibold text-center md:text-right">
+          <div className="text-xs text-neutral-500 font-semibold text-center md:text-right">
             Crafted for RID 3011 with Pride and Fellowship.
           </div>
         </div>

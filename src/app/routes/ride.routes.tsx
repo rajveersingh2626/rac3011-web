@@ -1,19 +1,19 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, Link, Outlet, ScrollRestoration, useLocation, type RouteObject } from 'react-router';
-import { Plane, Handshake, Images, Compass, LayoutDashboard } from 'lucide-react';
+import { Images, Compass, LayoutDashboard } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { useAuth } from '@/app/auth';
 import { portalHref } from '@/app/host';
-import { RequireSubdomainAuth } from './subdomainGuards';
 import { SurfaceLoading } from './SurfaceLoading';
 
 const RideHomePage = lazy(() => import('@/pages/ride/RideHomePage').then((m) => ({ default: m.RideHomePage })));
-const RideIncomingPage = lazy(() => import('@/pages/ride/RideIncomingPage').then((m) => ({ default: m.RideIncomingPage })));
-const SupportClubPage = lazy(() => import('@/pages/ride/SupportClubPage').then((m) => ({ default: m.SupportClubPage })));
 const RideGalleryPage = lazy(() => import('@/pages/ride/RideGalleryPage').then((m) => ({ default: m.RideGalleryPage })));
 const RideParticipantDashboardPage = lazy(() =>
   import('@/pages/ride/RideParticipantDashboardPage').then((m) => ({ default: m.RideParticipantDashboardPage }))
+);
+const RideParticipantLoginPage = lazy(() =>
+  import('@/pages/ride/RideParticipantLoginPage').then((m) => ({ default: m.RideParticipantLoginPage }))
 );
 
 function SubdomainAdminRedirect() {
@@ -21,6 +21,15 @@ function SubdomainAdminRedirect() {
     window.location.assign(portalHref('/portal/admin/ride'));
   }, []);
   return <SurfaceLoading />;
+}
+
+function RequireRideParticipantAuth() {
+  const { status } = useAuth();
+  if (status === 'loading') return <SurfaceLoading />;
+  if (status !== 'authenticated') {
+    return <RideParticipantLoginPage />;
+  }
+  return <Outlet />;
 }
 
 function RideSubpageHeader() {
@@ -36,8 +45,6 @@ function RideSubpageHeader() {
         </Link>
         <nav className="flex items-center gap-4 text-xs font-black uppercase tracking-wider sm:gap-6 sm:text-sm text-[#171515]">
           <Link to="/" className="hover:text-[#EA6623]">Home</Link>
-          <Link to="/incoming" className="hover:text-[#EA6623]">Incoming</Link>
-          <Link to="/support-club" className="hover:text-[#EA6623]">Support Club</Link>
           <Link to="/gallery" className="hover:text-[#EA6623]">Gallery</Link>
           <Link
             to="/dashboard"
@@ -57,10 +64,8 @@ function Layout() {
 
   const nav = [
     { label: 'Delhi Meri Jaan', to: '/', icon: <Compass size={18} /> },
-    { label: 'Incoming', to: '/incoming', icon: <Plane size={18} /> },
-    { label: 'Support club', to: '/support-club', icon: <Handshake size={18} /> },
     { label: 'Gallery', to: '/gallery', icon: <Images size={18} /> },
-    { label: 'Participant Dashboard', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
+    { label: 'Participant Portal', to: '/dashboard', icon: <LayoutDashboard size={18} /> },
   ];
 
   return (
@@ -79,12 +84,11 @@ const routes: RouteObject[] = [
     children: [
       { index: true, element: <RideHomePage /> },
       { path: '/delhi-meri-jaan', element: <RideHomePage /> },
-      { path: '/incoming', element: <RideIncomingPage /> },
       { path: '/gallery', element: <RideGalleryPage /> },
+      { path: '/login', element: <RideParticipantLoginPage /> },
       {
-        element: <RequireSubdomainAuth />,
+        element: <RequireRideParticipantAuth />,
         children: [
-          { path: '/support-club', element: <SupportClubPage /> },
           { path: '/dashboard', element: <RideParticipantDashboardPage /> },
         ],
       },
