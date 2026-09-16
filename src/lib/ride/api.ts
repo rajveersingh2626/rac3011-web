@@ -138,6 +138,8 @@ export interface CreateGalleryItemInput {
   url: string;
   kind: GalleryItemKind;
   caption?: string | null;
+  headingLeft?: string | null;
+  headingRight?: string | null;
   order?: number;
 }
 

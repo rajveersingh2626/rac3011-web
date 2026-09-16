@@ -28,6 +28,8 @@ const publicGalleryItemSchema = z.object({
   url: z.string(),
   kind: galleryItemKindSchema,
   caption: z.string().nullable(),
+  headingLeft: z.string().nullable().optional(),
+  headingRight: z.string().nullable().optional(),
   order: z.number(),
 });
 export type PublicGalleryItem = z.infer<typeof publicGalleryItemSchema>;

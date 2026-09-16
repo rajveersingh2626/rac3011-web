@@ -23,11 +23,19 @@ const MB = 1024 * 1024;
 
 export const TIER_MAX_BYTES: Record<StorageTier, number> = {
   permanent: 5 * MB,
-  dynamic: 10 * MB,
+  dynamic: 25 * MB,
   private: 25 * MB,
 };
 
-const BASE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'application/pdf'] as const;
+const BASE_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'application/pdf',
+  'video/mp4',
+  'video/webm',
+] as const;
 
 const OPENXML_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -47,6 +55,8 @@ const MIME_LABELS: Record<string, string> = {
   'image/webp': 'WebP',
   'image/avif': 'AVIF',
   'application/pdf': 'PDF',
+  'video/mp4': 'MP4 Video',
+  'video/webm': 'WebM Video',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
