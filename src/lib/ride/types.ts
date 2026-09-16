@@ -55,6 +55,8 @@ export const galleryItemSchema = z.object({
   url: z.string(),
   kind: galleryItemKindSchema,
   caption: z.string().nullable(),
+  headingLeft: z.string().nullable().optional(),
+  headingRight: z.string().nullable().optional(),
   order: z.number(),
   createdAt: z.string(),
 });

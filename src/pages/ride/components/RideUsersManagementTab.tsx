@@ -16,9 +16,9 @@ import {
   fetchUserDirectory, 
   createAdminUser, 
   updateAdminUser,
-  deleteAdminUser,
   revokeUserSessions
 } from '@/lib/rbac/api';
+import { apiFetch } from '@/lib/api';
 import type { UserDirectoryItem } from '@/lib/rbac/types';
 
 export function RideUsersManagementTab() {
@@ -99,16 +99,18 @@ export function RideUsersManagementTab() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      await deleteAdminUser(userId);
+      // Decoupled deletion: Strictly targets ride_participants only, never touching main district users
+      await apiFetch(`/ride/participants/${encodeURIComponent(userId)}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       setDeleteConfirmUser(null);
-      setSuccessToast('User account successfully deleted and all credentials/sessions purged.');
+      setSuccessToast('RIDE participant record successfully removed from exchange registry.');
+      void qc.invalidateQueries({ queryKey: ['ride-participants'] });
       void qc.invalidateQueries({ queryKey: ['ride-user-directory'] });
       setTimeout(() => setSuccessToast(null), 4000);
     },
     onError: (err: any) => {
-      setFormError(err?.message || 'Failed to delete user account.');
+      setFormError(err?.message || 'Failed to remove participant.');
     },
   });
 

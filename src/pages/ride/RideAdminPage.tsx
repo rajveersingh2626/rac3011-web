@@ -266,26 +266,41 @@ function GalleryAdminSection() {
   const qc = useQueryClient();
   const query = useQuery({ queryKey: GALLERY_KEY, queryFn: () => fetchGalleryItems({ pageSize: 200 }) });
 
-  const [year, setYear] = useState(String(new Date().getFullYear()));
+  const [year, setYear] = useState<string>(String(currentRyYear()));
   const [kind, setKind] = useState<GalleryItemKind>('photo');
-  const [photo, setPhoto] = useState<FileUploadValue | null>(null);
-  const [videoUrl, setVideoUrl] = useState('');
+  const [mediaFile, setMediaFile] = useState<FileUploadValue | null>(null);
+  const [mediaUrl, setMediaUrl] = useState('');
   const [caption, setCaption] = useState('');
+  const [headingLeft, setHeadingLeft] = useState('');
+  const [headingRight, setHeadingRight] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const invalidate = () => void qc.invalidateQueries({ queryKey: GALLERY_KEY });
 
   const createMutation = useMutation({
     mutationFn: () => {
-      const url = kind === 'photo' ? (photo?.kind === 'file' ? photo.file.url : photo?.kind === 'link' ? photo.url : null) : videoUrl.trim();
-      if (!url) throw new ApiError(400, 'Add a photo or a link first');
-      return createGalleryItem({ year: Number(year), url, kind, caption: caption.trim() || null });
+      const url = mediaFile?.kind === 'file' 
+        ? mediaFile.file.url 
+        : mediaFile?.kind === 'link' 
+          ? mediaFile.url 
+          : mediaUrl.trim();
+      if (!url) throw new ApiError(400, 'Please upload a photo/video or provide a media URL first.');
+      return createGalleryItem({ 
+        year: Number(year), 
+        url, 
+        kind, 
+        caption: caption.trim() || null,
+        headingLeft: headingLeft.trim() || null,
+        headingRight: headingRight.trim() || null,
+      });
     },
     onSuccess: () => {
       invalidate();
-      setPhoto(null);
-      setVideoUrl('');
+      setMediaFile(null);
+      setMediaUrl('');
       setCaption('');
+      setHeadingLeft('');
+      setHeadingRight('');
     },
     onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not add this item.'),
   });
@@ -303,7 +318,11 @@ function GalleryAdminSection() {
   const years = [...byYear.keys()].sort((a, b) => b - a);
 
   return (
-    <Section eyebrow="RIDE admin" title="Gallery" description="Manage the photos and videos shown on the public gallery page.">
+    <Section 
+      eyebrow="RIDE Admin" 
+      title="Snap Gallery (Delhi Through Our Lens)" 
+      description="Manage full-bleed snap-scroll photos and dynamic background videos shown on the homepage with custom bottom-left and bottom-right headings."
+    >
       {error && (
         <div className="mb-3">
           <Alert tone="error" title="Something went wrong">
@@ -315,33 +334,67 @@ function GalleryAdminSection() {
         <Field label="Year" required>
           <Input type="number" value={year} onChange={(e) => setYear(e.target.value)} />
         </Field>
-        <Field label="Kind" required>
+        <Field label="Media Type" required>
           <Select value={kind} onChange={(e) => setKind(e.target.value as GalleryItemKind)} options={[
-            { value: 'photo', label: 'Photo' },
-            { value: 'video', label: 'Video' },
+            { value: 'photo', label: 'Photo (Auto-WebP)' },
+            { value: 'video', label: 'Video (Looping Background)' },
           ]} />
         </Field>
-        {kind === 'photo' ? (
-          <div className="sm:col-span-2">
-            <Field label="Photo" hint="Upload a file, or paste a link">
-              <FileUpload tier="dynamic" resourceType="ride_gallery_item" value={photo} onChange={setPhoto} label="Gallery photo" />
-            </Field>
-          </div>
-        ) : (
-          <div className="sm:col-span-2">
-            <Field label="Video link" hint="YouTube or Google Drive share link">
-              <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" />
-            </Field>
-          </div>
-        )}
+
         <div className="sm:col-span-2">
-          <Field label="Caption" hint="Optional">
-            <Input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} />
+          <Field 
+            label={kind === 'photo' ? 'Upload Photo (Auto-compressed to WebP)' : 'Upload Video / Provide MP4 or WebM URL'} 
+            hint="Upload media directly, or enter a direct CDN/storage URL"
+          >
+            <div className="space-y-2">
+              <FileUpload 
+                tier="dynamic" 
+                resourceType="ride_gallery_item" 
+                value={mediaFile} 
+                onChange={setMediaFile} 
+                label={kind === 'photo' ? 'Select photo' : 'Select video file (MP4/WebM)'} 
+              />
+              <div className="text-xs text-neutral-500 font-medium">
+                Or enter direct URL:
+              </div>
+              <Input 
+                value={mediaUrl} 
+                onChange={(e) => setMediaUrl(e.target.value)} 
+                placeholder={kind === 'photo' ? 'https://example.com/photo.webp' : 'https://example.com/video.mp4'} 
+              />
+            </div>
           </Field>
         </div>
+
+        <div className="sm:col-span-1">
+          <Field label="Heading Left (Bottom-Left on Slide)" hint="e.g. CHANDNI CHOWK AT DAWN">
+            <Input 
+              value={headingLeft} 
+              onChange={(e) => setHeadingLeft(e.target.value)} 
+              placeholder="Main Title (Bottom-Left)" 
+            />
+          </Field>
+        </div>
+
+        <div className="sm:col-span-1">
+          <Field label="Heading Right (Bottom-Right on Slide)" hint="e.g. THE SOUL OF PURANI DILLI">
+            <Input 
+              value={headingRight} 
+              onChange={(e) => setHeadingRight(e.target.value)} 
+              placeholder="Subtitle / Tag (Bottom-Right)" 
+            />
+          </Field>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Field label="Internal Notes / Caption" hint="Optional admin reference">
+            <Input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} placeholder="Internal description or photographer credit" />
+          </Field>
+        </div>
+
         <div className="sm:col-span-2">
           <Button onClick={() => createMutation.mutate()} loading={createMutation.isPending}>
-            Add to gallery
+            Add Slide to Snap Gallery
           </Button>
         </div>
       </div>
@@ -351,19 +404,24 @@ function GalleryAdminSection() {
       ) : query.isError ? (
         <ErrorState title="Couldn't load the gallery" onRetry={() => void query.refetch()} />
       ) : years.length === 0 ? (
-        <EmptyState title="No items yet" body="Add the first photo or video above." />
+        <EmptyState title="No snap slides yet" body="Add the first photo or video slide above." />
       ) : (
         <Card rule="accent">
           <div className="flex flex-col gap-5">
             {years.map((y) => (
               <div key={y}>
-                <p className="m-0 mb-2 text-[12px] font-bold text-fg">{y}</p>
+                <p className="m-0 mb-2 text-[12px] font-bold text-fg">{y} Edition Slides</p>
                 <div className="flex flex-col gap-2">
                   {(byYear.get(y) ?? []).map((item) => (
                     <div key={item.id} className="flex items-center justify-between gap-3 rounded-[10px] border border-line p-2.5">
                       <div className="min-w-0">
-                        <p className="m-0 truncate text-[12.5px] font-semibold text-fg">{item.caption ?? item.url}</p>
-                        <p className="m-0 text-[11px] text-fg-3">{item.kind}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs uppercase text-[#19539D]">{item.headingLeft || 'Untitled Slide'}</span>
+                          <span className="text-neutral-400">•</span>
+                          <span className="text-xs font-mono text-neutral-600">{item.headingRight || 'No Subtitle'}</span>
+                        </div>
+                        <p className="m-0 truncate text-[11px] text-neutral-500 mt-0.5">{item.url}</p>
+                        <p className="m-0 text-[10px] text-fg-3 uppercase font-semibold">{item.kind}</p>
                       </div>
                       <IconButton label="Remove" onClick={() => deleteMutation.mutate(item.id)} disabled={deleteMutation.isPending}>
                         <Trash2 />

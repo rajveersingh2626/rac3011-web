@@ -17,8 +17,7 @@ import {
   RedFortBadge,
   IndiaGateIceCreamBadge,
 } from './components/DelhiStickers';
-import { EditionHistory } from './components/EditionHistory';
-import { NativePhotoShowcase } from './components/NativePhotoShowcase';
+import { DelhiSnapGallery } from './components/DelhiSnapGallery';
 import { RideTeamSection } from './components/RideTeamSection';
 import { PersistentVerticalSpine } from './components/PersistentVerticalSpine';
 
@@ -97,14 +96,7 @@ export function RideHomePage() {
               onClick={() => scrollToSection('gallery')}
               className="hover:text-[#EA6623] transition-colors cursor-pointer"
             >
-              Gallery
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection('editions')}
-              className="hover:text-[#EA6623] transition-colors cursor-pointer"
-            >
-              Editions
+              Delhi Through Our Lens
             </button>
             <button
               type="button"
@@ -324,28 +316,10 @@ export function RideHomePage() {
         </div>
       </section>
 
-      {/* SECTION 3: NATIVECONTENT PHOTO SHOWCASE */}
-      <NativePhotoShowcase />
+      {/* SECTION 3: DELHI THROUGH OUR LENS — NATIVECONTENT FULL-BLEED SNAP-SCROLL */}
+      <DelhiSnapGallery />
 
-      {/* SECTION 4: EDITION HISTORY (2024: Delhi, 2025: Darshan Delhi, 2026: Delhi Meri Jaan) */}
-      <section id="editions" className="py-16 sm:py-24 px-4 sm:px-8 lg:px-16 xl:px-24 w-full bg-[#F7F3E9]/80">
-        <div className="w-full">
-          <div className="text-center mb-12 sm:mb-16">
-            <span className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#EA6623]">
-              Legacy & Growth
-            </span>
-            <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#171515] tracking-tight mt-1.5 uppercase">
-              The Evolution of The RIDE
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg text-neutral-600 max-w-3xl mx-auto mt-2.5 font-semibold">
-              From Delhi to Darshan Delhi and Delhi Meri Jaan, explore how RID 3011 pioneered India's most celebrated Rotaract exchange tradition.
-            </p>
-          </div>
-          <EditionHistory />
-        </div>
-      </section>
-
-      {/* SECTION 5: OUR TEAM SECTION */}
+      {/* SECTION 4: OUR TEAM SECTION */}
       <section id="our-team" className="py-16 sm:py-24 px-4 sm:px-8 lg:px-16 xl:px-24 w-full">
         <RideTeamSection />
       </section>
@@ -370,10 +344,7 @@ export function RideHomePage() {
               Experience
             </button>
             <button type="button" onClick={() => scrollToSection('gallery')} className="hover:text-[#EA6623] cursor-pointer">
-              Gallery
-            </button>
-            <button type="button" onClick={() => scrollToSection('editions')} className="hover:text-[#EA6623] cursor-pointer">
-              Editions
+              Delhi Through Our Lens
             </button>
             <button type="button" onClick={() => scrollToSection('our-team')} className="hover:text-[#EA6623] cursor-pointer">
               Our Team
