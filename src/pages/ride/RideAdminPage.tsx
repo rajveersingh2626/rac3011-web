@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useDocumentMeta } from '@/lib/meta';
 import { currentRyYear } from '@/lib/reports/month';
-import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
@@ -38,6 +37,7 @@ import { RideEmailStudioTab } from './components/RideEmailStudioTab';
 import { RideFormBuilderTab } from './components/RideFormBuilderTab';
 import { RideResourcesPortalTab } from './components/RideResourcesPortalTab';
 import { RideActiveLoginsTab } from './components/RideActiveLoginsTab';
+import { RideUsersManagementTab } from './components/RideUsersManagementTab';
 
 const DELEGATIONS_KEY = ['ride', 'admin', 'delegations'];
 const SUPPORT_CLUBS_KEY = ['ride', 'admin', 'support-clubs'];
@@ -382,7 +382,7 @@ function GalleryAdminSection() {
 
 export function RideAdminPage() {
   useDocumentMeta({ title: 'RIDE admin' });
-  const [activeTab, setActiveTab] = useState<'dmj' | 'forms' | 'email' | 'resources' | 'logins' | 'delegations' | 'gallery'>('dmj');
+  const [activeTab, setActiveTab] = useState<'dmj' | 'users' | 'forms' | 'email' | 'resources' | 'logins' | 'delegations' | 'gallery'>('dmj');
   const qc = useQueryClient();
   const delegationsQuery = useQuery({
     queryKey: DELEGATIONS_KEY,
@@ -432,12 +432,13 @@ export function RideAdminPage() {
   ];
 
   return (
-    <Container width="wide" className="py-6 space-y-6">
+    <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
       {/* Top Admin Section Tabs */}
       <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-neutral-200">
         {[
           { id: 'dmj', label: 'Delhi Meri Jaan 2026' },
           { id: 'forms', label: 'Form Builder' },
+          { id: 'users', label: 'Users & Credentials' },
           { id: 'email', label: 'Email Studio' },
           { id: 'resources', label: 'Resources Portal' },
           { id: 'logins', label: 'Active Logins (Live)' },
@@ -462,6 +463,8 @@ export function RideAdminPage() {
       {activeTab === 'dmj' && <DelhiMeriJaanAdminTab />}
 
       {activeTab === 'forms' && <RideFormBuilderTab />}
+
+      {activeTab === 'users' && <RideUsersManagementTab />}
 
       {activeTab === 'email' && <RideEmailStudioTab />}
 
@@ -499,6 +502,6 @@ export function RideAdminPage() {
         onClose={() => setAssigning(null)}
         onSaved={invalidateDelegations}
       />
-    </Container>
+    </div>
   );
 }

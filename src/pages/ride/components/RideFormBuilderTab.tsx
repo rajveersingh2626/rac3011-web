@@ -46,6 +46,12 @@ export function RideFormBuilderTab() {
   const [savedFeedback, setSavedFeedback] = useState<string | null>(null);
   const [allSubmissions, setAllSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
 
+  // New Form Modal State
+  const [isNewFormModalOpen, setIsNewFormModalOpen] = useState(false);
+  const [newFormTitle, setNewFormTitle] = useState('');
+  const [newFormDescription, setNewFormDescription] = useState('');
+  const [newFormSlug, setNewFormSlug] = useState('');
+
   useEffect(() => {
     const handleSubmissionsUpdated = () => {
       setAllSubmissions(getStoredSubmissions());
@@ -86,6 +92,49 @@ export function RideFormBuilderTab() {
       saveStoredForms(updated);
       return updated;
     });
+  };
+
+  const handleCreateForm = () => {
+    if (!newFormTitle.trim()) return;
+    const generatedSlug = newFormSlug.trim() || newFormTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+    const newForm: FormDefinition = {
+      id: 'form-' + Date.now(),
+      slug: generatedSlug,
+      title: newFormTitle.trim(),
+      description: newFormDescription.trim() || 'Custom intake form for registered delegates.',
+      version: 1,
+      isActive: true,
+      isPublic: true,
+      createdAt: new Date().toISOString().split('T')[0],
+      fields: [
+        { id: 'f-' + Date.now(), name: 'fullName', label: 'Full Legal Name', type: 'text', required: true, placeholder: 'Enter your full name' },
+        { id: 'f-' + (Date.now() + 1), name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'delegate@example.com' },
+      ],
+    };
+    const updated = [newForm, ...forms];
+    setForms(updated);
+    saveStoredForms(updated);
+    setActiveFormId(newForm.id);
+    setIsNewFormModalOpen(false);
+    setNewFormTitle('');
+    setNewFormDescription('');
+    setNewFormSlug('');
+    setSavedFeedback(`Form "${newForm.title}" created and published successfully!`);
+    setTimeout(() => setSavedFeedback(null), 3500);
+  };
+
+  const handleDeleteActiveForm = (formId: string) => {
+    if (forms.length <= 1) {
+      alert('You must keep at least one registration form active.');
+      return;
+    }
+    if (!confirm('Are you sure you want to delete this form definition?')) return;
+    const updated = forms.filter((f) => f.id !== formId);
+    setForms(updated);
+    saveStoredForms(updated);
+    setActiveFormId(updated[0].id);
+    setSavedFeedback('Form deleted successfully.');
+    setTimeout(() => setSavedFeedback(null), 3000);
   };
 
   const handleDeleteField = (fieldId: string) => {
@@ -319,6 +368,14 @@ export function RideFormBuilderTab() {
             <span className="text-xs font-black uppercase tracking-wider text-neutral-700">
               Registration Forms ({forms.length})
             </span>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setIsNewFormModalOpen(true)}
+              leading={<Plus size={14} />}
+            >
+              New Form
+            </Button>
           </div>
 
           <div className="space-y-2">
@@ -391,6 +448,17 @@ export function RideFormBuilderTab() {
                     />
                     Show in Navigation
                   </label>
+
+                  {forms.length > 1 && (
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleDeleteActiveForm(activeForm.id)}
+                      leading={<Trash2 size={13} />}
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -782,6 +850,68 @@ export function RideFormBuilderTab() {
             <Button className="w-full" variant="primary" disabled>
               Submit Delegate Application (Preview Disabled)
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Create New Form Modal */}
+      <Modal
+        open={isNewFormModalOpen}
+        onClose={() => setIsNewFormModalOpen(false)}
+        title="Create New Registration Form"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <Button variant="secondary" onClick={() => setIsNewFormModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateForm}
+              disabled={!newFormTitle.trim()}
+              leading={<Plus size={15} />}
+            >
+              Create & Publish Form
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2">
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1">
+              Form Title <span className="text-red-500">*</span>
+            </label>
+            <Input
+              value={newFormTitle}
+              onChange={(e) => setNewFormTitle(e.target.value)}
+              placeholder="e.g. Host Family Preference Form"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1">
+              Custom URL Slug (Optional)
+            </label>
+            <Input
+              value={newFormSlug}
+              onChange={(e) => setNewFormSlug(e.target.value)}
+              placeholder="e.g. host-family-intake"
+            />
+            <p className="text-[11px] text-neutral-500 mt-1">
+              Leaves as default to auto-generate from title.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1">
+              Description / Instructions
+            </label>
+            <textarea
+              rows={3}
+              value={newFormDescription}
+              onChange={(e) => setNewFormDescription(e.target.value)}
+              placeholder="Brief instructions for delegates filling out this questionnaire..."
+              className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-sans focus:ring-2 focus:ring-[#19539D] focus:border-transparent outline-none"
+            />
           </div>
         </div>
       </Modal>

@@ -220,7 +220,7 @@ export function DashboardPage() {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
                   <div className="max-w-2xl">
                     <p className="text-sm text-fg leading-relaxed m-0 font-medium">
-                      You have full root oversight across all <strong>39 District capabilities</strong>.
+                      You have full root oversight across all <strong>41 District capabilities</strong>.
                       Grant, inspect, or revoke permissions across all <strong>145+ official leader accounts</strong> (Presidents, Secretaries, Council, ZRR, DRR, and Project Admins).
                     </p>
                   </div>
@@ -236,7 +236,7 @@ export function DashboardPage() {
                       variant="secondary"
                       onClick={() => navigate('/portal/admin/roles')}
                     >
-                      Role Capabilities (39)
+                      Role Capabilities (41)
                     </Button>
                     <Button
                       variant="secondary"

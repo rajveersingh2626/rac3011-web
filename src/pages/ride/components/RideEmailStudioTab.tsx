@@ -201,6 +201,7 @@ function generateBespokeRideEmailHtml(title: string, rawBody: string, ctaUrl: st
 
 export function RideEmailStudioTab() {
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate>(EMAIL_TEMPLATES[0]);
+  const [targetAudience, setTargetAudience] = useState('confirmed');
   const [testRecipient, setTestRecipient] = useState('delegate.preview@rotaract3011.org');
   const [dryRunSent, setDryRunSent] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -208,27 +209,27 @@ export function RideEmailStudioTab() {
   const [previewMode, setPreviewMode] = useState<'visual' | 'html' | 'text'>('visual');
 
   const previewSubject = selectedTemplate.subject
-    .replace('{{pass_ref}}', 'DMJ-902144')
+    .replace('{{pass_ref}}', 'DMJ-[REF]')
     .replace('{{district_number}}', '3141');
 
   const previewBody = selectedTemplate.body
-    .replace(/\{\{delegate_name\}\}/g, 'Rtr. Rohan Malhotra')
-    .replace(/\{\{district_number\}\}/g, '3141')
-    .replace(/\{\{club_name\}\}/g, 'Rotaract Club of Bombay Midtown')
-    .replace(/\{\{pass_ref\}\}/g, 'DMJ-902144')
-    .replace(/\{\{arrival_location\}\}/g, 'IGI Airport Terminal 3')
-    .replace(/\{\{host_club_name\}\}/g, 'Rotaract Club of Delhi South Central')
-    .replace(/\{\{host_rotaractor_name\}\}/g, 'Rtr. Kabir Mehra')
-    .replace(/\{\{host_neighborhood\}\}/g, 'Hauz Khas Enclave')
-    .replace(/\{\{host_phone\}\}/g, '+91 98101 23456')
-    .replace(/\{\{dietary_preference\}\}/g, 'Vegetarian')
-    .replace(/\{\{itinerary_url\}\}/g, 'https://ride.rotaract3011.org/#itinerary')
-    .replace(/\{\{gallery_url\}\}/g, 'https://ride.rotaract3011.org/#gallery');
+    .replace(/\{\{delegate_name\}\}/g, '[Delegate Name]')
+    .replace(/\{\{district_number\}\}/g, '[Home District]')
+    .replace(/\{\{club_name\}\}/g, '[Home Rotaract Club]')
+    .replace(/\{\{pass_ref\}\}/g, 'DMJ-[REF]')
+    .replace(/\{\{arrival_location\}\}/g, '[Transit Hub / Airport Desk]')
+    .replace(/\{\{host_club_name\}\}/g, '[Assigned Host Club]')
+    .replace(/\{\{host_rotaractor_name\}\}/g, '[Host Rotaractor]')
+    .replace(/\{\{host_neighborhood\}\}/g, '[Delhi Neighborhood]')
+    .replace(/\{\{host_phone\}\}/g, '[Host Contact]')
+    .replace(/\{\{dietary_preference\}\}/g, '[Dietary Preference]')
+    .replace(/\{\{itinerary_url\}\}/g, 'https://delhimerijaan.rotaract3011.org/#itinerary')
+    .replace(/\{\{gallery_url\}\}/g, 'https://delhimerijaan.rotaract3011.org/#gallery');
 
   const bespokeHtml = generateBespokeRideEmailHtml(
     selectedTemplate.name,
     previewBody,
-    'https://ride.rotaract3011.org',
+    'https://delhimerijaan.rotaract3011.org',
   );
 
   const handleDryRunSend = () => {
@@ -356,6 +357,27 @@ export function RideEmailStudioTab() {
                 {previewBody}
               </div>
             )}
+
+            {/* Audience Targeting Filter */}
+            <div className="p-3 bg-[#FDFBF7] rounded-xl border border-neutral-300 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="font-bold text-neutral-700">
+                <span className="text-[#19539D] font-black uppercase tracking-wider block text-[10px]">Restricted Scope:</span>
+                Dispatches are strictly isolated to RIDE Youth Exchange delegates.
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-neutral-600 text-xs">Target Audience:</span>
+                <select
+                  value={targetAudience}
+                  onChange={(e) => setTargetAudience(e.target.value)}
+                  className="px-2.5 py-1 rounded-lg border border-neutral-300 bg-white text-xs font-bold text-neutral-800"
+                >
+                  <option value="all">All Registered RIDE Delegates</option>
+                  <option value="confirmed">Confirmed Delegates Only</option>
+                  <option value="approved">Approved & Pending Delegates</option>
+                  <option value="hosts">Assigned Host Club Leads</option>
+                </select>
+              </div>
+            </div>
 
             {/* Action Bar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">

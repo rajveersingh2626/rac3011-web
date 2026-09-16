@@ -16,8 +16,9 @@ export interface ActiveSession {
   isCurrent: boolean;
 }
 
-export async function fetchActiveSessions(): Promise<ActiveSession[]> {
-  return apiFetch<ActiveSession[]>('/admin/sessions');
+export async function fetchActiveSessions(scope?: string): Promise<ActiveSession[]> {
+  const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
+  return apiFetch<ActiveSession[]>(`/admin/sessions${qs}`);
 }
 
 export async function revokeSession(id: string): Promise<{ success: boolean }> {
@@ -32,8 +33,9 @@ export async function revokeUserSessions(userId: string): Promise<{ count: numbe
   });
 }
 
-export async function revokeAllSessions(): Promise<{ count: number }> {
-  return apiFetch<{ count: number }>('/admin/sessions/revoke-all', {
+export async function revokeAllSessions(scope?: string): Promise<{ count: number }> {
+  const qs = scope ? `?scope=${encodeURIComponent(scope)}` : '';
+  return apiFetch<{ count: number }>(`/admin/sessions/revoke-all${qs}`, {
     method: 'POST',
   });
 }
