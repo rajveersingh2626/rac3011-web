@@ -73,6 +73,7 @@ const PERMISSION_DOMAINS = [
       { key: 'public_content:manage', name: 'Manage Public Pages', desc: 'Direct control over public landing pages and assets.' },
       { key: 'resources:manage', name: 'Manage Resource & Drive Vault', desc: 'Upload, manage, and relationally map Google Drive resources and guidelines to clubs and members.' },
       { key: 'forms:manage', name: 'Manage Registration Forms', desc: 'Build, configure, and publish dynamic registration forms and delegate intake schemas.' },
+      { key: 'ride:applications:manage', name: 'Manage RIDE Applications & Submissions', desc: 'Can review, approve, and triage internal host club applications and incoming delegation confirmations in the Needs Attention queue.' },
     ],
   },
   {

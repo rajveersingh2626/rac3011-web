@@ -35,69 +35,77 @@ export interface FormSubmissionRecord {
   id: string;
   formId: string;
   formTitle: string;
+  category: 'external_delegation' | 'internal_host_club';
   participantId?: string;
   participantName: string;
   participantEmail: string;
   homeDistrict: string;
+  clubName?: string;
+  status: 'submitted' | 'under_review' | 'approved' | 'declined';
   values: Record<string, any>;
   submittedAt: string;
+  notes?: string;
 }
 
-const FORMS_STORAGE_KEY = 'rac3011_ride_forms_v1';
-const SUBMISSIONS_STORAGE_KEY = 'rac3011_ride_submissions_v1';
+const FORMS_STORAGE_KEY = 'rac3011_ride_forms_v2';
+const SUBMISSIONS_STORAGE_KEY = 'rac3011_ride_submissions_v2';
 
 export const DEFAULT_FORMS: FormDefinition[] = [
   {
-    id: 'form-1',
-    slug: 'delegate-pass-2026',
-    title: 'Official Delegate Registration (DMJ 2026)',
-    description: 'Primary registration intake schema for outstation and international delegates traveling to Delhi NCR.',
+    id: 'form-delegation-confirm',
+    slug: 'delhi-meri-jaan-confirmation-2026',
+    title: 'Delhi Meri Jaan - Confirmation Form',
+    description: 'Official confirmation and delegation details for participating outside districts.',
     version: 1,
     isActive: true,
     isPublic: true,
-    createdAt: '2026-08-15',
+    createdAt: '2026-09-16',
     fields: [
-      { id: 'f1', name: 'fullName', label: 'Full Legal Name', type: 'text', required: true, placeholder: 'Enter your full legal name' },
-      { id: 'f2', name: 'email', label: 'Email Address', type: 'email', required: true, placeholder: 'delegate@rotaract.org' },
-      { id: 'f3', name: 'phone', label: 'WhatsApp / Mobile Number', type: 'phone', required: true, placeholder: '+91 98765 43210' },
-      { id: 'f4', name: 'homeDistrict', label: 'Home Rotary District', type: 'text', required: true, placeholder: 'e.g. 3141' },
-      { id: 'f5', name: 'homeClubName', label: 'Home Rotaract Club', type: 'text', required: true, placeholder: 'e.g. RAC Bombay Midtown' },
-      { id: 'f6', name: 'dietaryPref', label: 'Dietary Preference', type: 'select', required: true, options: ['Vegetarian', 'Jain', 'Non-Vegetarian', 'Vegan'] },
-      { id: 'f7', name: 'arrivalAt', label: 'Expected Arrival Date & Time', type: 'date', required: true },
-      { id: 'f8', name: 'arrivalMode', label: 'Mode of Travel', type: 'select', required: true, options: ['Flight (IGI Airport)', 'Train (New Delhi / Hazrat Nizamuddin)', 'Bus / Inter-state Road', 'Private Car'] },
-      { id: 'f9', name: 'emergencyContact', label: 'Emergency Contact Name & Phone', type: 'text', required: true, placeholder: 'Parent / Sponsoring Club President' },
+      { id: 'f1', name: 'homeDistrict', label: 'Rotary International District Number', type: 'text', required: true, placeholder: 'e.g. 3141' },
+      { id: 'f2', name: 'drrName', label: 'Name of District Rotaract Representative', type: 'text', required: true, placeholder: 'Enter DRR full name' },
+      { id: 'f3', name: 'drrPhone', label: 'Contact Number of District Rotaract Representative', type: 'phone', required: true, placeholder: '+91 XXXXX XXXXX' },
+      { id: 'f4', name: 'drrEmail', label: 'Email Address of District Rotaract Representative', type: 'email', required: true, placeholder: 'drr@district.org' },
+      { 
+        id: 'f5', 
+        name: 'pocName', 
+        label: 'Name of Point of Contact (POC)', 
+        type: 'text', 
+        required: true, 
+        placeholder: 'Enter POC full name',
+        helperText: 'It can be any individual appointed by the District Representative (DRR) to serve as the primary liaison for all communications related to the RIDE between the Incoming District and the Organizing Team. For example, District ISD, District Rotaract Secretary, or any other designated member.' 
+      },
+      { id: 'f6', name: 'pocPhone', label: 'Contact Number of Point of Contact (POC)', type: 'phone', required: true, placeholder: '+91 XXXXX XXXXX' },
+      { id: 'f7', name: 'pocEmail', label: 'Email Address of Point of Contact (POC)', type: 'email', required: true, placeholder: 'poc@district.org' },
     ],
   },
   {
-    id: 'form-2',
-    slug: 'homestay-allocation-preference',
-    title: 'Homestay & Hospitality Allocation Preferences',
-    description: 'Supplemental form for delegates requesting specific host club placements or dietary accommodations.',
+    id: 'form-host-club-app',
+    slug: 'delhi-meri-jaan-host-club-application-2026',
+    title: 'Delhi Meri Jaan - Rotaract Inter-District Exchange (RIDE) – Host Club Application',
+    description: 'Official application for RID 3011 Rotaract Clubs to host incoming national and international delegates.',
     version: 1,
     isActive: true,
     isPublic: true,
-    createdAt: '2026-08-20',
+    createdAt: '2026-09-16',
     fields: [
-      { id: 'hf1', name: 'passRef', label: 'Delegate Pass Reference ID', type: 'text', required: true, placeholder: 'DMJ-XXXXXX' },
-      { id: 'hf2', name: 'hostPreferenceZone', label: 'Preferred Delhi NCR Zone', type: 'select', required: false, options: ['Zone Prithvi (North/East)', 'Zone Agni (Central/West)', 'Zone Vayu (South Delhi/Noida)', 'Zone Akash (Gurgaon)'] },
-      { id: 'hf3', name: 'petAllergies', label: 'Do you have pet allergies?', type: 'select', required: true, options: ['No allergies', 'Allergic to Dogs', 'Allergic to Cats', 'Severe pet dander allergy'] },
-      { id: 'hf4', name: 'specialNeeds', label: 'Special Hospitality or Accessibility Requests', type: 'textarea', required: false, placeholder: 'Any accessibility or medical needs...' },
-    ],
-  },
-  {
-    id: 'form-3',
-    slug: 'cultural-night-audition',
-    title: 'Cultural Night & DJ Gala Performer Application',
-    description: 'Sign up for solo or club group performances representing regional culture during Delhi Meri Jaan.',
-    version: 2,
-    isActive: true,
-    isPublic: true,
-    createdAt: '2026-09-01',
-    fields: [
-      { id: 'cf1', name: 'actTitle', label: 'Performance Act Title', type: 'text', required: true, placeholder: 'e.g. Bhangra Fusion / Classical Sitar' },
-      { id: 'cf2', name: 'performerCount', label: 'Total Number of Performers', type: 'number', required: true, placeholder: '1-8' },
-      { id: 'cf3', name: 'audioTrackUrl', label: 'Audio Track Link (Google Drive / SoundCloud)', type: 'text', required: true, placeholder: 'https://...' },
-      { id: 'cf4', name: 'specialEquipment', label: 'Stage Equipment / Mic Requirements', type: 'textarea', required: false },
+      { id: 'hf1', name: 'email', label: 'Email', type: 'email', required: true, placeholder: 'president@club.rotaract3011.org' },
+      { id: 'hf2', name: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Full Name' },
+      { id: 'hf3', name: 'phone', label: 'Contact Number', type: 'phone', required: true, placeholder: '+91 98765 43210' },
+      { id: 'hf4', name: 'position', label: 'Position in the Club', type: 'text', required: true, placeholder: 'e.g. Club President / Club Secretary' },
+      { id: 'hf5', name: 'clubName', label: 'Rotaract Club Name', type: 'select', required: true },
+      { id: 'hf6', name: 'parentRotaryClub', label: 'Parent Rotary Club Name', type: 'text', required: true, helperText: 'Mention NA if not applicable', placeholder: 'Rotary Club of ...' },
+      { id: 'hf7', name: 'zone', label: 'Zone', type: 'select', required: true, options: ['Zone Prithvi', 'Zone Agni', 'Zone Vayu', 'Zone Akash'] },
+      { id: 'hf8', name: 'motivation', label: 'Why your club should be selected as a Host Club?', type: 'textarea', required: true, placeholder: 'Describe your club motivation and hosting strengths...' },
+      { id: 'hf9', name: 'pastHostingExperience', label: 'Has your club hosted inter-district/international Rotaractors before? If yes, share brief details.', type: 'textarea', required: true, placeholder: 'Share any previous hosting experience or NA...' },
+      { 
+        id: 'hf10', 
+        name: 'proposalDriveUrl', 
+        label: "Upload Your Club's Proposal (Google Drive Link)", 
+        type: 'text', 
+        required: true, 
+        placeholder: 'https://drive.google.com/...',
+        helperText: "Paste the Google Drive link to your club proposal document or presentation. Please ensure the link sharing permission is set to 'Anyone with the link can view'. The club proposal may contain the motivation/vision, proposed plan for accommodation, local transportation & food, key activities & unique experiences, possible challenges & plan to overcome them." 
+      },
     ],
   },
 ];
@@ -159,4 +167,21 @@ export function saveStoredSubmission(submission: Omit<FormSubmissionRecord, 'id'
     }
   }
   return record;
+}
+
+export function updateStoredSubmissionStatus(
+  submissionId: string, 
+  status: 'submitted' | 'under_review' | 'approved' | 'declined',
+  notes?: string
+): void {
+  const current = getStoredSubmissions();
+  const updated = current.map((s) => (s.id === submissionId ? { ...s, status, notes: notes !== undefined ? notes : s.notes } : s));
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('ride_submissions_updated'));
+    } catch (e) {
+      console.error('Failed to update submission status in localStorage', e);
+    }
+  }
 }

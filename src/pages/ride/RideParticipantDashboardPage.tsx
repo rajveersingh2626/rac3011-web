@@ -135,9 +135,9 @@ export function RideParticipantDashboardPage() {
 
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
   const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
-
-  const pendingForms = allForms.filter((f) => f.isActive && !submittedFormIds.has(f.id));
-  const completedForms = allForms.filter((f) => submittedFormIds.has(f.id));
+  const participantForms = allForms.filter((f) => f.id !== 'form-host-club-app');
+  const pendingForms = participantForms.filter((f) => f.isActive && !submittedFormIds.has(f.id));
+  const completedForms = participantForms.filter((f) => submittedFormIds.has(f.id));
 
   const handleOpenForm = (form: FormDefinition) => {
     setActiveFillingForm(form);
@@ -157,9 +157,11 @@ export function RideParticipantDashboardPage() {
       saveStoredSubmission({
         formId: activeFillingForm.id,
         formTitle: activeFillingForm.title,
+        category: 'external_delegation',
         participantName: userName,
         participantEmail: userEmail,
-        homeDistrict: userDistrict,
+        homeDistrict: formFieldValues.homeDistrict || userDistrict,
+        status: 'submitted',
         values: formFieldValues,
       });
 
@@ -679,6 +681,9 @@ export function RideParticipantDashboardPage() {
                       <label className="block text-xs font-black text-neutral-800">
                         {field.label} {field.required && <span className="text-red-500">*</span>}
                       </label>
+                      {field.helperText && (
+                        <p className="text-[11px] text-neutral-500 font-medium leading-tight mb-1">{field.helperText}</p>
+                      )}
 
                       {field.type === 'select' ? (
                         <select

@@ -20,19 +20,19 @@ interface Edition {
 const EDITIONS: Edition[] = [
   {
     year: '2024',
-    theme: 'Dastaan-e-Delhi',
+    theme: 'Delhi',
     tagline: 'Where Heritage Meets Harmony',
     logo: '/ride/logos/2024.png',
     dates: 'March 2024',
     stats: { delegates: 42, districts: 14, clubs: 28 },
     summary:
-      'The pioneer chapter that sparked the national youth exchange tradition across Rotary District 3011. delegates explored the timeless monuments of Old Delhi, relished Paranthe Wali Gali, and bonded over heritage storytelling sessions.',
+      'The pioneer chapter that sparked the national youth exchange tradition across Rotary District 3011. Delegates explored the timeless monuments of Old Delhi, relished Paranthe Wali Gali, and bonded over heritage storytelling sessions.',
     highlights: ['Humayun Tomb Sunset Walk', 'Old Delhi Cycle Tour & Food Safari', 'Cultural Gala Night at India Habitat Centre'],
     accentColor: '#19539D',
   },
   {
     year: '2025',
-    theme: 'Dekho Dilli',
+    theme: 'Darshan Delhi',
     tagline: 'Through The Eyes of a Dilliwala',
     logo: '/ride/logos/2025.png',
     dates: 'February 2025',

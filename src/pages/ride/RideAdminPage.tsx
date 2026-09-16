@@ -437,7 +437,7 @@ export function RideAdminPage() {
       <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-neutral-200">
         {[
           { id: 'dmj', label: 'Delhi Meri Jaan 2026' },
-          { id: 'forms', label: 'Form Builder' },
+          { id: 'forms', label: 'Submissions & Forms' },
           { id: 'users', label: 'Users & Credentials' },
           { id: 'email', label: 'Email Studio' },
           { id: 'resources', label: 'Resources Portal' },

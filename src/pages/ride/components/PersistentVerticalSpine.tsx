@@ -11,10 +11,10 @@ interface Station {
 
 const STATIONS: Station[] = [
   { id: 'hero', num: '01', hindi: 'कश्मीरी गेट', name: 'KASHMERE GATE', isInterchange: true, interchangeColors: ['#C72425', '#FBC02D', '#8B2671'] },
-  { id: 'itinerary', num: '02', hindi: 'चांदनी चौक', name: 'CHANDNI CHOWK', isInterchange: false },
+  { id: 'four-pillars', num: '02', hindi: 'चांदनी चौक', name: 'CHANDNI CHOWK', isInterchange: false },
   { id: 'gallery', num: '03', hindi: 'राजीव चौक', name: 'RAJIV CHOWK', isInterchange: true, interchangeColors: ['#0084B4', '#FBC02D'] },
   { id: 'editions', num: '04', hindi: 'हौज़ खास', name: 'HAUZ KHAS', isInterchange: true, interchangeColors: ['#EA6623', '#FBC02D'] },
-  { id: 'register', num: '05', hindi: 'केंद्रीय सचिवालय', name: 'CENTRAL SECRETARIAT', isInterchange: true, interchangeColors: ['#8B2671', '#FBC02D'] },
+  { id: 'our-team', num: '05', hindi: 'केंद्रीय सचिवालय', name: 'CENTRAL SECRETARIAT', isInterchange: true, interchangeColors: ['#8B2671', '#FBC02D'] },
 ];
 
 export function PersistentVerticalSpine() {

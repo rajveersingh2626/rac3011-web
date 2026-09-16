@@ -76,3 +76,11 @@ export async function updateAdminUser(userId: string, input: UpdateAdminUserInpu
   await apiFetch(`/user-roles/users/${encodeURIComponent(userId)}`, { method: 'PATCH', body: input });
 }
 
+export async function deleteAdminUser(userId: string): Promise<void> {
+  await apiFetch(`/user-roles/users/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+}
+
+export async function revokeUserSessions(userId: string): Promise<{ count: number }> {
+  return apiFetch(`/admin/sessions/revoke-user/${encodeURIComponent(userId)}`, { method: 'POST' });
+}
+

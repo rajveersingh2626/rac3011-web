@@ -26,6 +26,7 @@ import type { ReportStatus } from '@/lib/reports/types';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { fetchAnnouncementFeed } from '@/lib/announcements/api';
 import { ClubPointsWidget } from './ClubPointsWidget';
+import { HostClubApplicationCard } from './components/HostClubApplicationCard';
 
 const STATUS_TONE: Record<ReportStatus, BadgeTone> = {
   draft: 'neutral',
@@ -326,7 +327,14 @@ export function DashboardPage() {
             </div>
           )}
 
-          {/* 3. CLUB REPORTING & POINTS (FOR CLUB LEADERSHIP) */}
+          {/* 3. DELHI MERI JAAN HOST CLUB APPLICATION CALL (FOR RID 3011 PRESIDENTS / SECRETARIES) */}
+          {(canReport || Boolean(clubId) || canManageAccess) && (
+            <div className="lg:col-span-2">
+              <HostClubApplicationCard />
+            </div>
+          )}
+
+          {/* 4. CLUB REPORTING & POINTS (FOR CLUB LEADERSHIP) */}
           {canReport && clubId ? (
             <ReportStatusWidget clubId={clubId} />
           ) : !canViewPoints && !canManageAccess ? (

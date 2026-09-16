@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Users, UserPlus, Key, Search, RefreshCw, 
-  CheckCircle2, ShieldCheck, Mail, Phone
+  CheckCircle2, ShieldCheck, Mail, Phone,
+  Trash2, LogOut, AlertTriangle
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +15,9 @@ import { Field } from '@/components/ui/Field';
 import { 
   fetchUserDirectory, 
   createAdminUser, 
-  updateAdminUser 
+  updateAdminUser,
+  deleteAdminUser,
+  revokeUserSessions
 } from '@/lib/rbac/api';
 import type { UserDirectoryItem } from '@/lib/rbac/types';
 
@@ -26,6 +29,7 @@ export function RideUsersManagementTab() {
   // Modal states
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<UserDirectoryItem | null>(null);
   const [selectedUser, setSelectedUser] = useState<UserDirectoryItem | null>(null);
 
   // New user form state
@@ -90,6 +94,34 @@ export function RideUsersManagementTab() {
     },
     onError: (err: any) => {
       setResetError(err?.message || 'Failed to update password.');
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await deleteAdminUser(userId);
+    },
+    onSuccess: () => {
+      setDeleteConfirmUser(null);
+      setSuccessToast('User account successfully deleted and all credentials/sessions purged.');
+      void qc.invalidateQueries({ queryKey: ['ride-user-directory'] });
+      setTimeout(() => setSuccessToast(null), 4000);
+    },
+    onError: (err: any) => {
+      setFormError(err?.message || 'Failed to delete user account.');
+    },
+  });
+
+  const revokeSessionsMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      return await revokeUserSessions(userId);
+    },
+    onSuccess: (res) => {
+      setSuccessToast(`Successfully revoked ${res?.count ?? 0} active session(s) & purged tokens.`);
+      setTimeout(() => setSuccessToast(null), 4000);
+    },
+    onError: (err: any) => {
+      setFormError(err?.message || 'Failed to revoke user sessions.');
     },
   });
 
@@ -294,14 +326,35 @@ export function RideUsersManagementTab() {
                       {u.profile?.clubName || 'District 3011'}
                     </td>
                     <td className="p-3.5 text-right">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => openResetPasswordModal(u)}
-                        leading={<Key size={13} />}
-                      >
-                        Reset Password
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => openResetPasswordModal(u)}
+                          leading={<Key size={13} />}
+                        >
+                          Password
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => revokeSessionsMutation.mutate(u.id)}
+                          loading={revokeSessionsMutation.isPending}
+                          leading={<LogOut size={13} className="text-amber-600" />}
+                          title="Revoke active sessions and tokens"
+                        >
+                          Revoke Sessions
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => setDeleteConfirmUser(u)}
+                          leading={<Trash2 size={13} />}
+                          title="Permanently remove user"
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -424,6 +477,42 @@ export function RideUsersManagementTab() {
               onClick={() => updatePasswordMutation.mutate()}
             >
               Update Password
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete User Confirmation Modal */}
+      <Modal
+        open={Boolean(deleteConfirmUser)}
+        onClose={() => setDeleteConfirmUser(null)}
+        title="Permanently Delete User Account"
+        size="sm"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="p-3.5 rounded-xl bg-red-50 border-2 border-red-500 text-red-950 text-xs space-y-2">
+            <div className="flex items-center gap-2 font-black uppercase text-red-700">
+              <AlertTriangle size={18} />
+              <span>Irreversible Administrative Action</span>
+            </div>
+            <p>
+              Are you sure you want to permanently delete the account for <strong>{deleteConfirmUser?.name}</strong> ({deleteConfirmUser?.email})?
+            </p>
+            <p className="text-[11px] text-red-800">
+              This will immediately purge all active login sessions, revoke all security access tokens, and remove assigned roles.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t">
+            <Button variant="secondary" onClick={() => setDeleteConfirmUser(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={deleteUserMutation.isPending}
+              onClick={() => deleteConfirmUser && deleteUserMutation.mutate(deleteConfirmUser.id)}
+            >
+              Delete Account & Purge Sessions
             </Button>
           </div>
         </div>
