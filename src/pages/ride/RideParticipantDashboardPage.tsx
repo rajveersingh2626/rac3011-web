@@ -165,6 +165,23 @@ export function RideParticipantDashboardPage() {
         values: formFieldValues,
       });
 
+      // Persist directly to PostgreSQL database via API
+      apiFetch('/public/ride/participants', {
+        method: 'POST',
+        body: {
+          fullName: formFieldValues.pocName || formFieldValues.drrName || userName,
+          email: formFieldValues.pocEmail || formFieldValues.drrEmail || userEmail,
+          phone: formFieldValues.pocPhone || formFieldValues.drrPhone || '+91 99999 99999',
+          homeDistrict: formFieldValues.homeDistrict || userDistrict || '3141',
+          homeClubName: formFieldValues.clubName || userClub || 'Rotaract Visiting Club',
+          cityState: 'Visiting District Delegation',
+          country: 'India',
+          edition: 'delhi_meri_jaan_2026',
+          arrivalMode: formFieldValues.modeOfArrival || 'Train/Flight',
+          allergiesNotes: JSON.stringify(formFieldValues),
+        },
+      }).catch(() => undefined);
+
       setAllSubmissions(getStoredSubmissions());
       setFormSubmitting(false);
       setSubmissionSuccess(true);

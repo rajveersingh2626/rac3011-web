@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { useAuth } from '@/app/auth';
+import { apiFetch } from '@/lib/api';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { 
   getStoredSubmissions, 
@@ -124,6 +125,23 @@ export function HostClubApplicationCard() {
       });
 
       setSubmissions(getStoredSubmissions());
+
+      // Persist to PostgreSQL database via API
+      const targetClubId = (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id;
+      if (targetClubId) {
+        apiFetch('/ride/support-clubs', {
+          method: 'POST',
+          body: {
+            clubId: targetClubId,
+            ryYear: 2026,
+            capacityDelegates: 10,
+            homestayAvailable: true,
+            contactPhone: phone.trim(),
+            notes: `Google Drive Proposal: ${proposalDriveUrl.trim()} | Position: ${position.trim()} | Zone: ${zone} | Motivation: ${motivation.trim()}`,
+          },
+        }).catch(() => undefined);
+      }
+
       setSubmitting(false);
       setSuccess(true);
       setTimeout(() => {
