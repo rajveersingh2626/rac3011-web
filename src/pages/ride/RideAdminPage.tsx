@@ -275,7 +275,10 @@ function GalleryAdminSection() {
   const [headingRight, setHeadingRight] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const invalidate = () => void qc.invalidateQueries({ queryKey: GALLERY_KEY });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: GALLERY_KEY });
+    void qc.invalidateQueries({ queryKey: ['ride-public-gallery'] });
+  };
 
   const createMutation = useMutation({
     mutationFn: () => {
