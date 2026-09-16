@@ -22,7 +22,8 @@ export function RequireSubdomainAuth() {
   if (status === 'loading') return <AuthCheckSkeleton />;
 
   if (status !== 'authenticated') {
-    const loginHref = portalHref('/portal/login');
+    const returnUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const loginHref = portalHref(`/portal/login?next=${encodeURIComponent(returnUrl)}`);
     return (
       <Container className="py-16">
         <EmptyState

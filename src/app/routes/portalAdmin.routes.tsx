@@ -47,12 +47,16 @@ const ActiveSessionsPage = lazy(() =>
 const ChangelogPage = lazy(() =>
   import('@/pages/portal/ChangelogPage').then((m) => ({ default: m.ChangelogPage })),
 );
+const RideAdminPage = lazy(() =>
+  import('@/pages/ride/RideAdminPage').then((m) => ({ default: m.RideAdminPage })),
+);
 
 function guarded(perm: string, path: string, element: ReactElement): RouteObject {
   return { element: <RequirePermission perm={perm} />, children: [{ path, element }] };
 }
 
 export const portalAdminRouteObjects: RouteObject[] = [
+  guarded('subdomain:ride:manage', '/portal/admin/ride', <RideAdminPage />),
   guarded('reports:review', '/portal/admin/clubs', <AdminClubsPage />),
   guarded('reports:score', '/portal/admin/clubs/:clubId/:month', <ScoreMonthPage />),
   guarded('club_facts:edit', '/portal/admin/clubs/:clubId/facts', <ClubFactsPage />),

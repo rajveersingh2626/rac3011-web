@@ -121,7 +121,7 @@ function GroupList({ groups, adminOpenDefault, onNavigate }: { groups: NavGroup[
 function ScopeSwitcher() {
   const { me } = useAuth();
   if (!me || me.clubs.length === 0) return null;
-  const isSuperAdmin = me.roles.some((r) => r.roleKey === 'super_admin');
+  const isSuperAdmin = me.roles.some((r) => r.roleKey === 'super_admin' || r.roleKey === 'superadmin' || r.roleKey === 'district_admin');
   const isDistrict = me.profile?.clubId === 'DISTRICT' || isSuperAdmin;
 
   if (isSuperAdmin) {

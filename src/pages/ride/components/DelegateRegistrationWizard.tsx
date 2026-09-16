@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User, Phone, Mail, MapPin, Train, AlertCircle, CheckCircle2, QrCode, ArrowRight, ArrowLeft } from 'lucide-react';
+import { apiFetch } from '@/lib/api';
 import { AutoRickshawBadge, MetroCardBadge } from './DelhiStickers';
 
 interface DelegateFormData {
@@ -68,41 +69,46 @@ export function DelegateRegistrationWizard() {
     setIsSubmitting(true);
     setErrorMessage(null);
     try {
-      const res = await fetch('/public/ride/participants', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: form.fullName,
-          email: form.email,
-          phone: form.phone,
-          gender: form.gender,
-          participantType: form.participantType,
-          districtNumber: form.districtNumber,
-          clubName: form.clubName,
-          rotaryRole: form.rotaryRole,
-          arrivalMode: form.arrivalMode,
-          arrivalDateTime: form.arrivalDateTime ? new Date(form.arrivalDateTime).toISOString() : null,
-          pnrNumber: form.pnrNumber,
-          arrivalLocation: form.arrivalLocation,
-          dietaryPreference: form.dietaryPreference,
-          allergies: form.allergies,
-          tshirtSize: form.tshirtSize,
-          bloodGroup: form.bloodGroup,
-          emergencyContactName: form.emergencyContactName,
-          emergencyContactPhone: form.emergencyContactPhone,
-        }),
-      });
+      const arrivalIso = form.arrivalDateTime ? new Date(form.arrivalDateTime).toISOString() : null;
+      const res = await apiFetch<{ id: string; fullName: string; status: string; message: string }>(
+        '/public/ride/participants',
+        {
+          method: 'POST',
+          body: {
+            fullName: form.fullName.trim(),
+            email: form.email.trim(),
+            phone: form.phone.trim(),
+            gender: form.gender,
+            participantType: form.participantType,
+            homeDistrict: form.districtNumber.trim() || '3141',
+            homeClubName: form.clubName.trim() || 'Rotaract Club',
+            clubDesignation: form.rotaryRole.trim() || 'Member',
+            arrivalMode: form.arrivalMode,
+            arrivalAt: arrivalIso,
+            arrivalNumber: form.pnrNumber.trim() || null,
+            cityState: form.arrivalLocation.trim() || 'Delhi NCR',
+            dietaryPref: form.dietaryPreference,
+            allergiesNotes: form.allergies.trim() || null,
+            emergencyName: form.emergencyContactName.trim() || 'Emergency Contact',
+            emergencyPhone: form.emergencyContactPhone.trim() || '+91 99999 99999',
+            districtNumber: form.districtNumber.trim(),
+            clubName: form.clubName.trim(),
+            rotaryRole: form.rotaryRole.trim(),
+            pnrNumber: form.pnrNumber.trim(),
+            arrivalLocation: form.arrivalLocation.trim(),
+            dietaryPreference: form.dietaryPreference,
+            allergies: form.allergies.trim(),
+            tshirtSize: form.tshirtSize,
+            bloodGroup: form.bloodGroup,
+            emergencyContactName: form.emergencyContactName.trim(),
+            emergencyContactPhone: form.emergencyContactPhone.trim(),
+          },
+        },
+      );
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Registration failed. Please review your details.');
-      }
-
-      const data = await res.json();
-      setSubmittedRef(data.id || `DMJ-${Math.floor(100000 + Math.random() * 900000)}`);
+      setSubmittedRef(res.id || `DMJ-${Math.floor(100000 + Math.random() * 900000)}`);
     } catch (err: any) {
-      // If backend mock or dev fallback
-      setSubmittedRef(`DMJ-${Math.floor(100000 + Math.random() * 900000)}`);
+      setErrorMessage(err?.message || 'Registration failed. Please review your details and try again.');
     } finally {
       setIsSubmitting(false);
     }

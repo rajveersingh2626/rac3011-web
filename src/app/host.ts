@@ -54,10 +54,11 @@ export function mainSiteHref(): string {
 }
 
 // The portal only exists on the main site, so subdomains must always link cross-origin to it.
-export function portalHref(path: '/portal/login' | '/portal/dashboard' = '/portal/login'): string {
+export function portalHref(path: string = '/portal/login'): string {
   const url = new URL(mainSiteHref());
-  url.pathname = path;
-  url.search = '';
+  const [pathname, search] = path.split('?');
+  url.pathname = pathname || '/portal/login';
+  url.search = search ? `?${search}` : '';
   return url.toString();
 }
 
@@ -69,7 +70,8 @@ export function surfaceHref(key: Exclude<Surface, 'main'>): string {
     return url.toString();
   }
   const prefix = currentEnvPrefix(url.hostname);
-  url.hostname = `${prefix}${key}.${APEX}`;
+  const subdomain = key === 'ride' ? 'delhimerijaan' : key;
+  url.hostname = `${prefix}${subdomain}.${APEX}`;
   url.pathname = '/';
   url.search = '';
   return url.toString();

@@ -95,6 +95,16 @@ const FLAGSHIP_ITEMS = [
     desc: 'Connecting Rotarians with youth for corporate mentorship & jobs.',
     color: '#7C3AED',
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80'
+  },
+  {
+    id: 'ride',
+    surface: 'ride' as const,
+    title: 'The RIDE: Delhi Meri Jaan',
+    category: 'District Conference',
+    target: 'Annual Conference & Fellowship',
+    desc: 'The premier Rotaract District 3011 annual conference experience.',
+    color: '#EA6623',
+    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80'
   }
 ];
 
@@ -176,12 +186,14 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
   const drishtiHref = useSurfaceHref('drishti');
   const rclHref = useSurfaceHref('rcl');
   const careerBridgeHref = useSurfaceHref('careerbridge');
+  const rideHref = useSurfaceHref('ride');
 
   const surfaceHrefs: Record<string, string | undefined> = {
     mission3011: missionHref,
     drishti: drishtiHref,
     rcl: rclHref,
-    careerbridge: careerBridgeHref
+    careerbridge: careerBridgeHref,
+    ride: rideHref
   };
 
   useEffect(() => {

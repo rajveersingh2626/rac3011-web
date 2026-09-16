@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api';
 import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -117,11 +119,45 @@ const STATUS_TONES: Record<ParticipantRecord['status'], BadgeTone> = {
 };
 
 export function DelhiMeriJaanAdminTab() {
-  const [participants, setParticipants] = useState<ParticipantRecord[]>(MOCK_PARTICIPANTS);
+  const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [districtFilter, setDistrictFilter] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState<ParticipantRecord | null>(null);
+
+  const { data: apiResponse } = useQuery({
+    queryKey: ['ride', 'participants'],
+    queryFn: async () => {
+      try {
+        return await apiFetch<{ items: any[]; total: number }>('/ride/participants?pageSize=200');
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  const participants: ParticipantRecord[] = useMemo(() => {
+    if (apiResponse?.items && apiResponse.items.length > 0) {
+      return apiResponse.items.map((raw: any) => ({
+        id: raw.id,
+        fullName: raw.fullName,
+        email: raw.email,
+        phone: raw.phone,
+        participantType: (raw.participantType as any) || 'external',
+        districtNumber: raw.homeDistrict || raw.districtNumber || '3141',
+        clubName: raw.homeClubName || raw.clubName || 'Rotaract Club',
+        rotaryRole: raw.clubDesignation || raw.rotaryRole || 'Member',
+        status: (raw.status as any) || 'pending',
+        arrivalMode: raw.arrivalMode || 'Local',
+        arrivalLocation: raw.cityState || raw.arrivalLocation || 'Delhi NCR',
+        tshirtSize: raw.tshirtSize || 'L',
+        dietaryPreference: raw.dietaryPref || raw.dietaryPreference || 'veg',
+        hostClubName: raw.hostFamilyName || undefined,
+        createdAt: raw.createdAt,
+      }));
+    }
+    return MOCK_PARTICIPANTS;
+  }, [apiResponse]);
 
   const districts = Array.from(new Set(participants.map((p) => p.districtNumber)));
 
@@ -136,10 +172,20 @@ export function DelhiMeriJaanAdminTab() {
     return matchesSearch && matchesStatus && matchesDistrict;
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return apiFetch(`/ride/participants/${id}/status`, {
+        method: 'PATCH',
+        body: { status },
+      });
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['ride', 'participants'] });
+    },
+  });
+
   const updateStatus = (id: string, newStatus: ParticipantRecord['status']) => {
-    setParticipants((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
-    );
+    updateStatusMutation.mutate({ id, status: newStatus });
     if (selectedRecord?.id === id) {
       setSelectedRecord((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
