@@ -76,7 +76,6 @@
   box-shadow: 1px 1px 0px var(--ride-ink);
 }
 
-/* Floating Animations */
 @keyframes ride-float-1 {
   0%, 100% {
     transform: translateY(0px) rotate(var(--rot, -3deg));
@@ -95,12 +94,38 @@
   }
 }
 
+@keyframes ride-float-3 {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rot, -5deg));
+  }
+  50% {
+    transform: translateY(-13px) rotate(var(--rot, -2deg));
+  }
+}
+
+@keyframes ride-float-4 {
+  0%, 100% {
+    transform: translateY(0px) rotate(var(--rot, 2deg));
+  }
+  50% {
+    transform: translateY(-8px) rotate(var(--rot, 5deg));
+  }
+}
+
 .animate-ride-float-1 {
   animation: ride-float-1 4.5s ease-in-out infinite;
 }
 
 .animate-ride-float-2 {
   animation: ride-float-2 5.2s ease-in-out infinite;
+}
+
+.animate-ride-float-3 {
+  animation: ride-float-3 6.0s ease-in-out infinite;
+}
+
+.animate-ride-float-4 {
+  animation: ride-float-4 5.6s ease-in-out infinite;
 }
 
 /* Marquee Ribbon */
