@@ -188,8 +188,12 @@ export function DashboardPage() {
         : Boolean(clubId && hostClubAppConfig.allowedClubIds.includes(clubId));
 
   const canApplyHostClub =
-    isHostClubAllowed &&
-    ((canReport && !canManageAccess) || (can('subdomain:ride:host_club_apply') && !canManageAccess));
+    canManageAccess ||
+    (isHostClubAllowed &&
+      (canReport ||
+        can('subdomain:ride:host_club_apply') ||
+        can('reports:submit') ||
+        Boolean(clubId)));
   const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
   const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements;
 

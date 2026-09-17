@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/cn';
 
 function playAudioFeedback(type: 'success' | 'warning' | 'error') {
@@ -649,10 +650,12 @@ export function EventCheckinPage() {
             ) : (
               /* Manual Walk-In Form */
               <Card tone="plain" className="p-5 flex flex-col gap-4">
-                <h4 className="text-sm font-bold text-fg">Manual Attendee Registration</h4>
-                <p className="text-xs text-fg-3 -mt-2">
-                  Register walk-in attendees or members without digital tickets.
-                </p>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-fg m-0">Manual Attendee Registration</h4>
+                  <p className="text-xs text-fg-3 m-0">
+                    Register walk-in attendees or members without digital tickets.
+                  </p>
+                </div>
 
                 <Field label="Attendee Full Name" required>
                   <Input
@@ -663,10 +666,9 @@ export function EventCheckinPage() {
                 </Field>
 
                 <Field label="Club Affiliation" required>
-                  <select
+                  <Select
                     value={walkInClubId}
                     onChange={(e) => setWalkInClubId(e.target.value)}
-                    className="w-full h-10 px-3 rounded-lg border border-line bg-bg text-fg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">-- Select Affiliated Club --</option>
                     {activeEvent?.clubId && (
@@ -679,7 +681,7 @@ export function EventCheckinPage() {
                         {c.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </Field>
 
                 <Button
@@ -696,6 +698,7 @@ export function EventCheckinPage() {
                   }}
                   disabled={!walkInName.trim() || !walkInClubId.trim() || checkinMutation.isPending}
                   loading={checkinMutation.isPending}
+                  className="w-full mt-1"
                 >
                   Confirm Walk-In Check-In
                 </Button>
@@ -833,48 +836,13 @@ export function EventCheckinPage() {
 
         {/* Manual Walk-In Registration Modal */}
         {showAddAttendeeModal && (
-          <Modal open title="Manual Walk-In Registration" onClose={() => setShowAddAttendeeModal(false)}>
-            <div className="flex flex-col gap-4">
-              <p className="text-xs text-fg-3">
-                Register an on-site attendee or delegate directly into the live verification ledger for {activeEvent.title}.
-              </p>
-
-              <Field label="Attendee Full Name" required>
-                <Input
-                  value={modalAttendeeName}
-                  onChange={(e) => setModalAttendeeName(e.target.value)}
-                  placeholder="e.g. Rtr. John Doe"
-                  autoFocus
-                />
-              </Field>
-
-              <Field label="Club Affiliation" required>
-                <select
-                  value={modalClubOrDistrict}
-                  onChange={(e) => setModalClubOrDistrict(e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-line bg-bg text-fg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">-- Select Affiliated Club --</option>
-                  {activeEvent?.clubId && (
-                    <option value={activeEvent.clubId}>
-                      ★ Event Host Club
-                    </option>
-                  )}
-                  {districtClubs.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              {checkinMutation.isError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-bold">
-                  {(checkinMutation.error as any)?.message || 'Check-in failed. Please verify attendee details.'}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 border-t border-line pt-4">
+          <Modal
+            open
+            title="Manual Walk-In Registration"
+            description={`Register an on-site attendee or delegate directly into the live verification ledger for ${activeEvent.title}.`}
+            onClose={() => setShowAddAttendeeModal(false)}
+            footer={
+              <div className="flex items-center justify-end gap-2.5 w-full">
                 <Button
                   variant="secondary"
                   size="sm"
@@ -906,6 +874,42 @@ export function EventCheckinPage() {
                   Confirm & Check-In
                 </Button>
               </div>
+            }
+          >
+            <div className="flex flex-col gap-4 py-2">
+              <Field label="Attendee Full Name" required>
+                <Input
+                  value={modalAttendeeName}
+                  onChange={(e) => setModalAttendeeName(e.target.value)}
+                  placeholder="e.g. Rtr. John Doe"
+                  autoFocus
+                />
+              </Field>
+
+              <Field label="Club Affiliation" required>
+                <Select
+                  value={modalClubOrDistrict}
+                  onChange={(e) => setModalClubOrDistrict(e.target.value)}
+                >
+                  <option value="">-- Select Affiliated Club --</option>
+                  {activeEvent?.clubId && (
+                    <option value={activeEvent.clubId}>
+                      ★ Event Host Club
+                    </option>
+                  )}
+                  {districtClubs.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+
+              {checkinMutation.isError && (
+                <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-700 dark:text-red-300 font-bold">
+                  {(checkinMutation.error as any)?.message || 'Check-in failed. Please verify attendee details.'}
+                </div>
+              )}
             </div>
           </Modal>
         )}
