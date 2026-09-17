@@ -493,7 +493,7 @@ export default function DistrictMap({
         zIndex: isFullScreen ? 99999 : 1,
         width: '100%',
         height: isFullScreen ? '100vh' : 'calc(100vh - 72px)',
-        minHeight: isFullScreen ? '100vh' : '780px',
+        minHeight: isFullScreen ? '100vh' : (isMobile ? 'calc(100vh - 120px)' : '780px'),
         backgroundColor: '#FDF8FA',
         borderRadius: '0px',
         overflow: 'hidden',
@@ -502,14 +502,14 @@ export default function DistrictMap({
         transition: 'all 0.3s ease'
       }}
     >
-      {/* Top Floating View Mode Switcher */}
+      {/* Top Floating View Mode Switcher (Desktop only, mobile has bottom bar) */}
       <div
         style={{
           position: 'absolute',
           top: '20px',
           right: '24px',
           zIndex: 1000,
-          display: 'flex',
+          display: isMobile ? 'none' : 'flex',
           alignItems: 'center',
           gap: '10px',
           pointerEvents: 'auto',
@@ -589,7 +589,7 @@ export default function DistrictMap({
             inset: 0, 
             zIndex: 1, 
             overflowY: 'auto', 
-            padding: '90px 24px 100px 24px',
+            padding: isMobile ? '70px 14px calc(80px + env(safe-area-inset-bottom, 16px)) 14px' : '90px 24px 100px 24px',
             backgroundColor: '#FAF5F7'
           }}
         >
@@ -667,7 +667,7 @@ export default function DistrictMap({
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '18px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
                 {filteredClubs.map((club: MapClub) => {
                   const neonColor = getClubNeonColor(club);
                   const hasSecretary = isRealSecretary(club.secretary);
@@ -1065,7 +1065,7 @@ export default function DistrictMap({
 
             <aside className={`frosted-slideout-panel ${currentSlideoutClub ? 'open' : ''}`}>
               {currentSlideoutClub && (
-                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '85px 30px 40px 30px', boxSizing: 'border-box' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: isMobile ? '70px 16px calc(80px + env(safe-area-inset-bottom, 16px)) 16px' : '85px 30px 40px 30px', boxSizing: 'border-box' }}>
                   
                   <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
                     

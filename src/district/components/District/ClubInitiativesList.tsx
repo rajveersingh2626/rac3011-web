@@ -515,7 +515,7 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '28px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '24px' }}>
             {visibleProjects.map((proj) => (
               <div
                 key={proj.id}

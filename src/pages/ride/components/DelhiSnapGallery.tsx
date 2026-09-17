@@ -3,16 +3,79 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchRideGallery, type PublicGalleryItem } from '@/lib/publicApi/ride';
 import { ChevronDown } from 'lucide-react';
 
+const FALLBACK_RIDE_SLIDES: PublicGalleryItem[] = [
+  {
+    id: 'p1',
+    year: 2026,
+    headingLeft: 'KARTAVYA PATH',
+    headingRight: 'EXP 2026 // [01]',
+    caption: 'Kartavya Path Twilight & Tricolor Illumination',
+    url: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 1,
+  },
+  {
+    id: 'p2',
+    year: 2026,
+    headingLeft: 'SHAHJAHANABAD ARCHES',
+    headingRight: 'EXP 2026 // [02]',
+    caption: 'Morning Sun Through Shahjahanabad Arches',
+    url: 'https://images.unsplash.com/photo-1592635196078-9fdc757f27f4?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 2,
+  },
+  {
+    id: 'p3',
+    year: 2026,
+    headingLeft: 'PARANTHE WALI GALI',
+    headingRight: 'EXP 2026 // [03]',
+    caption: 'Sizzling Stuffed Paranthas & Clay Tapri Chai',
+    url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 3,
+  },
+  {
+    id: 'p4',
+    year: 2026,
+    headingLeft: 'LAL QILA SANDSTONE',
+    headingRight: 'EXP 2026 // [04]',
+    caption: 'Lal Qila Sandstone Poetry & Azure Skies',
+    url: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 4,
+  },
+  {
+    id: 'p5',
+    year: 2026,
+    headingLeft: 'QUTUB MINAR COMPLEX',
+    headingRight: 'EXP 2026 // [05]',
+    caption: 'Geometric Shadows Across Mehrauli Columns',
+    url: 'https://images.unsplash.com/photo-1545126178-862ad858685c?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 5,
+  },
+  {
+    id: 'p6',
+    year: 2026,
+    headingLeft: 'LOTUS TEMPLE DAWN',
+    headingRight: 'EXP 2026 // [06]',
+    caption: 'Marble Petals Reflected in Ponds',
+    url: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?q=80&w=1600&auto=format&fit=crop',
+    kind: 'photo',
+    order: 6,
+  },
+];
+
 export function DelhiSnapGallery() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data, isSuccess } = useQuery({
+  const { data } = useQuery({
     queryKey: ['public', 'ride', 'gallery'],
     queryFn: () => fetchRideGallery(),
   });
 
   const apiItems: PublicGalleryItem[] = data?.items ?? [];
-  const slides = apiItems;
+  const slides = apiItems.length > 0 ? apiItems : FALLBACK_RIDE_SLIDES;
 
   const scrollToNext = (index: number) => {
     if (!containerRef.current || slides.length === 0) return;
@@ -33,7 +96,7 @@ export function DelhiSnapGallery() {
         </div>
       </div>
 
-      {isSuccess && slides.length === 0 ? (
+      {slides.length === 0 ? (
         <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 text-white">
           <span className="w-3 h-3 rounded-full bg-[#EA6623] mb-3 animate-pulse" />
           <h3 className="text-lg sm:text-xl font-black tracking-widest uppercase font-mono text-white">
@@ -76,6 +139,12 @@ export function DelhiSnapGallery() {
                   alt={leftText}
                   className="absolute inset-0 w-full h-full object-cover select-none"
                   loading={idx === 0 ? 'eager' : 'lazy'}
+                  onError={(e) => {
+                    const fallback = FALLBACK_RIDE_SLIDES[idx % FALLBACK_RIDE_SLIDES.length].url;
+                    if (e.currentTarget.src !== fallback) {
+                      e.currentTarget.src = fallback;
+                    }
+                  }}
                 />
               )}
 

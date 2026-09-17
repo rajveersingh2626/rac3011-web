@@ -106,12 +106,20 @@ const FALLBACK_GALLERY_ITEMS: PublicGalleryItem[] = [
   },
 ];
 
+export function resolveGalleryImageUrl(url: string | null | undefined): string {
+  if (!url) return '/hero-dac-oath.webp';
+  // Strip disabled apex rotaract3011.org domain to local asset path
+  const cleaned = url.replace(/^https?:\/\/(www\.)?rotaract3011\.org(\/.*)?$/, '$2');
+  if (cleaned.startsWith('/')) return cleaned;
+  return cleaned || url;
+}
+
 export default function EventGalleryView() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  const { data, isError } = useQuery({
+  const { data } = useQuery({
     queryKey: ['public', 'gallery'],
     queryFn: fetchGalleryItems,
     staleTime: 0,
@@ -120,13 +128,14 @@ export default function EventGalleryView() {
   });
 
   const allItems: PublicGalleryItem[] = useMemo(() => {
-    if (isError) return FALLBACK_GALLERY_ITEMS;
-    const items = data?.items;
-    if (Array.isArray(items) && items.length > 0) return items;
-    // API returned empty array (all items deleted) or still loading — show fallbacks
-    if (!data) return []; // still loading, show nothing yet
-    return FALLBACK_GALLERY_ITEMS;
-  }, [data, isError]);
+    const rawItems = (data?.items && Array.isArray(data.items) && data.items.length > 0)
+      ? data.items
+      : FALLBACK_GALLERY_ITEMS;
+    return rawItems.map((item) => ({
+      ...item,
+      imageUrl: resolveGalleryImageUrl(item.imageUrl),
+    }));
+  }, [data]);
 
 
   const categories = useMemo(() => {
@@ -213,9 +222,13 @@ export default function EventGalleryView() {
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '9px 18px',
+                  minHeight: '44px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   borderRadius: '12px',
-                  fontSize: '0.85rem',
+                  fontSize: '0.86rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                   border: isActive ? 'none' : '1px solid rgba(18, 52, 153, 0.15)',
@@ -232,7 +245,7 @@ export default function EventGalleryView() {
         </div>
 
         {/* Search Input */}
-        <div style={{ position: 'relative', minWidth: '240px', flex: '1 1 240px', maxWidth: '360px' }}>
+        <div style={{ position: 'relative', minWidth: '200px', flex: '1 1 200px', maxWidth: '360px' }}>
           <Search
             size={16}
             style={{
@@ -251,7 +264,8 @@ export default function EventGalleryView() {
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '9px 14px 9px 36px',
+              padding: '10px 14px 10px 36px',
+              minHeight: '44px',
               borderRadius: '12px',
               border: '1px solid #d1d5db',
               fontSize: '0.88rem',
@@ -285,7 +299,7 @@ export default function EventGalleryView() {
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))',
             gap: '24px',
           }}
         >
@@ -338,18 +352,10 @@ export default function EventGalleryView() {
                   loading="lazy"
                   onError={(e) => {
                     const img = e.currentTarget;
-                    const wrapper = img.parentElement;
-                    if (!wrapper) return;
-                    img.style.display = 'none';
-                    const fallback = document.createElement('div');
-                    fallback.style.cssText = [
-                      'position:absolute', 'inset:0',
-                      'background:linear-gradient(135deg,#123499 0%,#0C2470 60%,#D81B60 100%)',
-                      'display:flex', 'align-items:center', 'justify-content:center',
-                      'flex-direction:column', 'gap:8px', 'color:#fff',
-                    ].join(';');
-                    fallback.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;opacity:0.7">District 3011</span>`;
-                    wrapper.appendChild(fallback);
+                    if (!img.dataset.failed) {
+                      img.dataset.failed = 'true';
+                      img.src = '/hero-dac-oath.webp';
+                    }
                   }}
                 />
                 <div
