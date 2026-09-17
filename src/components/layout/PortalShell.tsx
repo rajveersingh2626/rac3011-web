@@ -10,9 +10,13 @@ import { cn } from '@/lib/cn';
 import { PORTAL_NAV_GROUPS, type NavGroup } from './portalNav';
 
 function visibleGroups(groups: NavGroup[], can: (perm: string) => boolean): NavGroup[] {
+  const checkPerm = (perm?: string) => {
+    if (!perm) return true;
+    return perm.split(',').some((p) => can(p.trim()));
+  };
   return groups
-    .filter((g) => !g.perm || can(g.perm))
-    .map((g) => ({ ...g, items: g.items.filter((i) => !i.perm || can(i.perm)) }))
+    .filter((g) => checkPerm(g.perm))
+    .map((g) => ({ ...g, items: g.items.filter((i) => checkPerm(i.perm)) }))
     .filter((g) => g.items.length > 0);
 }
 
@@ -226,9 +230,9 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
   const shouldOpenAdmin = adminOpenDefault ?? hasAdminPerm;
 
   return (
-    <div className="flex min-h-screen flex-col bg-page">
+    <div className="flex h-screen max-h-screen flex-col bg-page overflow-hidden">
       {/* Top Portal Quote Ribbon */}
-      <div className="relative z-30 flex items-center justify-center bg-gradient-to-r from-[#123499] via-[#880E4F] to-[#D81B60] py-1 px-4 text-center shadow-xs">
+      <div className="relative z-30 flex shrink-0 items-center justify-center bg-gradient-to-r from-[#123499] via-[#880E4F] to-[#D81B60] py-1 px-4 text-center shadow-xs">
         <span className="font-['Dancing_Script',cursive] text-[13.5px] font-semibold text-white tracking-wide drop-shadow-xs">
           “Start with rotaract and good things happen”
         </span>
@@ -282,12 +286,12 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
         </div>
       </header>
 
-      {/* Main Container with Restored Sidebar & Content */}
-      <div className="mx-auto flex w-full max-w-[1440px] flex-1 gap-8 px-4 py-6 lg:px-7">
-        <aside className="hidden w-[230px] shrink-0 lg:block sticky top-6 max-h-[calc(100vh-4rem)] overflow-y-auto pr-2 pb-6 scrollbar-thin">
+      {/* Main Container with Independent Scrolling Sidebar & Content (Zero Outer Window Scrollbar) */}
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1 min-h-0 overflow-hidden gap-8 px-4 lg:px-7">
+        <aside className="hidden w-[230px] shrink-0 lg:flex flex-col h-full overflow-y-auto pt-6 pb-8 pr-2 scrollbar-thin">
           <GroupList groups={groups} adminOpenDefault={shouldOpenAdmin} />
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <main className="min-w-0 flex-1 h-full overflow-y-auto pt-6 pb-12 pr-1 scrollbar-thin">{children}</main>
       </div>
 
       {/* Mobile Drawer */}

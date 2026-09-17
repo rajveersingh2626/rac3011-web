@@ -30,7 +30,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 
-// Extensive breakdown of all 41 District 3011 capabilities
+// Extensive breakdown of all 43 District 3011 capabilities
 const PERMISSION_DOMAINS = [
   {
     name: 'Reporting & Scoring',
@@ -74,7 +74,6 @@ const PERMISSION_DOMAINS = [
       { key: 'resources:manage', name: 'Manage Resource & Drive Vault', desc: 'Upload, manage, and relationally map Google Drive resources and guidelines to clubs and members.' },
       { key: 'forms:manage', name: 'Manage Registration Forms', desc: 'Build, configure, and publish dynamic registration forms and delegate intake schemas.' },
       { key: 'forms:responses:view', name: 'View Form Responses', desc: 'Inspect, triage, export, and review submitted custom form responses.' },
-      { key: 'ride:applications:manage', name: 'Manage RIDE Applications & Submissions', desc: 'Can review, approve, and triage internal host club applications and incoming delegation confirmations in the Needs Attention queue.' },
     ],
   },
   {
@@ -752,7 +751,7 @@ export function AdminUsersPage() {
           <div className="flex flex-col gap-6">
             <p className="m-0 text-[13.5px] text-fg-2">
               District 3011 employs a granular role-based access control (RBAC) architecture. Every API route and
-              portal capability is guarded by one of these 41 specific permission keys.
+              portal capability is guarded by one of these 43 specific permission keys.
             </p>
 
             <div className="flex flex-col gap-6">

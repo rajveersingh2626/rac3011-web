@@ -364,19 +364,19 @@ export function DashboardPage() {
 
   const hostClubAppConfig = dashboardAppsQuery.data?.hostClubApp;
   const isHostClubAllowed =
-    !hostClubAppConfig || hostClubAppConfig.accessMode === 'all'
-      ? true
-      : hostClubAppConfig.accessMode === 'none'
-        ? false
+    hostClubAppConfig?.accessMode === 'none'
+      ? false
+      : !hostClubAppConfig || hostClubAppConfig.accessMode === 'all'
+        ? true
         : Boolean(clubId && hostClubAppConfig.allowedClubIds.includes(clubId));
 
   const canApplyHostClub =
-    canManageAccess ||
-    (isHostClubAllowed &&
-      (canReport ||
-        can('subdomain:ride:host_club_apply') ||
-        can('reports:submit') ||
-        Boolean(clubId)));
+    isHostClubAllowed &&
+    (canManageAccess ||
+      canReport ||
+      can('subdomain:ride:host_club_apply') ||
+      can('reports:submit') ||
+      Boolean(clubId));
   const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
   const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements;
 

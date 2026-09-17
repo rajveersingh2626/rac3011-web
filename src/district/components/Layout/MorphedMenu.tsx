@@ -278,9 +278,10 @@ export default function MorphedMenu({
             left: isMobile && isOpen ? '50%' : 'auto',
             right: isMobile && isOpen ? 'auto' : '-18px',
             transform: isMobile && isOpen ? 'translateX(-50%)' : 'none',
-            width: isOpen ? (isMobile ? 'calc(100vw - 24px)' : 'min(420px, 92vw)') : (isMobile ? '64px' : '60px'),
-            maxWidth: '420px',
-            height: isOpen ? (isMobile ? 'min(660px, calc(100dvh - 32px))' : 'min(640px, 90vh)') : (isMobile ? '44px' : '36px'),
+            width: isOpen ? (isMobile ? 'calc(100vw - 24px)' : 'min(410px, 92vw)') : (isMobile ? '64px' : '60px'),
+            maxWidth: '410px',
+            height: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'auto') : (isMobile ? '44px' : '36px'),
+            maxHeight: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'min(650px, calc(100vh - 24px))') : (isMobile ? '44px' : '36px'),
             backgroundColor: 'rgba(15, 18, 26, 0.94)',
             backdropFilter: 'blur(32px) saturate(190%)',
             WebkitBackdropFilter: 'blur(32px) saturate(190%)',
@@ -301,16 +302,19 @@ export default function MorphedMenu({
           <div style={{ height: '3px', background: 'linear-gradient(90deg, #D81B60 0%, #123499 50%, #880E4F 100%)' }} />
 
           <div 
+            className="no-scrollbar"
             style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              height: 'calc(100% - 3px)', 
-              padding: isMobile ? '18px 18px 16px 18px' : '24px 26px 20px 26px', 
+              height: '100%', 
+              padding: isMobile ? '14px 16px 12px 16px' : '16px 20px 14px 20px', 
               justifyContent: 'space-between',
-              overflowY: 'auto'
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <DistrictLogo size="medium" />
               </div>
@@ -321,13 +325,13 @@ export default function MorphedMenu({
                   background: 'rgba(255, 255, 255, 0.12)',
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   color: '#FFFFFF',
-                  padding: '5px 14px',
+                  padding: '4px 12px',
                   borderRadius: '16px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
                   cursor: 'pointer',
-                  fontSize: '0.78rem',
+                  fontSize: '0.76rem',
                   fontWeight: 700,
                   transition: 'all 0.2s ease'
                 }}
@@ -344,7 +348,7 @@ export default function MorphedMenu({
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '4px 0 16px 0' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '2px 0 10px 0' }}>
               {navLinks.map((link: MorphedMenuLink, idx: number) => {
                 const isHovered = hoveredNav === idx;
                 return (
@@ -354,7 +358,7 @@ export default function MorphedMenu({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        padding: '6px 8px',
+                        padding: '4px 8px',
                         borderRadius: '100px',
                         background: link.active ? 'rgba(255, 255, 255, 0.08)' : isHovered ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
                         border: link.active ? '1px solid rgba(255, 255, 255, 0.18)' : '1px solid transparent',
@@ -464,12 +468,12 @@ export default function MorphedMenu({
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
-                          gap: '4px',
-                          marginLeft: '28px',
-                          marginTop: '4px',
-                          marginBottom: '6px',
+                          gap: '2px',
+                          marginLeft: '24px',
+                          marginTop: '2px',
+                          marginBottom: '4px',
                           borderLeft: '2px solid rgba(255, 255, 255, 0.15)',
-                          paddingLeft: '12px'
+                          paddingLeft: '10px'
                         }}
                       >
                         {link.subTabs?.map((sub: MorphedMenuSubTab, sIdx: number) => {
@@ -483,8 +487,8 @@ export default function MorphedMenu({
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '8px',
-                                padding: '5px 10px',
+                                gap: '7px',
+                                padding: '3px 8px',
                                 borderRadius: '8px',
                                 cursor: 'pointer',
                                 background: sub.active ? 'rgba(255, 255, 255, 0.1)' : isSubHovered ? 'rgba(255, 255, 255, 0.05)' : 'transparent',
@@ -498,7 +502,7 @@ export default function MorphedMenu({
                               <span
                                 style={{
                                   color: sub.active ? '#FFFFFF' : isSubHovered ? '#FFFFFF' : 'rgba(255, 255, 255, 0.85)',
-                                  fontSize: '0.82rem',
+                                  fontSize: '0.80rem',
                                   fontWeight: sub.active ? 700 : 600,
                                   display: 'flex',
                                   alignItems: 'center',
@@ -520,11 +524,11 @@ export default function MorphedMenu({
 
             <div
               style={{
-                paddingTop: '14px',
-                paddingBottom: '14px',
+                paddingTop: '8px',
+                paddingBottom: '8px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.1)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                margin: '8px 0 16px 0',
+                margin: '4px 0 8px 0',
                 opacity: isOpen ? 1 : 0,
                 transform: isOpen ? 'translateY(0)' : 'translateY(15px)',
                 transition: 'all 0.45s ease 0.18s'
@@ -630,7 +634,7 @@ export default function MorphedMenu({
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gap: '10px 14px',
+                gap: '6px 12px',
                 opacity: isOpen ? 1 : 0,
                 transform: isOpen ? 'translateY(0)' : 'translateY(20px)',
                 transition: 'all 0.5s ease 0.22s'
@@ -656,7 +660,7 @@ export default function MorphedMenu({
                     <span
                       style={{
                         color: isHoveredF ? '#D81B60' : 'rgba(255, 255, 255, 0.7)',
-                        fontSize: '0.80rem',
+                        fontSize: '0.78rem',
                         fontWeight: 600,
                         transition: 'color 0.2s ease',
                         display: 'flex',
@@ -688,15 +692,15 @@ export default function MorphedMenu({
             <div
               style={{
                 textAlign: 'center',
-                paddingTop: '10px',
-                marginTop: '10px',
+                paddingTop: '6px',
+                marginTop: '6px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
               <span
                 style={{
                   fontFamily: "'Dancing Script', 'Great Vibes', cursive",
-                  fontSize: '0.88rem',
+                  fontSize: '0.84rem',
                   color: 'rgba(255, 255, 255, 0.72)',
                   letterSpacing: '0.3px',
                   fontStyle: 'italic',

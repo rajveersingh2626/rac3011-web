@@ -32,6 +32,8 @@ export interface RequirePermissionProps {
 export function RequirePermission({ perm, scope }: RequirePermissionProps) {
   const { status, can } = useAuth();
   if (status === 'loading') return <AuthCheckSkeleton />;
-  if (!can(perm, scope)) return <ForbiddenPage />;
+  const perms = perm.split(',').map((p) => p.trim());
+  const hasAccess = perms.some((p) => can(p, scope));
+  if (!hasAccess) return <ForbiddenPage />;
   return <Outlet />;
 }
