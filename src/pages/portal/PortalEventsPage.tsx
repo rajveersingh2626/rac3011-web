@@ -252,6 +252,12 @@ function EventCard({ event, canManage }: { event: PublicEvent | EventAdmin; canM
             </svg>
             Add to calendar
           </a>
+          <a
+            href={`/portal/admin/events/${event.slug || event.id}`}
+            className="rounded-full border border-line px-2.5 py-0.5 text-[11px] font-semibold text-fg-2 no-underline transition-colors hover:border-accent hover:text-accent"
+          >
+            Check-in
+          </a>
           {canManage && (
             <>
               <button

@@ -38,6 +38,9 @@ const AdminFeedbackPage = lazy(() =>
 const PortalEventsPage = lazy(() =>
   import('@/pages/portal/PortalEventsPage').then((m) => ({ default: m.PortalEventsPage })),
 );
+const EventCheckinPage = lazy(() =>
+  import('@/pages/portal/admin/EventCheckinPage').then((m) => ({ default: m.EventCheckinPage })),
+);
 const DrrCalendarAdminPage = lazy(() =>
   import('@/pages/portal/admin/DrrCalendarAdminPage').then((m) => ({ default: m.DrrCalendarAdminPage })),
 );
@@ -67,7 +70,9 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('requests:manage', '/portal/admin/requests', <AdminRequestsPage />),
   guarded('content:edit', '/portal/content', <ContentEditorPage />),
   guarded('roles:manage', '/portal/admin/roles', <AdminRolesPage />),
-  guarded('events:checkin', '/portal/admin/events/:slug', <ComingSoon title="Event check-in" />),
+  guarded('events:checkin', '/portal/admin/checkin', <EventCheckinPage />),
+  guarded('events:checkin', '/portal/admin/events/:slug/checkin', <EventCheckinPage />),
+  guarded('events:checkin', '/portal/admin/events/:slug', <EventCheckinPage />),
   guarded('members:approve', '/portal/members', <AdminMembersPage />),
   guarded('effort:approve', '/portal/admin/effort-log', <ComingSoon title="Effort log" />),
   guarded('announcements:send', '/portal/admin/announcements', <AdminAnnouncementsPage />),

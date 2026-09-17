@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   ExternalLink, Copy, Check, Plus, 
-  Search, HardDrive, Users, Building, ShieldCheck
+  Search, HardDrive, Users, Building, ShieldCheck, Trash2
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,10 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
+import { 
+  getStoredResources, saveStoredResource, deleteStoredResource,
+  type StoredDriveResource 
+} from '@/lib/ride/formsStorage';
 
 export type ResourceCategory = 
   | 'guidelines'
@@ -20,20 +24,7 @@ export type ResourceCategory =
 
 export type ResourceScope = 'all' | 'club' | 'member';
 
-export interface DriveResource {
-  id: string;
-  title: string;
-  category: ResourceCategory;
-  scope: ResourceScope;
-  targetClubName?: string;
-  targetMemberEmail?: string;
-  driveUrl: string;
-  description: string;
-  lastUpdated: string;
-  fileCount?: number;
-}
-
-const CATEGORY_LABELS: Record<ResourceCategory, { label: string; tone: BadgeTone }> = {
+const CATEGORY_LABELS: Record<string, { label: string; tone: BadgeTone }> = {
   guidelines: { label: 'Guidelines & Safety', tone: 'blue' },
   passes: { label: 'Delegate ID & Passes', tone: 'pink' },
   hospitality: { label: 'Host Family Kits', tone: 'green' },
@@ -42,78 +33,18 @@ const CATEGORY_LABELS: Record<ResourceCategory, { label: string; tone: BadgeTone
   dossiers: { label: 'Executive Dossiers', tone: 'red' },
 };
 
-const INITIAL_RESOURCES: DriveResource[] = [
-  {
-    id: 'res-1',
-    title: 'Official Delegate Information Kit & 4-Day Itinerary (DMJ 2026)',
-    category: 'guidelines',
-    scope: 'all',
-    driveUrl: 'https://drive.google.com/drive/folders/1a_RIDE2026_Official_Delegate_Dossier',
-    description: 'Master pack including check-in checkpoints, dress codes, Sufi night entry passes, and Old Delhi heritage trail route maps.',
-    lastUpdated: '2026-09-10',
-    fileCount: 8,
-  },
-  {
-    id: 'res-2',
-    title: 'Host Family Welcome & Emergency Protocol Handbook',
-    category: 'hospitality',
-    scope: 'club',
-    targetClubName: 'RAC Delhi South Central',
-    driveUrl: 'https://drive.google.com/drive/folders/1b_Host_Family_Welcome_Handbooks_2026',
-    description: 'Checklist and dietary guidelines for Rotaractor families hosting outstation delegates in Hauz Khas and Greater Kailash.',
-    lastUpdated: '2026-09-12',
-    fileCount: 4,
-  },
-  {
-    id: 'res-3',
-    title: 'Delhi Metro Smart Token & Transit Transit Route Manifest',
-    category: 'transit',
-    scope: 'all',
-    driveUrl: 'https://drive.google.com/drive/folders/1c_DMJ2026_DMRC_Transit_Manifests',
-    description: 'Airport Express line guides, station coordination desks, and emergency shuttle dispatch schedules.',
-    lastUpdated: '2026-09-14',
-    fileCount: 6,
-  },
-  {
-    id: 'res-4',
-    title: 'Cultural Night Audio Tracks & Stage Lighting Cues',
-    category: 'media',
-    scope: 'member',
-    targetMemberEmail: 'cultural.lead@rotaract3011.org',
-    driveUrl: 'https://drive.google.com/drive/folders/1d_Stage_Cues_Performances_Master_Stems',
-    description: 'High-definition master stems and backing tracks for state cultural performances and closing awards gala.',
-    lastUpdated: '2026-09-15',
-    fileCount: 12,
-  },
-  {
-    id: 'res-5',
-    title: 'Print-Ready Badge Artwork & Delegate NFC Lanyards',
-    category: 'passes',
-    scope: 'all',
-    driveUrl: 'https://drive.google.com/drive/folders/1e_Print_Ready_Badges_Vector_Files',
-    description: 'Vector SVG & CMYK PDF print files for delegate QR credentials with yellow metro-line lanyard borders.',
-    lastUpdated: '2026-09-08',
-    fileCount: 5,
-  },
-  {
-    id: 'res-6',
-    title: 'Host Club Bilateral Memorandums (Zonal Allotments)',
-    category: 'dossiers',
-    scope: 'club',
-    targetClubName: 'All 75 District 3011 Clubs',
-    driveUrl: 'https://drive.google.com/drive/folders/1f_Bilateral_Exchange_Agreements_Signed',
-    description: 'Formal twin-club and hosting agreements countersigned by DRR Archit Bhatia and visiting District Chairs.',
-    lastUpdated: '2026-09-05',
-    fileCount: 15,
-  },
-];
-
 export function RideResourcesPortalTab() {
-  const [resources, setResources] = useState<DriveResource[]>(INITIAL_RESOURCES);
+  const [resources, setResources] = useState<StoredDriveResource[]>(() => getStoredResources());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedScope, setSelectedScope] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleSync = () => setResources(getStoredResources());
+    window.addEventListener('ride_resources_updated', handleSync);
+    return () => window.removeEventListener('ride_resources_updated', handleSync);
+  }, []);
 
   // New Resource Modal State
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -137,17 +68,23 @@ export function RideResourcesPortalTab() {
     return matchesCategory && matchesScope && matchesSearch;
   });
 
-  const handleCopyLink = (res: DriveResource) => {
+  const handleCopyLink = (res: StoredDriveResource) => {
     navigator.clipboard.writeText(res.driveUrl);
     setCopiedId(res.id);
     setTimeout(() => setCopiedId(null), 2500);
   };
 
+  const handleDeleteResource = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this drive resource?')) {
+      deleteStoredResource(id);
+      setResources(getStoredResources());
+    }
+  };
+
   const handleAddResource = () => {
     if (!newTitle.trim() || !newDriveUrl.trim()) return;
 
-    const created: DriveResource = {
-      id: 'res-' + Date.now(),
+    saveStoredResource({
       title: newTitle.trim(),
       category: newCategory,
       scope: newScope,
@@ -155,11 +92,9 @@ export function RideResourcesPortalTab() {
       targetMemberEmail: newScope === 'member' ? newMemberEmail.trim() : undefined,
       driveUrl: newDriveUrl.trim(),
       description: newDescription.trim() || 'Official resource drive link for Delhi Meri Jaan 2026.',
-      lastUpdated: new Date().toISOString().slice(0, 10),
-      fileCount: 1,
-    };
+    });
 
-    setResources((prev) => [created, ...prev]);
+    setResources(getStoredResources());
     setAddModalOpen(false);
     setNewTitle('');
     setNewDriveUrl('');
@@ -300,8 +235,17 @@ export function RideResourcesPortalTab() {
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
+                    onClick={() => handleDeleteResource(res.id)}
+                    className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-all text-xs flex items-center gap-1 cursor-pointer"
+                    title="Delete Resource Link"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleCopyLink(res)}
-                    className="p-1.5 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-neutral-600 transition-all text-xs flex items-center gap-1"
+                    className="p-1.5 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-neutral-600 transition-all text-xs flex items-center gap-1 cursor-pointer"
                     title="Copy Google Drive URL"
                   >
                     {copiedId === res.id ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
@@ -311,7 +255,7 @@ export function RideResourcesPortalTab() {
                     href={res.driveUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#19539D] text-white text-xs font-black hover:bg-blue-800 transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#19539D] text-white text-xs font-black hover:bg-blue-800 transition-all cursor-pointer"
                   >
                     <span>Open Drive</span>
                     <ExternalLink size={12} />

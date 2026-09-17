@@ -277,6 +277,7 @@ function GalleryAdminSection() {
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: GALLERY_KEY });
+    void qc.invalidateQueries({ queryKey: ['public', 'ride', 'gallery'] });
     void qc.invalidateQueries({ queryKey: ['ride-public-gallery'] });
   };
 

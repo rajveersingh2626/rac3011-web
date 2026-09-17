@@ -185,3 +185,125 @@ export function updateStoredSubmissionStatus(
     }
   }
 }
+
+// ==========================================
+// RIDE DRIVE RESOURCES VAULT (Clean CRUD)
+// ==========================================
+export interface StoredDriveResource {
+  id: string;
+  title: string;
+  category: string;
+  scope: 'all' | 'club' | 'member';
+  targetClubName?: string;
+  targetMemberEmail?: string;
+  driveUrl: string;
+  description: string;
+  lastUpdated: string;
+}
+
+const RESOURCES_STORAGE_KEY = 'rac3011_ride_resources_vault_v1';
+
+export function getStoredResources(): StoredDriveResource[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(RESOURCES_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoredResource(res: Omit<StoredDriveResource, 'id' | 'lastUpdated'>): StoredDriveResource {
+  const current = getStoredResources();
+  const item: StoredDriveResource = {
+    ...res,
+    id: 'res-' + Date.now(),
+    lastUpdated: new Date().toISOString().slice(0, 10),
+  };
+  const updated = [item, ...current];
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(RESOURCES_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('ride_resources_updated'));
+    } catch (e) {
+      console.error('Failed to save resource', e);
+    }
+  }
+  return item;
+}
+
+export function deleteStoredResource(id: string): void {
+  const current = getStoredResources();
+  const updated = current.filter((r) => r.id !== id);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(RESOURCES_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('ride_resources_updated'));
+    } catch (e) {
+      console.error('Failed to delete resource', e);
+    }
+  }
+}
+
+// ==========================================
+// RIDE ANNOUNCEMENTS / COMMUNICATIONS STUDIO
+// ==========================================
+export interface StoredRideAnnouncement {
+  id: string;
+  subject: string;
+  body: string;
+  audienceScope: 'all' | 'district' | 'host_club' | 'individual';
+  targetValue?: string;
+  sender: string;
+  sentAt: string;
+  recipientCount: number;
+  deliveryStatus: 'delivered' | 'pending';
+}
+
+const ANNOUNCEMENTS_STORAGE_KEY = 'rac3011_ride_announcements_v1';
+
+export function getStoredRideAnnouncements(): StoredRideAnnouncement[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(ANNOUNCEMENTS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoredRideAnnouncement(
+  announcement: Omit<StoredRideAnnouncement, 'id' | 'sentAt' | 'deliveryStatus'>
+): StoredRideAnnouncement {
+  const current = getStoredRideAnnouncements();
+  const record: StoredRideAnnouncement = {
+    ...announcement,
+    id: 'ann-' + Date.now(),
+    sentAt: new Date().toISOString(),
+    deliveryStatus: 'delivered',
+  };
+  const updated = [record, ...current];
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(ANNOUNCEMENTS_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('ride_announcements_updated'));
+    } catch (e) {
+      console.error('Failed to save ride announcement', e);
+    }
+  }
+  return record;
+}
+
+export function deleteStoredRideAnnouncement(id: string): void {
+  const current = getStoredRideAnnouncements();
+  const updated = current.filter((a) => a.id !== id);
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(ANNOUNCEMENTS_STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event('ride_announcements_updated'));
+    } catch (e) {
+      console.error('Failed to delete ride announcement', e);
+    }
+  }
+}
+
