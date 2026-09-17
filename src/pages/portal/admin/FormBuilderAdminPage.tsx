@@ -36,11 +36,13 @@ import { HostClubApplicationCard } from '../components/HostClubApplicationCard';
 type AccessMode = 'all' | 'specific' | 'none';
 
 const ROLE_OPTIONS = [
-  { value: 'club_president', label: 'Club President' },
-  { value: 'club_secretary', label: 'Club Secretary' },
-  { value: 'club_director', label: 'Club Board / Directors' },
-  { value: 'district_leader', label: 'District Council / Team' },
-  { value: 'all_members', label: 'All Verified Members' },
+  { value: 'president', label: 'Club President' },
+  { value: 'secretary', label: 'Club Secretary' },
+  { value: 'member', label: 'Club Member' },
+  { value: 'drr', label: 'District Rotaract Representative (DRR)' },
+  { value: 'dsc', label: 'District Secretariat / Council (DSC)' },
+  { value: 'zrr', label: 'Zonal Rotaract Representative (ZRR)' },
+  { value: 'super_admin', label: 'Super Admin' },
 ];
 
 export function FormBuilderAdminPage() {
@@ -1349,10 +1351,12 @@ export function FormBuilderAdminPage() {
 
                     {Object.entries(selectedSubmission.values || {}).map(([key, val]) => {
                       const isLink = String(val).startsWith('http://') || String(val).startsWith('https://');
+                      const fieldDef = activeResponseForm?.fields?.find((f) => f.id === key);
+                      const fieldLabel = fieldDef?.label || key.replace(/([A-Z])/g, ' $1');
                       return (
                         <div key={key} className="p-3.5 rounded-xl border border-line bg-surface space-y-1">
-                          <div className="text-[11px] font-bold text-fg-3 capitalize">
-                            {key.replace(/([A-Z])/g, ' $1')}
+                          <div className="text-[11px] font-bold text-fg-3">
+                            {fieldLabel}
                           </div>
                           <div className="text-xs text-fg">
                             {isLink ? (
@@ -1360,9 +1364,9 @@ export function FormBuilderAdminPage() {
                                 href={String(val)}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 text-blue-600 font-bold hover:underline"
+                                className="inline-flex items-center gap-1.5 text-blue-600 font-bold hover:underline break-all"
                               >
-                                <ExternalLink size={13} />
+                                <ExternalLink size={13} className="shrink-0" />
                                 {String(val)}
                               </a>
                             ) : (

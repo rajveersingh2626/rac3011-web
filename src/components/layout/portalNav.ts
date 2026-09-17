@@ -77,7 +77,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     label: 'Admin',
     items: [
       { key: 'admin-clubs', label: 'Clubs', to: '/portal/admin/clubs', perm: 'reports:review' },
-      { key: 'admin-form-builder', label: 'Form Builder', to: '/portal/admin/form-builder', perm: 'requests:manage' },
+      { key: 'admin-form-builder', label: 'Form Builder', to: '/portal/admin/form-builder', perm: 'forms:manage,forms:responses:view,requests:manage,roles:manage' },
       { key: 'admin-report-builder', label: 'Report Builder', to: '/portal/admin/report-builder', perm: 'requests:manage' },
       { key: 'admin-requests', label: 'Requests', to: '/portal/admin/requests', perm: 'requests:manage' },
       { key: 'admin-showcase', label: 'Showcase queue', to: '/portal/admin/showcase', perm: 'showcase:publish' },
@@ -91,7 +91,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-ride', label: 'RIDE Youth Exchange', to: '/portal/admin/ride', perm: 'subdomain:ride:manage' },
       { key: 'admin-users', label: 'Give / Revoke Access', to: '/portal/admin/users', perm: 'roles:manage' },
       { key: 'admin-sessions', label: 'Active Logins', to: '/portal/admin/sessions', perm: 'roles:manage' },
-      { key: 'admin-roles', label: 'Role Capabilities (41)', to: '/portal/admin/roles', perm: 'roles:manage' },
+      { key: 'admin-roles', label: 'Role Capabilities (43)', to: '/portal/admin/roles', perm: 'roles:manage' },
       { key: 'admin-announcements', label: 'Announcements', to: '/portal/admin/announcements', perm: 'announcements:send' },
       { key: 'admin-public-content', label: 'Public content', to: '/portal/admin/public-content', perm: 'public_content:manage' },
       { key: 'admin-settings', label: 'Settings', to: '/portal/admin/settings', perm: 'settings:manage' },
