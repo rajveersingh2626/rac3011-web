@@ -10,6 +10,9 @@ const PointRulesPage = lazy(() => import('@/pages/portal/admin/PointRulesPage').
 const ReportFormBuilderPage = lazy(() =>
   import('@/pages/portal/admin/ReportFormBuilderPage').then((m) => ({ default: m.ReportFormBuilderPage })),
 );
+const FormBuilderAdminPage = lazy(() =>
+  import('@/pages/portal/admin/FormBuilderAdminPage').then((m) => ({ default: m.FormBuilderAdminPage })),
+);
 const AdminRequestsPage = lazy(() => import('@/pages/portal/admin/AdminRequestsPage').then((m) => ({ default: m.AdminRequestsPage })));
 const NewRequestPage = lazy(() => import('@/pages/portal/admin/NewRequestPage').then((m) => ({ default: m.NewRequestPage })));
 const AdminMembersPage = lazy(() => import('@/pages/portal/admin/AdminMembersPage').then((m) => ({ default: m.AdminMembersPage })));
@@ -64,8 +67,9 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('reports:score', '/portal/admin/clubs/:clubId/:month', <ScoreMonthPage />),
   guarded('club_facts:edit', '/portal/admin/clubs/:clubId/facts', <ClubFactsPage />),
   guarded('point_rules:manage', '/portal/admin/point-rules', <PointRulesPage />),
+  guarded('requests:manage', '/portal/admin/form-builder', <FormBuilderAdminPage />),
+  guarded('requests:manage', '/portal/admin/report-builder', <ReportFormBuilderPage />),
   guarded('requests:manage', '/portal/admin/report-form', <ReportFormBuilderPage />),
-  guarded('requests:manage', '/portal/admin/form-builder', <ReportFormBuilderPage />),
   guarded('requests:manage', '/portal/admin/requests/new', <NewRequestPage />),
   guarded('requests:manage', '/portal/admin/requests', <AdminRequestsPage />),
   guarded('content:edit', '/portal/content', <ContentEditorPage />),
