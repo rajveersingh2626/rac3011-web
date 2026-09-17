@@ -126,3 +126,44 @@ export async function dispatchCheckinTickets(
   });
 }
 
+export async function deleteEventCheckin(
+  eventId: string,
+  checkinId: string,
+): Promise<{ success: boolean; removedCheckinId: string }> {
+  return apiFetch(`/events/${eventId}/checkins/${checkinId}`, {
+    method: 'DELETE',
+    schema: z.object({ success: z.boolean(), removedCheckinId: z.string() }),
+  });
+}
+
+export const publicPassSchema = z.object({
+  token: z.string(),
+  isValid: z.boolean(),
+  isCheckedIn: z.boolean(),
+  checkedInAt: z.string().nullable().optional(),
+  event: z.object({
+    id: z.string(),
+    title: z.string(),
+    slug: z.string().nullable().optional(),
+    startsAt: z.string(),
+    endsAt: z.string().nullable().optional(),
+    location: z.string().nullable().optional(),
+    coverUrl: z.string().nullable().optional(),
+  }),
+  attendee: z.object({
+    id: z.string(),
+    fullName: z.string(),
+    clubName: z.string().optional(),
+    district: z.string().optional(),
+  }),
+  googleWalletUrl: z.string().optional(),
+});
+
+export type PublicPass = z.infer<typeof publicPassSchema>;
+
+export async function fetchPublicPass(token: string): Promise<PublicPass> {
+  return apiFetch(`/events/pass/${token}`, {
+    schema: publicPassSchema,
+  });
+}
+

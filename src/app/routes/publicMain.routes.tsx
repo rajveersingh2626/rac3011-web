@@ -17,8 +17,10 @@ import { ContactPage } from '@/pages/public/ContactPage';
 import { EventPage } from '@/pages/public/EventPage';
 import { PrivacyPolicyPage } from '@/pages/public/PrivacyPolicyPage';
 import { TermsOfServicePage } from '@/pages/public/TermsOfServicePage';
+import { PublicEventPassPage } from '@/pages/public/PublicEventPassPage';
 
 export const publicMainRouteObjects: RouteObject[] = [
+  { path: '/pass/:token', element: <PublicEventPassPage /> },
   { path: '/showcase/:slug', element: <ShowcaseDetailPage /> },
   { path: '/showcase/clubs/:clubSlug', element: <ClubShowcasePage /> },
   { path: '/heritage/:slug', element: <DrrProfilePage /> },

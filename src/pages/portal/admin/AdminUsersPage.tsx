@@ -108,6 +108,7 @@ const PERMISSION_DOMAINS = [
       { key: 'subdomain:rcl:manage', name: 'RCL Admin', desc: 'Manage the Rotaract Cricket League fixtures, teams, and scores.' },
       { key: 'subdomain:careerbridge:manage', name: 'CareerBridge Admin', desc: 'Manage career fairs, job listings, and mentorship programs.' },
       { key: 'subdomain:ride:manage', name: 'RIDE Subdomain Admin', desc: 'Access and oversee the RIDE subdomain infrastructure.' },
+      { key: 'subdomain:ride:host_club_apply', name: 'Apply for RIDE Host Club', desc: 'Can submit and edit the host club proposal application for Delhi Meri Jaan.' },
       { key: 'ride:manage', name: 'RIDE Youth Exchange Admin', desc: 'Full administration of The RIDE Youth Exchange and Delhi Meri Jaan portal.' },
       { key: 'ride:delegates:manage', name: 'Manage RIDE Delegates & Homestays', desc: 'Manage incoming exchange participants, delegations, homestay families and host club allocations.' },
     ],

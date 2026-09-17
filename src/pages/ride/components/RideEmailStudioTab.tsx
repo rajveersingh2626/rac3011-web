@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Send, Check, Copy, Trash2, Mail, Users, Building, ShieldCheck, 
-  MessageSquare, History, CheckCircle2 
+  MessageSquare, History, CheckCircle2, Search, X, Sparkles, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -10,6 +10,12 @@ import {
   getStoredRideAnnouncements, saveStoredRideAnnouncement, deleteStoredRideAnnouncement,
   type StoredRideAnnouncement 
 } from '@/lib/ride/formsStorage';
+import { dispatchRideBroadcast } from '@/lib/ride/rideBroadcastApi';
+
+const ROTARY_DISTRICTS = [
+  '3011', '3040', '3054', '3070', '3080', '3110', '3120', 
+  '3131', '3141', '3142', '3190', '3201', '3232', '3292'
+];
 
 function generateBespokeRideEmailHtml(title: string, rawBody: string): string {
   const paragraphs = rawBody
@@ -82,18 +88,33 @@ function generateBespokeRideEmailHtml(title: string, rawBody: string): string {
 </html>`;
 }
 
+function simulatePreviewText(text: string, selectedDistricts: string[]): string {
+  const sampleDistrict = selectedDistricts[0] || '3141';
+  return text
+    .replace(/\{\{\s*(?:name|delegate_name|full_name)\s*\}\}/gi, 'Rtr. Rohan Mehra')
+    .replace(/\{\{\s*district_number\s*\}\}/gi, sampleDistrict)
+    .replace(/\{\{\s*(?:pass_reference|pass_ref)\s*\}\}/gi, 'DMJ-2026-X89A')
+    .replace(/\{\{\s*(?:host_club|host_club_name)\s*\}\}/gi, 'Rotaract Club of Delhi Central');
+}
+
 export function RideEmailStudioTab() {
   const [activeSubTab, setActiveSubTab] = useState<'compose' | 'history'>('compose');
   const [announcements, setAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
 
+  // Targeting state
+  const [targetAll, setTargetAll] = useState(true);
+  const [targetHostClubsOnly, setTargetHostClubsOnly] = useState(false);
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [customEmailsInput, setCustomEmailsInput] = useState('');
+
   // Form State
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
-  const [audienceScope, setAudienceScope] = useState<'all' | 'district' | 'host_club' | 'individual'>('all');
-  const [targetValue, setTargetValue] = useState('');
   const [previewMode, setPreviewMode] = useState<'visual' | 'html'>('visual');
   const [sending, setSending] = useState(false);
-  const [sendSuccess, setSendSuccess] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [copiedHtml, setCopiedHtml] = useState(false);
 
   useEffect(() => {
@@ -106,10 +127,28 @@ export function RideEmailStudioTab() {
     setBody((prev) => prev + ` ${token} `);
   };
 
-  const bespokeHtml = generateBespokeRideEmailHtml(
-    subject || 'DELHI MERI JAAN 2026 NOTIFICATION',
-    body || 'Compose your message to view the live responsive preview.'
+  const toggleDistrict = (d: string) => {
+    setSelectedDistricts((prev) =>
+      prev.includes(d) ? prev.filter((item) => item !== d) : [...prev, d],
+    );
+    if (targetAll) setTargetAll(false);
+  };
+
+  const filteredDistricts = ROTARY_DISTRICTS.filter((d) =>
+    d.includes(districtSearch.trim()),
   );
+
+  // Live preview content with simulated tokens
+  const previewSubject = simulatePreviewText(
+    subject || 'DELHI MERI JAAN 2026 NOTIFICATION',
+    selectedDistricts,
+  );
+  const previewBody = simulatePreviewText(
+    body || 'Compose your message to view the live responsive preview with simulated dynamic tokens.',
+    selectedDistricts,
+  );
+
+  const bespokeHtml = generateBespokeRideEmailHtml(previewSubject, previewBody);
 
   const handleCopyHtml = () => {
     navigator.clipboard.writeText(bespokeHtml);
@@ -117,32 +156,61 @@ export function RideEmailStudioTab() {
     setTimeout(() => setCopiedHtml(false), 2000);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!subject.trim() || !body.trim()) return;
     setSending(true);
+    setErrorMessage(null);
+    setSendSuccess(null);
 
-    setTimeout(() => {
+    const customEmails = customEmailsInput
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.includes('@'));
+
+    try {
+      const result = await dispatchRideBroadcast({
+        subject: subject.trim(),
+        body: body.trim(),
+        all: targetAll,
+        hostClubsOnly: targetHostClubsOnly,
+        districtNumbers: selectedDistricts.length > 0 ? selectedDistricts : undefined,
+        customEmails: customEmails.length > 0 ? customEmails : undefined,
+      });
+
+      const audienceDesc = targetAll
+        ? 'All Registered Delegates'
+        : selectedDistricts.length > 0
+          ? `Districts: ${selectedDistricts.join(', ')}`
+          : targetHostClubsOnly
+            ? 'Host Clubs Only'
+            : customEmails.length > 0
+              ? `${customEmails.length} Custom Email(s)`
+              : 'Targeted Audience';
+
       saveStoredRideAnnouncement({
         subject: subject.trim(),
         body: body.trim(),
-        audienceScope,
-        targetValue: audienceScope === 'all' ? undefined : targetValue.trim(),
+        audienceScope: targetAll ? 'all' : selectedDistricts.length > 0 ? 'district' : 'individual',
+        targetValue: audienceDesc,
         sender: 'RIDE Organizing Committee (RID 3011)',
-        recipientCount: audienceScope === 'all' ? 65 : audienceScope === 'individual' ? 1 : 12,
+        recipientCount: result.dispatchedCount,
       });
 
       setAnnouncements(getStoredRideAnnouncements());
-      setSending(false);
-      setSendSuccess(true);
+      setSendSuccess(`Successfully queued ${result.dispatchedCount} email(s) for delivery!`);
       setSubject('');
       setBody('');
-      setTargetValue('');
+      setCustomEmailsInput('');
 
       setTimeout(() => {
-        setSendSuccess(false);
+        setSendSuccess(null);
         setActiveSubTab('history');
-      }, 1200);
-    }, 600);
+      }, 1500);
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Failed to dispatch broadcast. Please verify connectivity.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleDeleteAnnouncement = (id: string) => {
@@ -203,54 +271,120 @@ export function RideEmailStudioTab() {
                 </p>
               </div>
 
-              {/* Audience Scope Selector */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-black text-neutral-800 uppercase tracking-wider block">
-                  Audience Scope
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'all', label: 'All Registered Delegates', icon: Users },
-                    { id: 'district', label: 'Filter by District No.', icon: Building },
-                    { id: 'host_club', label: 'Host Clubs Only', icon: ShieldCheck },
-                    { id: 'individual', label: 'Single Delegate (Email)', icon: Mail },
-                  ].map((scope) => {
-                    const Icon = scope.icon;
-                    return (
-                      <button
-                        key={scope.id}
-                        type="button"
-                        onClick={() => setAudienceScope(scope.id as any)}
-                        className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                          audienceScope === scope.id
-                            ? 'border-[#19539D] bg-blue-50/70 text-[#19539D] ring-2 ring-[#19539D]'
-                            : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700'
-                        }`}
-                      >
-                        <Icon size={14} className="shrink-0" />
-                        <span className="truncate">{scope.label}</span>
-                      </button>
-                    );
-                  })}
+              {/* Enhanced Recipient Targeting Controls */}
+              <div className="space-y-3 rounded-2xl border-2 border-neutral-200 bg-neutral-50/70 p-3.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-neutral-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Filter size={13} className="text-[#EA6623]" />
+                    <span>Audience Targeting & Scope</span>
+                  </label>
+                  <span className="text-[10px] font-bold text-neutral-500">
+                    Select one or more filters
+                  </span>
                 </div>
 
-                {audienceScope !== 'all' && (
-                  <div className="pt-2">
+                {/* Main Scope Switches */}
+                <div className="grid grid-cols-2 gap-2">
+                  <label className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
+                    targetAll
+                      ? 'border-[#19539D] bg-blue-50/80 text-[#19539D] ring-1 ring-[#19539D]'
+                      : 'border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-700'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={targetAll}
+                      onChange={(e) => {
+                        setTargetAll(e.target.checked);
+                        if (e.target.checked) setSelectedDistricts([]);
+                      }}
+                      className="rounded text-[#19539D] focus:ring-[#19539D]"
+                    />
+                    <Users size={14} className="shrink-0" />
+                    <span>All Registered Delegates</span>
+                  </label>
+
+                  <label className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-bold cursor-pointer transition-all ${
+                    targetHostClubsOnly
+                      ? 'border-[#59A835] bg-emerald-50/80 text-emerald-800 ring-1 ring-[#59A835]'
+                      : 'border-neutral-200 bg-white hover:bg-neutral-100 text-neutral-700'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={targetHostClubsOnly}
+                      onChange={(e) => setTargetHostClubsOnly(e.target.checked)}
+                      className="rounded text-[#59A835] focus:ring-[#59A835]"
+                    />
+                    <ShieldCheck size={14} className="shrink-0" />
+                    <span>Host Clubs Only</span>
+                  </label>
+                </div>
+
+                {/* District Selector & Search */}
+                <div className="space-y-2 pt-1 border-t border-neutral-200">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-black uppercase text-neutral-700 flex items-center gap-1">
+                      <Building size={12} />
+                      <span>Filter by District Number ({selectedDistricts.length} selected)</span>
+                    </span>
+                    {selectedDistricts.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDistricts([])}
+                        className="text-[10px] font-bold text-red-600 hover:underline cursor-pointer"
+                      >
+                        Clear Selection
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <Search size={13} className="absolute left-2.5 top-2.5 text-neutral-400" />
                     <input
                       type="text"
-                      value={targetValue}
-                      onChange={(e) => setTargetValue(e.target.value)}
-                      placeholder={
-                        audienceScope === 'district'
-                          ? 'Enter Rotary District Number (e.g. 3141)'
-                          : audienceScope === 'host_club'
-                            ? 'Enter Host Club Name'
-                            : 'Enter Delegate Email Address'
-                      }
-                      className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                      value={districtSearch}
+                      onChange={(e) => setDistrictSearch(e.target.value)}
+                      placeholder="Search district numbers (e.g. 3011, 3141)..."
+                      className="w-full pl-8 pr-3 py-1.5 rounded-xl border border-neutral-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#19539D] bg-white"
                     />
                   </div>
-                )}
+
+                  {/* District Pills Grid */}
+                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1">
+                    {filteredDistricts.map((d) => {
+                      const isSelected = selectedDistricts.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => toggleDistrict(d)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                            isSelected
+                              ? 'bg-[#19539D] text-white border border-[#19539D] shadow-sm'
+                              : 'bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100'
+                          }`}
+                        >
+                          <span>RID {d}</span>
+                          {isSelected && <Check size={11} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Custom Email Input */}
+                <div className="space-y-1.5 pt-1 border-t border-neutral-200">
+                  <label className="text-[11px] font-black uppercase text-neutral-700 flex items-center gap-1">
+                    <Mail size={12} />
+                    <span>Custom Guest Emails (Optional)</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={customEmailsInput}
+                    onChange={(e) => setCustomEmailsInput(e.target.value)}
+                    placeholder="Enter additional emails separated by commas or newlines..."
+                    className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#19539D] bg-white"
+                  />
+                </div>
               </div>
 
               {/* Subject Line */}
@@ -262,7 +396,7 @@ export function RideEmailStudioTab() {
                   type="text"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder="e.g. Important Itinerary Update: Old Delhi Heritage Walk Coordinates"
+                  placeholder="e.g. Important DMJ 2026 Itinerary & Homestay Briefing: {{district_number}}"
                   className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-xs font-bold text-[#171515] focus:outline-none focus:ring-2 focus:ring-[#19539D]"
                 />
               </div>
@@ -270,23 +404,26 @@ export function RideEmailStudioTab() {
               {/* Variable Token Chips */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-neutral-500 font-bold">
-                  <span>Dynamic Personalization Tokens:</span>
+                  <span className="flex items-center gap-1">
+                    <Sparkles size={12} className="text-[#EA6623]" />
+                    <span>Dynamic Personalization Tokens:</span>
+                  </span>
                   <span className="text-[10px] text-[#EA6623]">Click to insert</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { token: '{{delegate_name}}', label: 'Delegate Name' },
+                    { token: '{{name}}', label: 'Delegate Name' },
                     { token: '{{district_number}}', label: 'District No.' },
-                    { token: '{{pass_ref}}', label: 'Pass Ref' },
-                    { token: '{{host_club_name}}', label: 'Host Club' },
+                    { token: '{{pass_reference}}', label: 'Pass Ref' },
+                    { token: '{{host_club}}', label: 'Host Club' },
                   ].map((chip) => (
                     <button
                       key={chip.token}
                       type="button"
                       onClick={() => insertToken(chip.token)}
-                      className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-mono font-bold transition-all cursor-pointer border border-neutral-300"
+                      className="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[11px] font-mono font-bold transition-all cursor-pointer border border-neutral-300"
                     >
-                      {chip.label}
+                      {chip.label} &bull; <span className="text-[#EA6623]">{chip.token}</span>
                     </button>
                   ))}
                 </div>
@@ -301,21 +438,30 @@ export function RideEmailStudioTab() {
                   rows={8}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder="Write your email content here. Paragraph breaks are supported..."
+                  placeholder="Dear {{name}}, Welcome to RID {{district_number}} delegation. Your pass reference is {{pass_reference}} and your designated host club is {{host_club}}..."
                   className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-xs font-sans leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#19539D]"
                 />
               </div>
 
+              {/* Status and Error Banners */}
+              {errorMessage && (
+                <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-xs font-bold text-red-800 flex items-center justify-between">
+                  <span>{errorMessage}</span>
+                  <button onClick={() => setErrorMessage(null)}><X size={14} /></button>
+                </div>
+              )}
+
+              {sendSuccess && (
+                <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs font-bold text-emerald-800 flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-emerald-600" />
+                  <span>{sendSuccess}</span>
+                </div>
+              )}
+
               {/* Submit & Dispatch Action */}
               <div className="pt-2 flex items-center justify-between gap-3 border-t border-neutral-100">
                 <div className="text-[11px] text-neutral-500 font-medium">
-                  {sendSuccess ? (
-                    <span className="text-green-600 font-black flex items-center gap-1">
-                      <CheckCircle2 size={14} /> Announcement Dispatched!
-                    </span>
-                  ) : (
-                    <span>Ready to broadcast to {audienceScope === 'all' ? 'All Registered Delegates' : 'targeted recipients'}</span>
-                  )}
+                  Ready to broadcast to {targetAll ? 'All Registered Delegates' : 'targeted filters'}
                 </div>
 
                 <Button
@@ -375,11 +521,11 @@ export function RideEmailStudioTab() {
                   <iframe
                     title="Live Email Preview"
                     srcDoc={bespokeHtml}
-                    className="w-full h-[520px] border-0 bg-white"
+                    className="w-full h-[540px] border-0 bg-white"
                   />
                 </div>
               ) : (
-                <div className="p-4 rounded-2xl border-2 border-neutral-300 bg-neutral-900 text-neutral-100 font-mono text-[11px] leading-relaxed max-h-[520px] overflow-y-auto whitespace-pre-wrap">
+                <div className="p-4 rounded-2xl border-2 border-neutral-300 bg-neutral-900 text-neutral-100 font-mono text-[11px] leading-relaxed max-h-[540px] overflow-y-auto whitespace-pre-wrap">
                   {bespokeHtml}
                 </div>
               )}

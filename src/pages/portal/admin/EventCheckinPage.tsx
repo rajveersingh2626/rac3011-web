@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QRCodeSVG } from 'qrcode.react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { 
   QrCode, Camera, Users, Download, 
   CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Search, ShieldCheck, Ticket, UserCheck, ExternalLink,
+  Search, ShieldCheck, UserCheck, UserPlus, UserMinus,
   Send
 } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchAdminEvents } from '@/lib/events/api';
 import { 
   fetchEventCheckins, postEventCheckin, downloadCheckinCsv, 
-  fetchEventTicket, dispatchCheckinTickets, type EventTicket, type DispatchResult
+  deleteEventCheckin, dispatchCheckinTickets, type DispatchResult
 } from '@/lib/events/checkinApi';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
@@ -139,10 +138,22 @@ export function EventCheckinPage() {
   const [walkInName, setWalkInName] = useState('');
   const [walkInClubId, setWalkInClubId] = useState('');
 
-  // Ticket Modal
-  const [showTicketModal, setShowTicketModal] = useState(false);
-  const [ticketData, setTicketData] = useState<EventTicket | null>(null);
-  const [ticketLoading, setTicketLoading] = useState(false);
+  // Manual Add Attendee Modal State
+  const [showAddAttendeeModal, setShowAddAttendeeModal] = useState(false);
+  const [modalAttendeeName, setModalAttendeeName] = useState('');
+  const [modalClubOrDistrict, setModalClubOrDistrict] = useState('');
+
+  // Delete / Unmark Checkin Mutation
+  const deleteCheckinMutation = useMutation({
+    mutationFn: (checkinId: string) => deleteEventCheckin(eventId!, checkinId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['event-checkins', eventId] });
+      playAudioFeedback('warning');
+    },
+    onError: (err: any) => {
+      alert(err?.message || 'Failed to remove check-in record');
+    },
+  });
 
   // Audience Targeting & Automated Dispatch Modal
   const [showDispatchModal, setShowDispatchModal] = useState(false);
@@ -346,21 +357,6 @@ export function EventCheckinPage() {
     };
   }, [activeTab, selectedDeviceId, eventId]);
 
-  // Open ticket pass
-  const handleOpenMyTicket = async () => {
-    if (!eventId) return;
-    setShowTicketModal(true);
-    setTicketLoading(true);
-    try {
-      const ticket = await fetchEventTicket(eventId);
-      setTicketData(ticket);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setTicketLoading(false);
-    }
-  };
-
   // CSV Export handler
   const [exportingCsv, setExportingCsv] = useState(false);
   const handleExportCsv = async () => {
@@ -460,11 +456,11 @@ export function EventCheckinPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleOpenMyTicket}
+              onClick={() => setShowAddAttendeeModal(true)}
               className="flex items-center gap-1.5"
             >
-              <Ticket className="size-4" />
-              My Ticket Pass
+              <UserPlus className="size-4 text-emerald-600" />
+              Add Attendee
             </Button>
 
             <Button
@@ -731,13 +727,14 @@ export function EventCheckinPage() {
                       <th className="px-4 py-3">Attendee</th>
                       <th className="px-4 py-3">Club</th>
                       <th className="px-4 py-3">Method</th>
-                      <th className="px-4 py-3 text-right">Time</th>
+                      <th className="px-4 py-3">Time</th>
+                      <th className="px-4 py-3 text-right">Attendance Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-line">
                     {filteredItems.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="p-8 text-center text-fg-3 italic">
+                        <td colSpan={5} className="p-8 text-center text-fg-3 italic">
                           {searchQuery ? 'No attendees match search query.' : 'No attendees checked in yet.'}
                         </td>
                       </tr>
@@ -768,13 +765,29 @@ export function EventCheckinPage() {
                               {item.method === 'qr' ? 'QR Scanner' : item.method === 'walk_in' ? 'Walk-In' : 'Manual'}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono text-[11px] text-fg-3">
+                          <td className="px-4 py-3 font-mono text-[11px] text-fg-3">
                             {new Date(item.checkedInAt).toLocaleTimeString('en-IN', {
                               hour: '2-digit',
                               minute: '2-digit',
                               second: '2-digit',
                               hour12: true,
                             })}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Unmark attendance for ${item.attendeeName || 'this attendee'}?`)) {
+                                  deleteCheckinMutation.mutate(item.id);
+                                }
+                              }}
+                              disabled={deleteCheckinMutation.isPending}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-300 text-[11px] font-bold transition-colors cursor-pointer"
+                              title="Unmark attendance"
+                            >
+                              <UserMinus className="size-3" />
+                              <span>Unmark</span>
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -786,48 +799,64 @@ export function EventCheckinPage() {
           </div>
         </div>
 
-        {/* My Ticket / QR Pass Modal */}
-        {showTicketModal && (
-          <Modal open title="Event Pass & QR Ticket" onClose={() => setShowTicketModal(false)}>
-            {ticketLoading ? (
-              <div className="p-8 text-center">
-                <RefreshCw className="size-8 animate-spin text-accent mx-auto mb-2" />
-                <p className="text-xs text-fg-3">Generating cryptographic anti-replay pass…</p>
-              </div>
-            ) : ticketData ? (
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="rounded-2xl border-2 border-line bg-white p-4 shadow-sm">
-                  <QRCodeSVG value={ticketData.token} size={220} level="M" />
-                </div>
-
-                <div>
-                  <h4 className="text-base font-black text-fg">{ticketData.event.title}</h4>
-                  <p className="text-xs text-fg-2 font-bold mt-0.5">{ticketData.member.fullName}</p>
-                  <p className="text-[11px] text-fg-3">{ticketData.member.clubName}</p>
-                </div>
-
-                <div className="flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-1.5 text-[11px] text-fg-3">
-                  <ShieldCheck className="size-4 text-emerald-500" />
-                  <span>Single-use signed cryptographic pass with anti-replay lock</span>
-                </div>
-
-                {ticketData.googleWalletUrl && (
-                  <a
-                    href={ticketData.googleWalletUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-neutral-800 transition-colors"
-                  >
-                    <ExternalLink className="size-4" />
-                    Save to Google Wallet
-                  </a>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-red-500 text-center py-4">
-                Could not generate ticket pass for this event. Please verify your membership profile.
+        {/* Manual Walk-In Registration Modal */}
+        {showAddAttendeeModal && (
+          <Modal open title="Manual Walk-In Registration" onClose={() => setShowAddAttendeeModal(false)}>
+            <div className="flex flex-col gap-4">
+              <p className="text-xs text-fg-3">
+                Register an on-site attendee or delegate directly into the live verification ledger for {activeEvent.title}.
               </p>
-            )}
+
+              <Field label="Attendee Full Name" required>
+                <Input
+                  value={modalAttendeeName}
+                  onChange={(e) => setModalAttendeeName(e.target.value)}
+                  placeholder="e.g. Rtr. John Doe"
+                  autoFocus
+                />
+              </Field>
+
+              <Field label="Club ID / Affiliation / District" required>
+                <Input
+                  value={modalClubOrDistrict}
+                  onChange={(e) => setModalClubOrDistrict(e.target.value)}
+                  placeholder="e.g. Rotaract Club of Delhi Central or Club ID"
+                />
+              </Field>
+
+              <div className="flex justify-end gap-2 border-t border-line pt-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowAddAttendeeModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!modalAttendeeName.trim() || !modalClubOrDistrict.trim() || checkinMutation.isPending}
+                  loading={checkinMutation.isPending}
+                  onClick={() => {
+                    if (!modalAttendeeName.trim() || !modalClubOrDistrict.trim()) return;
+                    checkinMutation.mutate(
+                      { walkInName: modalAttendeeName.trim(), clubId: modalClubOrDistrict.trim() },
+                      {
+                        onSuccess: () => {
+                          setModalAttendeeName('');
+                          setModalClubOrDistrict('');
+                          setShowAddAttendeeModal(false);
+                        },
+                      },
+                    );
+                  }}
+                  className="flex items-center gap-1.5"
+                >
+                  <UserCheck className="size-4" />
+                  Confirm & Check-In
+                </Button>
+              </div>
+            </div>
           </Modal>
         )}
         {/* Audience Targeting & Automated Ticket Dispatch Modal */}
