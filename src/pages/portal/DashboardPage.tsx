@@ -25,6 +25,7 @@ import { fetchReports } from '@/lib/reports/api';
 import type { ReportStatus } from '@/lib/reports/types';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { fetchAnnouncementFeed } from '@/lib/announcements/api';
+import { apiFetch } from '@/lib/api';
 import { ClubPointsWidget } from './ClubPointsWidget';
 import { HostClubApplicationCard } from './components/HostClubApplicationCard';
 
@@ -159,7 +160,36 @@ export function DashboardPage() {
   const canApproveMembers = can('members:approve');
   const canManageEvents = can('events:manage');
   const canReport = Boolean(clubId) && !isDistrictOffice && can('reports:submit', { type: 'club', id: clubId ?? undefined });
-  const canApplyHostClub = (canReport && !canManageAccess) || (can('subdomain:ride:host_club_apply') && !canManageAccess);
+
+  const dashboardAppsQuery = useQuery({
+    queryKey: ['dashboard-apps'],
+    queryFn: async () => {
+      try {
+        const res = await apiFetch<{
+          hostClubApp?: {
+            accessMode: 'all' | 'specific' | 'none';
+            allowedClubIds: string[];
+          };
+        }>('/settings/dashboard-apps');
+        return res;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 60_000,
+  });
+
+  const hostClubAppConfig = dashboardAppsQuery.data?.hostClubApp;
+  const isHostClubAllowed =
+    !hostClubAppConfig || hostClubAppConfig.accessMode === 'all'
+      ? true
+      : hostClubAppConfig.accessMode === 'none'
+        ? false
+        : Boolean(clubId && hostClubAppConfig.allowedClubIds.includes(clubId));
+
+  const canApplyHostClub =
+    isHostClubAllowed &&
+    ((canReport && !canManageAccess) || (can('subdomain:ride:host_club_apply') && !canManageAccess));
   const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
   const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements;
 

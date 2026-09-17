@@ -77,8 +77,8 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     label: 'Admin',
     items: [
       { key: 'admin-clubs', label: 'Clubs', to: '/portal/admin/clubs', perm: 'reports:review' },
-      { key: 'admin-point-rules', label: 'Point rules', to: '/portal/admin/point-rules', perm: 'point_rules:manage' },
-      { key: 'admin-report-form', label: 'Report form', to: '/portal/admin/report-form', perm: 'requests:manage' },
+      { key: 'admin-form-builder', label: 'Form Builder', to: '/portal/admin/form-builder', perm: 'requests:manage' },
+      { key: 'admin-report-builder', label: 'Report Builder', to: '/portal/admin/report-builder', perm: 'requests:manage' },
       { key: 'admin-requests', label: 'Requests', to: '/portal/admin/requests', perm: 'requests:manage' },
       { key: 'admin-showcase', label: 'Showcase queue', to: '/portal/admin/showcase', perm: 'showcase:publish' },
       { key: 'admin-members', label: 'Members', to: '/portal/members', perm: 'members:approve' },
