@@ -104,3 +104,25 @@ export async function fetchEventTicket(eventId: string): Promise<EventTicket> {
     schema: eventTicketSchema,
   });
 }
+
+export const dispatchResultSchema = z.object({
+  recipientCount: z.number(),
+  dispatchedCount: z.number(),
+});
+
+export type DispatchResult = z.infer<typeof dispatchResultSchema>;
+
+export async function dispatchCheckinTickets(
+  eventId: string,
+  payload: {
+    audience: 'all_members' | 'presidents' | 'secretaries' | 'dac_members' | 'custom_emails';
+    customEmails?: string[];
+  },
+): Promise<DispatchResult> {
+  return apiFetch(`/events/${eventId}/checkin/dispatch-tickets`, {
+    method: 'POST',
+    body: payload,
+    schema: dispatchResultSchema,
+  });
+}
+

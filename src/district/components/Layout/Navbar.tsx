@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import MorphedMenu, { type DistrictUserRole } from './MorphedMenu';
 import MobileBottomNav from './MobileBottomNav';
-import { Home, MapPin, Award, Users, FolderOpen, Calendar, ChevronDown, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Home, MapPin, Award, Users, FolderOpen, Calendar, Sparkles, Image as ImageIcon } from 'lucide-react';
 
 export interface NavbarProps {
   activePage: string;
@@ -123,81 +123,37 @@ export default function Navbar({
       onMouseLeave={handleMouseLeave}
       style={{
         position: 'fixed',
-        top: '0px',
+        top: '12px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
-        pointerEvents: shouldShowNavbar ? 'auto' : 'none',
-        paddingTop: '20px',
-        paddingBottom: '20px',
-        minWidth: '320px',
+        pointerEvents: 'auto',
+        width: isMobile ? 'calc(100% - 24px)' : 'auto',
+        maxWidth: isMobile ? '460px' : '1100px',
         display: 'flex',
         justifyContent: 'center'
       }}
     >
-      {/* Persistent affordance: shows a menu exists before any hover/scroll on desktop/tablet */}
-      <button
-        type="button"
-        className="wide-only"
-        onClick={handleMouseEnter}
-        onMouseEnter={handleMouseEnter}
-        onFocus={(e) => {
-          handleMouseEnter();
-          e.currentTarget.style.boxShadow = '0 0 0 2px #123499, 0 8px 16px rgba(0, 0, 0, 0.35)';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.35)';
-        }}
-        aria-label="Show navigation menu"
-        aria-expanded={shouldShowNavbar}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '52px',
-          height: '18px',
-          display: 'flex',
-          alignItems: 'flex-end',
-          justifyContent: 'center',
-          paddingBottom: '2px',
-          border: '1px solid rgba(255, 255, 255, 0.18)',
-          borderTop: 'none',
-          borderRadius: '0 0 10px 10px',
-          backgroundColor: 'rgba(15, 18, 24, 0.75)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          boxShadow: '0 8px 16px rgba(0, 0, 0, 0.35)',
-          cursor: 'pointer',
-          zIndex: 1001,
-          opacity: shouldShowNavbar ? 0 : 1,
-          pointerEvents: shouldShowNavbar ? 'none' : 'auto',
-          transition: 'opacity 0.3s ease',
-          outline: 'none'
-        }}
-      >
-        <ChevronDown size={12} color="#FFFFFF" aria-hidden="true" />
-      </button>
-
       <div
-        className="wide-only"
         style={{
-          display: isMobile ? 'none' : 'inline-flex',
+          display: 'inline-flex',
           alignItems: 'center',
-          gap: '10px',
-          padding: '7px 16px 7px 10px',
-          backgroundColor: isMenuOpen ? 'transparent' : 'rgba(15, 18, 24, 0.75)',
-          backdropFilter: isMenuOpen ? 'none' : 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: isMenuOpen ? 'none' : 'blur(24px) saturate(180%)',
-          border: isMenuOpen ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.18)',
-          borderRadius: '9999px',
+          justifyContent: isMobile ? 'space-between' : 'center',
+          width: isMobile ? '100%' : 'auto',
+          gap: isMobile ? '8px' : '10px',
+          padding: isMobile ? '6px 12px' : '7px 16px 7px 12px',
+          backgroundColor: isMenuOpen ? 'transparent' : 'rgba(15, 23, 42, 0.90)',
+          backdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
+          border: isMenuOpen ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.16)',
+          borderRadius: '20px',
           boxShadow: isMenuOpen 
             ? 'none' 
-            : '0 14px 40px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.25)',
-          transform: shouldShowNavbar ? 'translateY(0) scale(1.1)' : 'translateY(-120px) scale(1.1)',
-          opacity: shouldShowNavbar ? 1 : 0,
-          pointerEvents: shouldShowNavbar ? 'auto' : 'none',
-          transition: 'transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease'
+            : '0 12px 36px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
+          transform: 'translateY(0)',
+          opacity: 1,
+          pointerEvents: 'auto',
+          transition: 'background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease'
         }}
       >
         <button
@@ -334,36 +290,30 @@ export default function Navbar({
           </>
         )}
 
-        {!isMobile && (
-          <MorphedMenu
-            activePage={activePage}
-            setActivePage={setActivePage}
-            activeDistrictTab={activeDistrictTab}
-            setActiveDistrictTab={setActiveDistrictTab}
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            onOpenLoginModal={onOpenLoginModal}
-            onLogout={onLogout}
-            onMenuOpenChange={setIsMenuOpen}
-            isOpenProp={isMenuOpen}
-          />
+        {isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', padding: '0 4px' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              {activePage === 'home' ? 'RID 3011' : (districtSubTabs.find(t => t.id === activeDistrictTab)?.shortLabel || 'District')}
+            </span>
+          </div>
         )}
+
+        <MorphedMenu
+          activePage={activePage}
+          setActivePage={setActivePage}
+          activeDistrictTab={activeDistrictTab}
+          setActiveDistrictTab={setActiveDistrictTab}
+          isLoggedIn={isLoggedIn}
+          userRole={userRole}
+          onOpenLoginModal={onOpenLoginModal}
+          onLogout={onLogout}
+          onMenuOpenChange={setIsMenuOpen}
+          isOpenProp={isMenuOpen}
+        />
       </div>
 
       {isMobile && (
         <>
-          <MorphedMenu
-            activePage={activePage}
-            setActivePage={setActivePage}
-            activeDistrictTab={activeDistrictTab}
-            setActiveDistrictTab={setActiveDistrictTab}
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            onOpenLoginModal={onOpenLoginModal}
-            onLogout={onLogout}
-            onMenuOpenChange={setIsMenuOpen}
-            isOpenProp={isMenuOpen}
-          />
 
           <MobileBottomNav
             activePage={activePage}

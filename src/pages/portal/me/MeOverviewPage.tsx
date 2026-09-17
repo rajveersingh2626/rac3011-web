@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
-import { API_ORIGIN } from '@/lib/api';
 import { fetchMyCard } from '@/lib/members/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
@@ -35,7 +34,7 @@ export function MeOverviewPage() {
         ) : cardQuery.isError ? (
           <ErrorState title="Couldn't load your membership card" onRetry={() => void cardQuery.refetch()} />
         ) : (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_1fr]">
+          <div className="max-w-2xl">
             <Card>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -54,20 +53,6 @@ export function MeOverviewPage() {
                   ]}
                 />
               </div>
-              <p className="m-0 mt-4 text-[11.5px] text-fg-3">
-                Show this at a district event and somebody scans it &ndash; that&apos;s what the QR code on the
-                right is for.
-              </p>
-            </Card>
-            <Card>
-              <p className="m-0 mb-3 text-[10.5px] font-bold tracking-[1px] text-fg-3">SCAN AT CHECK-IN</p>
-              <img
-                src={`${API_ORIGIN}/me/qr.svg`}
-                alt="Your check-in QR code"
-                width={200}
-                height={200}
-                className="mx-auto block"
-              />
             </Card>
           </div>
         )}
