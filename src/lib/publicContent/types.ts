@@ -122,11 +122,17 @@ export const sisterClubRequestSchema = z.object({
 export type SisterClubRequest = z.infer<typeof sisterClubRequestSchema>;
 
 export const GALLERY_CATEGORIES = ['District Events', 'Club Projects', 'Installations', 'Conferences', 'Socials', 'Other'] as const;
+export const GALLERY_TYPES = [
+  { value: 'district', label: 'Main District Gallery' },
+  { value: 'ride', label: 'RIDE Gallery (Delhi Through Our Lens)' },
+] as const;
+
 export const galleryItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   eventName: z.string().nullable().optional(),
   category: z.string().optional().default('District Events'),
+  galleryType: z.string().optional().default('district'),
   imageUrl: z.string(),
   caption: z.string().nullable().optional(),
   date: z.string(),

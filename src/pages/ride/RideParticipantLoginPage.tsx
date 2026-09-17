@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { ArrowLeft, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
-import { useAuth } from '@/app/auth';
-import { apiFetch, ApiError } from '@/lib/api';
+import { useParticipantAuth } from '@/lib/ride/participantAuth';
+import { ApiError } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Button } from '@/components/ui/Button';
 
@@ -10,14 +10,14 @@ export function RideParticipantLoginPage() {
   useDocumentMeta({ title: 'Participant Sign In • Delhi Meri Jaan 2026' });
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { status, refresh } = useAuth();
+  const { status, login } = useParticipantAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // If already authenticated, redirect to dashboard
+  // If already authenticated as a participant, redirect to dashboard
   useEffect(() => {
     if (status === 'authenticated') {
       const next = params.get('next') || '/dashboard';
@@ -36,30 +36,15 @@ export function RideParticipantLoginPage() {
 
     setLoading(true);
     try {
-      let emailToUse = email.trim();
-      if (!emailToUse.includes('@')) {
-        try {
-          const resolved = await apiFetch<{ email: string }>(
-            `/auth-lookup/resolve?identifier=${encodeURIComponent(emailToUse)}`,
-          );
-          if (resolved?.email) {
-            emailToUse = resolved.email;
-          }
-        } catch {
-          // ignore lookup error, proceed with emailToUse
-        }
-      }
-
-      await apiFetch('/auth/sign-in/email', {
-        method: 'POST',
-        body: { email: emailToUse, password: password.trim() },
-      });
-
-      await refresh();
+      await login(email.trim(), password.trim());
       const next = params.get('next') || '/dashboard';
       navigate(next, { replace: true });
     } catch (err: any) {
-      setError(err instanceof ApiError ? err.message : (err?.message || 'Invalid email or password. Please verify your credentials.'));
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : err?.message || 'Invalid credentials or participant account not found. Please contact RIDE administration.',
+      );
       setLoading(false);
     }
   };

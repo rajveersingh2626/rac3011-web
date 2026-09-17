@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { 
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
   Smartphone, Monitor, LogOut, 
   MapPin, Building, QrCode
 } from 'lucide-react';
-import { useAuth } from '@/app/auth';
+import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Card } from '@/components/ui/Card';
@@ -66,14 +65,14 @@ interface AnnouncementMessage {
   tag: string;
 }
 
-const DEFAULT_ANNOUNCEMENTS: AnnouncementMessage[] = [
+const ANNOUNCEMENTS: AnnouncementMessage[] = [
   {
     id: 'msg-1',
-    subject: 'Welcome to Delhi Meri Jaan 2026 • Official Delegate Instructions',
-    date: 'Official Briefing',
-    sender: 'Host Organizing Committee • RID 3011',
-    tag: 'Official Pass',
-    body: 'Dear Delegate,\n\nNamaste from Rotary International District 3011!\n\nWe are delighted to welcome you to the capital for "THE RIDE: DELHI MERI JAAN 2026". Please ensure you have completed all questionnaires in the "Pending Forms" section of this portal to help us coordinate your arrival and accommodations smoothly.\n\nOur hospitality leads will receive you with authentic Dilli refreshments.\n\nWarm regards,\nDistrict Exchange Committee',
+    subject: 'Welcome to Delhi Meri Jaan 2026 — Master Protocol & Logistics',
+    date: 'Host Committee',
+    sender: 'Rtr. Ritik Varshney (RIDE Chair 2026)',
+    tag: 'Protocol',
+    body: 'Dear Delegate,\n\nWelcome to RID 3011! Please ensure your travel dossier and flight/train coordinates are uploaded under the Travel Manifest tab no later than 10 days prior to arrival.\n\nWarm Rotaract Regards,\nOrganizing Committee',
   },
   {
     id: 'msg-2',
@@ -87,19 +86,12 @@ const DEFAULT_ANNOUNCEMENTS: AnnouncementMessage[] = [
 
 export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
-  const { me, signOut } = useAuth();
-  const user = me?.user;
+  const { participant, logout } = useParticipantAuth();
 
-  const { data: participantData } = useQuery({
-    queryKey: ['ride', 'participants', 'me'],
-    queryFn: async () => {
-      try {
-        return await apiFetch<any>('/ride/participants/me');
-      } catch {
-        return null;
-      }
-    },
-  });
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
 
   const [activeTab, setActiveTab] = useState<'status' | 'forms' | 'resources' | 'inbox' | 'sessions'>('status');
   const [allForms, setAllForms] = useState<FormDefinition[]>(() => getStoredForms());
@@ -125,13 +117,13 @@ export function RideParticipantDashboardPage() {
   }, []);
 
   // Compute pending forms: active forms for which this participant hasn't submitted yet
-  const userEmail = participantData?.email || user?.email || '';
-  const userName = participantData?.fullName || user?.name || 'Registered Delegate';
-  const userDistrict = participantData?.homeDistrict || '';
-  const userClub = participantData?.homeClubName || '';
-  const userRef = participantData?.id 
-    ? `DMJ-${participantData.id.slice(0, 6).toUpperCase()}` 
-    : (user?.id ? `DMJ-${user.id.slice(0, 6).toUpperCase()}` : 'DMJ-DELEGATE');
+  const userEmail = participant?.email || '';
+  const userName = participant?.fullName || 'Registered Delegate';
+  const userDistrict = participant?.homeDistrict || '';
+  const userClub = participant?.homeClubName || '';
+  const userRef = participant?.id 
+    ? `DMJ-${participant.id.slice(0, 6).toUpperCase()}` 
+    : 'DMJ-DELEGATE';
 
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
   const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
@@ -229,7 +221,7 @@ export function RideParticipantDashboardPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={signOut}
+              onClick={handleLogout}
               leading={<LogOut size={14} />}
             >
               Log Out
@@ -243,7 +235,7 @@ export function RideParticipantDashboardPage() {
             { id: 'status', label: 'Approval Status', count: undefined },
             { id: 'forms', label: 'Pending Forms', count: pendingForms.length },
             { id: 'resources', label: 'Drive Resources', count: RESOURCES_LIST.length },
-            { id: 'inbox', label: 'Inbox & Announcements', count: DEFAULT_ANNOUNCEMENTS.length },
+            { id: 'inbox', label: 'Inbox & Announcements', count: ANNOUNCEMENTS.length },
             { id: 'sessions', label: 'Active Sessions', count: undefined },
           ].map((tab) => (
             <button
@@ -323,17 +315,17 @@ export function RideParticipantDashboardPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-[#171515]">
-                      {participantData?.hostFamilyName || 'Host Allocation in Progress'}
+                      {participant?.hostFamilyName || 'Host Allocation in Progress'}
                     </h4>
                     <p className="text-xs text-neutral-600 mt-1">
-                      {participantData?.hostFamilyName
-                        ? `Host Assignment: ${participantData.hostFamilyName}`
+                      {participant?.hostFamilyName
+                        ? `Host Assignment: ${participant.hostFamilyName}`
                         : 'Your host Rotaract club and homestay coordinator will be assigned prior to arrivals.'}
                     </p>
                   </div>
                   <div className="pt-2 text-[11px] text-neutral-500 font-bold border-t border-neutral-200">
-                    {participantData?.dietaryPref
-                      ? `Dietary preference recorded: ${participantData.dietaryPref}`
+                    {participant?.dietaryPref
+                      ? `Dietary preference recorded: ${participant.dietaryPref}`
                       : 'Dietary preferences logged with exchange committee.'}
                   </div>
                 </div>
@@ -346,10 +338,10 @@ export function RideParticipantDashboardPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-[#171515]">
-                      {participantData?.cityState || participantData?.arrivalLocation || 'IGI Airport / NDLS Welcome Desk'}
+                      {participant?.cityState || 'IGI Airport / NDLS Welcome Desk'}
                     </h4>
                     <p className="text-xs text-neutral-600 mt-1">
-                      Mode of Arrival: {participantData?.arrivalMode || 'Standard Transit'}<br />
+                      Mode of Arrival: {participant?.arrivalMode || 'Standard Transit'}<br />
                       Transport: DMRC Metro Transit Pass Supported<br />
                       Secretariat Desk: Active 24 Hours on check-in days
                     </p>
@@ -554,7 +546,7 @@ export function RideParticipantDashboardPage() {
             </div>
 
             <div className="space-y-4">
-              {DEFAULT_ANNOUNCEMENTS.map((msg) => (
+              {ANNOUNCEMENTS.map((msg) => (
                 <div
                   key={msg.id}
                   className="rounded-2xl border-2 border-[#171515] bg-white overflow-hidden ride-pop-sm"
@@ -602,7 +594,7 @@ export function RideParticipantDashboardPage() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  onClick={signOut}
+                  onClick={handleLogout}
                   leading={<LogOut size={14} />}
                 >
                   Log Out
@@ -644,7 +636,7 @@ export function RideParticipantDashboardPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    onClick={signOut}
+                    onClick={handleLogout}
                   >
                     Log Out
                   </Button>
