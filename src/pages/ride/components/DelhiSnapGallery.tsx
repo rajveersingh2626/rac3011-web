@@ -3,50 +3,19 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchRideGallery, type PublicGalleryItem } from '@/lib/publicApi/ride';
 import { ChevronDown } from 'lucide-react';
 
-const FALLBACK_SLIDES = [
-  {
-    id: 'snap-fallback-1',
-    url: '/ride/banners/hero_culture.png',
-    kind: 'photo' as const,
-    headingLeft: 'CHANDNI CHOWK',
-    headingRight: 'THE SOUL OF PURANI DILLI',
-  },
-  {
-    id: 'snap-fallback-2',
-    url: '/ride/banners/hero_heritage.png',
-    kind: 'photo' as const,
-    headingLeft: 'QUTUB COMPLEX',
-    headingRight: 'EIGHT CENTURIES OF ARCHITECTURE',
-  },
-  {
-    id: 'snap-fallback-3',
-    url: '/ride/banners/hero_food.png',
-    kind: 'photo' as const,
-    headingLeft: 'STREETS OF FLAVOUR',
-    headingRight: 'CULINARY TRADITIONS OF NCR',
-  },
-  {
-    id: 'snap-fallback-4',
-    url: '/ride/banners/hero_metro.png',
-    kind: 'photo' as const,
-    headingLeft: 'DMRC NETWORK',
-    headingRight: 'LIFELINE CONNECTING MILLIONS',
-  },
-];
-
 export function DelhiSnapGallery() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data } = useQuery({
-    queryKey: ['ride-public-gallery'],
+  const { data, isSuccess } = useQuery({
+    queryKey: ['public', 'ride', 'gallery'],
     queryFn: () => fetchRideGallery(),
   });
 
   const apiItems: PublicGalleryItem[] = data?.items ?? [];
-  const slides = apiItems.length > 0 ? apiItems : FALLBACK_SLIDES;
+  const slides = apiItems;
 
   const scrollToNext = (index: number) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || slides.length === 0) return;
     const nextIndex = (index + 1) % slides.length;
     const target = containerRef.current.children[nextIndex] as HTMLElement;
     target?.scrollIntoView({ behavior: 'smooth' });
@@ -64,12 +33,23 @@ export function DelhiSnapGallery() {
         </div>
       </div>
 
-      {/* Snap-Scroll Container: 100vw by 100vh with CSS snap mandatory */}
-      <div
-        ref={containerRef}
-        className="w-full h-full overflow-y-scroll overflow-x-hidden snap-y snap-mandatory scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
+      {isSuccess && slides.length === 0 ? (
+        <div className="w-full h-full flex flex-col items-center justify-center text-center p-6 text-white">
+          <span className="w-3 h-3 rounded-full bg-[#EA6623] mb-3 animate-pulse" />
+          <h3 className="text-lg sm:text-xl font-black tracking-widest uppercase font-mono text-white">
+            DELHI THROUGH OUR LENS
+          </h3>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-md mt-2 font-mono">
+            Moments from the upcoming edition will appear here as they are published.
+          </p>
+        </div>
+      ) : (
+        /* Snap-Scroll Container: 100vw by 100vh with CSS snap mandatory */
+        <div
+          ref={containerRef}
+          className="w-full h-full overflow-y-scroll overflow-x-hidden snap-y snap-mandatory scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
         {slides.map((slide, idx) => {
           const leftText = (slide as any).headingLeft || (slide as any).caption || 'DELHI MERI JAAN';
           const rightText = (slide as any).headingRight || `EXP 2026 // [${String(idx + 1).padStart(2, '0')}]`;
@@ -149,7 +129,8 @@ export function DelhiSnapGallery() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
     </section>
   );
 }

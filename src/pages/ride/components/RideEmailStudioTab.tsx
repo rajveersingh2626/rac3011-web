@@ -1,86 +1,20 @@
-import { useState } from 'react';
-import { Send, ShieldAlert, Check, Copy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { 
+  Send, Check, Copy, Trash2, Mail, Users, Building, ShieldCheck, 
+  MessageSquare, History, CheckCircle2 
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { 
+  getStoredRideAnnouncements, saveStoredRideAnnouncement, deleteStoredRideAnnouncement,
+  type StoredRideAnnouncement 
+} from '@/lib/ride/formsStorage';
 
-interface EmailTemplate {
-  id: string;
-  slug: string;
-  name: string;
-  subject: string;
-  body: string;
-}
-
-const EMAIL_TEMPLATES: EmailTemplate[] = [
-  {
-    id: 'tpl-1',
-    slug: 'welcome-pass',
-    name: 'Official Delegate Pass & Welcome',
-    subject: 'Welcome to Delhi Meri Jaan 2026 • Your Official Delegate Pass [{{pass_ref}}]',
-    body: `Dear {{delegate_name}},
-
-Namaste from Rotary International District 3011!
-
-We are thrilled to welcome you to the capital for "THE RIDE: DELHI MERI JAAN 2026". Your registration from RID {{district_number}} ({{club_name}}) has been successfully approved.
-
-Your Official Delegate Reference: {{pass_ref}}
-Designated Transit Hub: {{arrival_location}}
-Assigned Host Club: {{host_club_name}}
-
-Please keep your digital pass QR code handy during arrivals at our welcome desks. Our youth exchange leads will meet you with authentic Dilli refreshments and guide you to your host families.
-
-Check the live 4-day itinerary: {{itinerary_url}}
-
-Yours in Rotaract Fellowship,
-Host Organizing Committee • RID 3011
-Delhi Meri Jaan 2026`,
-  },
-  {
-    id: 'tpl-2',
-    slug: 'homestay-match',
-    name: 'Homestay Allocation & Host Family Details',
-    subject: 'Your Dilli Homestay Match • Delhi Meri Jaan 2026',
-    body: `Dear {{delegate_name}},
-
-We are pleased to introduce your host family for Delhi Meri Jaan!
-
-Host Rotaractor: {{host_rotaractor_name}}
-Host Club: {{host_club_name}}
-Location: {{host_neighborhood}}, Delhi NCR
-Contact: {{host_phone}}
-
-Your host family has been briefed regarding your dietary preferences ({{dietary_preference}}) and arrival schedule. Feel free to connect with them on WhatsApp before departing.
-
-Welcome to a home away from home!
-
-Warm regards,
-Homestay & Hospitality Team • RID 3011`,
-  },
-  {
-    id: 'tpl-3',
-    slug: 'farewell-certificate',
-    name: 'Post-Exchange Certificate of Participation',
-    subject: 'Delhi Meri Jaan 2026 • Official Certificate of Exchange & Memories',
-    body: `Dear {{delegate_name}},
-
-Thank you for making Delhi Meri Jaan 2026 an unforgettable celebration of friendship and culture!
-
-Your verified Certificate of Participation has been generated and appended to your Rotaract RID 3011 profile.
-
-Relive the magic on our Snap Gallery: {{gallery_url}}
-
-May the memories of Old Delhi street safaris, Sufi night qawwalis, and late-night laughter stay with you forever.
-
-With warm Rotaract hugs,
-District Rotaract Representative & Exchange Committee
-Rotary International District 3011`,
-  },
-];
-
-function generateBespokeRideEmailHtml(title: string, rawBody: string, ctaUrl: string): string {
+function generateBespokeRideEmailHtml(title: string, rawBody: string): string {
   const paragraphs = rawBody
     .split('\n\n')
-    .filter((p) => p.trim() && !p.startsWith('Your Official Delegate') && !p.startsWith('Check the live') && !p.startsWith('Yours in') && !p.startsWith('Host Organizing') && !p.startsWith('Delhi Meri Jaan') && !p.startsWith('Warm regards') && !p.startsWith('With warm'));
+    .filter((p) => p.trim());
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -98,7 +32,7 @@ function generateBespokeRideEmailHtml(title: string, rawBody: string, ctaUrl: st
 </head>
 <body style="margin: 0; padding: 0; background-color: #FDFBF7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #171515;">
 
-  <!-- 1. CONTINUOUS HORIZONTAL YELLOW LINE TICKER (Homepage Signature Element) -->
+  <!-- Signature Continuous Yellow Bar -->
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FBC02D; border-bottom: 3px solid #171515;">
     <tr>
       <td style="padding: 10px 16px; text-align: center;">
@@ -113,307 +47,417 @@ function generateBespokeRideEmailHtml(title: string, rawBody: string, ctaUrl: st
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FDFBF7; padding: 32px 12px;">
     <tr>
       <td align="center">
-        <!-- 2. Pop-Brutalist White Card Container -->
         <table role="presentation" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 580px; margin: 0 auto; background-color: #FFFFFF; border: 3px solid #171515; border-radius: 20px; box-shadow: 6px 6px 0px #171515; overflow: hidden;">
-          
-          <!-- Card Header Banner -->
           <tr>
-            <td style="padding: 28px 24px 20px; text-align: center; background-color: #FDFBF7; border-bottom: 2px solid #171515;">
-              <!-- Official 2026 Emblem -->
-              <img src="https://ride.rotaract3011.org/ride/logos/2026_logo_coloured.png" alt="Delhi Meri Jaan 2026" width="180" style="max-width: 180px; height: auto; display: inline-block; margin-bottom: 12px;" />
-              
-              <!-- Cultural Slogan Badge -->
-              <div>
-                <span style="display: inline-block; padding: 4px 14px; background-color: #19539D; border: 2px solid #171515; border-radius: 999px; color: #FFFFFF; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;">
-                  Rotary District Exchange &bull; RID 3011
-                </span>
-              </div>
+            <td style="padding: 24px 24px 18px; text-align: center; background-color: #FDFBF7; border-bottom: 2px solid #171515;">
+              <span style="display: inline-block; padding: 4px 14px; background-color: #19539D; border: 2px solid #171515; border-radius: 999px; color: #FFFFFF; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;">
+                Official RIDE Communication &bull; RID 3011
+              </span>
             </td>
           </tr>
 
-          <!-- Card Content Body -->
           <tr>
             <td style="padding: 28px 28px 24px;">
-              <h1 class="email-hero-title" style="margin: 0 0 16px; font-size: 26px; font-weight: 900; line-height: 1.2; text-transform: uppercase; color: #171515; letter-spacing: -0.5px;">
+              <h1 class="email-hero-title" style="margin: 0 0 16px; font-size: 24px; font-weight: 900; line-height: 1.25; text-transform: uppercase; color: #171515; letter-spacing: -0.5px;">
                 ${title}
               </h1>
 
-              ${paragraphs.map((p) => `<p style="margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: #374151;">${p}</p>`).join('')}
+              ${paragraphs.map((p) => `<p style="margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: #374151;">${p.replace(/\n/g, '<br/>')}</p>`).join('')}
 
-              <!-- Event Dispatch Facts Card -->
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 20px 0; background-color: #FFFDF7; border: 2px solid #171515; border-radius: 12px; box-shadow: 3px 3px 0px #171515; overflow: hidden; font-size: 13px;">
-                <tr style="background-color: #FBC02D; border-bottom: 2px solid #171515;">
-                  <td colspan="2" style="padding: 8px 12px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #171515;">
-                    Official Exchange Dispatch Record
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px; padding-top: 16px; border-top: 2px dashed #E5E7EB; text-align: center;">
+                <tr>
+                  <td style="font-size: 11px; color: #6B7280; line-height: 1.5;">
+                    Rotary International District 3011 &bull; Delhi Meri Jaan 2026<br/>
+                    Delivered securely via the RIDE Operations Console.
                   </td>
                 </tr>
-                <tr style="border-bottom: 1px solid #E5E7EB;">
-                  <td style="padding: 8px 12px; color: #6B7280; font-weight: bold; width: 40%;">Delegate Reference</td>
-                  <td style="padding: 8px 12px; font-weight: 900; color: #19539D;">DMJ-902144</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E5E7EB;">
-                  <td style="padding: 8px 12px; color: #6B7280; font-weight: bold;">Transit Arrival Hub</td>
-                  <td style="padding: 8px 12px; font-weight: 700; color: #171515;">IGI Airport T3 / NDLS</td>
-                </tr>
-                <tr style="border-bottom: 1px solid #E5E7EB;">
-                  <td style="padding: 8px 12px; color: #6B7280; font-weight: bold;">Assigned Host Club</td>
-                  <td style="padding: 8px 12px; font-weight: 700; color: #59A835;">RAC Delhi South Central</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 12px; color: #6B7280; font-weight: bold;">Dates</td>
-                  <td style="padding: 8px 12px; font-weight: 700; color: #EA6623;">October 2026 (4-Day Trail)</td>
-                </tr>
               </table>
-
-              <!-- Call To Action Button -->
-              <div style="margin: 26px 0 16px; text-align: center;">
-                <a href="${ctaUrl}" style="background-color: #EA6623; color: #FFFFFF; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; padding: 14px 32px; border: 2px solid #171515; border-radius: 12px; text-decoration: none; display: inline-block; box-shadow: 4px 4px 0px #171515;">
-                  Access Event Portal & Pass &rarr;
-                </a>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Continuous Yellow Accent Strip before Footer -->
-          <tr>
-            <td style="height: 6px; background-color: #FBC02D; border-top: 2px solid #171515; border-bottom: 1px solid #171515;"></td>
-          </tr>
-
-          <!-- Card Footer -->
-          <tr>
-            <td style="padding: 20px 24px; background-color: #FDFBF7; text-align: center; font-size: 11px; color: #6B7280; line-height: 1.5;">
-              <p style="margin: 0 0 6px; font-weight: 700; color: #171515;">
-                Rotaract International District 3011 &bull; The RIDE: Delhi Meri Jaan
-              </p>
-              <p style="margin: 0;">
-                Official Portal: <a href="https://ride.rotaract3011.org" style="color: #19539D; font-weight: bold; text-decoration: underline;">ride.rotaract3011.org</a>
-              </p>
             </td>
           </tr>
         </table>
       </td>
     </tr>
   </table>
-
 </body>
 </html>`;
 }
 
 export function RideEmailStudioTab() {
-  const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate>(EMAIL_TEMPLATES[0]);
-  const [targetAudience, setTargetAudience] = useState('confirmed');
-  const [testRecipient, setTestRecipient] = useState('delegate.preview@rotaract3011.org');
-  const [dryRunSent, setDryRunSent] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<'compose' | 'history'>('compose');
+  const [announcements, setAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
+
+  // Form State
+  const [subject, setSubject] = useState('');
+  const [body, setBody] = useState('');
+  const [audienceScope, setAudienceScope] = useState<'all' | 'district' | 'host_club' | 'individual'>('all');
+  const [targetValue, setTargetValue] = useState('');
+  const [previewMode, setPreviewMode] = useState<'visual' | 'html'>('visual');
+  const [sending, setSending] = useState(false);
+  const [sendSuccess, setSendSuccess] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'visual' | 'html' | 'text'>('visual');
 
-  const previewSubject = selectedTemplate.subject
-    .replace('{{pass_ref}}', 'DMJ-[REF]')
-    .replace('{{district_number}}', '3141');
+  useEffect(() => {
+    const handleSync = () => setAnnouncements(getStoredRideAnnouncements());
+    window.addEventListener('ride_announcements_updated', handleSync);
+    return () => window.removeEventListener('ride_announcements_updated', handleSync);
+  }, []);
 
-  const previewBody = selectedTemplate.body
-    .replace(/\{\{delegate_name\}\}/g, '[Delegate Name]')
-    .replace(/\{\{district_number\}\}/g, '[Home District]')
-    .replace(/\{\{club_name\}\}/g, '[Home Rotaract Club]')
-    .replace(/\{\{pass_ref\}\}/g, 'DMJ-[REF]')
-    .replace(/\{\{arrival_location\}\}/g, '[Transit Hub / Airport Desk]')
-    .replace(/\{\{host_club_name\}\}/g, '[Assigned Host Club]')
-    .replace(/\{\{host_rotaractor_name\}\}/g, '[Host Rotaractor]')
-    .replace(/\{\{host_neighborhood\}\}/g, '[Delhi Neighborhood]')
-    .replace(/\{\{host_phone\}\}/g, '[Host Contact]')
-    .replace(/\{\{dietary_preference\}\}/g, '[Dietary Preference]')
-    .replace(/\{\{itinerary_url\}\}/g, 'https://delhimerijaan.rotaract3011.org/#itinerary')
-    .replace(/\{\{gallery_url\}\}/g, 'https://delhimerijaan.rotaract3011.org/#gallery');
+  const insertToken = (token: string) => {
+    setBody((prev) => prev + ` ${token} `);
+  };
 
   const bespokeHtml = generateBespokeRideEmailHtml(
-    selectedTemplate.name,
-    previewBody,
-    'https://delhimerijaan.rotaract3011.org',
+    subject || 'DELHI MERI JAAN 2026 NOTIFICATION',
+    body || 'Compose your message to view the live responsive preview.'
   );
-
-  const handleDryRunSend = () => {
-    setDryRunSent(true);
-    setTimeout(() => setDryRunSent(false), 4000);
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(previewBody);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
 
   const handleCopyHtml = () => {
     navigator.clipboard.writeText(bespokeHtml);
     setCopiedHtml(true);
-    setTimeout(() => setCopiedHtml(false), 2500);
+    setTimeout(() => setCopiedHtml(false), 2000);
+  };
+
+  const handleSend = () => {
+    if (!subject.trim() || !body.trim()) return;
+    setSending(true);
+
+    setTimeout(() => {
+      saveStoredRideAnnouncement({
+        subject: subject.trim(),
+        body: body.trim(),
+        audienceScope,
+        targetValue: audienceScope === 'all' ? undefined : targetValue.trim(),
+        sender: 'RIDE Organizing Committee (RID 3011)',
+        recipientCount: audienceScope === 'all' ? 65 : audienceScope === 'individual' ? 1 : 12,
+      });
+
+      setAnnouncements(getStoredRideAnnouncements());
+      setSending(false);
+      setSendSuccess(true);
+      setSubject('');
+      setBody('');
+      setTargetValue('');
+
+      setTimeout(() => {
+        setSendSuccess(false);
+        setActiveSubTab('history');
+      }, 1200);
+    }, 600);
+  };
+
+  const handleDeleteAnnouncement = (id: string) => {
+    if (window.confirm('Delete this sent communication record?')) {
+      deleteStoredRideAnnouncement(id);
+      setAnnouncements(getStoredRideAnnouncements());
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Safety Alert Banner */}
-      <div className="p-4 rounded-2xl border-2 border-[#19539D] bg-blue-50/70 flex items-start gap-3 text-xs text-[#19539D] font-bold">
-        <ShieldAlert size={18} className="shrink-0 text-[#19539D] mt-0.5" />
-        <div>
-          <span className="uppercase tracking-wider font-black block">Bespoke Design Architecture:</span>
-          Each template is strictly fixed and tailored for Delhi Meri Jaan 2026, integrating the continuous horizontal yellow line element and official district branding.
+      {/* Navigation Pill Bar */}
+      <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-neutral-200">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('compose')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'compose'
+                ? 'bg-[#19539D] text-white ride-pop-sm'
+                : 'bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-300'
+            }`}
+          >
+            <MessageSquare size={14} />
+            <span>Compose Email Announcement</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('history')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'history'
+                ? 'bg-[#19539D] text-white ride-pop-sm'
+                : 'bg-white hover:bg-neutral-100 text-neutral-700 border border-neutral-300'
+            }`}
+          >
+            <History size={14} />
+            <span>Sent Communications Log ({announcements.length})</span>
+          </button>
+        </div>
+
+        <div className="text-xs font-bold text-neutral-500 font-mono">
+          RIDE Announcements Engine &bull; RID 3011
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Template Selector List */}
-        <div className="lg:col-span-4 space-y-3">
-          <span className="text-xs font-black uppercase tracking-wider text-neutral-600 block">
-            Select Notification Template
-          </span>
-          {EMAIL_TEMPLATES.map((tpl) => (
-            <button
-              key={tpl.id}
-              type="button"
-              onClick={() => setSelectedTemplate(tpl)}
-              className={`w-full text-left p-4 rounded-2xl border-2 border-[#171515] transition-all cursor-pointer ${
-                selectedTemplate.id === tpl.id
-                  ? 'bg-white ride-pop scale-[1.02]'
-                  : 'bg-[#FDFBF7] hover:bg-neutral-100 ride-pop-sm opacity-90'
-              }`}
-            >
-              <div className="font-black text-sm text-[#171515]">{tpl.name}</div>
-              <div className="text-[11px] text-neutral-500 truncate mt-1">{tpl.subject}</div>
-            </button>
-          ))}
-        </div>
-
-        {/* Template Preview and Dry Run */}
-        <div className="lg:col-span-8">
-          <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm space-y-4">
-            {/* Subject Line Bar */}
-            <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-              <div className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Subject Line Preview</div>
-              <div className="text-sm font-black text-[#171515] mt-0.5">{previewSubject}</div>
-            </div>
-
-            {/* Preview Mode Switcher */}
-            <div className="flex items-center justify-between border-b pb-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode('visual')}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    previewMode === 'visual'
-                      ? 'bg-[#171515] text-white'
-                      : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
-                  }`}
-                >
-                  Live Visual Preview
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode('html')}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    previewMode === 'html'
-                      ? 'bg-[#171515] text-white'
-                      : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
-                  }`}
-                >
-                  HTML Source
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode('text')}
-                  className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                    previewMode === 'text'
-                      ? 'bg-[#171515] text-white'
-                      : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
-                  }`}
-                >
-                  Plain Text
-                </button>
+      {activeSubTab === 'compose' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Compose Form Column */}
+          <div className="lg:col-span-6 space-y-4">
+            <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm space-y-4 bg-white">
+              <div>
+                <h3 className="text-sm font-black uppercase text-[#171515] tracking-wide">
+                  Compose Email Announcement
+                </h3>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  Broadcast notices, travel alerts, and hosting updates to visiting delegates and host clubs.
+                </p>
               </div>
 
-              <div className="text-[11px] font-bold text-neutral-500">
-                Continuous Yellow Element: <span className="text-green-700 font-extrabold">Active</span>
-              </div>
-            </div>
+              {/* Audience Scope Selector */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-neutral-800 uppercase tracking-wider block">
+                  Audience Scope
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'all', label: 'All Registered Delegates', icon: Users },
+                    { id: 'district', label: 'Filter by District No.', icon: Building },
+                    { id: 'host_club', label: 'Host Clubs Only', icon: ShieldCheck },
+                    { id: 'individual', label: 'Single Delegate (Email)', icon: Mail },
+                  ].map((scope) => {
+                    const Icon = scope.icon;
+                    return (
+                      <button
+                        key={scope.id}
+                        type="button"
+                        onClick={() => setAudienceScope(scope.id as any)}
+                        className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                          audienceScope === scope.id
+                            ? 'border-[#19539D] bg-blue-50/70 text-[#19539D] ring-2 ring-[#19539D]'
+                            : 'border-neutral-200 hover:bg-neutral-50 text-neutral-700'
+                        }`}
+                      >
+                        <Icon size={14} className="shrink-0" />
+                        <span className="truncate">{scope.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-            {/* Preview Content Area */}
-            {previewMode === 'visual' && (
-              <div className="rounded-2xl border-2 border-[#171515] overflow-hidden bg-neutral-100 shadow-inner">
-                <iframe
-                  title="Bespoke Email Client Preview"
-                  srcDoc={bespokeHtml}
-                  className="w-full h-[460px] border-0 bg-white"
-                />
-              </div>
-            )}
-
-            {previewMode === 'html' && (
-              <div className="p-4 rounded-2xl border-2 border-neutral-300 bg-neutral-900 text-neutral-100 font-mono text-[11px] leading-relaxed max-h-[460px] overflow-y-auto whitespace-pre-wrap">
-                {bespokeHtml}
-              </div>
-            )}
-
-            {previewMode === 'text' && (
-              <div className="p-5 rounded-2xl border-2 border-neutral-200 bg-white font-mono text-xs leading-relaxed whitespace-pre-wrap text-neutral-800 max-h-[460px] overflow-y-auto">
-                {previewBody}
-              </div>
-            )}
-
-            {/* Audience Targeting Filter */}
-            <div className="p-3 bg-[#FDFBF7] rounded-xl border border-neutral-300 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="font-bold text-neutral-700">
-                <span className="text-[#19539D] font-black uppercase tracking-wider block text-[10px]">Restricted Scope:</span>
-                Dispatches are strictly isolated to RIDE Youth Exchange delegates.
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-neutral-600 text-xs">Target Audience:</span>
-                <select
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
-                  className="px-2.5 py-1 rounded-lg border border-neutral-300 bg-white text-xs font-bold text-neutral-800"
-                >
-                  <option value="all">All Registered RIDE Delegates</option>
-                  <option value="confirmed">Confirmed Delegates Only</option>
-                  <option value="approved">Approved & Pending Delegates</option>
-                  <option value="hosts">Assigned Host Club Leads</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="secondary" onClick={handleCopyHtml} leading={copiedHtml ? <Check size={14} /> : <Copy size={14} />}>
-                  {copiedHtml ? 'Copied HTML!' : 'Copy Bespoke HTML'}
-                </Button>
-                <Button size="sm" variant="secondary" onClick={handleCopy} leading={copied ? <Check size={14} /> : <Copy size={14} />}>
-                  {copied ? 'Copied Text!' : 'Copy Text'}
-                </Button>
+                {audienceScope !== 'all' && (
+                  <div className="pt-2">
+                    <input
+                      type="text"
+                      value={targetValue}
+                      onChange={(e) => setTargetValue(e.target.value)}
+                      placeholder={
+                        audienceScope === 'district'
+                          ? 'Enter Rotary District Number (e.g. 3141)'
+                          : audienceScope === 'host_club'
+                            ? 'Enter Host Club Name'
+                            : 'Enter Delegate Email Address'
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                    />
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Subject Line */}
+              <div className="space-y-1">
+                <label className="text-xs font-black text-neutral-800 uppercase tracking-wider block">
+                  Subject Line
+                </label>
                 <input
-                  type="email"
-                  value={testRecipient}
-                  onChange={(e) => setTestRecipient(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-[#171515] text-xs font-medium"
-                  placeholder="Test recipient email"
+                  type="text"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="e.g. Important Itinerary Update: Old Delhi Heritage Walk Coordinates"
+                  className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-xs font-bold text-[#171515] focus:outline-none focus:ring-2 focus:ring-[#19539D]"
                 />
-                <Button size="sm" variant="primary" onClick={handleDryRunSend} leading={<Send size={13} />}>
-                  {dryRunSent ? 'Dry-Run Logged!' : 'Simulate Dry-Run'}
+              </div>
+
+              {/* Variable Token Chips */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-neutral-500 font-bold">
+                  <span>Dynamic Personalization Tokens:</span>
+                  <span className="text-[10px] text-[#EA6623]">Click to insert</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { token: '{{delegate_name}}', label: 'Delegate Name' },
+                    { token: '{{district_number}}', label: 'District No.' },
+                    { token: '{{pass_ref}}', label: 'Pass Ref' },
+                    { token: '{{host_club_name}}', label: 'Host Club' },
+                  ].map((chip) => (
+                    <button
+                      key={chip.token}
+                      type="button"
+                      onClick={() => insertToken(chip.token)}
+                      className="px-2 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-mono font-bold transition-all cursor-pointer border border-neutral-300"
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Message Body */}
+              <div className="space-y-1">
+                <label className="text-xs font-black text-neutral-800 uppercase tracking-wider block">
+                  Announcement Body
+                </label>
+                <textarea
+                  rows={8}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="Write your email content here. Paragraph breaks are supported..."
+                  className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-xs font-sans leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                />
+              </div>
+
+              {/* Submit & Dispatch Action */}
+              <div className="pt-2 flex items-center justify-between gap-3 border-t border-neutral-100">
+                <div className="text-[11px] text-neutral-500 font-medium">
+                  {sendSuccess ? (
+                    <span className="text-green-600 font-black flex items-center gap-1">
+                      <CheckCircle2 size={14} /> Announcement Dispatched!
+                    </span>
+                  ) : (
+                    <span>Ready to broadcast to {audienceScope === 'all' ? 'All Registered Delegates' : 'targeted recipients'}</span>
+                  )}
+                </div>
+
+                <Button
+                  variant="primary"
+                  loading={sending}
+                  disabled={sending || !subject.trim() || !body.trim()}
+                  onClick={handleSend}
+                  leading={<Send size={14} />}
+                >
+                  Broadcast Announcement
                 </Button>
               </div>
-            </div>
+            </Card>
+          </div>
 
-            {dryRunSent && (
-              <div className="p-3 rounded-xl bg-green-50 border border-green-300 text-green-800 text-xs font-bold flex items-center gap-2">
-                <Check size={15} />
-                <span>Simulated dispatch recorded in audit logs for {testRecipient}. No real emails sent.</span>
+          {/* Live Preview Column */}
+          <div className="lg:col-span-6 space-y-4">
+            <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm space-y-3 bg-white">
+              <div className="flex items-center justify-between border-b pb-2">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('visual')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      previewMode === 'visual'
+                        ? 'bg-[#171515] text-white'
+                        : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
+                    }`}
+                  >
+                    Visual Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode('html')}
+                    className={`px-3 py-1 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      previewMode === 'html'
+                        ? 'bg-[#171515] text-white'
+                        : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-700'
+                    }`}
+                  >
+                    HTML Code
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCopyHtml}
+                  className="px-2.5 py-1 rounded-lg border border-neutral-300 text-neutral-600 hover:bg-neutral-100 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  {copiedHtml ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+                  <span>{copiedHtml ? 'Copied' : 'Copy HTML'}</span>
+                </button>
               </div>
-            )}
-          </Card>
+
+              {previewMode === 'visual' ? (
+                <div className="rounded-2xl border-2 border-[#171515] overflow-hidden bg-neutral-100 shadow-inner">
+                  <iframe
+                    title="Live Email Preview"
+                    srcDoc={bespokeHtml}
+                    className="w-full h-[520px] border-0 bg-white"
+                  />
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl border-2 border-neutral-300 bg-neutral-900 text-neutral-100 font-mono text-[11px] leading-relaxed max-h-[520px] overflow-y-auto whitespace-pre-wrap">
+                  {bespokeHtml}
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeSubTab === 'history' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase text-[#171515]">
+              Dispatched Announcements Log
+            </h3>
+            <span className="text-xs text-neutral-500 font-mono font-bold">
+              Total Communications: {announcements.length}
+            </span>
+          </div>
+
+          {announcements.length === 0 ? (
+            <div className="p-12 text-center rounded-2xl border-2 border-dashed border-neutral-300 bg-white">
+              <Mail size={36} className="mx-auto text-neutral-400 mb-2" />
+              <h4 className="text-sm font-black text-neutral-700 uppercase">No Announcements Dispatched Yet</h4>
+              <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+                Use the Compose tab to draft and send official announcements to visiting delegates and host families.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {announcements.map((ann) => (
+                <Card
+                  key={ann.id}
+                  rule="accent"
+                  padding="compact"
+                  className="border-2 border-[#171515] ride-pop-sm bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-sm font-black text-[#171515]">
+                        {ann.subject}
+                      </h4>
+                      <Badge tone={ann.audienceScope === 'all' ? 'green' : 'blue'}>
+                        {ann.audienceScope === 'all'
+                          ? 'All Delegates'
+                          : `${ann.audienceScope}: ${ann.targetValue || ''}`}
+                      </Badge>
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold uppercase">
+                        {ann.deliveryStatus}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-neutral-600 line-clamp-2 leading-relaxed">
+                      {ann.body}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-[10px] text-neutral-400 font-mono pt-1">
+                      <span>Sent: {new Date(ann.sentAt).toLocaleString()}</span>
+                      <span>Recipients: ~{ann.recipientCount}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAnnouncement(ann.id)}
+                      className="p-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 transition-all text-xs flex items-center gap-1 cursor-pointer"
+                      title="Delete Record"
+                    >
+                      <Trash2 size={14} />
+                      <span className="hidden sm:inline text-[11px] font-bold">Remove</span>
+                    </button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-

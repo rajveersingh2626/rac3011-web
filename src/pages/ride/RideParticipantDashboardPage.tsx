@@ -3,7 +3,7 @@ import {
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
   Smartphone, Monitor, LogOut, 
-  MapPin, Building, QrCode
+  MapPin, Building, QrCode, ShieldCheck
 } from 'lucide-react';
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
@@ -14,75 +14,10 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { 
   getStoredForms, getStoredSubmissions, saveStoredSubmission,
-  type FormDefinition, type FormSubmissionRecord 
+  getStoredResources, getStoredRideAnnouncements,
+  type FormDefinition, type FormSubmissionRecord,
+  type StoredDriveResource, type StoredRideAnnouncement
 } from '@/lib/ride/formsStorage';
-
-interface DriveResourceItem {
-  id: string;
-  title: string;
-  category: string;
-  driveUrl: string;
-  description: string;
-}
-
-const RESOURCES_LIST: DriveResourceItem[] = [
-  {
-    id: 'res-1',
-    title: 'Official Delegate Information Kit & 4-Day Itinerary (DMJ 2026)',
-    category: 'Guidelines',
-    driveUrl: 'https://drive.google.com/drive/folders/1a_RIDE2026_Official_Delegate_Dossier',
-    description: 'Master pack including check-in checkpoints, dress codes, Sufi night entry passes, and Old Delhi heritage trail route maps.',
-  },
-  {
-    id: 'res-2',
-    title: 'Host Family Welcome & Hospitality Handbook',
-    category: 'Hospitality',
-    driveUrl: 'https://drive.google.com/drive/folders/1b_Host_Family_Welcome_Handbooks_2026',
-    description: 'Guidelines for delegates staying with Rotaract host families across South Delhi and Central Delhi.',
-  },
-  {
-    id: 'res-3',
-    title: 'Delhi Metro Smart Token & Transit Station Guide',
-    category: 'Transit',
-    driveUrl: 'https://drive.google.com/drive/folders/1c_DMJ2026_DMRC_Transit_Manifests',
-    description: 'Airport Express line guides, station coordination desks, and emergency shuttle dispatch schedules.',
-  },
-  {
-    id: 'res-4',
-    title: 'Official High-Resolution Snap Gallery & Media Kit',
-    category: 'Media',
-    driveUrl: 'https://drive.google.com/drive/folders/1e_Print_Ready_Badges_Vector_Files',
-    description: 'Download promotional assets, Instagram story templates, and live event photo dumps.',
-  },
-];
-
-interface AnnouncementMessage {
-  id: string;
-  subject: string;
-  date: string;
-  sender: string;
-  body: string;
-  tag: string;
-}
-
-const ANNOUNCEMENTS: AnnouncementMessage[] = [
-  {
-    id: 'msg-1',
-    subject: 'Welcome to Delhi Meri Jaan 2026 — Master Protocol & Logistics',
-    date: 'Host Committee',
-    sender: 'Rtr. Ritik Varshney (RIDE Chair 2026)',
-    tag: 'Protocol',
-    body: 'Dear Delegate,\n\nWelcome to RID 3011! Please ensure your travel dossier and flight/train coordinates are uploaded under the Travel Manifest tab no later than 10 days prior to arrival.\n\nWarm Rotaract Regards,\nOrganizing Committee',
-  },
-  {
-    id: 'msg-2',
-    subject: 'Host Family & Transit Hub Coordination',
-    date: 'Hospitality Desk',
-    sender: 'Homestay & Hospitality Team',
-    tag: 'Hospitality',
-    body: 'Greetings!\n\nHost families and club leads have been briefed on dietary preferences and arrival schedules. Transit desks at IGI Airport and New Delhi Railway Station will be equipped to provide your transit kits.\n\nSee you soon on the metro line!',
-  },
-];
 
 export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
@@ -96,6 +31,8 @@ export function RideParticipantDashboardPage() {
   const [activeTab, setActiveTab] = useState<'status' | 'forms' | 'resources' | 'inbox' | 'sessions'>('status');
   const [allForms, setAllForms] = useState<FormDefinition[]>(() => getStoredForms());
   const [allSubmissions, setAllSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
+  const [resources, setResources] = useState<StoredDriveResource[]>(() => getStoredResources());
+  const [announcements, setAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
   
   // Fill Form Modal State
   const [activeFillingForm, setActiveFillingForm] = useState<FormDefinition | null>(null);
@@ -108,11 +45,18 @@ export function RideParticipantDashboardPage() {
   useEffect(() => {
     const handleFormsUpdated = () => setAllForms(getStoredForms());
     const handleSubmissionsUpdated = () => setAllSubmissions(getStoredSubmissions());
+    const handleResourcesUpdated = () => setResources(getStoredResources());
+    const handleAnnouncementsUpdated = () => setAnnouncements(getStoredRideAnnouncements());
+
     window.addEventListener('ride_forms_updated', handleFormsUpdated);
     window.addEventListener('ride_submissions_updated', handleSubmissionsUpdated);
+    window.addEventListener('ride_resources_updated', handleResourcesUpdated);
+    window.addEventListener('ride_announcements_updated', handleAnnouncementsUpdated);
     return () => {
       window.removeEventListener('ride_forms_updated', handleFormsUpdated);
       window.removeEventListener('ride_submissions_updated', handleSubmissionsUpdated);
+      window.removeEventListener('ride_resources_updated', handleResourcesUpdated);
+      window.removeEventListener('ride_announcements_updated', handleAnnouncementsUpdated);
     };
   }, []);
 
@@ -133,7 +77,12 @@ export function RideParticipantDashboardPage() {
 
   const handleOpenForm = (form: FormDefinition) => {
     setActiveFillingForm(form);
-    setFormFieldValues({});
+    const initial: Record<string, any> = {};
+    if (userDistrict) {
+      initial['homeDistrict'] = userDistrict;
+      initial['rotaryDistrict'] = userDistrict;
+    }
+    setFormFieldValues(initial);
     setSubmissionSuccess(false);
   };
 
@@ -145,6 +94,8 @@ export function RideParticipantDashboardPage() {
     if (!activeFillingForm) return;
     setFormSubmitting(true);
 
+    const finalHomeDistrict = userDistrict || formFieldValues.homeDistrict || '3141';
+
     setTimeout(() => {
       saveStoredSubmission({
         formId: activeFillingForm.id,
@@ -152,9 +103,12 @@ export function RideParticipantDashboardPage() {
         category: 'external_delegation',
         participantName: userName,
         participantEmail: userEmail,
-        homeDistrict: formFieldValues.homeDistrict || userDistrict,
+        homeDistrict: finalHomeDistrict,
         status: 'submitted',
-        values: formFieldValues,
+        values: {
+          ...formFieldValues,
+          homeDistrict: finalHomeDistrict,
+        },
       });
 
       // Persist directly to PostgreSQL database via API
@@ -164,7 +118,7 @@ export function RideParticipantDashboardPage() {
           fullName: formFieldValues.pocName || formFieldValues.drrName || userName,
           email: formFieldValues.pocEmail || formFieldValues.drrEmail || userEmail,
           phone: formFieldValues.pocPhone || formFieldValues.drrPhone || '+91 99999 99999',
-          homeDistrict: formFieldValues.homeDistrict || userDistrict || '3141',
+          homeDistrict: finalHomeDistrict,
           homeClubName: formFieldValues.clubName || userClub || 'Rotaract Visiting Club',
           cityState: 'Visiting District Delegation',
           country: 'India',
@@ -184,11 +138,55 @@ export function RideParticipantDashboardPage() {
     }, 600);
   };
 
-  const handleCopyLink = (res: DriveResourceItem) => {
+  const handleCopyLink = (res: StoredDriveResource) => {
     navigator.clipboard.writeText(res.driveUrl);
     setCopiedResId(res.id);
     setTimeout(() => setCopiedResId(null), 2500);
   };
+
+  const isApproved = participant?.approvalStatus === 'approved' || participant?.status === 'approved';
+  const isRejected = participant?.approvalStatus === 'rejected';
+  const hasHostFamily = !!participant?.hostFamilyName;
+  const isDossierComplete = participant?.dossierStatus === 'complete' || participant?.dossierStatus === 'verified';
+
+  const dynamicMilestones = [
+    {
+      step: '01',
+      title: 'Registration Submitted',
+      desc: userDistrict ? `Logged from RID ${userDistrict}` : 'Account verified & active',
+      status: 'completed' as const,
+    },
+    {
+      step: '02',
+      title: isApproved ? 'District Approved' : isRejected ? 'Verification Pending' : 'District Verification',
+      desc: isApproved
+        ? 'Approved by RID 3011'
+        : isRejected
+          ? 'Contact Exchange Secretariat'
+          : 'Under review by RID 3011',
+      status: isApproved ? ('completed' as const) : ('active' as const),
+    },
+    {
+      step: '03',
+      title: 'Host Club & Homestay',
+      desc: hasHostFamily
+        ? (participant?.hostFamilyName || 'Host Family Assigned')
+        : isApproved
+          ? 'Allocation in progress'
+          : 'Awaiting district approval',
+      status: hasHostFamily ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
+    },
+    {
+      step: '04',
+      title: 'Digital Delegate Pass',
+      desc: isDossierComplete && isApproved
+        ? 'Ready for check-in'
+        : isApproved
+          ? 'Submit confirmation form'
+          : 'Awaiting approvals',
+      status: (isDossierComplete && isApproved) ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#171515] py-8 px-4 sm:px-6 lg:px-8">
@@ -205,7 +203,9 @@ export function RideParticipantDashboardPage() {
                 <h1 className="text-xl font-black uppercase text-[#171515] tracking-tight">
                   {userName}
                 </h1>
-                <Badge tone="green">Verified Delegate</Badge>
+                <Badge tone={isApproved ? 'green' : 'amber'}>
+                  {isApproved ? 'Verified Delegate' : 'Pending Verification'}
+                </Badge>
               </div>
               <p className="text-xs text-neutral-600 font-semibold mt-0.5">
                 {userDistrict ? `RID ${userDistrict} · ` : ''}{userClub ? `${userClub} · ` : ''}{userEmail}
@@ -234,8 +234,8 @@ export function RideParticipantDashboardPage() {
           {[
             { id: 'status', label: 'Approval Status', count: undefined },
             { id: 'forms', label: 'Pending Forms', count: pendingForms.length },
-            { id: 'resources', label: 'Drive Resources', count: RESOURCES_LIST.length },
-            { id: 'inbox', label: 'Inbox & Announcements', count: ANNOUNCEMENTS.length },
+            { id: 'resources', label: 'Drive Resources', count: resources.length },
+            { id: 'inbox', label: 'Inbox & Announcements', count: announcements.length },
             { id: 'sessions', label: 'Active Sessions', count: undefined },
           ].map((tab) => (
             <button
@@ -275,12 +275,7 @@ export function RideParticipantDashboardPage() {
 
               {/* Progress Milestones */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {[
-                  { step: '01', title: 'Registration Submitted', desc: 'Received & logged', status: 'completed' },
-                  { step: '02', title: 'District Verification', desc: 'Approved by RID 3011', status: 'completed' },
-                  { step: '03', title: 'Host Club & Homestay', desc: 'RAC Delhi South Central', status: 'completed' },
-                  { step: '04', title: 'Digital Delegate Pass', desc: 'Ready for check-in', status: 'active' },
-                ].map((item) => (
+                {dynamicMilestones.map((item) => (
                   <div
                     key={item.step}
                     className={`p-4 rounded-2xl border-2 transition-all ${
@@ -484,52 +479,63 @@ export function RideParticipantDashboardPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {RESOURCES_LIST.map((res) => (
-                <Card
-                  key={res.id}
-                  rule="accent"
-                  padding="compact"
-                  className="border-2 border-[#171515] ride-pop-sm bg-white flex flex-col justify-between"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <Badge tone="blue">{res.category}</Badge>
-                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                        Authorized Access
-                      </span>
+            {resources.length === 0 ? (
+              <div className="p-10 text-center rounded-2xl border-2 border-dashed border-neutral-300 bg-white">
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  No Google Drive resources currently attached
+                </p>
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  When the RIDE Organizing Committee uploads official drive dossiers, they will be listed here.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {resources.map((res) => (
+                  <Card
+                    key={res.id}
+                    rule="accent"
+                    padding="compact"
+                    className="border-2 border-[#171515] ride-pop-sm bg-white flex flex-col justify-between"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge tone="blue">{res.category}</Badge>
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                          Authorized Access
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-[#171515] leading-snug">
+                        {res.title}
+                      </h4>
+                      <p className="text-xs text-neutral-600 leading-relaxed">
+                        {res.description}
+                      </p>
                     </div>
-                    <h4 className="text-sm font-black text-[#171515] leading-snug">
-                      {res.title}
-                    </h4>
-                    <p className="text-xs text-neutral-600 leading-relaxed">
-                      {res.description}
-                    </p>
-                  </div>
 
-                  <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink(res)}
-                      className="p-1.5 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-neutral-600 text-xs flex items-center gap-1"
-                      title="Copy Drive URL"
-                    >
-                      {copiedResId === res.id ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
-                    </button>
+                    <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyLink(res)}
+                        className="p-1.5 rounded-lg border border-neutral-300 hover:bg-neutral-100 text-neutral-600 text-xs flex items-center gap-1 cursor-pointer"
+                        title="Copy Drive URL"
+                      >
+                        {copiedResId === res.id ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
+                      </button>
 
-                    <a
-                      href={res.driveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#19539D] text-white text-xs font-black hover:bg-blue-800 transition-all"
-                    >
-                      <span>Open in Drive</span>
-                      <ExternalLink size={12} />
-                    </a>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                      <a
+                        href={res.driveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#19539D] text-white text-xs font-black hover:bg-blue-800 transition-all cursor-pointer"
+                      >
+                        <span>Open in Drive</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -545,35 +551,46 @@ export function RideParticipantDashboardPage() {
               </p>
             </div>
 
-            <div className="space-y-4">
-              {ANNOUNCEMENTS.map((msg) => (
-                <div
-                  key={msg.id}
-                  className="rounded-2xl border-2 border-[#171515] bg-white overflow-hidden ride-pop-sm"
-                >
-                  {/* Bespoke Continuous Yellow Line Strip */}
-                  <div className="bg-[#FBC02D] px-4 py-1.5 border-b-2 border-[#171515] flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-[#171515]">
-                    <span>DELHI MERI JAAN 2026 • OFFICIAL DISPATCH</span>
-                    <span>{msg.date}</span>
+            {announcements.length === 0 ? (
+              <div className="p-10 text-center rounded-2xl border-2 border-dashed border-neutral-300 bg-white">
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  No announcements received yet
+                </p>
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Important delegate advisories, event schedules, and logistics broadcasts will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {announcements.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className="rounded-2xl border-2 border-[#171515] bg-white overflow-hidden ride-pop-sm"
+                  >
+                    {/* Bespoke Continuous Yellow Line Strip */}
+                    <div className="bg-[#FBC02D] px-4 py-1.5 border-b-2 border-[#171515] flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-[#171515]">
+                      <span>DELHI MERI JAAN 2026 • OFFICIAL DISPATCH</span>
+                      <span>{new Date(msg.sentAt).toLocaleDateString('en-GB')}</span>
+                    </div>
+
+                    <div className="p-5 space-y-3">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h4 className="text-sm font-black text-[#171515]">{msg.subject}</h4>
+                        <Badge tone="pink">{msg.audienceScope}</Badge>
+                      </div>
+
+                      <div className="text-[11px] text-neutral-500 font-bold">
+                        From: {msg.sender}
+                      </div>
+
+                      <div className="p-4 bg-[#FDFBF7] rounded-xl border border-neutral-200 text-xs leading-relaxed text-neutral-800 whitespace-pre-wrap font-sans">
+                        {msg.body}
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <h4 className="text-sm font-black text-[#171515]">{msg.subject}</h4>
-                      <Badge tone="pink">{msg.tag}</Badge>
-                    </div>
-
-                    <div className="text-[11px] text-neutral-500 font-bold">
-                      From: {msg.sender}
-                    </div>
-
-                    <div className="p-4 bg-[#FDFBF7] rounded-xl border border-neutral-200 text-xs leading-relaxed text-neutral-800 whitespace-pre-wrap font-sans">
-                      {msg.body}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -724,13 +741,34 @@ export function RideParticipantDashboardPage() {
                           <span>{field.placeholder || 'I acknowledge and agree'}</span>
                         </label>
                       ) : (
-                        <input
-                          type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'}
-                          value={formFieldValues[field.name] || ''}
-                          onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                          placeholder={field.placeholder}
-                          className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs"
-                        />
+                        <div>
+                          <input
+                            type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'}
+                            value={
+                              field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))
+                                ? (userDistrict || formFieldValues[field.name] || '')
+                                : (formFieldValues[field.name] || '')
+                            }
+                            onChange={(e) => {
+                              if (field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))) return;
+                              handleFieldChange(field.name, e.target.value);
+                            }}
+                            disabled={field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))}
+                            readOnly={field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))}
+                            placeholder={field.placeholder}
+                            className={`w-full px-3 py-2 rounded-xl border text-xs ${
+                              field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))
+                                ? 'bg-neutral-100 border-neutral-300 text-neutral-600 font-bold cursor-not-allowed select-none'
+                                : 'border-neutral-300'
+                            }`}
+                          />
+                          {field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation')) && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 mt-1 font-semibold">
+                              <ShieldCheck size={13} className="shrink-0" />
+                              <span>Locked: Registered Rotary International District assignment</span>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   ))}

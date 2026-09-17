@@ -84,6 +84,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-members', label: 'Members', to: '/portal/members', perm: 'members:approve' },
       { key: 'admin-effort-log', label: 'Effort log', to: '/portal/admin/effort-log', perm: 'effort:approve' },
       { key: 'admin-events', label: 'Events', to: '/portal/admin/events', perm: 'events:manage' },
+      { key: 'admin-checkin', label: 'Event Check-In', to: '/portal/admin/checkin', perm: 'events:checkin' },
       { key: 'admin-drr-calendar', label: 'DRR Calendar', to: '/portal/admin/drr-calendar', perm: 'drr_calendar:manage' },
       { key: 'admin-feedback', label: 'Feedback', to: '/portal/admin/feedback', perm: 'feedback:review' },
       { key: 'admin-content', label: 'Content', to: '/portal/content', perm: 'content:edit' },
