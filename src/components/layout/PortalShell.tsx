@@ -130,9 +130,10 @@ function ScopeSwitcher() {
 
   if (isSuperAdmin) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11.5px] font-bold text-white shadow-xs">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-[11.5px] font-bold text-white shadow-xs">
         <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
-        District 3011 · Super Admin
+        <span className="hidden sm:inline">District 3011 · Super Admin</span>
+        <span className="sm:hidden">Admin</span>
       </span>
     );
   }
@@ -140,9 +141,10 @@ function ScopeSwitcher() {
   if (isDistrict) {
     const roleKey = me.roles[0]?.roleKey ?? 'council';
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11.5px] font-bold text-white shadow-xs">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-[11.5px] font-bold text-white shadow-xs">
         <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
-        District Secretariat · {roleKey.toUpperCase()}
+        <span className="hidden sm:inline">District Secretariat · {roleKey.toUpperCase()}</span>
+        <span className="sm:hidden">{roleKey.toUpperCase()}</span>
       </span>
     );
   }
@@ -151,9 +153,9 @@ function ScopeSwitcher() {
     const club = me.clubs[0];
     const role = me.roles[0]?.roleKey ?? 'member';
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11.5px] font-semibold text-white/90">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-[11.5px] font-semibold text-white/90">
         <span className="size-1.5 rounded-full bg-[#D81B60]" />
-        {club.shortName} · {role}
+        <span className="truncate max-w-[110px] sm:max-w-none">{club.shortName} · {role}</span>
       </span>
     );
   }
@@ -162,7 +164,7 @@ function ScopeSwitcher() {
     <Menu
       label={me.clubs[0].shortName}
       items={items}
-      triggerClassName="border-white/20 bg-white/10 hover:bg-white/15 text-white min-h-9 py-1 px-3 rounded-full text-[12px] font-bold"
+      triggerClassName="border-white/20 bg-white/10 hover:bg-white/15 text-white min-h-9 py-1 px-2.5 sm:px-3 rounded-full text-[11.5px] sm:text-[12px] font-bold truncate max-w-[120px] sm:max-w-none"
     />
   );
 }

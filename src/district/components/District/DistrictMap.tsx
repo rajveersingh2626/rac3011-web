@@ -238,6 +238,13 @@ export default function DistrictMap({
   const [searchQuery, setSearchQuery] = useState('');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const filteredClubs = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
@@ -783,18 +790,19 @@ export default function DistrictMap({
         <div
           style={{
             position: 'absolute',
-            top: '84px',
-            left: '24px',
+            top: isMobile ? '72px' : '84px',
+            left: isMobile ? '12px' : '24px',
+            right: isMobile ? '12px' : 'auto',
             zIndex: 1000,
             background: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: `2px solid ${activeZoneObj.color}`,
             borderRadius: '12px',
-            padding: '16px 20px',
+            padding: isMobile ? '12px 14px' : '16px 20px',
             boxShadow: '0 12px 32px rgba(0,0,0,0.14)',
-            minWidth: '260px',
-            maxWidth: '320px',
+            minWidth: isMobile ? 'auto' : '260px',
+            maxWidth: isMobile ? 'calc(100% - 24px)' : '320px',
             pointerEvents: 'auto'
           } as CSSProperties}
         >
@@ -856,17 +864,19 @@ export default function DistrictMap({
       <div 
         style={{
           position: 'absolute',
-          bottom: '20px',
-          right: '20px',
+          bottom: isMobile ? 'calc(76px + env(safe-area-inset-bottom, 8px))' : '20px',
+          right: isMobile ? '12px' : '20px',
+          left: isMobile ? '12px' : 'auto',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          justifyContent: isMobile ? 'space-between' : 'flex-end',
+          gap: isMobile ? '6px' : '10px',
           zIndex: 1000,
           pointerEvents: 'auto',
           flexWrap: 'wrap'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '10px', pointerEvents: 'auto', flexWrap: 'wrap', width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
           {/* Segmented View Mode Control: Map View vs Cards/Tiles View */}
           <div
             style={{
@@ -884,8 +894,9 @@ export default function DistrictMap({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
+                gap: '5px',
+                padding: isMobile ? '6px 9px' : '6px 12px',
+                minHeight: '38px',
                 borderRadius: '6px',
                 border: 'none',
                 background: viewMode === 'map' ? 'var(--rotaract-pink)' : 'transparent',
@@ -896,15 +907,16 @@ export default function DistrictMap({
                 transition: 'all 0.2s ease'
               }}
             >
-              <MapIcon size={14} /> Map View
+              <MapIcon size={14} /> Map
             </button>
             <button
               onClick={() => setViewMode('cards')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
+                gap: '5px',
+                padding: isMobile ? '6px 9px' : '6px 12px',
+                minHeight: '38px',
                 borderRadius: '6px',
                 border: 'none',
                 background: viewMode === 'cards' ? 'var(--rotaract-pink)' : 'transparent',
@@ -915,7 +927,7 @@ export default function DistrictMap({
                 transition: 'all 0.2s ease'
               }}
             >
-              <LayoutGrid size={14} /> Cards / Tiles View
+              <LayoutGrid size={14} /> Cards
             </button>
           </div>
 
@@ -926,17 +938,19 @@ export default function DistrictMap({
               backdropFilter: 'blur(16px)',
               border: '1px solid rgba(216, 27, 96, 0.2)',
               borderRadius: '8px',
-              padding: '6px 16px',
+              padding: '6px 12px',
+              minHeight: '38px',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+              gap: '6px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+              flex: isMobile ? 1 : 'none'
             }}
           >
-            <Search size={16} style={{ color: 'var(--rotaract-pink)' }} />
+            <Search size={15} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
             <input
               type="text"
-              placeholder="Search club name..."
+              placeholder="Search club..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -944,17 +958,16 @@ export default function DistrictMap({
                 border: 'none',
                 outline: 'none',
                 color: '#1E1E24',
-                fontSize: '0.84rem',
+                fontSize: '0.82rem',
                 fontWeight: 600,
-                width: '160px'
+                width: isMobile ? '100%' : '160px',
+                minWidth: '60px'
               }}
             />
             {searchQuery && (
-              <X size={14} style={{ color: '#71717A', cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
+              <X size={14} style={{ color: '#71717A', cursor: 'pointer', flexShrink: 0 }} onClick={() => setSearchQuery('')} />
             )}
           </div>
-
-
 
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
@@ -963,18 +976,19 @@ export default function DistrictMap({
               backdropFilter: 'blur(16px)',
               border: '1px solid rgba(216, 27, 96, 0.25)',
               color: 'var(--rotaract-pink)',
-              width: '40px',
-              height: '40px',
+              width: '38px',
+              height: '38px',
               borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.06)'
+              boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+              flexShrink: 0
             }}
             title={isFullScreen ? "Exit Fullscreen" : "Full Screen Mode"}
           >
-            {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            {isFullScreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
           </button>
         </div>
       </div>

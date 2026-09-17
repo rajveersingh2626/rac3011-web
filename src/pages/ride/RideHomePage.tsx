@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { ArrowRight, Sparkles, MapPin, HeartHandshake, Award } from 'lucide-react';
+import { ArrowRight, Sparkles, MapPin, HeartHandshake, Award, Menu, X } from 'lucide-react';
 import {
   AutoRickshawBadge,
   ChaiKulhadBadge,
@@ -22,6 +22,8 @@ import { RideTeamSection } from './components/RideTeamSection';
 import { PersistentVerticalSpine } from './components/PersistentVerticalSpine';
 
 export function RideHomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     document.title = 'RIDE: Delhi Meri Jaan | Rotaract District 3011';
   }, []);
@@ -113,14 +115,69 @@ export function RideHomePage() {
             </Link>
           </nav>
 
-          {/* Right Action Button -> Directly to /dashboard */}
-          <Link
-            to="/dashboard"
-            className="px-4 sm:px-6 py-2 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white font-black text-xs sm:text-sm uppercase tracking-wider ride-pop-sm hover:bg-orange-600 transition-all inline-flex items-center gap-1.5"
-          >
-            <span>Join The Ride</span>
-          </Link>
+          {/* Right Action Button -> Directly to /dashboard & Mobile Menu Toggle */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link
+              to="/dashboard"
+              className="px-3.5 sm:px-6 py-2 rounded-xl border-2 sm:border-3 border-[#171515] bg-[#EA6623] text-white font-black text-xs sm:text-sm uppercase tracking-wider ride-pop-sm hover:bg-orange-600 transition-all inline-flex items-center gap-1.5"
+            >
+              <span>Join The Ride</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-xl border-2 border-[#171515] bg-white text-[#171515] hover:bg-neutral-100 transition-colors cursor-pointer flex items-center justify-center min-h-[40px] min-w-[40px]"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t-2 border-[#171515]/10 bg-[#FDFBF7] px-4 py-4 space-y-2 shadow-lg animate-in slide-in-from-top-2 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                scrollToSection('four-pillars');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-3.5 py-2.5 rounded-lg font-bold text-neutral-800 hover:bg-[#EA6623]/10 hover:text-[#EA6623] transition-colors text-sm cursor-pointer"
+            >
+              Experience
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                scrollToSection('gallery');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-3.5 py-2.5 rounded-lg font-bold text-neutral-800 hover:bg-[#EA6623]/10 hover:text-[#EA6623] transition-colors text-sm cursor-pointer"
+            >
+              Delhi Through Our Lens
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                scrollToSection('our-team');
+                setMobileMenuOpen(false);
+              }}
+              className="w-full text-left px-3.5 py-2.5 rounded-lg font-bold text-neutral-800 hover:bg-[#EA6623]/10 hover:text-[#EA6623] transition-colors text-sm cursor-pointer"
+            >
+              Our Team
+            </button>
+            <Link
+              to="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-lg font-extrabold text-[#19539D] hover:bg-blue-50 transition-colors text-sm"
+            >
+              <span>Participant Portal</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        )}
       </header>
 
       {/* Reduced-density Floating Badges (strictly placed in extreme margins with low z-index) */}
@@ -168,7 +225,7 @@ export function RideHomePage() {
         </div>
 
         {/* Grand Headline */}
-        <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-[#171515] leading-[0.94] uppercase mt-2 sm:mt-4 mb-4 sm:mb-6 max-w-6xl z-10">
+        <h1 className="text-2xl sm:text-5xl md:text-7xl lg:text-[6.5rem] font-black tracking-tighter text-[#171515] leading-[0.94] uppercase mt-2 sm:mt-4 mb-4 sm:mb-6 max-w-6xl z-10 break-words">
           THE RIDE <span className="text-[#C72425]">•</span> DELHI MERI JAAN
         </h1>
 
@@ -177,19 +234,19 @@ export function RideHomePage() {
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 z-10">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 z-10 w-full max-w-md sm:max-w-none">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-3 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl border-3 border-[#171515] bg-[#EA6623] text-white text-base sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-orange-600 transition-all ride-pop-active cursor-pointer"
+            className="inline-flex items-center justify-center gap-2.5 px-6 sm:px-10 py-3 sm:py-4 rounded-2xl border-3 border-[#171515] bg-[#EA6623] text-white text-sm sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-orange-600 transition-all ride-pop-active cursor-pointer min-w-[170px]"
           >
             <span>Join The Ride</span>
-            <ArrowRight size={20} />
+            <ArrowRight size={18} />
           </Link>
 
           <button
             type="button"
             onClick={() => scrollToSection('four-pillars')}
-            className="inline-flex items-center gap-2.5 px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl border-3 border-[#171515] bg-white text-[#171515] text-base sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-neutral-100 transition-all ride-pop-active cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-6 sm:px-10 py-3 sm:py-4 rounded-2xl border-3 border-[#171515] bg-white text-[#171515] text-sm sm:text-lg font-black uppercase tracking-wider ride-pop-lg hover:bg-neutral-100 transition-all ride-pop-active cursor-pointer min-w-[170px]"
           >
             <span>Explore Experience</span>
           </button>
