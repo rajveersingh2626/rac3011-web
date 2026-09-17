@@ -3,7 +3,6 @@ import { createBrowserRouter, Link, Outlet, ScrollRestoration, useLocation, type
 import { Images, Compass, LayoutDashboard } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { useAuth } from '@/app/auth';
 import { portalHref } from '@/app/host';
 import { SurfaceLoading } from './SurfaceLoading';
 
@@ -23,8 +22,10 @@ function SubdomainAdminRedirect() {
   return <SurfaceLoading />;
 }
 
+import { ParticipantAuthProvider, useParticipantAuth } from '@/lib/ride/participantAuth';
+
 function RequireRideParticipantAuth() {
-  const { status } = useAuth();
+  const { status } = useParticipantAuth();
   if (status === 'loading') return <SurfaceLoading />;
   if (status !== 'authenticated') {
     return <RideParticipantLoginPage />;
@@ -33,7 +34,7 @@ function RequireRideParticipantAuth() {
 }
 
 function RideSubpageHeader() {
-  const { me } = useAuth();
+  const { participant } = useParticipantAuth();
   return (
     <header className="sticky top-0 z-40 border-b-2 border-[#171515] bg-[#FDFBF7]/95 px-4 py-3 backdrop-blur-md sm:px-8 shadow-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -50,7 +51,7 @@ function RideSubpageHeader() {
             to="/dashboard"
             className="px-3.5 py-1.5 rounded-xl bg-[#19539D] text-white hover:bg-blue-800 transition-all font-black text-xs"
           >
-            {me ? 'My Dashboard' : 'Participant Portal'}
+            {participant ? 'My Dashboard' : 'Participant Portal'}
           </Link>
         </nav>
       </div>
@@ -69,12 +70,14 @@ function Layout() {
   ];
 
   return (
-    <SubdomainShell surface="ride" title="RIDE: Delhi Meri Jaan" nav={nav}>
-      {!isHomePage && <RideSubpageHeader />}
-      <Suspense fallback={<SurfaceLoading />}>
-        <Outlet />
-      </Suspense>
-    </SubdomainShell>
+    <ParticipantAuthProvider>
+      <SubdomainShell surface="ride" title="RIDE: Delhi Meri Jaan" nav={nav}>
+        {!isHomePage && <RideSubpageHeader />}
+        <Suspense fallback={<SurfaceLoading />}>
+          <Outlet />
+        </Suspense>
+      </SubdomainShell>
+    </ParticipantAuthProvider>
   );
 }
 

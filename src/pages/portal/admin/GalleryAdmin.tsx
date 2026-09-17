@@ -1,5 +1,5 @@
 import { galleryApi } from '@/lib/publicContent/api';
-import { GALLERY_CATEGORIES, type GalleryItem } from '@/lib/publicContent/types';
+import { GALLERY_CATEGORIES, GALLERY_TYPES, type GalleryItem } from '@/lib/publicContent/types';
 import { Badge } from '@/components/ui/Badge';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
@@ -18,11 +18,12 @@ export function GalleryAdmin({ canWrite }: { canWrite: boolean }) {
       crud={galleryApi}
       orderable
       canWrite={canWrite}
-      writableKeys={['title', 'eventName', 'category', 'imageUrl', 'caption', 'date']}
+      writableKeys={['title', 'eventName', 'category', 'galleryType', 'imageUrl', 'caption', 'date']}
       emptyValues={{
         title: '',
         eventName: '',
         category: 'District Events',
+        galleryType: 'district',
         imageUrl: '',
         caption: '',
         date: today,
@@ -56,6 +57,15 @@ export function GalleryAdmin({ canWrite }: { canWrite: boolean }) {
           ),
         },
         {
+          key: 'galleryType',
+          header: 'Target Gallery',
+          cell: (r) => (
+            <Badge tone={r.galleryType === 'ride' ? 'amber' : 'neutral'}>
+              {r.galleryType === 'ride' ? 'RIDE Gallery' : 'Main District'}
+            </Badge>
+          ),
+        },
+        {
           key: 'category',
           header: 'Category',
           cell: (r) => <Badge tone="neutral">{r.category || 'District Events'}</Badge>,
@@ -68,6 +78,13 @@ export function GalleryAdmin({ canWrite }: { canWrite: boolean }) {
       ]}
       renderForm={({ values, setValues }) => (
         <div className="flex flex-col gap-4">
+          <Field label="Target Gallery Destination" required hint="Classify whether this photo appears in the Main District Gallery or the RIDE Snap-Scroll">
+            <Select
+              options={GALLERY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+              value={values.galleryType ?? 'district'}
+              onChange={(e) => setValues({ galleryType: e.target.value })}
+            />
+          </Field>
           <Field label="Photo Title" required hint="Brief caption or descriptive headline">
             <Input
               value={values.title ?? ''}
