@@ -2,17 +2,18 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
-import { BrowserQRCodeReader, type IScannerControls } from '@zxing/browser';
+import { Html5Qrcode } from 'html5-qrcode';
 import { 
   QrCode, Camera, Users, Download, 
   CheckCircle2, AlertTriangle, XCircle, RefreshCw, 
-  Search, ShieldCheck, Ticket, UserCheck, ExternalLink
+  Search, ShieldCheck, Ticket, UserCheck, ExternalLink,
+  Send
 } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { fetchAdminEvents } from '@/lib/events/api';
 import { 
   fetchEventCheckins, postEventCheckin, downloadCheckinCsv, 
-  fetchEventTicket, type EventTicket 
+  fetchEventTicket, dispatchCheckinTickets, type EventTicket, type DispatchResult
 } from '@/lib/events/checkinApi';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
@@ -86,14 +87,22 @@ export function EventCheckinPage() {
 
   const events = eventsData?.items ?? [];
 
+  // Filter only upcoming and active events (events started today or in the future)
+  const upcomingEvents = useMemo(() => {
+    const cutoff = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12h grace window for today's ongoing events
+    return events.filter((e) => new Date(e.startsAt) >= cutoff);
+  }, [events]);
+
+  const activeEventsList = upcomingEvents.length > 0 ? upcomingEvents : events;
+
   // Match active event by ID or slug
   const activeEvent = useMemo(() => {
-    if (!events.length) return null;
+    if (!activeEventsList.length) return null;
     if (slug) {
-      return events.find((e) => e.slug === slug || e.id === slug) ?? events[0];
+      return activeEventsList.find((e) => e.slug === slug || e.id === slug) ?? activeEventsList[0];
     }
-    return events[0];
-  }, [events, slug]);
+    return activeEventsList[0];
+  }, [activeEventsList, slug]);
 
   const eventId = activeEvent?.id;
 
@@ -123,8 +132,7 @@ export function EventCheckinPage() {
     description: 'Aim camera at attendee’s QR ticket or profile badge.',
   });
 
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const controlsRef = useRef<IScannerControls | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const lastScannedTokenRef = useRef<{ token: string; time: number } | null>(null);
 
   // Manual Check-in Form
@@ -135,6 +143,46 @@ export function EventCheckinPage() {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [ticketData, setTicketData] = useState<EventTicket | null>(null);
   const [ticketLoading, setTicketLoading] = useState(false);
+
+  // Audience Targeting & Automated Dispatch Modal
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [dispatchAudience, setDispatchAudience] = useState<
+    'all_members' | 'presidents' | 'secretaries' | 'dac_members' | 'custom_emails'
+  >('all_members');
+  const [customEmailsInput, setCustomEmailsInput] = useState('');
+  const [dispatchResult, setDispatchResult] = useState<DispatchResult | null>(null);
+
+  const dispatchMutation = useMutation({
+    mutationFn: (payload: {
+      audience: 'all_members' | 'presidents' | 'secretaries' | 'dac_members' | 'custom_emails';
+      customEmails?: string[];
+    }) => dispatchCheckinTickets(eventId!, payload),
+    onSuccess: (res) => {
+      setDispatchResult(res);
+    },
+    onError: (err: any) => {
+      alert(err.message || 'Failed to dispatch tickets');
+    },
+  });
+
+  const handleTriggerDispatch = () => {
+    let customEmails: string[] | undefined;
+    if (dispatchAudience === 'custom_emails') {
+      customEmails = customEmailsInput
+        .split(/[\n,;]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.includes('@'));
+      if (customEmails.length === 0) {
+        alert('Please enter at least one valid email address.');
+        return;
+      }
+    }
+    setDispatchResult(null);
+    dispatchMutation.mutate({
+      audience: dispatchAudience,
+      customEmails,
+    });
+  };
 
   // Search in table
   const [searchQuery, setSearchQuery] = useState('');
@@ -197,60 +245,103 @@ export function EventCheckinPage() {
     checkinMutation.mutate({ qrToken: text });
   };
 
-  // Enumerate video devices
+  // Start / Stop Html5Qrcode high-performance camera scanning with permission handling
   useEffect(() => {
-    if (activeTab !== 'camera') return;
-
-    BrowserQRCodeReader.listVideoInputDevices()
-      .then((videoDevices) => {
-        setDevices(videoDevices);
-        if (videoDevices.length > 0) {
-          // Prefer back/environment camera if available
-          const backCam = videoDevices.find((d) =>
-            /back|rear|environment/i.test(d.label),
-          );
-          setSelectedDeviceId(backCam ? backCam.deviceId : videoDevices[0].deviceId);
-        }
-      })
-      .catch((err) => {
-        setCameraError(err.message || 'Failed to enumerate camera devices.');
-      });
-  }, [activeTab]);
-
-  // Start / Stop ZXing camera scanning
-  useEffect(() => {
-    if (activeTab !== 'camera' || !videoRef.current || !selectedDeviceId || !eventId) {
-      if (controlsRef.current) {
-        controlsRef.current.stop();
-        controlsRef.current = null;
+    if (activeTab !== 'camera' || !eventId) {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(() => {});
       }
       return;
     }
 
-    const codeReader = new BrowserQRCodeReader();
-    setCameraError(null);
+    let isMounted = true;
+    const scannerId = 'html5-qr-scanner-box';
 
-    codeReader
-      .decodeFromVideoDevice(
-        selectedDeviceId,
-        videoRef.current,
-        (result) => {
-          if (result) {
-            handleScanText(result.getText());
+    async function startScanner() {
+      try {
+        setCameraError(null);
+
+        // 1. Explicitly prompt / check camera permission
+        if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'environment' },
+            });
+            stream.getTracks().forEach((track) => track.stop());
+          } catch (permErr: any) {
+            if (!isMounted) return;
+            setCameraError(
+              permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError'
+                ? 'Camera access denied. Please allow camera permissions in your browser settings.'
+                : (permErr?.message || 'Unable to access camera.')
+            );
+            return;
           }
-        },
-      )
-      .then((controls) => {
-        controlsRef.current = controls;
-      })
-      .catch((err) => {
-        setCameraError(err.message || 'Unable to access camera. Please allow camera permissions.');
-      });
+        }
+
+        // 2. Enumerate cameras
+        try {
+          const videoDevices = await Html5Qrcode.getCameras();
+          if (!isMounted) return;
+          setDevices(videoDevices as unknown as MediaDeviceInfo[]);
+
+          if (!videoDevices || videoDevices.length === 0) {
+            setCameraError('No camera found on this device.');
+            return;
+          }
+
+          if (!selectedDeviceId) {
+            const backCam = videoDevices.find((d) =>
+              /back|rear|environment/i.test(d.label),
+            );
+            setSelectedDeviceId(backCam ? backCam.id : videoDevices[0].id);
+          }
+        } catch {
+          // Continue with default facingMode constraint
+        }
+
+        // 3. Stop previous instance if active
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+          await html5QrCodeRef.current.stop();
+        }
+
+        // 4. Initialize Html5Qrcode instance
+        const scanner = new Html5Qrcode(scannerId, false);
+        html5QrCodeRef.current = scanner;
+
+        const cameraConfig = selectedDeviceId
+          ? { deviceId: { exact: selectedDeviceId } }
+          : { facingMode: 'environment' };
+
+        await scanner.start(
+          cameraConfig,
+          {
+            fps: 25,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          (decodedText) => {
+            handleScanText(decodedText);
+          },
+          () => {
+            // Frame decode miss - normal during search
+          }
+        );
+      } catch (err: any) {
+        if (!isMounted) return;
+        setCameraError(err?.message || 'Unable to start camera. Please verify device permissions.');
+      }
+    }
+
+    const timer = setTimeout(() => {
+      void startScanner();
+    }, 150);
 
     return () => {
-      if (controlsRef.current) {
-        controlsRef.current.stop();
-        controlsRef.current = null;
+      isMounted = false;
+      clearTimeout(timer);
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.stop().catch(() => {});
       }
     };
   }, [activeTab, selectedDeviceId, eventId]);
@@ -338,12 +429,12 @@ export function EventCheckinPage() {
               <select
                 value={activeEvent.id}
                 onChange={(e) => {
-                  const ev = events.find((item) => item.id === e.target.value);
+                  const ev = activeEventsList.find((item) => item.id === e.target.value);
                   if (ev) navigate(`/portal/admin/events/${ev.slug || ev.id}`);
                 }}
                 className="w-full rounded-xl border border-line bg-surface px-3 py-2 text-sm font-bold text-fg focus:outline-none focus:ring-2 focus:ring-accent"
               >
-                {events.map((ev) => (
+                {activeEventsList.map((ev) => (
                   <option key={ev.id} value={ev.id}>
                     {ev.title} ({new Date(ev.startsAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })})
                   </option>
@@ -353,6 +444,19 @@ export function EventCheckinPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setDispatchResult(null);
+                setShowDispatchModal(true);
+              }}
+              className="flex items-center gap-1.5"
+            >
+              <Send className="size-4" />
+              Dispatch Tickets
+            </Button>
+
             <Button
               variant="secondary"
               size="sm"
@@ -456,11 +560,9 @@ export function EventCheckinPage() {
             {activeTab === 'camera' ? (
               <Card tone="plain" className="overflow-hidden p-0">
                 <div className="relative aspect-square w-full bg-black overflow-hidden flex items-center justify-center">
-                  <video
-                    ref={videoRef}
-                    className="h-full w-full object-cover"
-                    playsInline
-                    muted
+                  <div
+                    id="html5-qr-scanner-box"
+                    className="h-full w-full overflow-hidden flex items-center justify-center [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
                   />
 
                   {/* Reticle Overlay */}
@@ -726,6 +828,104 @@ export function EventCheckinPage() {
                 Could not generate ticket pass for this event. Please verify your membership profile.
               </p>
             )}
+          </Modal>
+        )}
+        {/* Audience Targeting & Automated Ticket Dispatch Modal */}
+        {showDispatchModal && (
+          <Modal open title="Dispatch Entry Tickets • Automated Mailer" onClose={() => setShowDispatchModal(false)}>
+            <div className="flex flex-col gap-5">
+              <div>
+                <p className="text-xs text-fg-3">
+                  Targeted members will automatically receive a branded event ticket with a dynamic, cryptographic entry pass via email.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-fg-2">
+                  Target Audience
+                </label>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { id: 'all_members', title: 'All Members', desc: 'Every registered active member in District 3011' },
+                    { id: 'presidents', title: 'Club Presidents', desc: 'All current active club presidents' },
+                    { id: 'secretaries', title: 'Club Secretaries', desc: 'All current active club secretaries' },
+                    { id: 'dac_members', title: 'DAC & District Team', desc: 'District council, ZRR, and secretariat officers' },
+                    { id: 'custom_emails', title: 'Custom Email Addresses', desc: 'Specific guest or attendee email addresses' },
+                  ].map((target) => (
+                    <label
+                      key={target.id}
+                      className={cn(
+                        'flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-all',
+                        dispatchAudience === target.id
+                          ? 'border-accent bg-accent/5 ring-1 ring-accent'
+                          : 'border-line hover:border-fg-3/40 bg-surface'
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="audience"
+                        value={target.id}
+                        checked={dispatchAudience === target.id}
+                        onChange={() => setDispatchAudience(target.id as any)}
+                        className="mt-0.5 text-accent focus:ring-accent"
+                      />
+                      <div>
+                        <div className="text-xs font-bold text-fg">{target.title}</div>
+                        <div className="text-[11px] text-fg-3">{target.desc}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {dispatchAudience === 'custom_emails' && (
+                <Field
+                  label="Email Addresses"
+                  hint="Separate multiple emails with commas or new lines"
+                  required
+                >
+                  <textarea
+                    rows={3}
+                    placeholder="rtr.john@example.com, guest@rotary.org"
+                    value={customEmailsInput}
+                    onChange={(e) => setCustomEmailsInput(e.target.value)}
+                    className="w-full rounded-xl border border-line bg-surface p-2.5 text-xs font-mono text-fg placeholder:text-fg-3 focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </Field>
+              )}
+
+              {dispatchResult && (
+                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3.5 text-xs text-emerald-900 dark:text-emerald-200">
+                  <div className="flex items-center gap-2 font-bold mb-1">
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                    Automated Dispatch Triggered Successfully!
+                  </div>
+                  <p className="text-[11px]">
+                    Queued {dispatchResult.dispatchedCount} dynamic entry tickets for delivery via background email pool.
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 border-t border-line pt-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowDispatchModal(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleTriggerDispatch}
+                  disabled={dispatchMutation.isPending}
+                  className="flex items-center gap-1.5"
+                >
+                  <Send className="size-4" />
+                  {dispatchMutation.isPending ? 'Queuing…' : 'Send Automated Tickets'}
+                </Button>
+              </div>
+            </div>
           </Modal>
         )}
       </Section>

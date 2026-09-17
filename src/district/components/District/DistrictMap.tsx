@@ -185,8 +185,7 @@ export default function DistrictMap({
   const mapInstanceRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<LeafletMarker[]>([]);
 
-  // Same query key as `DistrictApp`, so TanStack serves both from one fetch.
-  const { clubs: rosterClubs, isLive } = useDistrictClubs();
+  const { clubs: rosterClubs } = useDistrictClubs();
   const zoneNameById = useZoneNames();
   const activeClubs: MapClub[] = clubs && clubs.length > 0 ? clubs : rosterClubs;
 
@@ -858,60 +857,15 @@ export default function DistrictMap({
         style={{
           position: 'absolute',
           bottom: '20px',
-          left: '20px',
           right: '20px',
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '16px',
+          gap: '10px',
           zIndex: 1000,
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
           flexWrap: 'wrap'
         }}
       >
-        <div 
-          style={{
-            background: 'rgba(255, 255, 255, 0.94)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            border: '1px solid rgba(216, 27, 96, 0.2)',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            color: '#1E1E24',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
-            pointerEvents: 'auto'
-          } as CSSProperties}
-        >
-          <div 
-            style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              backgroundColor: activeZoneObj ? activeZoneObj.color : '#D81B60',
-              boxShadow: `0 0 12px ${activeZoneObj ? activeZoneObj.color : '#D81B60'}`,
-              animation: 'neonPulse 1.8s infinite ease-in-out'
-            }}
-          />
-          <div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 900, letterSpacing: '0.5px', color: '#1E1E24', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {activeZoneObj ? `${activeZoneObj.name.toUpperCase()} (${activeZoneObj.hindiName})` : 'ROTARACT DISTRICT 3011 • DIRECTORY'}
-              {isLive && (
-                <span className="pill-pink" style={{ fontSize: '0.68rem', padding: '2px 8px' }}>
-                  <CheckCircle2 size={10} /> RY 2026-27 Active
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: '0.74rem', color: '#4A4A5A', fontWeight: 600 }}>
-              {activeZoneObj 
-                ? `ZRR: ${activeZoneObj.zrr} • ZRS: ${activeZoneObj.zrs} • ${activeClubs.filter(c => clubMatchesZone(c, activeZoneObj.id)).length} Clubs`
-                : `4 Elemental Zones (Prithvi, Agni, Vayu, Akash) • ${activeClubs.length} Active Clubs`}
-            </div>
-          </div>
-        </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'auto', flexWrap: 'wrap' }}>
           {/* Segmented View Mode Control: Map View vs Cards/Tiles View */}
           <div
@@ -982,7 +936,7 @@ export default function DistrictMap({
             <Search size={16} style={{ color: 'var(--rotaract-pink)' }} />
             <input
               type="text"
-              placeholder="Search full club name..."
+              placeholder="Search club name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -992,54 +946,12 @@ export default function DistrictMap({
                 color: '#1E1E24',
                 fontSize: '0.84rem',
                 fontWeight: 600,
-                width: '170px'
+                width: '160px'
               }}
             />
             {searchQuery && (
               <X size={14} style={{ color: '#71717A', cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
             )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => handleZoneSelect(null)}
-              style={{
-                background: !activeZoneId ? '#FFFFFF' : '#0E0E0E',
-                backdropFilter: 'blur(12px)',
-                color: !activeZoneId ? '#0E0E0E' : '#FFFFFF',
-                border: !activeZoneId ? '2px solid #0E0E0E' : '1px solid #0E0E0E',
-                padding: '7px 14px',
-                borderRadius: '8px',
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                transition: 'all 0.25s ease',
-                boxShadow: !activeZoneId ? '0 4px 14px rgba(0,0,0,0.18)' : 'none'
-              }}
-            >
-              All Zones ({activeClubs.length})
-            </button>
-            {REGIONAL_ZONES.map(z => (
-              <button
-                key={z.id}
-                onClick={() => handleZoneSelect(z.id)}
-                style={{
-                  background: activeZoneId === z.id ? 'rgba(255, 255, 255, 0.96)' : z.color,
-                  backdropFilter: 'blur(12px)',
-                  color: activeZoneId === z.id ? z.color : '#FFFFFF',
-                  border: activeZoneId === z.id ? `2px solid ${z.color}` : `1px solid ${z.color}`,
-                  padding: '7px 14px',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  boxShadow: activeZoneId === z.id ? `0 4px 14px ${z.color}45` : '0 2px 8px rgba(0,0,0,0.12)'
-                }}
-              >
-                {z.name} <span style={{ opacity: 0.85, fontSize: '0.72rem' }}>({z.hindiName})</span>
-              </button>
-            ))}
           </div>
 
 
