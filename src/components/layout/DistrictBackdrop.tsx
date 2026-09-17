@@ -11,7 +11,7 @@ export function DistrictBackdrop() {
           backgroundSize: '28px 28px',
         }}
       />
-      <div className="wide-only absolute top-1/2 left-[92%] -translate-x-1/2 -translate-y-1/2 opacity-15 [width:clamp(680px,58vw,1080px)] [height:clamp(680px,58vw,1080px)]">
+      <div className="absolute top-1/2 left-[92%] -translate-x-1/2 -translate-y-1/2 opacity-10 sm:opacity-15 [width:clamp(480px,58vw,1080px)] [height:clamp(480px,58vw,1080px)] pointer-events-none">
         <img
           src="/images.webp"
           alt=""

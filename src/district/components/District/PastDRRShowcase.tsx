@@ -50,7 +50,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
       onMouseLeave={() => setIsHovered(false)}
       style={{
         padding: '0px',
-        borderRadius: isMobile ? '12px' : '20px',
+        borderRadius: isMobile ? '16px' : '20px',
         overflow: 'hidden',
         border: isCurrentDRR 
           ? '1.5px solid rgba(216, 27, 96, 0.45)'
@@ -65,14 +65,14 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
         flexDirection: 'column',
         position: 'relative',
         contentVisibility: 'auto',
-        containIntrinsicSize: isMobile ? '0 240px' : '0 450px'
+        containIntrinsicSize: isMobile ? '0 280px' : '0 450px'
       }}
     >
       {/* Photo or Themed Fallback Avatar */}
       <div 
         style={{ 
           width: '100%', 
-          height: isMobile ? '135px' : '330px', 
+          height: isMobile ? '185px' : '330px', 
           position: 'relative', 
           overflow: 'hidden',
           backgroundColor: '#1E1E24'
@@ -124,19 +124,19 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
             {/* Monogram Avatar Crest */}
             <div 
               style={{ 
-                width: isMobile ? '46px' : '94px', 
-                height: isMobile ? '46px' : '94px', 
+                width: isMobile ? '64px' : '94px', 
+                height: isMobile ? '64px' : '94px', 
                 borderRadius: '50%',
                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 100%)',
                 border: '2px solid rgba(255, 224, 130, 0.65)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: isMobile ? '1.1rem' : '2rem',
+                fontSize: isMobile ? '1.4rem' : '2rem',
                 fontWeight: 900,
                 color: '#FFE082',
                 boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
-                marginBottom: isMobile ? '6px' : '14px',
+                marginBottom: isMobile ? '8px' : '14px',
                 transition: 'transform 0.4s ease',
                 transform: isHovered ? 'scale(1.08)' : 'scale(1)'
               }}
@@ -144,14 +144,12 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
               {initials}
             </div>
 
-            <div style={{ fontSize: isMobile ? '0.55rem' : '0.76rem', color: '#FFE082', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{ fontSize: isMobile ? '0.68rem' : '0.76rem', color: '#FFE082', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Archival Record
             </div>
-            {!isMobile && (
-              <div style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '2px', fontWeight: 600 }}>
-                Rotary International District {drr.district}
-              </div>
-            )}
+            <div style={{ fontSize: isMobile ? '0.66rem' : '0.72rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '2px', fontWeight: 600 }}>
+              Rotary International District {drr.district}
+            </div>
           </div>
         )}
 
@@ -265,7 +263,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
       {/* Card Information Body */}
       <div 
         style={{ 
-          padding: isMobile ? '8px 6px 10px 6px' : '20px 22px 22px 22px', 
+          padding: isMobile ? '12px 10px 14px 10px' : '20px 22px 22px 22px', 
           display: 'flex', 
           flexDirection: 'column', 
           flex: 1,
@@ -276,10 +274,10 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
         <div>
           <h3 
             style={{ 
-              fontSize: isMobile ? '0.78rem' : '1.25rem', 
+              fontSize: isMobile ? '0.94rem' : '1.25rem', 
               fontWeight: 900, 
               color: '#18181B', 
-              lineHeight: 1.2, 
+              lineHeight: 1.25, 
               margin: '0 0 3px 0', 
               letterSpacing: '-0.3px',
               overflow: 'hidden',
@@ -294,7 +292,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
 
           <div 
             style={{ 
-              fontSize: isMobile ? '0.62rem' : '0.84rem', 
+              fontSize: isMobile ? '0.72rem' : '0.84rem', 
               color: isCurrentDRR ? '#D81B60' : 'var(--rotaract-pink)', 
               fontWeight: 700, 
               display: 'flex', 
@@ -306,39 +304,55 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
               textOverflow: 'ellipsis'
             }}
           >
-            <Shield size={isMobile ? 10 : 13} />
-            {isMobile ? 'DRR' : 'District Rotaract Representative'}
+            <Shield size={isMobile ? 12 : 13} />
+            {isMobile ? 'Past DRR' : 'District Rotaract Representative'}
           </div>
+
+          {drr.homeClub && (
+            <div 
+              style={{ 
+                fontSize: isMobile ? '0.66rem' : '0.76rem', 
+                color: '#64748B', 
+                fontWeight: 600, 
+                marginTop: '4px', 
+                overflow: 'hidden', 
+                textOverflow: 'ellipsis', 
+                whiteSpace: 'nowrap' 
+              }}
+            >
+              {drr.homeClub}
+            </div>
+          )}
         </div>
 
         {/* District & Tenure Footer */}
         <div 
           style={{ 
-            marginTop: isMobile ? '6px' : '16px', 
-            paddingTop: isMobile ? '6px' : '12px', 
+            marginTop: isMobile ? '8px' : '16px', 
+            paddingTop: isMobile ? '8px' : '12px', 
             borderTop: '1px solid #F4F4F5',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            fontSize: isMobile ? '0.60rem' : '0.82rem',
+            fontSize: isMobile ? '0.70rem' : '0.82rem',
             color: '#52525B'
           }}
         >
           <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }}>
-            <MapPin size={isMobile ? 10 : 13} style={{ color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }} /> RID {drr.district}
+            <MapPin size={isMobile ? 11 : 13} style={{ color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }} /> RID {drr.district}
           </span>
           <span 
             style={{ 
               fontWeight: 800, 
               color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
               background: isCurrentDRR ? '#FFF0F5' : '#FAFAFA',
-              padding: '4px 10px',
+              padding: isMobile ? '3px 7px' : '4px 10px',
               borderRadius: '6px',
               border: isCurrentDRR ? '1px solid rgba(216, 27, 96, 0.25)' : '1px solid #E4E4E7',
-              fontSize: '0.78rem',
+              fontSize: isMobile ? '0.70rem' : '0.78rem',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '5px'
+              gap: '4px'
             }}
           >
             {isCurrentDRR && <span className="live-indicator-dot" style={{ width: '5px', height: '5px' }} />}
@@ -581,7 +595,8 @@ export default function PastDRRShowcase() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: isMobile ? '7px 14px' : '8px 16px',
+                  minHeight: '44px',
+                  padding: isMobile ? '8px 14px' : '8px 16px',
                   borderRadius: '10px',
                   border: isActive ? `2px solid ${era.color}` : '1px solid #E4E4E7',
                   background: isActive ? era.color : '#F4F4F5',
@@ -653,7 +668,7 @@ export default function PastDRRShowcase() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: isMobile ? '8px' : '26px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: isMobile ? '12px' : '26px' }}>
           {filteredDRRs.map((drr) => {
             const isCurrentDRR = drr.year === '2026-27' || drr.name.toLowerCase().includes('archit');
             const eraConfig = getEraBadgeConfig(drr.district);

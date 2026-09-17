@@ -311,48 +311,129 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       }}
     >
       {/* ===================================================================
-          1. HERO HEADER SECTION WITH RESILIENT CAROUSEL
+          1. HERO HEADER SECTION WITH AUTHENTIC DAC 2026-27 OATH & MOMENTS
          =================================================================== */}
       <div
         style={{
           position: 'relative',
-          padding: '20px 14px 18px',
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #EEF2F9 100%)',
-          borderBottom: '1px solid rgba(18, 52, 153, 0.08)'
+          padding: '24px 16px 20px',
+          background: '#FFFFFF',
+          borderBottom: '1px solid rgba(18, 52, 153, 0.08)',
+          overflow: 'hidden'
         }}
       >
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EEF2FF', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(18, 52, 153, 0.18)', marginBottom: '10px' }}>
-          <Sparkles size={13} color="#123499" />
-          <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-            ROTARACT DISTRICT 3011 • RY 2026-27
-          </span>
+        {/* Authentic Group Photo Background of DAC 2026-27 Oath */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: 'none',
+            overflow: 'hidden'
+          }}
+        >
+          <img
+            src="/hero-dac-oath.webp"
+            alt="Rotaract District 3011 Administrative Council Oath"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center 28%',
+              opacity: 0.40,
+              filter: 'saturate(1.08) contrast(1.02)'
+            }}
+          />
+          {/* Subtle natural fade to blend smoothly into the white page background */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 42%, rgba(255, 255, 255, 0.95) 82%, #FFFFFF 100%), linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.60) 50%, transparent 100%)'
+            }}
+          />
         </div>
 
-        <h1
+        {/* Rotary Wheel Subtle Rotating Watermark in Background */}
+        <div
           style={{
-            fontSize: 'clamp(2.0rem, 8.8vw, 2.7rem)',
-            fontWeight: 900,
-            color: '#0F1218',
-            lineHeight: 1.05,
-            margin: '0 0 8px 0',
-            letterSpacing: '-0.8px',
-            textTransform: 'uppercase'
+            position: 'absolute',
+            right: '-18vw',
+            top: '8%',
+            width: '68vw',
+            height: '68vw',
+            maxWidth: '280px',
+            maxHeight: '280px',
+            opacity: 0.12,
+            pointerEvents: 'none',
+            zIndex: 1,
+            animation: 'spinWheel 24s linear infinite'
           }}
         >
-          ROTARACT<br />DISTRICT 3011
-        </h1>
+          <img
+            src="/images.webp"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
 
-        <p
-          style={{
-            fontSize: '0.88rem',
-            color: '#475569',
-            margin: '0 0 14px 0',
-            lineHeight: 1.45,
-            fontWeight: 500
-          }}
-        >
-          Uniting {totalClubs} chartered clubs and young changemakers across Delhi NCR for grassroots humanitarian action.
-        </p>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EEF2FF', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(18, 52, 153, 0.20)', marginBottom: '10px' }}>
+            <Sparkles size={13} color="#123499" />
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
+              ROTARACT DISTRICT 3011 • RY 2026-27
+            </span>
+          </div>
+
+          <h1
+            className="hero-main-title"
+            style={{
+              fontSize: 'clamp(2.1rem, 9.0vw, 3.1rem)',
+              fontWeight: 900,
+              color: '#1A1A1A',
+              lineHeight: 0.95,
+              margin: '0 0 10px 0',
+              letterSpacing: '-1px',
+              textTransform: 'uppercase',
+              textAlign: 'left',
+              whiteSpace: 'pre-line'
+            }}
+          >
+            {"ROTARACT\nDISTRICT\nORGANIZATION"}
+          </h1>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '16px' }}>
+            <span
+              className="hero-number-accent"
+              style={{
+                fontSize: 'clamp(3.5rem, 15vw, 4.8rem)',
+                fontWeight: 900,
+                color: '#0044ff',
+                lineHeight: 0.85,
+                letterSpacing: '-2px'
+              }}
+            >
+              3011
+            </span>
+
+            <p
+              className="hero-subtitle"
+              style={{
+                fontSize: '0.88rem',
+                color: '#0044ff',
+                margin: 0,
+                lineHeight: 1.35,
+                fontWeight: 600,
+                textAlign: 'left',
+                maxWidth: '240px'
+              }}
+            >
+              {"brings together clubs\nand young leaders across\nDelhi NCR\nto drive sustainable social change."}
+            </p>
+          </div>
+        </div>
 
         {/* Hero Slideshow Card with Fluid Proportions and Native Swipe */}
         <div

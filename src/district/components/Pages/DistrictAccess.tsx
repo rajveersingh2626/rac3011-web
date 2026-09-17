@@ -303,11 +303,14 @@ export default function DistrictAccess({
                       key={cat.key}
                       onClick={() => setLeadershipCategory(cat.key)}
                       style={{
-                        padding: isMobile ? '7px 14px' : '8px 16px',
+                        minHeight: '44px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: isMobile ? '8px 16px' : '8px 16px',
                         borderRadius: '100px',
                         border: 'none',
                         cursor: 'pointer',
-                        fontSize: isMobile ? '0.78rem' : '0.82rem',
+                        fontSize: isMobile ? '0.80rem' : '0.82rem',
                         fontWeight: 700,
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
@@ -359,16 +362,16 @@ export default function DistrictAccess({
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: isMobile ? '8px' : '22px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: isMobile ? '12px' : '22px' }}>
                 {filteredLeaders.map((leader) => (
                   <div 
                     key={leader.id} 
                     className="rotaract-card" 
                     style={{ 
-                      padding: isMobile ? '12px 6px' : '24px 20px', 
+                      padding: isMobile ? '16px 12px 18px 12px' : '24px 20px', 
                       textAlign: 'center', 
                       backgroundColor: '#FFFFFF', 
-                      borderRadius: isMobile ? '14px' : '20px',
+                      borderRadius: isMobile ? '16px' : '20px',
                       border: '1.5px solid rgba(216, 27, 96, 0.12)',
                       boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
                       transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -379,7 +382,7 @@ export default function DistrictAccess({
                   >
                     <div>
                       {/* Avatar with fallback */}
-                      <div style={{ position: 'relative', width: isMobile ? '54px' : '96px', height: isMobile ? '54px' : '96px', margin: isMobile ? '0 auto 8px auto' : '0 auto 16px auto' }}>
+                      <div style={{ position: 'relative', width: isMobile ? '72px' : '96px', height: isMobile ? '72px' : '96px', margin: isMobile ? '0 auto 10px auto' : '0 auto 16px auto' }}>
                         {leader.photo ? (
                           <img
                             src={leader.photo}
@@ -396,12 +399,12 @@ export default function DistrictAccess({
                               }
                             }}
                             style={{
-                              width: isMobile ? '54px' : '96px',
-                              height: isMobile ? '54px' : '96px',
+                              width: isMobile ? '72px' : '96px',
+                              height: isMobile ? '72px' : '96px',
                               borderRadius: '50%',
                               objectFit: 'cover',
                               objectPosition: '50% 20%',
-                              border: isMobile ? '2px solid #D81B60' : '3px solid #D81B60',
+                              border: isMobile ? '2.5px solid #D81B60' : '3px solid #D81B60',
                               boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
                             }}
                           />
@@ -410,14 +413,14 @@ export default function DistrictAccess({
                           className="avatar-fallback"
                           style={{
                             display: leader.photo ? 'none' : 'flex',
-                            width: isMobile ? '54px' : '96px',
-                            height: isMobile ? '54px' : '96px',
+                            width: isMobile ? '72px' : '96px',
+                            height: isMobile ? '72px' : '96px',
                             borderRadius: '50%',
                             background: 'linear-gradient(135deg, #D81B60 0%, #880E4F 100%)',
                             color: '#FFFFFF',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: isMobile ? '1rem' : '1.6rem',
+                            fontSize: isMobile ? '1.25rem' : '1.6rem',
                             fontWeight: 900,
                             boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
                           }}
@@ -427,13 +430,13 @@ export default function DistrictAccess({
                       </div>
 
                       {/* Category Pill */}
-                      <div style={{ marginBottom: isMobile ? '4px' : '8px' }}>
+                      <div style={{ marginBottom: isMobile ? '6px' : '8px' }}>
                         <span style={{ 
-                          fontSize: isMobile ? '0.56rem' : '0.68rem', 
+                          fontSize: isMobile ? '0.64rem' : '0.68rem', 
                           fontWeight: 800, 
                           letterSpacing: '0.4px',
                           textTransform: 'uppercase',
-                          padding: isMobile ? '2px 6px' : '3px 10px', 
+                          padding: isMobile ? '3px 8px' : '3px 10px', 
                           borderRadius: '100px',
                           background: leader.category === 'Executive Council' ? '#FDF2F4' : leader.category === 'Zonal Team' ? '#E0F2FE' : '#F3E8FF',
                           color: leader.category === 'Executive Council' ? '#D81B60' : leader.category === 'Zonal Team' ? '#0284C7' : '#7E22CE',
@@ -449,15 +452,15 @@ export default function DistrictAccess({
 
                       {/* Name */}
                       <h3 style={{ 
-                        fontSize: isMobile ? '0.82rem' : '1.18rem', 
+                        fontSize: isMobile ? '0.94rem' : '1.18rem', 
                         fontWeight: 800, 
                         color: '#0F172A', 
                         marginBottom: '4px', 
-                        lineHeight: 1.2,
+                        lineHeight: 1.25,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         display: '-webkit-box',
-                        WebkitLineClamp: isMobile ? 2 : 3,
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: 'vertical'
                       }}>
                         {leader.name}
@@ -467,12 +470,12 @@ export default function DistrictAccess({
                       <div style={{ 
                         color: '#D81B60', 
                         fontWeight: 700, 
-                        fontSize: isMobile ? '0.68rem' : '0.86rem', 
-                        minHeight: isMobile ? '26px' : '38px', 
+                        fontSize: isMobile ? '0.74rem' : '0.86rem', 
+                        minHeight: isMobile ? '28px' : '38px', 
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
-                        lineHeight: 1.15
+                        lineHeight: 1.2
                       }}>
                         {leader.role}
                       </div>

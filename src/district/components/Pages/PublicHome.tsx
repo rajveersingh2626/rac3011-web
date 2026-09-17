@@ -598,6 +598,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
   const containerRef = useRef<HTMLDivElement | null>(null);
   const currentSectionRef = useRef(0);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
   const [, setScrollProgress] = useState(0);
 
   const handleScrollToTop = () => {
@@ -617,7 +618,10 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
   };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -805,7 +809,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
           justifyContent: 'center',
           alignItems: 'flex-start',
           overflow: 'hidden',
-          padding: isMobile ? '80px 16px 40px 16px' : '0 4vw'
+          padding: isMobile ? '80px 16px 40px 16px' : isTablet ? '90px 4vw 40px 4vw' : '0 4vw'
         }}
       >
         {/* Authentic Group Photo Background of DAC 2026-27 Oath */}

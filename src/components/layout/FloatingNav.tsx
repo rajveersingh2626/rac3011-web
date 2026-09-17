@@ -102,7 +102,7 @@ export function FloatingNav({ links, homeHref, title }: FloatingNavProps) {
 
       <div
         className={cn(
-          'inline-flex scale-110 items-center gap-[10px] rounded-full',
+          'inline-flex items-center gap-[10px] rounded-full sm:scale-105 md:scale-110',
           shown ? 'translate-y-0' : 'md:-translate-y-[120px]',
           open ? 'pointer-events-none opacity-0' : 'opacity-100',
         )}
