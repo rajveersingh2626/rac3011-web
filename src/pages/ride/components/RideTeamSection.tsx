@@ -27,15 +27,31 @@ const TEAM_MEMBERS: TeamMember[] = [
     accentColor: '#19539D',
   },
   {
-    name: 'Rtr. Shefali',
-    role: 'DRS',
-    designation: 'District Rotaract Secretary · RID 3011',
-    image: '/leadership/shefali-prakash.webp',
-    tagline: 'Overseeing inter-district protocol and administrative coordination.',
+    name: 'Rtr. Prashant Joshi',
+    role: 'Logistics Head',
+    designation: 'Logistics & Transit Lead · Delhi Safari',
+    image: '/leadership/prashant-joshi.webp',
+    tagline: 'Orchestrating seamless travel, metro trails, and historical excursions.',
     accentColor: '#59A835',
   },
   {
-    name: 'Rtr. Archit Bhatia',
+    name: 'Rtr. Saransh Srivastava',
+    role: 'Homestay Chair',
+    designation: 'Homestay & Hospitality Chair · RID 3011',
+    image: '/leadership/saransh-srivastava.webp',
+    tagline: 'Connecting incoming delegates with warm, authentic Delhi host families.',
+    accentColor: '#FBC02D',
+  },
+  {
+    name: 'Rtr. Shubham Singh',
+    role: 'Protocol Officer',
+    designation: 'Protocol & Safety Officer · RID 3011',
+    image: '/leadership/shubham-singh.webp',
+    tagline: 'Ensuring round-the-clock delegate care, safety, and inter-district etiquette.',
+    accentColor: '#8E24AA',
+  },
+  {
+    name: 'DRR PHF Rtn. Rtr. Archit Bhatia',
     role: 'DRR',
     designation: 'District Rotaract Representative · RID 3011',
     image: '/leadership/archit-bhatia.webp',
@@ -62,8 +78,8 @@ export function RideTeamSection() {
           </p>
         </div>
 
-        {/* 4 Team Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+        {/* 6 Team Cards Grid (3 cols on large, 2 cols on tablet, 1 on mobile) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member.name}

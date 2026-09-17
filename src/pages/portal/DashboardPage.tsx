@@ -159,6 +159,7 @@ export function DashboardPage() {
   const canApproveMembers = can('members:approve');
   const canManageEvents = can('events:manage');
   const canReport = Boolean(clubId) && !isDistrictOffice && can('reports:submit', { type: 'club', id: clubId ?? undefined });
+  const canApplyHostClub = (canReport && !canManageAccess) || (can('subdomain:ride:host_club_apply') && !canManageAccess);
   const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
   const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements;
 
@@ -328,7 +329,7 @@ export function DashboardPage() {
           )}
 
           {/* 3. DELHI MERI JAAN HOST CLUB APPLICATION CALL (FOR RID 3011 PRESIDENTS / SECRETARIES) */}
-          {(canReport || Boolean(clubId) || canManageAccess) && (
+          {canApplyHostClub && (
             <div className="lg:col-span-2">
               <HostClubApplicationCard />
             </div>

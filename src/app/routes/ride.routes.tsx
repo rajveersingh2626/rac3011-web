@@ -14,6 +14,7 @@ const RideParticipantDashboardPage = lazy(() =>
 const RideParticipantLoginPage = lazy(() =>
   import('@/pages/ride/RideParticipantLoginPage').then((m) => ({ default: m.RideParticipantLoginPage }))
 );
+import { PublicEventPassPage } from '@/pages/public/PublicEventPassPage';
 
 function SubdomainAdminRedirect() {
   useEffect(() => {
@@ -82,6 +83,7 @@ function Layout() {
 }
 
 const routes: RouteObject[] = [
+  { path: '/pass/:token', element: <PublicEventPassPage /> },
   {
     element: <Layout />,
     children: [
