@@ -3,7 +3,7 @@ import {
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
   Smartphone, Monitor, LogOut, 
-  MapPin, Building, QrCode, ShieldCheck
+  ShieldCheck
 } from 'lucide-react';
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
@@ -146,8 +146,6 @@ export function RideParticipantDashboardPage() {
 
   const isApproved = participant?.approvalStatus === 'approved' || participant?.status === 'approved';
   const isRejected = participant?.approvalStatus === 'rejected';
-  const hasHostFamily = !!participant?.hostFamilyName;
-  const isDossierComplete = participant?.dossierStatus === 'complete' || participant?.dossierStatus === 'verified';
 
   const dynamicMilestones = [
     {
@@ -165,26 +163,6 @@ export function RideParticipantDashboardPage() {
           ? 'Contact Exchange Secretariat'
           : 'Under review by RID 3011',
       status: isApproved ? ('completed' as const) : ('active' as const),
-    },
-    {
-      step: '03',
-      title: 'Host Club & Homestay',
-      desc: hasHostFamily
-        ? (participant?.hostFamilyName || 'Host Family Assigned')
-        : isApproved
-          ? 'Allocation in progress'
-          : 'Awaiting district approval',
-      status: hasHostFamily ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
-    },
-    {
-      step: '04',
-      title: 'Digital Delegate Pass',
-      desc: isDossierComplete && isApproved
-        ? 'Ready for check-in'
-        : isApproved
-          ? 'Submit confirmation form'
-          : 'Awaiting approvals',
-      status: (isDossierComplete && isApproved) ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
     },
   ];
 
@@ -269,16 +247,16 @@ export function RideParticipantDashboardPage() {
                   Delegate Exchange Progress & Dossier Status
                 </h3>
                 <p className="text-xs text-neutral-600 mt-0.5">
-                  Follow your live check-in, hosting family assignment, and event credential status for Delhi Meri Jaan 2026.
+                  Follow your application review and district verification status for Delhi Meri Jaan 2026.
                 </p>
               </div>
 
-              {/* Progress Milestones */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Progress Milestones (Step 01 and Step 02) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
                 {dynamicMilestones.map((item) => (
                   <div
                     key={item.step}
-                    className={`p-4 rounded-2xl border-2 transition-all ${
+                    className={`p-5 rounded-2xl border-2 transition-all ${
                       item.status === 'completed'
                         ? 'border-[#171515] bg-emerald-50 text-emerald-950'
                         : item.status === 'active'
@@ -289,70 +267,22 @@ export function RideParticipantDashboardPage() {
                     <div className="flex items-center justify-between text-xs font-black mb-2">
                       <span className="font-mono">{item.step}</span>
                       {item.status === 'completed' ? (
-                        <CheckCircle2 size={16} className="text-emerald-700" />
+                        <CheckCircle2 size={18} className="text-emerald-700" />
                       ) : (
-                        <Clock size={16} className="text-[#EA6623]" />
+                        <Clock size={18} className="text-[#EA6623]" />
                       )}
                     </div>
-                    <div className="font-black text-xs text-[#171515]">{item.title}</div>
-                    <div className="text-[11px] text-neutral-600 mt-0.5">{item.desc}</div>
+                    <div className="font-black text-sm text-[#171515]">{item.title}</div>
+                    <div className="text-xs text-neutral-600 mt-1">{item.desc}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Detail Cards: Host Family & Transit Hub */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-                {/* Host Family Card */}
-                <div className="p-5 rounded-2xl border-2 border-[#171515] bg-[#FDFBF7] space-y-3">
-                  <div className="flex items-center gap-2 text-[#19539D] font-black text-xs uppercase tracking-wider">
-                    <Building size={16} />
-                    <span>Assigned Host Club & Family</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-[#171515]">
-                      {participant?.hostFamilyName || 'Host Allocation in Progress'}
-                    </h4>
-                    <p className="text-xs text-neutral-600 mt-1">
-                      {participant?.hostFamilyName
-                        ? `Host Assignment: ${participant.hostFamilyName}`
-                        : 'Your host Rotaract club and homestay coordinator will be assigned prior to arrivals.'}
-                    </p>
-                  </div>
-                  <div className="pt-2 text-[11px] text-neutral-500 font-bold border-t border-neutral-200">
-                    {participant?.dietaryPref
-                      ? `Dietary preference recorded: ${participant.dietaryPref}`
-                      : 'Dietary preferences logged with exchange committee.'}
-                  </div>
-                </div>
-
-                {/* Transit Hub & Pass Preview */}
-                <div className="p-5 rounded-2xl border-2 border-[#171515] bg-[#FDFBF7] space-y-3">
-                  <div className="flex items-center gap-2 text-[#EA6623] font-black text-xs uppercase tracking-wider">
-                    <MapPin size={16} />
-                    <span>Arrival Transit Hub</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-[#171515]">
-                      {participant?.cityState || 'IGI Airport / NDLS Welcome Desk'}
-                    </h4>
-                    <p className="text-xs text-neutral-600 mt-1">
-                      Mode of Arrival: {participant?.arrivalMode || 'Standard Transit'}<br />
-                      Transport: DMRC Metro Transit Pass Supported<br />
-                      Secretariat Desk: Active 24 Hours on check-in days
-                    </p>
-                  </div>
-                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200">
-                    <span className="text-[11px] font-bold text-neutral-500 font-mono">Pass: {userRef}</span>
-                    <button
-                      type="button"
-                      onClick={() => alert(`Digital Pass: ${userRef}\nDelegate: ${userName}\nStatus: Verified\nShow this code at arrival desk.`)}
-                      className="px-3 py-1 rounded-xl bg-[#19539D] text-white text-[11px] font-black flex items-center gap-1.5 hover:bg-blue-800"
-                    >
-                      <QrCode size={13} />
-                      <span>View Pass QR</span>
-                    </button>
-                  </div>
-                </div>
+              {/* Status Update Notice Banner */}
+              <div className="max-w-2xl mx-auto p-5 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex items-center justify-center text-center">
+                <p className="text-sm sm:text-base font-extrabold text-[#171515] leading-relaxed">
+                  Keep checking for more updates on your application we hope to see you soon!
+                </p>
               </div>
             </Card>
           </div>

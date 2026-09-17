@@ -14,6 +14,7 @@ import {
   fetchEventCheckins, postEventCheckin, downloadCheckinCsv, 
   deleteEventCheckin, dispatchCheckinTickets, type DispatchResult
 } from '@/lib/events/checkinApi';
+import { fetchClubs } from '@/lib/publicApi/clubs';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
@@ -137,6 +138,25 @@ export function EventCheckinPage() {
   // Manual Check-in Form
   const [walkInName, setWalkInName] = useState('');
   const [walkInClubId, setWalkInClubId] = useState('');
+
+  // Fetch all District Clubs for walk-in selection
+  const { data: clubsData } = useQuery({
+    queryKey: ['public', 'clubs'],
+    queryFn: () => fetchClubs(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const districtClubs = useMemo(() => clubsData?.items ?? [], [clubsData]);
+
+  // Sync default club when active event or clubs list changes
+  useEffect(() => {
+    if (activeEvent?.clubId) {
+      setWalkInClubId((prev) => prev || activeEvent.clubId!);
+      setModalClubOrDistrict((prev) => prev || activeEvent.clubId!);
+    } else if (districtClubs.length > 0) {
+      setWalkInClubId((prev) => prev || districtClubs[0].id);
+      setModalClubOrDistrict((prev) => prev || districtClubs[0].id);
+    }
+  }, [activeEvent?.clubId, districtClubs]);
 
   // Manual Add Attendee Modal State
   const [showAddAttendeeModal, setShowAddAttendeeModal] = useState(false);
@@ -642,12 +662,24 @@ export function EventCheckinPage() {
                   />
                 </Field>
 
-                <Field label="Club ID / Affiliation" required>
-                  <Input
+                <Field label="Club Affiliation" required>
+                  <select
                     value={walkInClubId}
                     onChange={(e) => setWalkInClubId(e.target.value)}
-                    placeholder="Enter club ID or select club"
-                  />
+                    className="w-full h-10 px-3 rounded-lg border border-line bg-bg text-fg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">-- Select Affiliated Club --</option>
+                    {activeEvent?.clubId && (
+                      <option value={activeEvent.clubId}>
+                        ★ Event Host Club
+                      </option>
+                    )}
+                    {districtClubs.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
 
                 <Button
@@ -816,13 +848,31 @@ export function EventCheckinPage() {
                 />
               </Field>
 
-              <Field label="Club ID / Affiliation / District" required>
-                <Input
+              <Field label="Club Affiliation" required>
+                <select
                   value={modalClubOrDistrict}
                   onChange={(e) => setModalClubOrDistrict(e.target.value)}
-                  placeholder="e.g. Rotaract Club of Delhi Central or Club ID"
-                />
+                  className="w-full h-10 px-3 rounded-lg border border-line bg-bg text-fg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">-- Select Affiliated Club --</option>
+                  {activeEvent?.clubId && (
+                    <option value={activeEvent.clubId}>
+                      ★ Event Host Club
+                    </option>
+                  )}
+                  {districtClubs.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </Field>
+
+              {checkinMutation.isError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 font-bold">
+                  {(checkinMutation.error as any)?.message || 'Check-in failed. Please verify attendee details.'}
+                </div>
+              )}
 
               <div className="flex justify-end gap-2 border-t border-line pt-4">
                 <Button

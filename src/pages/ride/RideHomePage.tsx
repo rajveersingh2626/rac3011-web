@@ -159,9 +159,9 @@ export function RideHomePage() {
         </div>
 
         {/* Centered Transparent Official Logo */}
-        <div className="relative my-3 sm:my-6 w-full max-w-xl sm:max-w-3xl lg:max-w-4xl px-4 flex justify-center items-center mx-auto z-10">
+        <div className="relative my-3 sm:my-6 w-full max-w-xl sm:max-w-3xl lg:max-w-4xl px-4 flex justify-center items-center mx-auto text-center z-10">
           <img
-            src="/ride/logos/2026_logo_coloured.png?v=2"
+            src="/ride/logos/2026_logo_coloured.png?v=3"
             alt="Delhi Meri Jaan Official 2026 Emblem"
             className="w-full h-auto max-h-[240px] sm:max-h-[340px] md:max-h-[420px] lg:max-h-[460px] object-contain mx-auto drop-shadow-xl transition-transform duration-500 hover:scale-[1.02]"
           />
