@@ -126,7 +126,30 @@ export function HostClubApplicationCard() {
 
       setSubmissions(getStoredSubmissions());
 
-      // Persist to PostgreSQL database via API
+      // Persist to PostgreSQL database custom_form_submissions via Forms API
+      apiFetch('/forms/delhi-meri-jaan-host-club-application-2026/submit', {
+        method: 'POST',
+        body: {
+          applicantName: name.trim(),
+          applicantEmail: email.trim(),
+          applicantPhone: phone.trim(),
+          clubId: (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id,
+          clubName: clubName.trim(),
+          values: {
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim(),
+            position: position.trim(),
+            clubName: clubName.trim(),
+            parentRotaryClub: parentRotaryClub.trim(),
+            zone,
+            motivation: motivation.trim(),
+            pastHostingExperience: pastHostingExperience.trim(),
+            proposalDriveUrl: proposalDriveUrl.trim(),
+          },
+        },
+      }).catch(() => undefined);
+
       const targetClubId = (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id;
       if (targetClubId) {
         apiFetch('/ride/support-clubs', {

@@ -1,5 +1,6 @@
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Calendar,
   Award,
@@ -10,6 +11,7 @@ import {
   FileText,
   Send,
   UserCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
@@ -21,11 +23,17 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 import { fetchReports } from '@/lib/reports/api';
 import type { ReportStatus } from '@/lib/reports/types';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
 import { fetchAnnouncementFeed } from '@/lib/announcements/api';
 import { apiFetch } from '@/lib/api';
+import { fetchDashboardActiveForms, submitCustomForm, type ActiveDashboardFormItem } from '@/lib/forms/api';
 import { ClubPointsWidget } from './ClubPointsWidget';
 import { HostClubApplicationCard } from './components/HostClubApplicationCard';
 
@@ -141,6 +149,181 @@ function AnnouncementsWidget() {
         </ul>
       )}
     </Card>
+  );
+}
+
+function DynamicDashboardFormsWidget() {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const { data: forms } = useQuery<ActiveDashboardFormItem[]>({
+    queryKey: ['dashboard-active-forms'],
+    queryFn: fetchDashboardActiveForms,
+  });
+
+  const [activeForm, setActiveForm] = useState<ActiveDashboardFormItem | null>(null);
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // Filter out canonical host club form as it has its own bespoke HostClubApplicationCard
+  const customForms = useMemo(() => {
+    return (forms || []).filter(
+      (f) => f.slug !== 'delhi-meri-jaan-host-club-application-2026'
+    );
+  }, [forms]);
+
+  if (!customForms || customForms.length === 0) return null;
+
+  const handleSubmit = async () => {
+    if (!activeForm) return;
+    setSubmitting(true);
+    try {
+      await submitCustomForm(activeForm.id, { values: formValues });
+      toast({
+        title: 'Application Submitted',
+        body: 'Your response has been registered successfully.',
+        tone: 'success',
+      });
+      qc.invalidateQueries({ queryKey: ['dashboard-active-forms'] });
+      setActiveForm(null);
+      setFormValues({});
+    } catch (err: any) {
+      toast({
+        title: 'Submission Failed',
+        body: err.message || 'Please verify required questions.',
+        tone: 'error',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <>
+      {customForms.map((f) => (
+        <div key={f.id} className="lg:col-span-2">
+          <Card
+            eyebrow={f.category || 'District Application'}
+            title={f.title}
+            rule="accent"
+            className="bg-surface border-line-accent shadow-sm"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="max-w-2xl">
+                <p className="text-xs text-fg-3 m-0 mb-2">
+                  {f.description || 'Fill and submit this application for district consideration.'}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Badge tone={f.hasSubmitted ? 'green' : 'blue'}>
+                    {f.hasSubmitted ? 'Application Registered' : 'Submissions Open'}
+                  </Badge>
+                  <span className="text-[11px] text-fg-4 font-mono">{f.fields?.length || 0} questions</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  variant={f.hasSubmitted ? 'secondary' : 'primary'}
+                  size="sm"
+                  onClick={() => {
+                    setActiveForm(f);
+                    setFormValues(f.mySubmission?.values || {});
+                  }}
+                  leading={f.hasSubmitted ? <CheckCircle2 size={13} /> : <FileText size={13} />}
+                >
+                  {f.hasSubmitted ? 'View Submitted Response' : 'Open Application'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      ))}
+
+      {activeForm && (
+        <Modal
+          open={Boolean(activeForm)}
+          onClose={() => setActiveForm(null)}
+          title={activeForm.title}
+          footer={
+            <div className="flex items-center justify-between w-full">
+              <Button variant="ghost" size="sm" onClick={() => setActiveForm(null)}>
+                Close
+              </Button>
+              {!activeForm.hasSubmitted && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  leading={<CheckCircle2 size={13} />}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Application'}
+                </Button>
+              )}
+            </div>
+          }
+        >
+          <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 text-xs">
+            {activeForm.hasSubmitted && (
+              <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+                You have already submitted this application on{' '}
+                {new Date(activeForm.mySubmission?.submittedAt || '').toLocaleDateString()}. Status:{' '}
+                <strong>{activeForm.mySubmission?.status}</strong>
+              </div>
+            )}
+
+            {(activeForm.fields || []).map((field) => {
+              const isReadOnly = activeForm.hasSubmitted;
+              const val = formValues[field.name] ?? '';
+
+              return (
+                <div key={field.id} className="space-y-1">
+                  <label className="block text-xs font-bold text-fg">
+                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                  </label>
+                  {field.helperText && (
+                    <p className="text-[11px] text-fg-3 m-0">{field.helperText}</p>
+                  )}
+
+                  {field.type === 'textarea' ? (
+                    <Textarea
+                      disabled={isReadOnly}
+                      value={val}
+                      onChange={(e) =>
+                        setFormValues((prev) => ({ ...prev, [field.name]: e.target.value }))
+                      }
+                      placeholder={field.placeholder}
+                      rows={3}
+                    />
+                  ) : field.type === 'select' ? (
+                    <Select
+                      disabled={isReadOnly}
+                      value={val}
+                      onChange={(e) =>
+                        setFormValues((prev) => ({ ...prev, [field.name]: e.target.value }))
+                      }
+                      options={[
+                        { value: '', label: '-- Select an option --' },
+                        ...(field.options || []).map((o) => ({ value: o, label: o })),
+                      ]}
+                    />
+                  ) : (
+                    <Input
+                      disabled={isReadOnly}
+                      type={field.type === 'number' ? 'number' : 'text'}
+                      value={val}
+                      onChange={(e) =>
+                        setFormValues((prev) => ({ ...prev, [field.name]: e.target.value }))
+                      }
+                      placeholder={field.placeholder}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }
 
@@ -368,6 +551,9 @@ export function DashboardPage() {
               <HostClubApplicationCard />
             </div>
           )}
+
+          {/* Dynamic District Applications Targeted to User Role/Club */}
+          <DynamicDashboardFormsWidget />
 
           {/* 4. CLUB REPORTING & POINTS (FOR CLUB LEADERSHIP) */}
           {canReport && clubId ? (
