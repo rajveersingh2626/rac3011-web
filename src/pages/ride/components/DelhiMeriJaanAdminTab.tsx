@@ -4,8 +4,10 @@ import { apiFetch } from '@/lib/api';
 import { Card } from '@/components/ui/Card';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Search, Eye, FileSpreadsheet } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
+import { Search, Eye, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { AutoRickshawBadge, DilliDilwalonKiBadge } from './DelhiStickers';
+import { resetRideRegistrations } from '@/lib/ride/api';
 
 export interface ParticipantRecord {
   id: string;
@@ -17,10 +19,6 @@ export interface ParticipantRecord {
   clubName: string;
   rotaryRole: string;
   status: 'pending' | 'approved' | 'confirmed' | 'rejected' | 'waitlist';
-  arrivalMode: string;
-  arrivalLocation: string;
-  tshirtSize: string;
-  dietaryPreference: string;
   hostClubName?: string;
   createdAt: string;
 }
@@ -39,6 +37,11 @@ export function DelhiMeriJaanAdminTab() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [districtFilter, setDistrictFilter] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState<ParticipantRecord | null>(null);
+
+  // Reset Registrations Modal State
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetConfirmationText, setResetConfirmationText] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const { data: apiResponse } = useQuery({
     queryKey: ['ride', 'participants'],
@@ -63,10 +66,6 @@ export function DelhiMeriJaanAdminTab() {
         clubName: raw.homeClubName || raw.clubName || '',
         rotaryRole: raw.clubDesignation || raw.rotaryRole || '',
         status: (raw.status as any) || 'pending',
-        arrivalMode: raw.arrivalMode || 'Local',
-        arrivalLocation: raw.cityState || raw.arrivalLocation || '',
-        tshirtSize: raw.tshirtSize || '',
-        dietaryPreference: raw.dietaryPref || raw.dietaryPreference || '',
         hostClubName: raw.hostFamilyName || undefined,
         createdAt: raw.createdAt,
       }));
@@ -106,10 +105,25 @@ export function DelhiMeriJaanAdminTab() {
     }
   };
 
+  const handleResetRegistrations = async () => {
+    if (resetConfirmationText.trim() !== 'RESET') return;
+    setResetting(true);
+    try {
+      await resetRideRegistrations();
+      void qc.invalidateQueries({ queryKey: ['ride', 'participants'] });
+      setResetModalOpen(false);
+      setResetConfirmationText('');
+    } catch (err: any) {
+      alert(err?.message || 'Failed to reset registrations.');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const exportCSV = () => {
-    const headers = ['Ref ID,Full Name,Email,Phone,Type,District,Club,Role,Status,Arrival,Location,T-Shirt,Diet'];
+    const headers = ['Ref ID,Full Name,Email,Phone,Type,District,Club,Role,Status,Created At'];
     const rows = filtered.map((p) =>
-      `"${p.id}","${p.fullName}","${p.email}","${p.phone}","${p.participantType}","${p.districtNumber}","${p.clubName}","${p.rotaryRole}","${p.status}","${p.arrivalMode}","${p.arrivalLocation}","${p.tshirtSize}","${p.dietaryPreference}"`
+      `"${p.id}","${p.fullName}","${p.email}","${p.phone}","${p.participantType}","${p.districtNumber}","${p.clubName}","${p.rotaryRole}","${p.status}","${p.createdAt}"`
     );
     const blob = new Blob([[...headers, ...rows].join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -131,13 +145,24 @@ export function DelhiMeriJaanAdminTab() {
           </div>
           <h2 className="text-2xl font-black text-[#171515]">Delhi Meri Jaan 2026 Delegates Dossier</h2>
           <p className="text-xs text-neutral-600 font-semibold mt-0.5">
-            Manage inbound national & international delegates, verify travel PNRs, allocate host families, and track badge passes.
+            Manage inbound national & international delegates, verify registration credentials, and allocate host clubs.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" variant="secondary" onClick={exportCSV} leading={<FileSpreadsheet size={15} />}>
             Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={() => {
+              setResetConfirmationText('');
+              setResetModalOpen(true);
+            }}
+            leading={<Trash2 size={14} />}
+          >
+            Clear Registrations
           </Button>
           <AutoRickshawBadge />
         </div>
@@ -217,8 +242,7 @@ export function DelhiMeriJaanAdminTab() {
               <th className="p-3">Ref ID</th>
               <th className="p-3">Delegate</th>
               <th className="p-3">District & Club</th>
-              <th className="p-3">Arrival</th>
-              <th className="p-3">Kit & Diet</th>
+              <th className="p-3">Designation</th>
               <th className="p-3">Status</th>
               <th className="p-3 text-right">Actions</th>
             </tr>
@@ -226,7 +250,7 @@ export function DelhiMeriJaanAdminTab() {
           <tbody className="divide-y divide-neutral-200">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-neutral-500 font-semibold">
+                <td colSpan={6} className="p-8 text-center text-neutral-500 font-semibold">
                   No delegates match the active filter criteria.
                 </td>
               </tr>
@@ -245,12 +269,7 @@ export function DelhiMeriJaanAdminTab() {
                     <div className="text-[11px] text-neutral-600 truncate max-w-[180px]">{item.clubName}</div>
                   </td>
                   <td className="p-3">
-                    <div className="font-semibold text-neutral-800">{item.arrivalMode}</div>
-                    <div className="text-[11px] text-neutral-500 truncate max-w-[150px]">{item.arrivalLocation}</div>
-                  </td>
-                  <td className="p-3">
-                    <span className="font-bold text-[#171515]">Size: {item.tshirtSize}</span>
-                    <span className="text-[11px] text-neutral-500 block uppercase">{item.dietaryPreference}</span>
+                    <span className="font-semibold text-neutral-800">{item.rotaryRole || 'Delegate'}</span>
                   </td>
                   <td className="p-3">
                     <Badge tone={STATUS_TONES[item.status]}>{item.status}</Badge>
@@ -296,7 +315,7 @@ export function DelhiMeriJaanAdminTab() {
               <button
                 type="button"
                 onClick={() => setSelectedRecord(null)}
-                className="w-8 h-8 rounded-full border-2 border-[#171515] flex items-center justify-center font-black hover:bg-neutral-100"
+                className="w-8 h-8 rounded-full border-2 border-[#171515] flex items-center justify-center font-black hover:bg-neutral-100 cursor-pointer"
               >
                 ✕
               </button>
@@ -331,14 +350,6 @@ export function DelhiMeriJaanAdminTab() {
                   <span className="text-neutral-500 font-bold block">Phone</span>
                   <span className="font-semibold text-neutral-800">{selectedRecord.phone}</span>
                 </div>
-                <div>
-                  <span className="text-neutral-500 font-bold block">Arrival Location</span>
-                  <span className="font-semibold text-neutral-800">{selectedRecord.arrivalLocation}</span>
-                </div>
-                <div>
-                  <span className="text-neutral-500 font-bold block">Transit Mode</span>
-                  <span className="font-semibold text-neutral-800">{selectedRecord.arrivalMode}</span>
-                </div>
               </div>
 
               {/* Status transition actions */}
@@ -352,7 +363,7 @@ export function DelhiMeriJaanAdminTab() {
                       key={st}
                       type="button"
                       onClick={() => updateStatus(selectedRecord.id, st)}
-                      className={`px-3 py-1.5 rounded-xl border-2 border-[#171515] text-xs font-black transition-all ${
+                      className={`px-3 py-1.5 rounded-xl border-2 border-[#171515] text-xs font-black transition-all cursor-pointer ${
                         selectedRecord.status === st
                           ? 'bg-[#EA6623] text-white ride-pop-sm'
                           : 'bg-neutral-50 hover:bg-neutral-100'
@@ -371,6 +382,47 @@ export function DelhiMeriJaanAdminTab() {
           </div>
         </div>
       )}
+
+      {/* Reset Confirmation Modal */}
+      <Modal
+        open={resetModalOpen}
+        onClose={() => { if (!resetting) setResetModalOpen(false); }}
+        title="Reset & Wipe All Registrations"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" disabled={resetting} onClick={() => setResetModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              disabled={resetting || resetConfirmationText.trim() !== 'RESET'}
+              loading={resetting}
+              onClick={handleResetRegistrations}
+            >
+              Confirm Wipe
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4 py-2 text-xs">
+          <div className="p-3 rounded-xl border border-red-300 bg-red-50 text-red-900 font-medium">
+            <strong>CRITICAL WARNING:</strong> This will delete all participant registration records from the database. This action cannot be undone.
+          </div>
+          <div>
+            <label className="block font-black uppercase text-neutral-700 mb-1">
+              Type <span className="text-red-600 font-mono">RESET</span> to confirm:
+            </label>
+            <input
+              type="text"
+              value={resetConfirmationText}
+              onChange={(e) => setResetConfirmationText(e.target.value)}
+              placeholder="RESET"
+              className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
+

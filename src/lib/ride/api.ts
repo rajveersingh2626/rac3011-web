@@ -9,7 +9,11 @@ import {
   type GalleryItem,
   type GalleryItemKind,
   type SupportClub,
+  type RideResource,
+  type RideAnnouncement,
 } from './types';
+
+export type { RideResource, RideAnnouncement };
 
 const supportClubsPage = paginatedSchema(supportClubSchema);
 const delegationsPage = paginatedSchema(delegationSchema);
@@ -150,3 +154,59 @@ export async function createGalleryItem(input: CreateGalleryItemInput): Promise<
 export async function deleteGalleryItem(id: string): Promise<void> {
   await apiFetch(`/ride/gallery-items/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
+
+export interface CreateRideResourceInput {
+  title: string;
+  category: string;
+  scope: string;
+  targetClubName?: string;
+  targetMemberEmail?: string;
+  targetDistrict?: string;
+  driveUrl: string;
+  description?: string;
+}
+
+export async function fetchRideResources(params: { category?: string; scope?: string; page?: number; pageSize?: number } = {}) {
+  const qs = query({
+    'filter[category]': params.category,
+    'filter[scope]': params.scope,
+    page: params.page,
+    pageSize: params.pageSize,
+  });
+  return apiFetch<{ items: RideResource[]; total: number; page: number; pageSize: number }>(`/ride/resources${qs}`);
+}
+
+export async function createRideResource(input: CreateRideResourceInput): Promise<RideResource> {
+  return apiFetch('/ride/resources', { method: 'POST', body: input });
+}
+
+export async function deleteRideResource(id: string): Promise<void> {
+  await apiFetch(`/ride/resources/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function fetchPublicRideResources(params: { email?: string; clubName?: string; district?: string } = {}) {
+  const qs = query({
+    email: params.email,
+    clubName: params.clubName,
+    district: params.district,
+  });
+  return apiFetch<{ items: RideResource[] }>(`/public/ride/resources${qs}`);
+}
+
+export async function fetchPublicRideAnnouncements(params: { district?: string; email?: string } = {}) {
+  const qs = query({
+    district: params.district,
+    email: params.email,
+  });
+  return apiFetch<{ items: RideAnnouncement[] }>(`/public/ride/announcements${qs}`);
+}
+
+export async function fetchRideDistricts(): Promise<string[]> {
+  const res = await apiFetch<{ districts: string[] }>('/ride/participants/districts');
+  return res.districts || [];
+}
+
+export async function resetRideRegistrations(): Promise<{ count: number }> {
+  return apiFetch<{ count: number }>('/ride/participants/admin/reset', { method: 'POST' });
+}
+

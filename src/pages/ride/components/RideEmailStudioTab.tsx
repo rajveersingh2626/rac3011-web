@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   Send, Check, Copy, Trash2, Mail, Users, Building, ShieldCheck, 
   MessageSquare, History, CheckCircle2, Search, X, Sparkles, Filter
@@ -11,8 +12,9 @@ import {
   type StoredRideAnnouncement 
 } from '@/lib/ride/formsStorage';
 import { dispatchRideBroadcast } from '@/lib/ride/rideBroadcastApi';
+import { fetchRideDistricts } from '@/lib/ride/api';
 
-const ROTARY_DISTRICTS = [
+const DEFAULT_ROTARY_DISTRICTS = [
   '3011', '3040', '3054', '3070', '3080', '3110', '3120', 
   '3131', '3141', '3142', '3190', '3201', '3232', '3292'
 ];
@@ -107,6 +109,17 @@ export function RideEmailStudioTab() {
   const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
   const [districtSearch, setDistrictSearch] = useState('');
   const [customEmailsInput, setCustomEmailsInput] = useState('');
+  const [publishAsAnnouncement, setPublishAsAnnouncement] = useState(true);
+
+  // Dynamic districts from registered participants
+  const { data: dynamicDistricts = [] } = useQuery({
+    queryKey: ['ride', 'districts'],
+    queryFn: fetchRideDistricts,
+  });
+
+  const allAvailableDistricts = Array.from(
+    new Set([...dynamicDistricts, ...DEFAULT_ROTARY_DISTRICTS])
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   // Form State
   const [subject, setSubject] = useState('');
@@ -134,7 +147,7 @@ export function RideEmailStudioTab() {
     if (targetAll) setTargetAll(false);
   };
 
-  const filteredDistricts = ROTARY_DISTRICTS.filter((d) =>
+  const filteredDistricts = allAvailableDistricts.filter((d) =>
     d.includes(districtSearch.trim()),
   );
 
@@ -175,6 +188,7 @@ export function RideEmailStudioTab() {
         hostClubsOnly: targetHostClubsOnly,
         districtNumbers: selectedDistricts.length > 0 ? selectedDistricts : undefined,
         customEmails: customEmails.length > 0 ? customEmails : undefined,
+        publishAsAnnouncement,
       });
 
       const audienceDesc = targetAll
@@ -457,6 +471,23 @@ export function RideEmailStudioTab() {
                   <span>{sendSuccess}</span>
                 </div>
               )}
+
+              {/* In-Portal Announcement Toggle */}
+              <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/70 flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="publishAsAnnouncement"
+                  checked={publishAsAnnouncement}
+                  onChange={(e) => setPublishAsAnnouncement(e.target.checked)}
+                  className="rounded text-[#19539D] focus:ring-[#19539D] h-4 w-4 mt-0.5 cursor-pointer"
+                />
+                <label htmlFor="publishAsAnnouncement" className="cursor-pointer text-xs">
+                  <span className="font-bold text-[#171515] block">Publish as In-Portal Announcement</span>
+                  <span className="text-[11px] text-neutral-600 font-medium leading-normal block mt-0.5">
+                    Automatically sync this broadcast to the Participant Portal feed and Delegate Inbox for real-time in-app delivery.
+                  </span>
+                </label>
+              </div>
 
               {/* Submit & Dispatch Action */}
               <div className="pt-2 flex items-center justify-between gap-3 border-t border-neutral-100">

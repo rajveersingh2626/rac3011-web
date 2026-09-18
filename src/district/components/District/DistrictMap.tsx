@@ -3,14 +3,14 @@ import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
 import L from 'leaflet';
 import type { Map as LeafletMap, Marker as LeafletMarker, LeafletMouseEvent } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { 
-  User, 
-  X, 
-  ChevronRight, 
-  Maximize2, 
-  Minimize2, 
-  Search, 
-  CheckCircle2, 
+import {
+  User,
+  X,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  Search,
+  CheckCircle2,
   Award,
   Globe,
   Layers,
@@ -262,8 +262,8 @@ export default function DistrictMap({
   const filteredClubs = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     return activeClubs.filter((c) => {
-      const matchesSearch = !query || 
-        (c.name || '').toLowerCase().includes(query) || 
+      const matchesSearch = !query ||
+        (c.name || '').toLowerCase().includes(query) ||
         (c.president || '').toLowerCase().includes(query) ||
         (c.shortName || '').toLowerCase().includes(query) ||
         (c.location || '').toLowerCase().includes(query) ||
@@ -436,8 +436,8 @@ export default function DistrictMap({
     // 2. Filter and render club markers (All zone polygon boxes completely removed)
     const filtered = clubsList.filter(c => {
       if (!c) return false;
-      const matchesSearch = !query || 
-        (c.name || '').toLowerCase().includes(query) || 
+      const matchesSearch = !query ||
+        (c.name || '').toLowerCase().includes(query) ||
         (c.president || '').toLowerCase().includes(query) ||
         (c.shortName || '').toLowerCase().includes(query);
       const matchesZone = clubMatchesZone(c, activeZoneId);
@@ -526,7 +526,7 @@ export default function DistrictMap({
   const activeZoneObj = REGIONAL_ZONES.find(z => z.id === activeZoneId);
 
   return (
-    <div 
+    <div
       id="district-map-section"
       onMouseMove={handleMouseMove}
       style={{
@@ -611,13 +611,13 @@ export default function DistrictMap({
       </div>
 
       {/* Map View Canvas */}
-      <div 
-        ref={mapContainerRef} 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          position: 'absolute', 
-          inset: 0, 
+      <div
+        ref={mapContainerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          position: 'absolute',
+          inset: 0,
           zIndex: 1,
           display: viewMode === 'map' ? 'block' : 'none'
         }}
@@ -658,12 +658,12 @@ export default function DistrictMap({
 
       {/* Tiles / Cards View Grid */}
       {viewMode === 'cards' && (
-        <div 
-          style={{ 
-            position: 'absolute', 
-            inset: 0, 
-            zIndex: 1, 
-            overflowY: 'auto', 
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            overflowY: 'auto',
             padding: isMobile ? '70px 14px calc(80px + env(safe-area-inset-bottom, 16px)) 14px' : '90px 24px 100px 24px',
             backgroundColor: '#FAF5F7'
           }}
@@ -698,7 +698,7 @@ export default function DistrictMap({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Lock size={17} style={{ color: '#D81B60', flexShrink: 0 }} />
                   <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#9F1239' }}>
-                    To get the contact of DAC members, the president, and the secretary of the club, we must log in
+                    Login to get the contacts of DAC Members, presidents and secretaries
                   </span>
                 </div>
                 <button
@@ -953,7 +953,7 @@ export default function DistrictMap({
 
 
 
-      <div 
+      <div
         style={{
           position: 'absolute',
           bottom: isMobile ? 'calc(76px + env(safe-area-inset-bottom, 8px))' : '20px',
@@ -1023,7 +1023,7 @@ export default function DistrictMap({
             </button>
           </div>
 
-          <div 
+          <div
             style={{
               position: 'relative',
               background: 'rgba(255, 255, 255, 0.94)',
@@ -1086,7 +1086,7 @@ export default function DistrictMap({
       </div>
 
       {hoveredClub && (
-        <div 
+        <div
           className="glass-hover-tooltip"
           style={{
             left: `${tooltipPos.x}px`,
@@ -1096,14 +1096,14 @@ export default function DistrictMap({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <div 
+            <div
               style={{
                 width: '8px',
                 height: '8px',
                 borderRadius: '50%',
                 backgroundColor: getClubNeonColor(hoveredClub),
                 boxShadow: `0 0 8px ${getClubNeonColor(hoveredClub)}`
-              }} 
+              }}
             />
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: getClubNeonColor(hoveredClub), textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               {hoveredClub.zone || 'District 3011'}
@@ -1140,13 +1140,13 @@ export default function DistrictMap({
       )}
 
       {(() => {
-        const currentSlideoutClub = activeSlideoutClub 
+        const currentSlideoutClub = activeSlideoutClub
           ? (activeClubs.find(c => c.id === activeSlideoutClub.id) || activeSlideoutClub)
           : null;
 
         return (
           <>
-            <div 
+            <div
               className={`frosted-slideout-overlay ${currentSlideoutClub ? 'open' : ''}`}
               onClick={() => {
                 setActiveSlideoutClub(null);
@@ -1158,12 +1158,12 @@ export default function DistrictMap({
             <aside className={`frosted-slideout-panel ${currentSlideoutClub ? 'open' : ''}`}>
               {currentSlideoutClub && (
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: isMobile ? '70px 16px calc(80px + env(safe-area-inset-bottom, 16px)) 16px' : '85px 30px 40px 30px', boxSizing: 'border-box' }}>
-                  
+
                   <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
-                    
+
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                       <div style={{ flex: 1, paddingRight: '12px' }}>
-                        <span 
+                        <span
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -1181,470 +1181,470 @@ export default function DistrictMap({
                           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: getClubNeonColor(currentSlideoutClub) }} />
                           {currentSlideoutClub.zone || 'District 3011'}
                         </span>
-                        
+
                         <h2 style={{ fontSize: '1.85rem', fontWeight: 900, color: '#1E1E24', lineHeight: 1.2, margin: 0 }}>
                           {currentSlideoutClub.name}
                         </h2>
                       </div>
 
-                <button
-                  onClick={() => {
-                    setActiveSlideoutClub(null);
-                    if (onSelectClub) onSelectClub(null);
-                  }}
-                  style={{
-                    background: '#FDF0F5',
-                    border: '1px solid rgba(216, 27, 96, 0.25)',
-                    color: '#D81B60',
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#D81B60'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#FDF0F5'}
-                  title="Close Sidebar"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {/* Leadership & Personal Data from Database */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
-                
-                {/* Club President Card */}
-                <div 
-                  style={{
-                    background: '#FFF8FA',
-                    border: '1.5px solid rgba(216, 27, 96, 0.2)',
-                    borderRadius: '16px',
-                    padding: '16px 18px',
-                    boxShadow: '0 4px 14px rgba(216, 27, 96, 0.05)'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#D81B60', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <User size={13} /> Club President (RY 2026-27)
-                    </span>
-                    {currentSlideoutClub.rotaryId && (
-                      <span style={{ fontSize: '0.68rem', color: '#71717A', background: '#FFFFFF', border: '1px solid #E4E4E7', padding: '2px 8px', borderRadius: '100px', fontWeight: 700 }}>
-                        Rotary ID: {currentSlideoutClub.rotaryId}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ fontSize: '1.08rem', fontWeight: 900, color: '#18181B' }}>
-                    {currentSlideoutClub.president || 'Rtr. Club President'}
-                  </div>
-
-                  {/* President Contact Actions */}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                    {isLoggedIn ? (
-                      <>
-                        {currentSlideoutClub.phone && (
-                          <a
-                            href={`tel:${currentSlideoutClub.phone}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '7px 12px',
-                              borderRadius: '8px',
-                              background: '#FFF1F2',
-                              border: '1px solid #FECDD3',
-                              color: '#D81B60',
-                              fontSize: '0.8rem',
-                              fontWeight: 700,
-                              textDecoration: 'none',
-                              transition: 'all 0.2s ease',
-                            }}
-                          >
-                            <Phone size={12} /> +91 {currentSlideoutClub.phone}
-                          </a>
-                        )}
-
-                        {currentSlideoutClub.email && (
-                          <a
-                            href={`mailto:${currentSlideoutClub.email}`}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              padding: '6px 11px',
-                              borderRadius: '8px',
-                              background: '#FFFFFF',
-                              border: '1px solid #E4E4E7',
-                              color: '#D81B60',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              textDecoration: 'none',
-                              maxWidth: '100%',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            <Mail size={12} /> {currentSlideoutClub.email}
-                          </a>
-                        )}
-
-                        <a
-                          href="/portal/directory"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            padding: '6px 11px',
-                            borderRadius: '8px',
-                            background: '#F8FAFC',
-                            border: '1px solid #E2E8F0',
-                            color: '#475569',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            textDecoration: 'none',
-                          }}
-                        >
-                          <User size={12} /> View in Directory
-                        </a>
-                      </>
-                    ) : (
                       <button
-                        type="button"
                         onClick={() => {
-                          if (onOpenLoginModal) onOpenLoginModal();
-                          else window.location.href = '/portal/login';
+                          setActiveSlideoutClub(null);
+                          if (onSelectClub) onSelectClub(null);
                         }}
-                        title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
                         style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '7px 14px',
-                          borderRadius: '8px',
-                          background: '#FFF1F2',
-                          border: '1px dashed #FECDD3',
+                          background: '#FDF0F5',
+                          border: '1px solid rgba(216, 27, 96, 0.25)',
                           color: '#D81B60',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
+                          flexShrink: 0
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#D81B60'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#FDF0F5'}
+                        title="Close Sidebar"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+
+                    {/* Leadership & Personal Data from Database */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '22px' }}>
+
+                      {/* Club President Card */}
+                      <div
+                        style={{
+                          background: '#FFF8FA',
+                          border: '1.5px solid rgba(216, 27, 96, 0.2)',
+                          borderRadius: '16px',
+                          padding: '16px 18px',
+                          boxShadow: '0 4px 14px rgba(216, 27, 96, 0.05)'
                         }}
                       >
-                        <Lock size={12} /> Log in to view President's contact
-                      </button>
-                    )}
-                  </div>
-                </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#D81B60', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <User size={13} /> Club President (RY 2026-27)
+                          </span>
+                          {currentSlideoutClub.rotaryId && (
+                            <span style={{ fontSize: '0.68rem', color: '#71717A', background: '#FFFFFF', border: '1px solid #E4E4E7', padding: '2px 8px', borderRadius: '100px', fontWeight: 700 }}>
+                              Rotary ID: {currentSlideoutClub.rotaryId}
+                            </span>
+                          )}
+                        </div>
 
-                {/* Club Secretary Card - omitted if empty or placeholder */}
-                {isRealSecretary(currentSlideoutClub.secretary) && (
-                  <div 
-                    style={{
-                      background: '#F0FDF4',
-                      border: '1.5px solid rgba(16, 185, 129, 0.25)',
-                      borderRadius: '16px',
-                      padding: '16px 18px',
-                      boxShadow: '0 4px 14px rgba(16, 185, 129, 0.05)'
-                    }}
-                  >
-                    <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                      <UserCheck size={13} /> Club Secretary (RY 2026-27)
-                    </div>
+                        <div style={{ fontSize: '1.08rem', fontWeight: 900, color: '#18181B' }}>
+                          {currentSlideoutClub.president || 'Rtr. Club President'}
+                        </div>
 
-                    <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#18181B' }}>
-                      {currentSlideoutClub.secretary}
-                    </div>
+                        {/* President Contact Actions */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                          {isLoggedIn ? (
+                            <>
+                              {currentSlideoutClub.phone && (
+                                <a
+                                  href={`tel:${currentSlideoutClub.phone}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '7px 12px',
+                                    borderRadius: '8px',
+                                    background: '#FFF1F2',
+                                    border: '1px solid #FECDD3',
+                                    color: '#D81B60',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                    transition: 'all 0.2s ease',
+                                  }}
+                                >
+                                  <Phone size={12} /> +91 {currentSlideoutClub.phone}
+                                </a>
+                              )}
 
-                    {/* Secretary Contact Actions */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
-                      {isLoggedIn ? (
-                        <>
-                          {currentSlideoutClub.secretaryPhone && (
-                            <a
-                              href={`tel:${currentSlideoutClub.secretaryPhone}`}
+                              {currentSlideoutClub.email && (
+                                <a
+                                  href={`mailto:${currentSlideoutClub.email}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '6px 11px',
+                                    borderRadius: '8px',
+                                    background: '#FFFFFF',
+                                    border: '1px solid #E4E4E7',
+                                    color: '#D81B60',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                    maxWidth: '100%',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  <Mail size={12} /> {currentSlideoutClub.email}
+                                </a>
+                              )}
+
+                              <a
+                                href="/portal/directory"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  padding: '6px 11px',
+                                  borderRadius: '8px',
+                                  background: '#F8FAFC',
+                                  border: '1px solid #E2E8F0',
+                                  color: '#475569',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                <User size={12} /> View in Directory
+                              </a>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onOpenLoginModal) onOpenLoginModal();
+                                else window.location.href = '/portal/login';
+                              }}
+                              title="Login to get the contacts of DAC Members, presidents and secretaries"
                               style={{
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '6px',
-                                padding: '7px 12px',
+                                padding: '7px 14px',
                                 borderRadius: '8px',
-                                background: '#F0FDF4',
-                                border: '1px solid #BBF7D0',
-                                color: '#059669',
-                                fontSize: '0.8rem',
+                                background: '#FFF1F2',
+                                border: '1px dashed #FECDD3',
+                                color: '#D81B60',
+                                fontSize: '0.78rem',
                                 fontWeight: 700,
-                                textDecoration: 'none',
+                                cursor: 'pointer',
                                 transition: 'all 0.2s ease',
                               }}
                             >
-                              <Phone size={12} /> +91 {currentSlideoutClub.secretaryPhone}
-                            </a>
+                              <Lock size={12} /> Log in to view President's contact
+                            </button>
                           )}
+                        </div>
+                      </div>
 
-                          {currentSlideoutClub.secretaryEmail && (
-                            <a
-                              href={`mailto:${currentSlideoutClub.secretaryEmail}`}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                padding: '6px 11px',
-                                borderRadius: '8px',
-                                background: '#FFFFFF',
-                                border: '1px solid #D1FAE5',
-                                color: '#059669',
-                                fontSize: '0.78rem',
-                                fontWeight: 700,
-                                textDecoration: 'none',
-                                maxWidth: '100%',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              <Mail size={12} /> {currentSlideoutClub.secretaryEmail}
-                            </a>
-                          )}
-
-                          <a
-                            href="/portal/directory"
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              padding: '6px 11px',
-                              borderRadius: '8px',
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
-                              color: '#475569',
-                              fontSize: '0.78rem',
-                              fontWeight: 700,
-                              textDecoration: 'none',
-                            }}
-                          >
-                            <UserCheck size={12} /> View in Directory
-                          </a>
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onOpenLoginModal) onOpenLoginModal();
-                            else window.location.href = '/portal/login';
+                      {/* Club Secretary Card - omitted if empty or placeholder */}
+                      {isRealSecretary(currentSlideoutClub.secretary) && (
+                        <div
+                          style={{
+                            background: '#F0FDF4',
+                            border: '1.5px solid rgba(16, 185, 129, 0.25)',
+                            borderRadius: '16px',
+                            padding: '16px 18px',
+                            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.05)'
                           }}
-                          title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
+                        >
+                          <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
+                            <UserCheck size={13} /> Club Secretary (RY 2026-27)
+                          </div>
+
+                          <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#18181B' }}>
+                            {currentSlideoutClub.secretary}
+                          </div>
+
+                          {/* Secretary Contact Actions */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                            {isLoggedIn ? (
+                              <>
+                                {currentSlideoutClub.secretaryPhone && (
+                                  <a
+                                    href={`tel:${currentSlideoutClub.secretaryPhone}`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      padding: '7px 12px',
+                                      borderRadius: '8px',
+                                      background: '#F0FDF4',
+                                      border: '1px solid #BBF7D0',
+                                      color: '#059669',
+                                      fontSize: '0.8rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none',
+                                      transition: 'all 0.2s ease',
+                                    }}
+                                  >
+                                    <Phone size={12} /> +91 {currentSlideoutClub.secretaryPhone}
+                                  </a>
+                                )}
+
+                                {currentSlideoutClub.secretaryEmail && (
+                                  <a
+                                    href={`mailto:${currentSlideoutClub.secretaryEmail}`}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px',
+                                      padding: '6px 11px',
+                                      borderRadius: '8px',
+                                      background: '#FFFFFF',
+                                      border: '1px solid #D1FAE5',
+                                      color: '#059669',
+                                      fontSize: '0.78rem',
+                                      fontWeight: 700,
+                                      textDecoration: 'none',
+                                      maxWidth: '100%',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  >
+                                    <Mail size={12} /> {currentSlideoutClub.secretaryEmail}
+                                  </a>
+                                )}
+
+                                <a
+                                  href="/portal/directory"
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '6px 11px',
+                                    borderRadius: '8px',
+                                    background: '#F8FAFC',
+                                    border: '1px solid #E2E8F0',
+                                    color: '#475569',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    textDecoration: 'none',
+                                  }}
+                                >
+                                  <UserCheck size={12} /> View in Directory
+                                </a>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (onOpenLoginModal) onOpenLoginModal();
+                                  else window.location.href = '/portal/login';
+                                }}
+                                title="Login to get the contacts of DAC Members, presidents and secretaries"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '7px 14px',
+                                  borderRadius: '8px',
+                                  background: '#F0FDF4',
+                                  border: '1px dashed #BBF7D0',
+                                  color: '#059669',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                }}
+                              >
+                                <Lock size={12} /> Log in to view Secretary's contact
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ISD & Charter Year Row */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
+                        {currentSlideoutClub.isDirector && (
+                          <div style={{ background: '#EFF6FF', border: '1px solid #DBEAFE', borderRadius: '14px', padding: '12px 14px' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 800, textTransform: 'uppercase' }}>
+                              IS Director
+                            </div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#1E3A8A', marginTop: '3px' }}>
+                              {currentSlideoutClub.isDirector}
+                            </div>
+                          </div>
+                        )}
+
+                        {currentSlideoutClub.charterYear && (
+                          <div style={{ background: '#FFFBEB', border: '1px solid #FEF3C7', borderRadius: '14px', padding: '12px 14px' }}>
+                            <div style={{ fontSize: '0.7rem', color: '#92400E', fontWeight: 800, textTransform: 'uppercase' }}>
+                              Charter Year
+                            </div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#B45309', marginTop: '3px' }}>
+                              {currentSlideoutClub.charterYear}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+
+                    <div style={{ marginBottom: '24px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginBottom: '14px'
+                        }}
+                      >
+                        <div
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '6px',
-                            padding: '7px 14px',
-                            borderRadius: '8px',
-                            background: '#F0FDF4',
-                            border: '1px dashed #BBF7D0',
-                            color: '#059669',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
+                            background: '#FFFBEB',
+                            border: '1px solid rgba(216, 27, 96, 0.2)',
+                            padding: '4px 14px',
+                            borderRadius: '6px'
                           }}
                         >
-                          <Lock size={12} /> Log in to view Secretary's contact
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* ISD & Charter Year Row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px' }}>
-                  {currentSlideoutClub.isDirector && (
-                    <div style={{ background: '#EFF6FF', border: '1px solid #DBEAFE', borderRadius: '14px', padding: '12px 14px' }}>
-                      <div style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 800, textTransform: 'uppercase' }}>
-                        IS Director
-                      </div>
-                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#1E3A8A', marginTop: '3px' }}>
-                        {currentSlideoutClub.isDirector}
-                      </div>
-                    </div>
-                  )}
-
-                  {currentSlideoutClub.charterYear && (
-                    <div style={{ background: '#FFFBEB', border: '1px solid #FEF3C7', borderRadius: '14px', padding: '12px 14px' }}>
-                      <div style={{ fontSize: '0.7rem', color: '#92400E', fontWeight: 800, textTransform: 'uppercase' }}>
-                        Charter Year
-                      </div>
-                      <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#B45309', marginTop: '3px' }}>
-                        {currentSlideoutClub.charterYear}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-              <div style={{ marginBottom: '24px' }}>
-                <div 
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '14px'
-                  }}
-                >
-                  <div 
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      background: '#FFFBEB',
-                      border: '1px solid rgba(216, 27, 96, 0.2)',
-                      padding: '4px 14px',
-                      borderRadius: '6px'
-                    }}
-                  >
-                    <span 
-                      style={{
-                        color: 'var(--skyline-gold-dark)',
-                        fontSize: '0.8rem',
-                        fontWeight: 800,
-                        letterSpacing: '1px',
-                        textTransform: 'uppercase'
-                      }}
-                    >
-                      CLUB KPIS & INITIATIVES
-                    </span>
-                  </div>
-
-                  {onOpenPostInitiativeModal && (
-                    <button
-                      onClick={() => onOpenPostInitiativeModal(currentSlideoutClub.id)}
-                      style={{
-                        background: '#D81B60',
-                        color: '#FFFFFF',
-                        border: 'none',
-                        padding: '5px 12px',
-                        borderRadius: '6px',
-                        fontSize: '0.76rem',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        transition: 'transform 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      + Publish
-                    </button>
-                  )}
-                </div>
-
-                {(currentSlideoutClub.initiatives && currentSlideoutClub.initiatives.length > 0) ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {(currentSlideoutClub.initiatives || []).map((init, idx) => (
-                      <div 
-                        key={idx}
-                        style={{
-                          background: '#FFFFFF',
-                          border: '1px solid #F3E5EB',
-                          borderRadius: '16px',
-                          padding: '18px 20px',
-                          boxShadow: '0 4px 14px rgba(216, 27, 96, 0.04)'
-                        }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
-                          <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--rotaract-pink)', lineHeight: 1.25, margin: 0 }}>
-                            {init.title}
-                          </h4>
-                          <span className="pill-pink" style={{ fontSize: '0.72rem', padding: '2px 8px', flexShrink: 0 }}>
-                            {init.category}
+                          <span
+                            style={{
+                              color: 'var(--skyline-gold-dark)',
+                              fontSize: '0.8rem',
+                              fontWeight: 800,
+                              letterSpacing: '1px',
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            CLUB KPIS & INITIATIVES
                           </span>
                         </div>
 
-                        <p style={{ color: '#4A4A5A', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '10px', fontWeight: 500 }}>
-                          {init.description}
-                        </p>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem', color: 'var(--skyline-gold-dark)', fontWeight: 800, borderTop: '1px solid #F3E5EB', paddingTop: '10px' }}>
-                          <span>Impact: {init.impact}</span>
-                          {init.date && <span style={{ color: '#71717A', fontWeight: 600 }}>{init.date}</span>}
-                        </div>
+                        {onOpenPostInitiativeModal && (
+                          <button
+                            onClick={() => onOpenPostInitiativeModal(currentSlideoutClub.id)}
+                            style={{
+                              background: '#D81B60',
+                              color: '#FFFFFF',
+                              border: 'none',
+                              padding: '5px 12px',
+                              borderRadius: '6px',
+                              fontSize: '0.76rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              transition: 'transform 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                          >
+                            + Publish
+                          </button>
+                        )}
                       </div>
-                    ))}
+
+                      {(currentSlideoutClub.initiatives && currentSlideoutClub.initiatives.length > 0) ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                          {(currentSlideoutClub.initiatives || []).map((init, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                background: '#FFFFFF',
+                                border: '1px solid #F3E5EB',
+                                borderRadius: '16px',
+                                padding: '18px 20px',
+                                boxShadow: '0 4px 14px rgba(216, 27, 96, 0.04)'
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '6px' }}>
+                                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--rotaract-pink)', lineHeight: 1.25, margin: 0 }}>
+                                  {init.title}
+                                </h4>
+                                <span className="pill-pink" style={{ fontSize: '0.72rem', padding: '2px 8px', flexShrink: 0 }}>
+                                  {init.category}
+                                </span>
+                              </div>
+
+                              <p style={{ color: '#4A4A5A', fontSize: '0.92rem', lineHeight: 1.5, marginBottom: '10px', fontWeight: 500 }}>
+                                {init.description}
+                              </p>
+
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.84rem', color: 'var(--skyline-gold-dark)', fontWeight: 800, borderTop: '1px solid #F3E5EB', paddingTop: '10px' }}>
+                                <span>Impact: {init.impact}</span>
+                                {init.date && <span style={{ color: '#71717A', fontWeight: 600 }}>{init.date}</span>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            background: '#FFFFFF',
+                            border: '1px dashed #E4E4E7',
+                            borderRadius: '14px',
+                            padding: '20px',
+                            textAlign: 'center',
+                            color: '#71717A',
+                            fontSize: '0.88rem',
+                            fontWeight: 500
+                          }}
+                        >
+                          <p style={{ margin: '0 0 10px 0' }}>No monthly report KPIs uploaded yet for this club.</p>
+                          {onOpenPostInitiativeModal && (
+                            <button
+                              onClick={() => onOpenPostInitiativeModal(currentSlideoutClub.id)}
+                              style={{
+                                background: '#FFF1F2',
+                                color: '#D81B60',
+                                border: '1px solid #FECDD3',
+                                padding: '7px 15px',
+                                borderRadius: '8px',
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              + Publish First Initiative
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                   </div>
-                ) : (
-                  <div 
-                    style={{
-                      background: '#FFFFFF',
-                      border: '1px dashed #E4E4E7',
-                      borderRadius: '14px',
-                      padding: '20px',
-                      textAlign: 'center',
-                      color: '#71717A',
-                      fontSize: '0.88rem',
-                      fontWeight: 500
-                    }}
-                  >
-                    <p style={{ margin: '0 0 10px 0' }}>No monthly report KPIs uploaded yet for this club.</p>
-                    {onOpenPostInitiativeModal && (
-                      <button
-                        onClick={() => onOpenPostInitiativeModal(currentSlideoutClub.id)}
-                        style={{
-                          background: '#FFF1F2',
-                          color: '#D81B60',
-                          border: '1px solid #FECDD3',
-                          padding: '7px 15px',
-                          borderRadius: '8px',
-                          fontSize: '0.8rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        + Publish First Initiative
-                      </button>
-                    )}
+
+                  <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                    <a
+                      href={`mailto:${currentSlideoutClub.email || currentSlideoutClub.presidentEmail || ''}?subject=${encodeURIComponent(`Connecting with ${currentSlideoutClub.name} (RY 2026-27)`)}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        padding: '16px 20px',
+                        borderRadius: '10px',
+                        fontWeight: 800,
+                        fontSize: '0.95rem',
+                        color: '#FFFFFF',
+                        background: 'linear-gradient(135deg, #D81B60 0%, #AD1457 100%)',
+                        textDecoration: 'none',
+                        boxShadow: '0 8px 24px rgba(216, 27, 96, 0.25)',
+                        transition: 'transform 0.2s ease'
+                      }}
+                    >
+                      Connect via Email <ChevronRight size={18} />
+                    </a>
                   </div>
-                )}
-              </div>
 
-            </div>
-
-            <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-              <a
-                href={`mailto:${currentSlideoutClub.email || currentSlideoutClub.presidentEmail || ''}?subject=${encodeURIComponent(`Connecting with ${currentSlideoutClub.name} (RY 2026-27)`)}`}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  width: '100%',
-                  padding: '16px 20px',
-                  borderRadius: '10px',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  color: '#FFFFFF',
-                  background: 'linear-gradient(135deg, #D81B60 0%, #AD1457 100%)',
-                  textDecoration: 'none',
-                  boxShadow: '0 8px 24px rgba(216, 27, 96, 0.25)',
-                  transition: 'transform 0.2s ease'
-                }}
-              >
-                Connect via Email <ChevronRight size={18} />
-              </a>
-            </div>
-
-          </div>
-        )}
-      </aside>
-    </>
-  );
-})()}
+                </div>
+              )}
+            </aside>
+          </>
+        );
+      })()}
 
     </div>
   );

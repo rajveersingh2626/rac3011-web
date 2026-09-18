@@ -115,8 +115,8 @@ export function RideGalleryPage() {
 
   const rawItems = query.data?.items ?? [];
   const rawYears = query.data?.years ?? [];
-  const items = rawItems.length > 0 ? rawItems : FALLBACK_RIDE_ITEMS;
-  const years = rawYears.length > 0 ? rawYears : [2026, 2025, 2024];
+  const items = query.data ? rawItems : FALLBACK_RIDE_ITEMS;
+  const years = query.data && rawYears.length > 0 ? rawYears : [2026, 2025, 2024];
 
   const activeYear = year ?? String(years[0]);
   const visible = items.filter((i) => String(i.year) === activeYear);

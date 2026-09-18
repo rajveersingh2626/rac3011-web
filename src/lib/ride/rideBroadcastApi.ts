@@ -15,6 +15,7 @@ export interface DispatchBroadcastPayload {
   hostClubsOnly?: boolean;
   all?: boolean;
   customEmails?: string[];
+  publishAsAnnouncement?: boolean;
 }
 
 export async function dispatchRideBroadcast(payload: DispatchBroadcastPayload): Promise<DispatchBroadcastResult> {
