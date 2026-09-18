@@ -159,7 +159,7 @@ export default function DistrictAccess({
       minHeight: '100vh',
       padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab)
         ? '0px'
-        : (isMobile ? '20px 12px calc(84px + env(safe-area-inset-bottom, 8px)) 12px' : '40px 24px 80px 24px'),
+        : (isMobile ? '76px 12px calc(84px + env(safe-area-inset-bottom, 8px)) 12px' : '40px 24px 80px 24px'),
       color: 'var(--text-primary)',
       boxSizing: 'border-box'
     }}>

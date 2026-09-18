@@ -246,6 +246,19 @@ export default function DistrictMap({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [isMapPanLocked, setIsMapPanLocked] = useState(true);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !isMobile) return;
+    if (isMapPanLocked) {
+      mapInstanceRef.current.dragging?.disable();
+      mapInstanceRef.current.touchZoom?.disable();
+    } else {
+      mapInstanceRef.current.dragging?.enable();
+      mapInstanceRef.current.touchZoom?.enable();
+    }
+  }, [isMapPanLocked, isMobile]);
+
   const filteredClubs = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     return activeClubs.filter((c) => {
@@ -259,6 +272,33 @@ export default function DistrictMap({
       return matchesSearch && matchesZone;
     });
   }, [activeClubs, searchQuery, activeZoneId]);
+
+  const groupedClubsByZone = useMemo(() => {
+    const zoneMap: Record<string, MapClub[]> = {};
+    const sorted = [...filteredClubs].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+    sorted.forEach((club) => {
+      const z = club.zone || 'District 3011';
+      if (!zoneMap[z]) zoneMap[z] = [];
+      zoneMap[z].push(club);
+    });
+
+    const preferredOrder = ['prithvi', 'agni', 'vayu', 'akash'];
+    const keys = Object.keys(zoneMap).sort((a, b) => {
+      const idxA = preferredOrder.findIndex((p) => a.toLowerCase().includes(p));
+      const idxB = preferredOrder.findIndex((p) => b.toLowerCase().includes(p));
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    return keys.map((zKey) => ({
+      zoneName: zKey,
+      clubs: zoneMap[zKey],
+      color: zoneMap[zKey][0] ? getClubNeonColor(zoneMap[zKey][0]) : '#D81B60',
+    }));
+  }, [filteredClubs]);
 
   const updateTooltipPos = (clientX: number, clientY: number) => {
     const tooltipWidth = 320;
@@ -319,7 +359,9 @@ export default function DistrictMap({
       center: [28.6050, 77.1800],
       zoom: 12,
       scrollWheelZoom: true,
-      zoomControl: false
+      zoomControl: false,
+      dragging: !isMobile,
+      touchZoom: !isMobile
     });
 
     mapInstanceRef.current = map;
@@ -581,6 +623,39 @@ export default function DistrictMap({
         }}
       />
 
+      {/* Mobile Map Gesture Unlock / Lock Toggle */}
+      {viewMode === 'map' && isMobile && (
+        <button
+          type="button"
+          onClick={() => setIsMapPanLocked((prev) => !prev)}
+          style={{
+            position: 'absolute',
+            top: '74px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: isMapPanLocked ? 'rgba(15, 23, 42, 0.90)' : '#D81B60',
+            color: '#FFFFFF',
+            padding: '8px 18px',
+            borderRadius: '100px',
+            border: '1.5px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            fontSize: '0.78rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            transition: 'all 0.22s ease',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          <span>{isMapPanLocked ? '🗺️ Tap to Pan Map' : '🔒 Lock Map to Scroll Page'}</span>
+        </button>
+      )}
+
       {/* Tiles / Cards View Grid */}
       {viewMode === 'cards' && (
         <div 
@@ -667,118 +742,135 @@ export default function DistrictMap({
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: '18px' }}>
-                {filteredClubs.map((club: MapClub) => {
-                  const neonColor = getClubNeonColor(club);
-                  const hasSecretary = isRealSecretary(club.secretary);
-                  return (
-                    <div
-                      key={club.id}
-                      onClick={() => {
-                        setActiveSlideoutClub(club);
-                        if (onSelectClub) onSelectClub(club.id);
-                      }}
-                      className="rotaract-card"
-                      style={{
-                        background: '#FFFFFF',
-                        borderRadius: '16px',
-                        padding: '20px 22px',
-                        border: `1.5px solid ${neonColor}35`,
-                        boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        transition: 'all 0.22s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-4px)';
-                        e.currentTarget.style.borderColor = neonColor;
-                        e.currentTarget.style.boxShadow = `0 12px 28px ${neonColor}25`;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.borderColor = `${neonColor}35`;
-                        e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.04)';
-                      }}
-                    >
-                      <div>
-                        {/* Zone Badge & Rotary ID */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                          <span
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
+                {groupedClubsByZone.map((group) => (
+                  <div key={group.zoneName} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {/* Zone Group Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '8px', borderBottom: `2px solid ${group.color}30` }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: group.color, boxShadow: `0 0 10px ${group.color}` }} />
+                      <h4 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#0F172A', margin: 0 }}>
+                        {group.zoneName}
+                      </h4>
+                      <span style={{ fontSize: '0.74rem', fontWeight: 800, color: group.color, background: `${group.color}15`, padding: '2px 8px', borderRadius: '100px', border: `1px solid ${group.color}30` }}>
+                        {group.clubs.length} {group.clubs.length === 1 ? 'Club' : 'Clubs'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                      {group.clubs.map((club: MapClub) => {
+                        const neonColor = group.color;
+                        const hasSecretary = isRealSecretary(club.secretary);
+                        return (
+                          <div
+                            key={club.id}
+                            onClick={() => {
+                              setActiveSlideoutClub(club);
+                              if (onSelectClub) onSelectClub(club.id);
+                            }}
+                            className="rotaract-card"
                             style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '3px 10px',
-                              borderRadius: '100px',
-                              background: `${neonColor}15`,
-                              border: `1px solid ${neonColor}40`,
-                              color: neonColor,
-                              fontSize: '0.72rem',
-                              fontWeight: 800,
-                              textTransform: 'uppercase'
+                              background: '#FFFFFF',
+                              borderRadius: '16px',
+                              padding: '20px 22px',
+                              border: `1.5px solid ${neonColor}35`,
+                              boxShadow: '0 4px 18px rgba(0,0,0,0.04)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              transition: 'all 0.22s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-4px)';
+                              e.currentTarget.style.borderColor = neonColor;
+                              e.currentTarget.style.boxShadow = `0 12px 28px ${neonColor}25`;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.borderColor = `${neonColor}35`;
+                              e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.04)';
                             }}
                           >
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: neonColor }} />
-                            {club.zone || 'District 3011'}
-                          </span>
+                            <div>
+                              {/* Zone Badge & Rotary ID */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    padding: '3px 10px',
+                                    borderRadius: '100px',
+                                    background: `${neonColor}15`,
+                                    border: `1px solid ${neonColor}40`,
+                                    color: neonColor,
+                                    fontSize: '0.72rem',
+                                    fontWeight: 800,
+                                    textTransform: 'uppercase'
+                                  }}
+                                >
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: neonColor }} />
+                                  {club.zone || 'District 3011'}
+                                </span>
 
-                          {club.rotaryId && club.rotaryId !== 'N/A' && (
-                            <span style={{ fontSize: '0.70rem', color: '#71717A', fontWeight: 700, background: '#F4F4F5', padding: '2px 8px', borderRadius: '6px' }}>
-                              ID: {club.rotaryId}
-                            </span>
-                          )}
-                        </div>
+                                {club.rotaryId && club.rotaryId !== 'N/A' && (
+                                  <span style={{ fontSize: '0.70rem', color: '#71717A', fontWeight: 700, background: '#F4F4F5', padding: '2px 8px', borderRadius: '6px' }}>
+                                    ID: {club.rotaryId}
+                                  </span>
+                                )}
+                              </div>
 
-                        {/* Club Name */}
-                        <h4 style={{ fontSize: '1.08rem', fontWeight: 900, color: '#0F172A', margin: '0 0 10px 0', lineHeight: 1.35 }}>
-                          {club.name}
-                        </h4>
+                              {/* Club Name */}
+                              <h4 style={{ fontSize: '1.08rem', fontWeight: 900, color: '#0F172A', margin: '0 0 10px 0', lineHeight: 1.35 }}>
+                                {club.name}
+                              </h4>
 
-                        {/* Location / Address */}
-                        {(club.address || club.location) && (
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.78rem', color: '#64748B', marginBottom: '12px', fontWeight: 600 }}>
-                            <MapPin size={13} style={{ color: neonColor, flexShrink: 0, marginTop: '2px' }} />
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                              {club.address || club.location}
-                            </span>
-                          </div>
-                        )}
+                              {/* Location / Address */}
+                              {(club.address || club.location) && (
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', fontSize: '0.78rem', color: '#64748B', marginBottom: '12px', fontWeight: 600 }}>
+                                  <MapPin size={13} style={{ color: neonColor, flexShrink: 0, marginTop: '2px' }} />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                    {club.address || club.location}
+                                  </span>
+                                </div>
+                              )}
 
-                        {/* Leadership */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: '#334155', fontWeight: 700, background: '#F8FAFC', padding: '10px 12px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <User size={13} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              Pres: <strong>{club.president || 'Rtr. Club President'}</strong>
-                            </span>
-                          </div>
+                              {/* Leadership */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.82rem', color: '#334155', fontWeight: 700, background: '#F8FAFC', padding: '10px 12px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <User size={13} style={{ color: 'var(--rotaract-pink)', flexShrink: 0 }} />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    Pres: <strong>{club.president || 'Rtr. Club President'}</strong>
+                                  </span>
+                                </div>
 
-                          {/* Only render secretary if present */}
-                          {hasSecretary && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <UserCheck size={13} style={{ color: '#059669', flexShrink: 0 }} />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                Sec: <strong>{club.secretary}</strong>
+                                {/* Only render secretary if present */}
+                                {hasSecretary && (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <UserCheck size={13} style={{ color: '#059669', flexShrink: 0 }} />
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                      Sec: <strong>{club.secretary}</strong>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Footer: Charter year & View Details button */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.76rem' }}>
+                              <span style={{ color: '#94A3B8', fontWeight: 700 }}>
+                                {club.charterYear ? `Chartered ${club.charterYear}` : 'Verified Club'}
+                              </span>
+                              <span style={{ color: 'var(--rotaract-pink)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                View Details <ChevronRight size={13} />
                               </span>
                             </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Footer: Charter year & View Details button */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #F1F5F9', fontSize: '0.76rem' }}>
-                        <span style={{ color: '#94A3B8', fontWeight: 700 }}>
-                          {club.charterYear ? `Chartered ${club.charterYear}` : 'Verified Club'}
-                        </span>
-                        <span style={{ color: 'var(--rotaract-pink)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          View Details <ChevronRight size={13} />
-                        </span>
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>

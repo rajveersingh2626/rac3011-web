@@ -153,117 +153,119 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
           </div>
         )}
 
-        {/* Gradient Shadow Vignette for Text Legibility */}
-        <div 
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 45%, rgba(0, 0, 0, 0.88) 100%)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            padding: isMobile ? '6px' : '16px',
-            pointerEvents: 'none'
-          }}
-        >
-          {/* Top Row: District Era Pin Badge & Seniority Badge */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {isCurrentDRR ? (
-              <>
-                <span 
-                  style={{
-                    background: 'rgba(15, 23, 42, 0.9)',
-                    color: '#FFFFFF',
-                    padding: '5px 13px',
-                    borderRadius: '100px',
-                    fontSize: '0.74rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.4px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    border: '1px solid rgba(216, 27, 96, 0.45)',
-                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)'
-                  }}
-                >
-                  <span className="live-indicator-dot" />
-                  CURRENT DRR
-                </span>
+        {/* Gradient Shadow Vignette for Text Legibility (Desktop only to keep mobile portrait clear) */}
+        {!isMobile && (
+          <div 
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 45%, rgba(0, 0, 0, 0.88) 100%)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: '16px',
+              pointerEvents: 'none'
+            }}
+          >
+            {/* Top Row: District Era Pin Badge & Seniority Badge */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {isCurrentDRR ? (
+                <>
+                  <span 
+                    style={{
+                      background: 'rgba(15, 23, 42, 0.9)',
+                      color: '#FFFFFF',
+                      padding: '5px 13px',
+                      borderRadius: '100px',
+                      fontSize: '0.74rem',
+                      fontWeight: 800,
+                      letterSpacing: '0.4px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      border: '1px solid rgba(216, 27, 96, 0.45)',
+                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)'
+                    }}
+                  >
+                    <span className="live-indicator-dot" />
+                    CURRENT DRR
+                  </span>
 
-                <span 
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.65)',
-                    color: '#F4F4F5',
-                    padding: '3px 9px',
-                    borderRadius: '100px',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                  }}
-                >
-                  #{drr.srNo}
-                </span>
-              </>
-            ) : (
-              <>
-                <span 
-                  style={{
-                    background: eraConfig.bg,
-                    color: eraConfig.textColor,
-                    padding: '5px 12px',
-                    borderRadius: '100px',
-                    fontSize: '0.74rem',
-                    fontWeight: 900,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    border: `1px solid ${eraConfig.border}`,
-                    boxShadow: eraConfig.shadow
-                  }}
-                >
-                  <MapPin size={12} /> {eraConfig.label}
-                </span>
+                  <span 
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.65)',
+                      color: '#F4F4F5',
+                      padding: '3px 9px',
+                      borderRadius: '100px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                    }}
+                  >
+                    #{drr.srNo}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span 
+                    style={{
+                      background: eraConfig.bg,
+                      color: eraConfig.textColor,
+                      padding: '5px 12px',
+                      borderRadius: '100px',
+                      fontSize: '0.74rem',
+                      fontWeight: 900,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      border: `1px solid ${eraConfig.border}`,
+                      boxShadow: eraConfig.shadow
+                    }}
+                  >
+                    <MapPin size={12} /> {eraConfig.label}
+                  </span>
 
-                <span 
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.65)',
-                    color: '#F4F4F5',
-                    padding: '3px 9px',
-                    borderRadius: '100px',
-                    fontSize: '0.72rem',
-                    fontWeight: 700,
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                  }}
-                >
-                  #{drr.srNo}
-                </span>
-              </>
-            )}
+                  <span 
+                    style={{
+                      background: 'rgba(0, 0, 0, 0.65)',
+                      color: '#F4F4F5',
+                      padding: '3px 9px',
+                      borderRadius: '100px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                    }}
+                  >
+                    #{drr.srNo}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Bottom Row inside Photo: Rotary Year Tenure */}
+            <div>
+              <span 
+                className="pill-gold" 
+                style={{ 
+                  fontSize: '0.78rem', 
+                  padding: '4px 10px', 
+                  marginBottom: '6px', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '5px' 
+                }}
+              >
+                <Calendar size={12} /> {drr.tenure}
+              </span>
+            </div>
           </div>
-
-          {/* Bottom Row inside Photo: Rotary Year Tenure */}
-          <div>
-            <span 
-              className="pill-gold" 
-              style={{ 
-                fontSize: '0.78rem', 
-                padding: '4px 10px', 
-                marginBottom: '6px', 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '5px' 
-              }}
-            >
-              <Calendar size={12} /> {drr.tenure}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Card Information Body */}
       <div 
         style={{ 
-          padding: isMobile ? '12px 10px 14px 10px' : '20px 22px 22px 22px', 
+          padding: isMobile ? '10px 10px 12px 10px' : '20px 22px 22px 22px', 
           display: 'flex', 
           flexDirection: 'column', 
           flex: 1,
@@ -272,6 +274,16 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
         }}
       >
         <div>
+          {isMobile && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }}>
+                {eraConfig.label}
+              </span>
+              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#71717A', background: '#F4F4F5', padding: '1px 6px', borderRadius: '4px' }}>
+                #{drr.srNo}
+              </span>
+            </div>
+          )}
           <h3 
             style={{ 
               fontSize: isMobile ? '0.94rem' : '1.25rem', 

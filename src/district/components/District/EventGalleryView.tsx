@@ -107,11 +107,15 @@ const FALLBACK_GALLERY_ITEMS: PublicGalleryItem[] = [
 ];
 
 export function resolveGalleryImageUrl(url: string | null | undefined): string {
-  if (!url) return '/hero-dac-oath.webp';
-  // Strip disabled apex rotaract3011.org domain to local asset path
-  const cleaned = url.replace(/^https?:\/\/(www\.)?rotaract3011\.org(\/.*)?$/, '$2');
-  if (cleaned.startsWith('/')) return cleaned;
-  return cleaned || url;
+  if (!url || typeof url !== 'string' || !url.trim()) return '/hero-dac-oath.webp';
+  const trimmed = url.trim();
+  // Strip any apex or subdomain rotaract3011.org domain to local asset path if pointing to static file
+  const localMatch = trimmed.match(/^https?:\/\/[a-zA-Z0-9.-]*rotaract3011\.org(\/.*)?$/);
+  if (localMatch && localMatch[1]) {
+    return localMatch[1];
+  }
+  if (trimmed.startsWith('/')) return trimmed;
+  return trimmed;
 }
 
 export default function EventGalleryView() {
@@ -571,6 +575,13 @@ export default function EventGalleryView() {
               <img
                 src={currentLightboxItem.imageUrl}
                 alt={currentLightboxItem.title}
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (!img.dataset.failed) {
+                    img.dataset.failed = 'true';
+                    img.src = '/hero-dac-oath.webp';
+                  }
+                }}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '65vh',

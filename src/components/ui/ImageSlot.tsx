@@ -11,6 +11,7 @@ export interface ImageSlotProps {
   prompt?: ReactNode;
   caption?: ReactNode;
   className?: string;
+  fallbackSrc?: string;
 }
 
 const ratioClass: Record<ImageRatio, string> = {
@@ -19,15 +20,26 @@ const ratioClass: Record<ImageRatio, string> = {
   '3:4': 'aspect-[3/4]',
 };
 
-export function ImageSlot({ src, alt, ratio = '4:3', prompt, caption, className }: ImageSlotProps) {
+export function ImageSlot({ src, alt, ratio = '4:3', prompt, caption, className, fallbackSrc }: ImageSlotProps) {
   const [failed, setFailed] = useState(false);
+  const [imgSrc, setImgSrc] = useState(src);
+
   useEffect(() => {
     setFailed(false);
+    setImgSrc(src);
   }, [src]);
+
+  const handleImageError = () => {
+    if (fallbackSrc && imgSrc !== fallbackSrc) {
+      setImgSrc(fallbackSrc);
+    } else {
+      setFailed(true);
+    }
+  };
 
   const box = cn('relative w-full overflow-hidden rounded-[16px]', ratioClass[ratio], className);
 
-  if (!src || failed) {
+  if (!imgSrc || failed) {
     return (
       <figure className="w-full">
         <div
@@ -46,11 +58,11 @@ export function ImageSlot({ src, alt, ratio = '4:3', prompt, caption, className 
     <figure className="w-full">
       <div data-state="filled" className={cn(box, 'bg-page')}>
         <img
-          src={src}
+          src={imgSrc}
           alt={alt}
           loading="lazy"
           decoding="async"
-          onError={() => setFailed(true)}
+          onError={handleImageError}
           className="absolute inset-0 size-full object-cover"
         />
       </div>

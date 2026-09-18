@@ -37,22 +37,22 @@ function RequireRideParticipantAuth() {
 function RideSubpageHeader() {
   const { participant } = useParticipantAuth();
   return (
-    <header className="sticky top-0 z-40 border-b-2 border-[#171515] bg-[#FDFBF7]/95 px-4 py-3 backdrop-blur-md sm:px-8 shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between">
-        <Link to="/" className="inline-flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-          <img src="/ride/logos/2026_logo_not_coloured.png" alt="RIDE" className="h-8 sm:h-9 w-auto object-contain" />
-          <span className="font-ride-sans text-base font-black text-[#171515] sm:text-lg">
+    <header className="sticky top-0 z-40 border-b-2 border-[#171515] bg-[#FDFBF7]/95 px-3.5 py-2.5 backdrop-blur-md sm:px-8 shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2">
+        <Link to="/" className="inline-flex items-center gap-2 hover:opacity-90 transition-opacity shrink-0">
+          <img src="/ride/logos/2026_logo_not_coloured.png" alt="RIDE" className="h-7 sm:h-9 w-auto object-contain" />
+          <span className="font-ride-sans text-xs sm:text-base font-black text-[#171515] hidden sm:inline">
             THE RIDE <span className="text-[#C72425]">•</span> RID 3011
           </span>
         </Link>
-        <nav className="flex items-center gap-4 text-xs font-black uppercase tracking-wider sm:gap-6 sm:text-sm text-[#171515]">
-          <Link to="/" className="hover:text-[#EA6623]">Home</Link>
-          <Link to="/gallery" className="hover:text-[#EA6623]">Gallery</Link>
+        <nav className="flex items-center gap-2.5 sm:gap-6 text-xs font-black uppercase tracking-wider sm:text-sm text-[#171515]">
+          <Link to="/" className="hover:text-[#EA6623] px-1 py-1">Home</Link>
+          <Link to="/gallery" className="hover:text-[#EA6623] px-1 py-1">Gallery</Link>
           <Link
             to="/dashboard"
-            className="px-3.5 py-1.5 rounded-xl bg-[#19539D] text-white hover:bg-blue-800 transition-all font-black text-xs"
+            className="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl bg-[#19539D] text-white hover:bg-blue-800 transition-all font-black text-[11px] sm:text-xs whitespace-nowrap"
           >
-            {participant ? 'My Dashboard' : 'Participant Portal'}
+            {participant ? 'Dashboard' : 'Portal'}
           </Link>
         </nav>
       </div>

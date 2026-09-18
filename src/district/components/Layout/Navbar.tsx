@@ -117,8 +117,9 @@ export default function Navbar({
   }, [isMobile, shouldShowNavbar]);
 
   return (
-    <div
-      ref={wrapperRef}
+    <>
+      <div
+        ref={wrapperRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
@@ -146,7 +147,7 @@ export default function Navbar({
           backdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
           border: isMenuOpen ? '1px solid transparent' : '1px solid rgba(255, 255, 255, 0.16)',
-          borderRadius: '20px',
+          borderRadius: '100px',
           boxShadow: isMenuOpen 
             ? 'none' 
             : '0 12px 36px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
@@ -311,28 +312,26 @@ export default function Navbar({
           isOpenProp={isMenuOpen}
         />
       </div>
-
-      {isMobile && (
-        <>
-
-          <MobileBottomNav
-            activePage={activePage}
-            activeDistrictTab={activeDistrictTab}
-            onNavigate={(page, tab) => {
-              setIsMenuOpen(false);
-              if (page === 'district' && tab) {
-                if (setActiveDistrictTab) setActiveDistrictTab(tab);
-                setActivePage('district', tab);
-              } else {
-                setActivePage(page, tab);
-              }
-            }}
-            onOpenMenu={() => {
-              setIsMenuOpen((prev) => !prev);
-            }}
-          />
-        </>
-      )}
     </div>
+
+    {isMobile && (
+      <MobileBottomNav
+        activePage={activePage}
+        activeDistrictTab={activeDistrictTab}
+        onNavigate={(page, tab) => {
+          setIsMenuOpen(false);
+          if (page === 'district' && tab) {
+            if (setActiveDistrictTab) setActiveDistrictTab(tab);
+            setActivePage('district', tab);
+          } else {
+            setActivePage(page, tab);
+          }
+        }}
+        onOpenMenu={() => {
+          setIsMenuOpen((prev) => !prev);
+        }}
+      />
+    )}
+  </>
   );
 }
