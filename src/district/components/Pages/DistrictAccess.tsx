@@ -134,9 +134,9 @@ export default function DistrictAccess({
     return leadersList.filter((leader) => {
       const matchesCategory = leadershipCategory === 'All' || leader.category === leadershipCategory;
       const q = leadershipSearch.trim().toLowerCase();
-      const matchesSearch = !q || 
-        leader.name.toLowerCase().includes(q) || 
-        leader.role.toLowerCase().includes(q) || 
+      const matchesSearch = !q ||
+        leader.name.toLowerCase().includes(q) ||
+        leader.role.toLowerCase().includes(q) ||
         (leader.email && leader.email.toLowerCase().includes(q));
       return matchesCategory && matchesSearch;
     });
@@ -177,434 +177,434 @@ export default function DistrictAccess({
       ) : (
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 
-        {activeDistrictTab === 'heritage' && (
-          <PastDRRShowcase />
-        )}
+          {activeDistrictTab === 'heritage' && (
+            <PastDRRShowcase />
+          )}
 
-        {(activeDistrictTab === 'initiatives' || activeDistrictTab === 'showcase') && (
-          <ClubInitiativesList
-            clubs={clubs}
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            onOpenLoginModal={onOpenLoginModal}
-            onOpenPostInitiativeModal={onOpenPostInitiativeModal}
-          />
-        )}
+          {(activeDistrictTab === 'initiatives' || activeDistrictTab === 'showcase') && (
+            <ClubInitiativesList
+              clubs={clubs}
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              onOpenLoginModal={onOpenLoginModal}
+              onOpenPostInitiativeModal={onOpenPostInitiativeModal}
+            />
+          )}
 
-        {activeDistrictTab === 'resources' && (
-          <DistrictResourcesView />
-        )}
+          {activeDistrictTab === 'resources' && (
+            <DistrictResourcesView />
+          )}
 
-        {activeDistrictTab === 'gallery' && (
-          <EventGalleryView />
-        )}
+          {activeDistrictTab === 'gallery' && (
+            <EventGalleryView />
+          )}
 
-        {activeDistrictTab === 'calendar' && (
-          <DistrictCalendarView
-            isLoggedIn={isLoggedIn}
-            userRole={userRole}
-            onOpenLoginModal={onOpenLoginModal}
-            clubs={clubs}
-          />
-        )}
+          {activeDistrictTab === 'calendar' && (
+            <DistrictCalendarView
+              isLoggedIn={isLoggedIn}
+              userRole={userRole}
+              onOpenLoginModal={onOpenLoginModal}
+              clubs={clubs}
+            />
+          )}
 
-        {activeDistrictTab === 'leadership' && (
-          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', color: '#FFFFFF', marginBottom: isMobile ? '20px' : '32px' }}>
-              <span className="pill-gold" style={{ fontSize: isMobile ? '0.74rem' : '0.82rem', marginBottom: '8px' }}>
-                DISTRICT ACTION COMMITTEE RY 2026-27
-              </span>
-              <h2 style={{ fontSize: isMobile ? 'clamp(1.75rem, 5vw, 2.4rem)' : '2.5rem', fontWeight: 900, letterSpacing: '-0.5px', marginTop: '6px' }}>
-                District Secretariat &amp; Leadership
-              </h2>
-              <p style={{ opacity: 0.9, fontSize: isMobile ? '0.92rem' : '1.05rem', maxWidth: '680px', margin: '8px auto 0 auto', lineHeight: 1.55 }}>
-                Guided by passion, fellowship, and visionary leadership — 50 dedicated leaders steering Rotaract District Organization 3011.
-              </p>
-            </div>
-
-            {!isLoggedIn && (
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.12)',
-                backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                borderRadius: '16px',
-                padding: isMobile ? '12px 16px' : '14px 22px',
-                marginBottom: isMobile ? '20px' : '26px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                flexWrap: 'wrap',
-                color: '#FFFFFF'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Lock size={18} style={{ color: '#FBBF24', flexShrink: 0 }} />
-                  <span style={{ fontSize: isMobile ? '0.82rem' : '0.88rem', fontWeight: 600, lineHeight: 1.4 }}>
-                    To get the contact of DAC members, the president, and the secretary of the club, we must log in
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onOpenLoginModal) onOpenLoginModal();
-                    else window.location.href = '/portal/login';
-                  }}
-                  style={{
-                    background: '#FFFFFF',
-                    color: '#123499',
-                    border: 'none',
-                    padding: '7px 18px',
-                    borderRadius: '100px',
-                    fontWeight: 800,
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    transition: 'transform 0.15s ease'
-                  }}
-                >
-                  Log in
-                </button>
-              </div>
-            )}
-
-            {/* Controls Bar: Category Pills & Search */}
-            <div style={{ 
-              display: 'flex', 
-              flexDirection: isMobile ? 'column' : 'row',
-              alignItems: isMobile ? 'stretch' : 'center', 
-              justifyContent: 'space-between', 
-              gap: isMobile ? '12px' : '16px', 
-              marginBottom: isMobile ? '20px' : '32px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(12px)',
-              padding: isMobile ? '12px 14px' : '16px 20px',
-              borderRadius: isMobile ? '16px' : '20px',
-              border: '1px solid rgba(255, 255, 255, 0.2)'
-            }}>
-              {/* Category Pills */}
-              <div style={{
-                display: 'flex',
-                flexWrap: isMobile ? 'nowrap' : 'wrap',
-                overflowX: isMobile ? 'auto' : 'visible',
-                WebkitOverflowScrolling: 'touch',
-                gap: '8px',
-                paddingBottom: isMobile ? '4px' : '0',
-                scrollbarWidth: 'none'
-              }}>
-                {[
-                  { key: 'All', label: 'All Leaders', count: leadersList.length },
-                  { key: 'Executive Council', label: 'Executive Council', count: leadersList.filter(l => l.category === 'Executive Council').length },
-                  { key: 'Zonal Team', label: 'Zonal Team', count: leadersList.filter(l => l.category === 'Zonal Team').length },
-                  { key: 'District Chairs', label: 'District Chairs', count: leadersList.filter(l => l.category === 'District Chairs').length }
-                ].map((cat) => {
-                  const isActive = leadershipCategory === cat.key;
-                  return (
-                    <button
-                      key={cat.key}
-                      onClick={() => setLeadershipCategory(cat.key)}
-                      style={{
-                        minHeight: '44px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        padding: isMobile ? '8px 16px' : '8px 16px',
-                        borderRadius: '100px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: isMobile ? '0.80rem' : '0.82rem',
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        flexShrink: 0,
-                        transition: 'all 0.2s ease',
-                        background: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)',
-                        color: isActive ? '#D81B60' : '#FFFFFF',
-                        boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'
-                      }}
-                    >
-                      {cat.label} ({cat.count})
-                    </button>
-                  );
-                })}
+          {activeDistrictTab === 'leadership' && (
+            <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+              <div style={{ textAlign: 'center', color: '#FFFFFF', marginBottom: isMobile ? '20px' : '32px' }}>
+                <span className="pill-gold" style={{ fontSize: isMobile ? '0.74rem' : '0.82rem', marginBottom: '8px' }}>
+                  DISTRICT ACTION COMMITTEE RY 2026-27
+                </span>
+                <h2 style={{ fontSize: isMobile ? 'clamp(1.75rem, 5vw, 2.4rem)' : '2.5rem', fontWeight: 900, letterSpacing: '-0.5px', marginTop: '6px' }}>
+                  District Secretariat &amp; Leadership
+                </h2>
+                <p style={{ opacity: 0.9, fontSize: isMobile ? '0.92rem' : '1.05rem', maxWidth: '680px', margin: '8px auto 0 auto', lineHeight: 1.55 }}>
+                  Guided by passion, fellowship, and visionary leadership — 50 dedicated leaders steering Rotaract District Organization 3011.
+                </p>
               </div>
 
-              {/* Search Box */}
-              <div style={{ position: 'relative', minWidth: isMobile ? '100%' : '260px', flex: '1', maxWidth: isMobile ? '100%' : '360px' }}>
-                <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input
-                  type="text"
-                  placeholder="Search leader by name, role, email..."
-                  value={leadershipSearch}
-                  onChange={(e) => setLeadershipSearch(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px 9px 36px',
-                    borderRadius: '100px',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    background: '#FFFFFF',
-                    color: '#0F172A',
-                    fontSize: '0.85rem',
-                    outline: 'none',
-                    fontWeight: 500,
-                    boxSizing: 'border-box'
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Leaders Grid */}
-            {filteredLeaders.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '24px' }}>
-                <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>No leaders match your search or filter</p>
-                <button 
-                  onClick={() => { setLeadershipCategory('All'); setLeadershipSearch(''); }}
-                  style={{ marginTop: '12px', padding: '8px 20px', borderRadius: '100px', background: '#FFFFFF', color: '#D81B60', border: 'none', fontWeight: 800, cursor: 'pointer' }}
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: isMobile ? '12px' : '22px' }}>
-                {filteredLeaders.map((leader) => (
-                  <div 
-                    key={leader.id} 
-                    className="rotaract-card" 
-                    style={{ 
-                      padding: isMobile ? '16px 12px 18px 12px' : '24px 20px', 
-                      textAlign: 'center', 
-                      backgroundColor: '#FFFFFF', 
-                      borderRadius: isMobile ? '16px' : '20px',
-                      border: '1.5px solid rgba(216, 27, 96, 0.12)',
-                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between'
+              {!isLoggedIn && (
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  borderRadius: '16px',
+                  padding: isMobile ? '12px 16px' : '14px 22px',
+                  marginBottom: isMobile ? '20px' : '26px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  flexWrap: 'wrap',
+                  color: '#FFFFFF'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Lock size={18} style={{ color: '#FBBF24', flexShrink: 0 }} />
+                    <span style={{ fontSize: isMobile ? '0.82rem' : '0.88rem', fontWeight: 600, lineHeight: 1.4 }}>
+                      Login to get the contacts of DAC Members, presidents and secretaries
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onOpenLoginModal) onOpenLoginModal();
+                      else window.location.href = '/portal/login';
+                    }}
+                    style={{
+                      background: '#FFFFFF',
+                      color: '#123499',
+                      border: 'none',
+                      padding: '7px 18px',
+                      borderRadius: '100px',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      transition: 'transform 0.15s ease'
                     }}
                   >
-                    <div>
-                      {/* Avatar with fallback */}
-                      <div style={{ position: 'relative', width: isMobile ? '72px' : '96px', height: isMobile ? '72px' : '96px', margin: isMobile ? '0 auto 10px auto' : '0 auto 16px auto' }}>
-                        {leader.photo ? (
-                          <img
-                            src={leader.photo}
-                            alt={leader.name}
-                            loading="lazy"
-                            onError={(e) => {
-                              const fallbackAsset = findLeaderPhoto(leader.name, leader.email, leader.id);
-                              if (fallbackAsset && !e.currentTarget.src.includes(fallbackAsset)) {
-                                e.currentTarget.src = fallbackAsset;
-                              } else {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
-                                if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
-                              }
-                            }}
+                    Log in
+                  </button>
+                </div>
+              )}
+
+              {/* Controls Bar: Category Pills & Search */}
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center',
+                justifyContent: 'space-between',
+                gap: isMobile ? '12px' : '16px',
+                marginBottom: isMobile ? '20px' : '32px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(12px)',
+                padding: isMobile ? '12px 14px' : '16px 20px',
+                borderRadius: isMobile ? '16px' : '20px',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
+              }}>
+                {/* Category Pills */}
+                <div style={{
+                  display: 'flex',
+                  flexWrap: isMobile ? 'nowrap' : 'wrap',
+                  overflowX: isMobile ? 'auto' : 'visible',
+                  WebkitOverflowScrolling: 'touch',
+                  gap: '8px',
+                  paddingBottom: isMobile ? '4px' : '0',
+                  scrollbarWidth: 'none'
+                }}>
+                  {[
+                    { key: 'All', label: 'All Leaders', count: leadersList.length },
+                    { key: 'Executive Council', label: 'Executive Council', count: leadersList.filter(l => l.category === 'Executive Council').length },
+                    { key: 'Zonal Team', label: 'Zonal Team', count: leadersList.filter(l => l.category === 'Zonal Team').length },
+                    { key: 'District Chairs', label: 'District Chairs', count: leadersList.filter(l => l.category === 'District Chairs').length }
+                  ].map((cat) => {
+                    const isActive = leadershipCategory === cat.key;
+                    return (
+                      <button
+                        key={cat.key}
+                        onClick={() => setLeadershipCategory(cat.key)}
+                        style={{
+                          minHeight: '44px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: isMobile ? '8px 16px' : '8px 16px',
+                          borderRadius: '100px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontSize: isMobile ? '0.80rem' : '0.82rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          transition: 'all 0.2s ease',
+                          background: isActive ? '#FFFFFF' : 'rgba(255, 255, 255, 0.15)',
+                          color: isActive ? '#D81B60' : '#FFFFFF',
+                          boxShadow: isActive ? '0 4px 12px rgba(0, 0, 0, 0.15)' : 'none'
+                        }}
+                      >
+                        {cat.label} ({cat.count})
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Search Box */}
+                <div style={{ position: 'relative', minWidth: isMobile ? '100%' : '260px', flex: '1', maxWidth: isMobile ? '100%' : '360px' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
+                  <input
+                    type="text"
+                    placeholder="Search leader by name, role, email..."
+                    value={leadershipSearch}
+                    onChange={(e) => setLeadershipSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px 9px 36px',
+                      borderRadius: '100px',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      background: '#FFFFFF',
+                      color: '#0F172A',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      fontWeight: 500,
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Leaders Grid */}
+              {filteredLeaders.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#FFFFFF', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '24px' }}>
+                  <p style={{ fontSize: '1.2rem', fontWeight: 700 }}>No leaders match your search or filter</p>
+                  <button
+                    onClick={() => { setLeadershipCategory('All'); setLeadershipSearch(''); }}
+                    style={{ marginTop: '12px', padding: '8px 20px', borderRadius: '100px', background: '#FFFFFF', color: '#D81B60', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: isMobile ? '12px' : '22px' }}>
+                  {filteredLeaders.map((leader) => (
+                    <div
+                      key={leader.id}
+                      className="rotaract-card"
+                      style={{
+                        padding: isMobile ? '16px 12px 18px 12px' : '24px 20px',
+                        textAlign: 'center',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: isMobile ? '16px' : '20px',
+                        border: '1.5px solid rgba(216, 27, 96, 0.12)',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <div>
+                        {/* Avatar with fallback */}
+                        <div style={{ position: 'relative', width: isMobile ? '72px' : '96px', height: isMobile ? '72px' : '96px', margin: isMobile ? '0 auto 10px auto' : '0 auto 16px auto' }}>
+                          {leader.photo ? (
+                            <img
+                              src={leader.photo}
+                              alt={leader.name}
+                              loading="lazy"
+                              onError={(e) => {
+                                const fallbackAsset = findLeaderPhoto(leader.name, leader.email, leader.id);
+                                if (fallbackAsset && !e.currentTarget.src.includes(fallbackAsset)) {
+                                  e.currentTarget.src = fallbackAsset;
+                                } else {
+                                  e.currentTarget.style.display = 'none';
+                                  const fallback = e.currentTarget.parentElement?.querySelector('.avatar-fallback');
+                                  if (fallback instanceof HTMLElement) fallback.style.display = 'flex';
+                                }
+                              }}
+                              style={{
+                                width: isMobile ? '72px' : '96px',
+                                height: isMobile ? '72px' : '96px',
+                                borderRadius: '50%',
+                                objectFit: 'cover',
+                                objectPosition: '50% 20%',
+                                border: isMobile ? '2.5px solid #D81B60' : '3px solid #D81B60',
+                                boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="avatar-fallback"
                             style={{
+                              display: leader.photo ? 'none' : 'flex',
                               width: isMobile ? '72px' : '96px',
                               height: isMobile ? '72px' : '96px',
                               borderRadius: '50%',
-                              objectFit: 'cover',
-                              objectPosition: '50% 20%',
-                              border: isMobile ? '2.5px solid #D81B60' : '3px solid #D81B60',
+                              background: 'linear-gradient(135deg, #D81B60 0%, #880E4F 100%)',
+                              color: '#FFFFFF',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: isMobile ? '1.25rem' : '1.6rem',
+                              fontWeight: 900,
                               boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
                             }}
-                          />
-                        ) : null}
-                        <div
-                          className="avatar-fallback"
-                          style={{
-                            display: leader.photo ? 'none' : 'flex',
-                            width: isMobile ? '72px' : '96px',
-                            height: isMobile ? '72px' : '96px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #D81B60 0%, #880E4F 100%)',
-                            color: '#FFFFFF',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: isMobile ? '1.25rem' : '1.6rem',
-                            fontWeight: 900,
-                            boxShadow: '0 8px 20px rgba(216, 27, 96, 0.25)'
-                          }}
-                        >
-                          {leader.name.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*)+/i, '').split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          >
+                            {leader.name.replace(/^(Rtn\.?\s*|Rtr\.?\s*|PHF\.?\s*)+/i, '').split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                        </div>
+
+                        {/* Category Pill */}
+                        <div style={{ marginBottom: isMobile ? '6px' : '8px' }}>
+                          <span style={{
+                            fontSize: isMobile ? '0.64rem' : '0.68rem',
+                            fontWeight: 800,
+                            letterSpacing: '0.4px',
+                            textTransform: 'uppercase',
+                            padding: isMobile ? '3px 8px' : '3px 10px',
+                            borderRadius: '100px',
+                            background: leader.category === 'Executive Council' ? '#FDF2F4' : leader.category === 'Zonal Team' ? '#E0F2FE' : '#F3E8FF',
+                            color: leader.category === 'Executive Council' ? '#D81B60' : leader.category === 'Zonal Team' ? '#0284C7' : '#7E22CE',
+                            display: 'inline-block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {leader.category}
+                          </span>
+                        </div>
+
+                        {/* Name */}
+                        <h3 style={{
+                          fontSize: isMobile ? '0.94rem' : '1.18rem',
+                          fontWeight: 800,
+                          color: '#0F172A',
+                          marginBottom: '4px',
+                          lineHeight: 1.25,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {leader.name}
+                        </h3>
+
+                        {/* Role */}
+                        <div style={{
+                          color: '#D81B60',
+                          fontWeight: 700,
+                          fontSize: isMobile ? '0.74rem' : '0.86rem',
+                          minHeight: isMobile ? '28px' : '38px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          lineHeight: 1.2
+                        }}>
+                          {leader.role}
                         </div>
                       </div>
 
-                      {/* Category Pill */}
-                      <div style={{ marginBottom: isMobile ? '6px' : '8px' }}>
-                        <span style={{ 
-                          fontSize: isMobile ? '0.64rem' : '0.68rem', 
-                          fontWeight: 800, 
-                          letterSpacing: '0.4px',
-                          textTransform: 'uppercase',
-                          padding: isMobile ? '3px 8px' : '3px 10px', 
-                          borderRadius: '100px',
-                          background: leader.category === 'Executive Council' ? '#FDF2F4' : leader.category === 'Zonal Team' ? '#E0F2FE' : '#F3E8FF',
-                          color: leader.category === 'Executive Council' ? '#D81B60' : leader.category === 'Zonal Team' ? '#0284C7' : '#7E22CE',
-                          display: 'inline-block',
-                          maxWidth: '100%',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {leader.category}
-                        </span>
-                      </div>
+                      {/* Email Card & Contact Information */}
+                      <div style={{ marginTop: '16px' }}>
+                        {isLoggedIn ? (
+                          <>
+                            {leader.email && (
+                              <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '6px',
+                                background: '#F8FAFC',
+                                border: '1px solid #E2E8F0',
+                                borderRadius: '10px',
+                                padding: '7px 10px',
+                                fontSize: '0.78rem'
+                              }}>
+                                <a
+                                  href={`mailto:${leader.email}`}
+                                  title={`Send email to ${leader.name}`}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    color: '#1E293B',
+                                    textDecoration: 'none',
+                                    fontWeight: 600,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                    flex: 1
+                                  }}
+                                >
+                                  <Mail size={14} style={{ color: '#D81B60', flexShrink: 0 }} />
+                                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {leader.email}
+                                  </span>
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyEmail(leader.email)}
+                                  title="Copy email address"
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: copiedEmail === leader.email ? '#10B981' : '#64748B',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: '2px',
+                                    borderRadius: '4px',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  {copiedEmail === leader.email ? <Check size={14} /> : <Copy size={14} />}
+                                </button>
+                              </div>
+                            )}
 
-                      {/* Name */}
-                      <h3 style={{ 
-                        fontSize: isMobile ? '0.94rem' : '1.18rem', 
-                        fontWeight: 800, 
-                        color: '#0F172A', 
-                        marginBottom: '4px', 
-                        lineHeight: 1.25,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical'
-                      }}>
-                        {leader.name}
-                      </h3>
-
-                      {/* Role */}
-                      <div style={{ 
-                        color: '#D81B60', 
-                        fontWeight: 700, 
-                        fontSize: isMobile ? '0.74rem' : '0.86rem', 
-                        minHeight: isMobile ? '28px' : '38px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        lineHeight: 1.2
-                      }}>
-                        {leader.role}
-                      </div>
-                    </div>
-
-                    {/* Email Card & Contact Information */}
-                    <div style={{ marginTop: '16px' }}>
-                      {isLoggedIn ? (
-                        <>
-                          {leader.email && (
-                            <div style={{
+                            {leader.phone && (
+                              <div style={{ marginTop: '8px' }}>
+                                <a
+                                  href={`tel:${leader.phone}`}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    color: '#64748B',
+                                    textDecoration: 'none',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  <Phone size={12} style={{ color: '#0284C7' }} />
+                                  +91 {leader.phone}
+                                </a>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onOpenLoginModal) onOpenLoginModal();
+                              else window.location.href = '/portal/login';
+                            }}
+                            title="Login to get the contacts of DAC Members, presidents and secretaries"
+                            style={{
+                              width: '100%',
+                              padding: isMobile ? '6px 4px' : '9px 12px',
+                              borderRadius: isMobile ? '8px' : '10px',
+                              background: '#F8FAFC',
+                              border: '1px dashed #CBD5E1',
+                              color: '#475569',
+                              fontSize: isMobile ? '0.64rem' : '0.78rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'space-between',
-                              gap: '6px',
-                              background: '#F8FAFC',
-                              border: '1px solid #E2E8F0',
-                              borderRadius: '10px',
-                              padding: '7px 10px',
-                              fontSize: '0.78rem'
-                            }}>
-                              <a 
-                                href={`mailto:${leader.email}`}
-                                title={`Send email to ${leader.name}`}
-                                style={{ 
-                                  display: 'flex', 
-                                  alignItems: 'center', 
-                                  gap: '6px', 
-                                  color: '#1E293B', 
-                                  textDecoration: 'none',
-                                  fontWeight: 600,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                  flex: 1
-                                }}
-                              >
-                                <Mail size={14} style={{ color: '#D81B60', flexShrink: 0 }} />
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {leader.email}
-                                </span>
-                              </a>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyEmail(leader.email)}
-                                title="Copy email address"
-                                style={{
-                                  background: 'transparent',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  color: copiedEmail === leader.email ? '#10B981' : '#64748B',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  padding: '2px',
-                                  borderRadius: '4px',
-                                  flexShrink: 0
-                                }}
-                              >
-                                {copiedEmail === leader.email ? <Check size={14} /> : <Copy size={14} />}
-                              </button>
-                            </div>
-                          )}
-
-                          {leader.phone && (
-                            <div style={{ marginTop: '8px' }}>
-                              <a 
-                                href={`tel:${leader.phone}`}
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '5px',
-                                  color: '#64748B',
-                                  textDecoration: 'none',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600
-                                }}
-                              >
-                                <Phone size={12} style={{ color: '#0284C7' }} />
-                                +91 {leader.phone}
-                              </a>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onOpenLoginModal) onOpenLoginModal();
-                            else window.location.href = '/portal/login';
-                          }}
-                          title="To get the contact of DAC members, the president, and the secretary of the club, we must log in"
-                          style={{
-                            width: '100%',
-                            padding: isMobile ? '6px 4px' : '9px 12px',
-                            borderRadius: isMobile ? '8px' : '10px',
-                            background: '#F8FAFC',
-                            border: '1px dashed #CBD5E1',
-                            color: '#475569',
-                            fontSize: isMobile ? '0.64rem' : '0.78rem',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '4px',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#FFF1F2';
-                            e.currentTarget.style.borderColor = '#FECDD3';
-                            e.currentTarget.style.color = '#D81B60';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#F8FAFC';
-                            e.currentTarget.style.borderColor = '#CBD5E1';
-                            e.currentTarget.style.color = '#475569';
-                          }}
-                        >
-                          <Lock size={13} style={{ color: '#D81B60' }} />
-                          <span>Log in to view contact</span>
-                        </button>
-                      )}
+                              justifyContent: 'center',
+                              gap: '4px',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#FFF1F2';
+                              e.currentTarget.style.borderColor = '#FECDD3';
+                              e.currentTarget.style.color = '#D81B60';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = '#F8FAFC';
+                              e.currentTarget.style.borderColor = '#CBD5E1';
+                              e.currentTarget.style.color = '#475569';
+                            }}
+                          >
+                            <Lock size={13} style={{ color: '#D81B60' }} />
+                            <span>Log in to view contact</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
