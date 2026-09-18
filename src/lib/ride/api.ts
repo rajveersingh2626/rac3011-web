@@ -206,7 +206,13 @@ export async function fetchRideDistricts(): Promise<string[]> {
   return res.districts || [];
 }
 
-export async function resetRideRegistrations(): Promise<{ count: number }> {
-  return apiFetch<{ count: number }>('/ride/participants/admin/reset', { method: 'POST' });
+export async function resetRideRegistrations(
+  confirmation = 'RESET',
+  mode: 'soft' | 'hard' = 'soft',
+): Promise<{ count: number; mode: 'soft' | 'hard' }> {
+  return apiFetch<{ count: number; mode: 'soft' | 'hard' }>('/ride/participants/admin/reset', {
+    method: 'POST',
+    body: JSON.stringify({ confirmation, mode }),
+  });
 }
 
