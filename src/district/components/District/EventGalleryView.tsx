@@ -182,14 +182,14 @@ export default function EventGalleryView() {
   const currentLightboxItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
 
   return (
-    <div style={{ marginTop: '40px', position: 'relative' }}>
+    <div style={{ marginTop: '20px', paddingTop: '24px', position: 'relative' }}>
       {/* Header Banner */}
       <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', marginBottom: '28px' }}>
         <div>
           <span className="pill-gold" style={{ marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
             <Sparkles size={14} /> DISTRICT EVENT GALLERY · RY 2026-27
           </span>
-          <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, color: '#123499', letterSpacing: '-1px' }}>
+          <h2 style={{ fontSize: 'clamp(1.75rem, 4.5vw, 2.75rem)', fontWeight: 900, color: '#123499', letterSpacing: '-0.5px' }}>
             Moments &amp; District Gallery
           </h2>
           <p style={{ color: '#475569', fontSize: '1rem', marginTop: '8px', maxWidth: '780px', lineHeight: 1.5, fontWeight: 500 }}>
