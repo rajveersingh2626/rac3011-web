@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 
-const GRID_CLASS = 'grid grid-cols-2 gap-5 sm:grid-cols-4';
+const GRID_CLASS = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5';
 
 export function PartnersPage() {
   useDocumentMeta({ title: 'Partners', description: 'Organizations that support district projects.' });
@@ -47,7 +47,7 @@ export function PartnersPage() {
         ) : (
           <div className={GRID_CLASS}>
             {data.items.map((partner) => (
-              <div key={partner.id} className="rotaract-card flex flex-col items-center gap-3 p-6 text-center">
+              <div key={partner.id} className="rotaract-card flex flex-col items-center justify-between gap-3 p-6 text-center">
                 {partner.logoUrl ? (
                   <img src={partner.logoUrl} alt={partner.name} className="h-14 w-auto max-w-full object-contain" />
                 ) : (
@@ -58,9 +58,9 @@ export function PartnersPage() {
                     Logo pending permission
                   </div>
                 )}
-                <p className="m-0 text-[13.5px] font-extrabold leading-snug text-[var(--text-primary)]">{partner.name}</p>
+                <p className="m-0 text-[14px] font-extrabold leading-snug text-[var(--text-primary)]">{partner.name}</p>
                 <div className="flex items-center gap-2 flex-wrap justify-center">
-                  <span className="pill-pink" style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
+                  <span className="pill-pink whitespace-nowrap" style={{ fontSize: '0.72rem', padding: '4px 12px' }}>
                     {titleCaseSlug(partner.tier)}
                   </span>
                   {partner.website && (

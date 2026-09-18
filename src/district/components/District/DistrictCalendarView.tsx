@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { 
@@ -76,6 +76,14 @@ const MONTH_NAMES = [
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginModal, clubs = [] }: DistrictCalendarViewProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+
   // Calendar navigation state: default to September 2026
   const [currentYear, setCurrentYear] = useState(2026);
   const [currentMonth, setCurrentMonth] = useState(8); // 8 = September (0-indexed)
@@ -319,27 +327,28 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         marginBottom: '24px',
         background: 'linear-gradient(135deg, #123499 0%, #0C2470 100%)',
         borderRadius: '22px',
-        padding: '30px',
+        padding: isMobile ? '20px 16px' : '30px',
         boxShadow: '0 18px 45px rgba(18, 52, 153, 0.26)',
         position: 'relative',
         overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 90% 18%, rgba(255,255,255,0.18), transparent 28%)', pointerEvents: 'none' }} />
         <div style={{ maxWidth: '820px', position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span className="pill-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem' }}>
-              <CalendarIcon size={14} /> DISTRICT CALENDAR (RY 2026-27)
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+            <span className="pill-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.74rem' : '0.82rem', whiteSpace: 'nowrap' }}>
+              <CalendarIcon size={14} /> {isMobile ? 'RY 2026-27' : 'DISTRICT CALENDAR (RY 2026-27)'}
             </span>
             <span style={{ 
               backgroundColor: 'rgba(255, 255, 255, 0.16)', 
               color: '#FFFFFF', 
-              fontSize: '0.78rem', 
+              fontSize: isMobile ? '0.72rem' : '0.78rem', 
               fontWeight: 800, 
               padding: '4px 12px', 
               borderRadius: '100px',
-              border: '1px solid rgba(255, 255, 255, 0.3)'
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              whiteSpace: 'nowrap'
             }}>
-              Official Assemblies &amp; DRR Official Visits
+              {isMobile ? 'Official Visits' : 'Official Assemblies & DRR Official Visits'}
             </span>
           </div>
 
@@ -450,7 +459,7 @@ export default function DistrictCalendarView({ isLoggedIn = false, onOpenLoginMo
         ) : (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: '18px'
         }}>
           {signatureTiles.map((tile) => (

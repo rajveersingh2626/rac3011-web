@@ -81,6 +81,13 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
   const [selectedMonth, setSelectedMonth] = useState('All Months');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [activeProjectModal, setActiveProjectModal] = useState<DisplayProject | null>(null);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
@@ -253,15 +260,15 @@ const ClubInitiativesList: FunctionComponent<ClubInitiativesListProps> = ({ club
         marginBottom: '18px',
         background: 'linear-gradient(135deg, #123499 0%, #0C2470 100%)',
         borderRadius: '22px',
-        padding: '30px',
+        padding: isMobile ? '20px 16px' : '30px',
         boxShadow: '0 18px 45px rgba(18, 52, 153, 0.26)',
         position: 'relative',
         overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 92% 18%, rgba(255,255,255,0.18), transparent 28%)', pointerEvents: 'none' }} />
         <div>
-          <span className="pill-gold" style={{ marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <Sparkles size={14} /> ROTARACT DISTRICT SHOWCASE (RY 2026-27)
+          <span className="pill-gold" style={{ marginBottom: '10px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.74rem' : '0.82rem', whiteSpace: 'nowrap' }}>
+            <Sparkles size={14} /> {isMobile ? 'DISTRICT SHOWCASE (RY 2026-27)' : 'ROTARACT DISTRICT SHOWCASE (RY 2026-27)'}
           </span>
           <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 3rem)', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-1px' }}>
             Rotaract Showcase &amp; Featured Projects

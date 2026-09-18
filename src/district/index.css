@@ -62,20 +62,21 @@ label {
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FDF5F8;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(216, 27, 96, 0.25);
-  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--rotaract-pink);
+  background: rgba(0, 0, 0, 0.32);
 }
 
 /* Glassmorphism & Cards */
