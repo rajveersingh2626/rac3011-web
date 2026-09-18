@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ExternalLink, Copy, Check, Plus, 
   Search, HardDrive, Users, Building, ShieldCheck, Trash2
@@ -10,9 +11,11 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { 
-  getStoredResources, saveStoredResource, deleteStoredResource,
-  type StoredDriveResource 
-} from '@/lib/ride/formsStorage';
+  fetchRideResources,
+  createRideResource,
+  deleteRideResource,
+  type RideResource,
+} from '@/lib/ride/api';
 
 export type ResourceCategory = 
   | 'guidelines'
@@ -34,17 +37,38 @@ const CATEGORY_LABELS: Record<string, { label: string; tone: BadgeTone }> = {
 };
 
 export function RideResourcesPortalTab() {
-  const [resources, setResources] = useState<StoredDriveResource[]>(() => getStoredResources());
+  const qc = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedScope, setSelectedScope] = useState<string>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handleSync = () => setResources(getStoredResources());
-    window.addEventListener('ride_resources_updated', handleSync);
-    return () => window.removeEventListener('ride_resources_updated', handleSync);
-  }, []);
+  const { data: resData } = useQuery({
+    queryKey: ['ride', 'resources'],
+    queryFn: () => fetchRideResources({ pageSize: 100 }),
+  });
+
+  const resources: RideResource[] = resData?.items || [];
+
+  const createMutation = useMutation({
+    mutationFn: createRideResource,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['ride', 'resources'] });
+      setAddModalOpen(false);
+      setNewTitle('');
+      setNewDriveUrl('');
+      setNewDescription('');
+      setNewClubName('');
+      setNewMemberEmail('');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteRideResource,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['ride', 'resources'] });
+    },
+  });
 
   // New Resource Modal State
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -61,14 +85,14 @@ export function RideResourcesPortalTab() {
     const matchesScope = selectedScope === 'all' || res.scope === selectedScope;
     const matchesSearch = 
       res.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      res.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (res.description && res.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (res.targetClubName && res.targetClubName.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (res.targetMemberEmail && res.targetMemberEmail.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesCategory && matchesScope && matchesSearch;
   });
 
-  const handleCopyLink = (res: StoredDriveResource) => {
+  const handleCopyLink = (res: RideResource) => {
     navigator.clipboard.writeText(res.driveUrl);
     setCopiedId(res.id);
     setTimeout(() => setCopiedId(null), 2500);
@@ -76,15 +100,14 @@ export function RideResourcesPortalTab() {
 
   const handleDeleteResource = (id: string) => {
     if (window.confirm('Are you sure you want to delete this drive resource?')) {
-      deleteStoredResource(id);
-      setResources(getStoredResources());
+      deleteMutation.mutate(id);
     }
   };
 
   const handleAddResource = () => {
     if (!newTitle.trim() || !newDriveUrl.trim()) return;
 
-    saveStoredResource({
+    createMutation.mutate({
       title: newTitle.trim(),
       category: newCategory,
       scope: newScope,
@@ -93,14 +116,6 @@ export function RideResourcesPortalTab() {
       driveUrl: newDriveUrl.trim(),
       description: newDescription.trim() || 'Official resource drive link for Delhi Meri Jaan 2026.',
     });
-
-    setResources(getStoredResources());
-    setAddModalOpen(false);
-    setNewTitle('');
-    setNewDriveUrl('');
-    setNewDescription('');
-    setNewClubName('');
-    setNewMemberEmail('');
   };
 
   return (
@@ -229,7 +244,7 @@ export function RideResourcesPortalTab() {
               {/* Action Buttons Footer */}
               <div className="pt-4 mt-4 border-t border-neutral-100 flex items-center justify-between gap-2">
                 <span className="text-[10px] text-neutral-400 font-mono">
-                  Updated: {res.lastUpdated}
+                  Updated: {res.updatedAt ? new Date(res.updatedAt).toLocaleDateString('en-GB') : 'Recently'}
                 </span>
 
                 <div className="flex items-center gap-1.5">

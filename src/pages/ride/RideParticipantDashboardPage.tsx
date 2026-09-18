@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { 
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
@@ -10,7 +11,7 @@ import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { 
   getStoredForms, getStoredSubmissions, saveStoredSubmission,
@@ -18,6 +19,12 @@ import {
   type FormDefinition, type FormSubmissionRecord,
   type StoredDriveResource, type StoredRideAnnouncement
 } from '@/lib/ride/formsStorage';
+import { 
+  fetchPublicRideResources, 
+  fetchPublicRideAnnouncements,
+  type RideResource,
+  type RideAnnouncement,
+} from '@/lib/ride/api';
 
 export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
@@ -31,8 +38,8 @@ export function RideParticipantDashboardPage() {
   const [activeTab, setActiveTab] = useState<'status' | 'forms' | 'resources' | 'inbox' | 'sessions'>('status');
   const [allForms, setAllForms] = useState<FormDefinition[]>(() => getStoredForms());
   const [allSubmissions, setAllSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
-  const [resources, setResources] = useState<StoredDriveResource[]>(() => getStoredResources());
-  const [announcements, setAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
+  const [localResources, setLocalResources] = useState<StoredDriveResource[]>(() => getStoredResources());
+  const [localAnnouncements, setLocalAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
   
   // Fill Form Modal State
   const [activeFillingForm, setActiveFillingForm] = useState<FormDefinition | null>(null);
@@ -45,8 +52,8 @@ export function RideParticipantDashboardPage() {
   useEffect(() => {
     const handleFormsUpdated = () => setAllForms(getStoredForms());
     const handleSubmissionsUpdated = () => setAllSubmissions(getStoredSubmissions());
-    const handleResourcesUpdated = () => setResources(getStoredResources());
-    const handleAnnouncementsUpdated = () => setAnnouncements(getStoredRideAnnouncements());
+    const handleResourcesUpdated = () => setLocalResources(getStoredResources());
+    const handleAnnouncementsUpdated = () => setLocalAnnouncements(getStoredRideAnnouncements());
 
     window.addEventListener('ride_forms_updated', handleFormsUpdated);
     window.addEventListener('ride_submissions_updated', handleSubmissionsUpdated);
@@ -68,6 +75,36 @@ export function RideParticipantDashboardPage() {
   const userRef = participant?.id 
     ? `DMJ-${participant.id.slice(0, 6).toUpperCase()}` 
     : 'DMJ-DELEGATE';
+
+  // Server Queries for live resources and announcements with auto-refresh
+  const { data: resourcesData } = useQuery({
+    queryKey: ['ride', 'publicResources', userEmail, userClub, userDistrict],
+    queryFn: () => fetchPublicRideResources({
+      email: userEmail || undefined,
+      clubName: userClub || undefined,
+      district: userDistrict || undefined,
+    }),
+    refetchInterval: 15000,
+  });
+
+  const { data: announcementsData } = useQuery({
+    queryKey: ['ride', 'publicAnnouncements', userDistrict, userEmail],
+    queryFn: () => fetchPublicRideAnnouncements({
+      district: userDistrict || undefined,
+      email: userEmail || undefined,
+    }),
+    refetchInterval: 15000,
+  });
+
+  const resources: (RideResource | StoredDriveResource)[] = 
+    resourcesData?.items && resourcesData.items.length > 0 
+      ? resourcesData.items 
+      : localResources;
+
+  const announcements: (RideAnnouncement | StoredRideAnnouncement)[] = 
+    announcementsData?.items && announcementsData.items.length > 0 
+      ? announcementsData.items 
+      : localAnnouncements;
 
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
   const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
@@ -138,14 +175,19 @@ export function RideParticipantDashboardPage() {
     }, 600);
   };
 
-  const handleCopyLink = (res: StoredDriveResource) => {
+  const handleCopyLink = (res: { id: string; driveUrl: string }) => {
     navigator.clipboard.writeText(res.driveUrl);
     setCopiedResId(res.id);
     setTimeout(() => setCopiedResId(null), 2500);
   };
 
-  const isApproved = participant?.approvalStatus === 'approved' || participant?.status === 'approved';
-  const isRejected = participant?.approvalStatus === 'rejected';
+  const approvalStatus = (participant?.approvalStatus || participant?.status || 'pending').toLowerCase();
+  const isApproved = approvalStatus === 'approved' || approvalStatus === 'confirmed';
+  const isRejected = approvalStatus === 'rejected';
+  const isWaitlist = approvalStatus === 'waitlist';
+
+  const statusBadgeTone: BadgeTone = isApproved ? 'green' : isRejected ? 'red' : isWaitlist ? 'neutral' : 'amber';
+  const statusBadgeLabel = isApproved ? 'Approved Delegate' : isRejected ? 'Verification Declined' : isWaitlist ? 'Waitlist' : 'Pending Verification';
 
   const dynamicMilestones = [
     {
@@ -156,13 +198,15 @@ export function RideParticipantDashboardPage() {
     },
     {
       step: '02',
-      title: isApproved ? 'District Approved' : isRejected ? 'Verification Pending' : 'District Verification',
+      title: isApproved ? 'District Approved' : isRejected ? 'Verification Declined' : isWaitlist ? 'Waitlist Pending' : 'District Verification',
       desc: isApproved
-        ? 'Approved by RID 3011'
+        ? 'Official delegation approved by RID 3011'
         : isRejected
-          ? 'Contact Exchange Secretariat'
-          : 'Under review by RID 3011',
-      status: isApproved ? ('completed' as const) : ('active' as const),
+          ? 'Application not accepted. Contact Exchange Secretariat.'
+          : isWaitlist
+            ? 'Placed on waitlist pending host club capacity'
+            : 'Under active review by RID 3011 Exchange Secretariat',
+      status: isApproved ? ('completed' as const) : isRejected ? ('rejected' as const) : ('active' as const),
     },
   ];
 
@@ -173,16 +217,16 @@ export function RideParticipantDashboardPage() {
         {/* Top Profile Card & Subdomain Indicator */}
         <div className="p-6 bg-white rounded-3xl border-3 border-[#171515] ride-pop flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#19539D] border-2 border-[#171515] flex items-center justify-center text-white font-black text-xl ride-pop-sm">
+            <div className="w-14 h-14 rounded-2xl bg-[#19539D] border-2 border-[#171515] flex items-center justify-center text-white font-black text-xl ride-pop-sm shrink-0">
               {userName.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-black uppercase text-[#171515] tracking-tight">
                   {userName}
                 </h1>
-                <Badge tone={isApproved ? 'green' : 'amber'}>
-                  {isApproved ? 'Verified Delegate' : 'Pending Verification'}
+                <Badge tone={statusBadgeTone}>
+                  {statusBadgeLabel}
                 </Badge>
               </div>
               <p className="text-xs text-neutral-600 font-semibold mt-0.5">
@@ -256,24 +300,28 @@ export function RideParticipantDashboardPage() {
                 {dynamicMilestones.map((item) => (
                   <div
                     key={item.step}
-                    className={`p-5 rounded-2xl border-2 transition-all ${
+                    className={`p-5 rounded-2xl border-2 transition-all min-h-[140px] flex flex-col justify-between ${
                       item.status === 'completed'
                         ? 'border-[#171515] bg-emerald-50 text-emerald-950'
-                        : item.status === 'active'
-                          ? 'border-[#171515] bg-[#FFFDF7] ride-pop-sm ring-2 ring-[#FBC02D]'
-                          : 'border-neutral-200 bg-neutral-50 text-neutral-400'
+                        : item.status === 'rejected'
+                          ? 'border-red-400 bg-red-50 text-red-950'
+                          : 'border-[#171515] bg-[#FFFDF7] ride-pop-sm ring-2 ring-[#FBC02D]'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs font-black mb-2">
                       <span className="font-mono">{item.step}</span>
                       {item.status === 'completed' ? (
                         <CheckCircle2 size={18} className="text-emerald-700" />
+                      ) : item.status === 'rejected' ? (
+                        <AlertCircle size={18} className="text-red-600" />
                       ) : (
                         <Clock size={18} className="text-[#EA6623]" />
                       )}
                     </div>
-                    <div className="font-black text-sm text-[#171515]">{item.title}</div>
-                    <div className="text-xs text-neutral-600 mt-1">{item.desc}</div>
+                    <div>
+                      <div className="font-black text-sm text-[#171515]">{item.title}</div>
+                      <div className="text-xs text-neutral-600 mt-1 leading-relaxed">{item.desc}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -500,7 +548,7 @@ export function RideParticipantDashboardPage() {
                     {/* Bespoke Continuous Yellow Line Strip */}
                     <div className="bg-[#FBC02D] px-4 py-1.5 border-b-2 border-[#171515] flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-[#171515]">
                       <span>DELHI MERI JAAN 2026 • OFFICIAL DISPATCH</span>
-                      <span>{new Date(msg.sentAt).toLocaleDateString('en-GB')}</span>
+                      <span>{new Date((msg as any).sentAt || (msg as any).createdAt || Date.now()).toLocaleDateString('en-GB')}</span>
                     </div>
 
                     <div className="p-5 space-y-3">

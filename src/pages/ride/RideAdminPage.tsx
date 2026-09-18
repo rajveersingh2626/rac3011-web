@@ -279,6 +279,7 @@ function GalleryAdminSection() {
     void qc.invalidateQueries({ queryKey: GALLERY_KEY });
     void qc.invalidateQueries({ queryKey: ['public', 'ride', 'gallery'] });
     void qc.invalidateQueries({ queryKey: ['ride-public-gallery'] });
+    void qc.refetchQueries({ queryKey: ['public', 'ride', 'gallery'] });
   };
 
   const createMutation = useMutation({

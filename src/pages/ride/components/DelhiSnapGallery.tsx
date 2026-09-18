@@ -75,7 +75,7 @@ export function DelhiSnapGallery() {
   });
 
   const apiItems: PublicGalleryItem[] = data?.items ?? [];
-  const slides = apiItems.length > 0 ? apiItems : FALLBACK_RIDE_SLIDES;
+  const slides = data ? apiItems : FALLBACK_RIDE_SLIDES;
 
   const scrollToNext = (index: number) => {
     if (!containerRef.current || slides.length === 0) return;

@@ -65,3 +65,33 @@ export type GalleryItem = z.infer<typeof galleryItemSchema>;
 export function paginatedSchema<T extends z.ZodTypeAny>(item: T) {
   return z.object({ items: z.array(item), total: z.number(), page: z.number(), pageSize: z.number() });
 }
+
+export const rideResourceSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  category: z.string(),
+  scope: z.string(),
+  targetClubName: z.string().nullable().optional(),
+  targetMemberEmail: z.string().nullable().optional(),
+  targetDistrict: z.string().nullable().optional(),
+  driveUrl: z.string(),
+  description: z.string().nullable().optional(),
+  order: z.number().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type RideResource = z.infer<typeof rideResourceSchema>;
+
+export const rideAnnouncementSchema = z.object({
+  id: z.string(),
+  subject: z.string(),
+  body: z.string(),
+  sender: z.string(),
+  audienceScope: z.string(),
+  targetDistricts: z.array(z.string()).optional(),
+  targetEmails: z.array(z.string()).optional(),
+  hostClubsOnly: z.boolean().optional(),
+  recipientCount: z.number(),
+  createdAt: z.string(),
+});
+export type RideAnnouncement = z.infer<typeof rideAnnouncementSchema>;
