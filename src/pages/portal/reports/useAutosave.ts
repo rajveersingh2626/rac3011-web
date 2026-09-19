@@ -6,6 +6,7 @@ export interface UseAutosaveResult {
   status: AutosaveStatus;
   error: string | null;
   flush: () => void;
+  cancel: () => void;
 }
 
 const DEBOUNCE_MS = 2_000;
@@ -23,12 +24,20 @@ export function useAutosave<T>(
   const latestValue = useRef(value);
   const savedValue = useRef(value);
   const saveRef = useRef(save);
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
   saveRef.current = save;
   latestValue.current = value;
 
+  const cancel = useCallback(() => {
+    clearTimeout(timer.current);
+    timer.current = undefined;
+  }, []);
+
   const runSave = useCallback(() => {
     clearTimeout(timer.current);
-    if (savedValue.current === latestValue.current) return;
+    timer.current = undefined;
+    if (!enabledRef.current || savedValue.current === latestValue.current) return;
     const toSave = latestValue.current;
     setStatus('saving');
     saveRef.current(toSave)
@@ -45,13 +54,23 @@ export function useAutosave<T>(
         }
       })
       .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : 'Save failed';
+        if (msg.toLowerCase().includes('cannot edit a submitted report')) {
+          setStatus('saved');
+          setError(null);
+          return;
+        }
         setStatus('error');
-        setError(e instanceof Error ? e.message : 'Save failed');
+        setError(msg);
       });
   }, [storageKey]);
 
   useEffect(() => {
-    if (!enabled || value === savedValue.current) return;
+    if (!enabled) {
+      cancel();
+      return;
+    }
+    if (value === savedValue.current) return;
     setStatus('pending');
 
     // Immediate backup to localStorage so work is never lost even if browser crashes before network save
@@ -66,11 +85,13 @@ export function useAutosave<T>(
     clearTimeout(timer.current);
     timer.current = setTimeout(runSave, DEBOUNCE_MS);
     return () => clearTimeout(timer.current);
-  }, [value, enabled, storageKey, runSave]);
+  }, [value, enabled, storageKey, runSave, cancel]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
-      runSave();
+      if (enabledRef.current) {
+        runSave();
+      }
     };
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', handleBeforeUnload);
@@ -80,9 +101,11 @@ export function useAutosave<T>(
         window.removeEventListener('beforeunload', handleBeforeUnload);
       }
       clearTimeout(timer.current);
-      runSave();
+      if (enabledRef.current) {
+        runSave();
+      }
     };
   }, [runSave]);
 
-  return { status, error, flush: runSave };
+  return { status, error, flush: runSave, cancel };
 }
