@@ -103,6 +103,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   };
 
   const getSafeSurfaceHref = (key: Exclude<Surface, 'main'>): string => {
+    if (key === 'ride') return 'https://delhimerijan.rotaract3011.org';
     return surfaceHrefs[key] || surfaceHref(key) || `/?surface=${key}`;
   };
 

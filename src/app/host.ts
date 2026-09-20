@@ -63,15 +63,23 @@ export function portalHref(path: string = '/portal/login'): string {
 }
 
 export function surfaceHref(key: Exclude<Surface, 'main'>): string {
+  if (key === 'ride') {
+    if (typeof window !== 'undefined' && isLocalHost(window.location.hostname)) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('surface', 'ride');
+      url.pathname = '/';
+      return url.toString();
+    }
+    return 'https://delhimerijan.rotaract3011.org';
+  }
   const url = new URL(window.location.href);
-  if (isLocalHost(url.hostname) || url.hostname.startsWith('testing.') || url.hostname === 'preprod-origin') {
+  if (isLocalHost(url.hostname)) {
     url.searchParams.set('surface', key);
     url.pathname = '/';
     return url.toString();
   }
   const prefix = currentEnvPrefix(url.hostname);
-  const subdomain = key === 'ride' ? 'delhimerijaan' : key;
-  url.hostname = `${prefix}${subdomain}.${APEX}`;
+  url.hostname = `${prefix}${key}.${APEX}`;
   url.pathname = '/';
   url.search = '';
   return url.toString();

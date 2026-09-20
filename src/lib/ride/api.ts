@@ -221,7 +221,7 @@ export async function fetchPublicRideAnnouncements(params: { district?: string; 
 
 export async function fetchRideDistricts(): Promise<string[]> {
   const res = await apiFetch<{ districts: string[] }>('/ride/participants/districts');
-  return res.districts || [];
+  return res?.districts || [];
 }
 
 export async function resetRideRegistrations(

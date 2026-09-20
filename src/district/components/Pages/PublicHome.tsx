@@ -251,7 +251,7 @@ const DISTRICT_UPCOMING_PROJECTS: UpcomingProject[] = [
     surface: 'ride',
     category: 'Youth Exchange & Fellowship',
     subtitle: 'National & International Youth Exchange 2026',
-    image: '/ride/logos/2026_logo_coloured.png',
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1200&auto=format&fit=crop',
     metric: 'Flagship Youth Exchange',
     description: 'Rotaract Inter-District Youth Exchange hosting delegates from across India and international Rotary districts for an immersive 4-day fellowship, heritage tour, and homestay experience.'
   },
@@ -332,6 +332,7 @@ const ExpandingCarousel: FC<ExpandingCarouselProps> = () => {
 
   const getSafeSurfaceHref = (surface?: FlagshipSurface): string | undefined => {
     if (!surface) return undefined;
+    if (surface === 'ride') return 'https://delhimerijan.rotaract3011.org';
     return surfaceHrefs[surface] || surfaceHref(surface) || `/?surface=${surface}`;
   };
 

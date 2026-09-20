@@ -100,11 +100,11 @@ const FLAGSHIP_ITEMS = [
     id: 'ride',
     surface: 'ride' as const,
     title: 'The RIDE: Delhi Meri Jaan',
-    category: 'District Conference',
-    target: 'Annual Conference & Fellowship',
-    desc: 'The premier Rotaract District 3011 annual conference experience.',
+    category: 'Youth Exchange & Fellowship',
+    target: 'National & International Exchange',
+    desc: 'Rotaract Youth Exchange hosting delegates for fellowship, heritage & homestays.',
     color: '#EA6623',
-    image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80'
+    image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=800&auto=format&fit=crop'
   }
 ];
 
