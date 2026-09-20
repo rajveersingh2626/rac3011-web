@@ -9,6 +9,7 @@ import {
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
+import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
