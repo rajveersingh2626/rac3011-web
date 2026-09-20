@@ -29,6 +29,38 @@ export const delegationHostSchema = z.object({
 });
 export type DelegationHost = z.infer<typeof delegationHostSchema>;
 
+export const delegationParticipantSchema = z.object({
+  id: z.string(),
+  fullName: z.string(),
+  email: z.string(),
+  rotaryId: z.string().nullable().optional(),
+  homeDistrict: z.string().optional(),
+  status: z.string(),
+  approvalStatus: z.string(),
+  hostClubId: z.string().nullable().optional(),
+  hostFamilyName: z.string().nullable().optional(),
+  hostFamilyPhone: z.string().nullable().optional(),
+  hostAddress: z.string().nullable().optional(),
+});
+export type DelegationParticipant = z.infer<typeof delegationParticipantSchema>;
+
+export const approvedHostClubSchema = z.object({
+  id: z.string(),
+  clubId: z.string(),
+  club: clubRefSchema,
+  applicantName: z.string(),
+  applicantEmail: z.string(),
+  applicantPhone: z.string(),
+  zone: z.string().optional().default(''),
+  capacityDelegates: z.number().default(10),
+  homestayAvailable: z.boolean().default(true),
+  proposalDriveUrl: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  status: z.string().default('approved'),
+  submittedAt: z.string().optional(),
+});
+export type ApprovedHostClub = z.infer<typeof approvedHostClubSchema>;
+
 export const delegationSchema = z.object({
   id: z.string(),
   ryYear: z.number(),
@@ -41,6 +73,8 @@ export const delegationSchema = z.object({
   contactEmail: z.string().nullable(),
   status: delegationStatusSchema,
   hosts: z.array(delegationHostSchema),
+  participants: z.array(delegationParticipantSchema).optional().default([]),
+  approvedParticipantsCount: z.number().optional().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

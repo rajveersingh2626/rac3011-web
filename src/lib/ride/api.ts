@@ -11,9 +11,11 @@ import {
   type SupportClub,
   type RideResource,
   type RideAnnouncement,
+  approvedHostClubSchema,
+  type ApprovedHostClub,
 } from './types';
 
-export type { RideResource, RideAnnouncement };
+export type { RideResource, RideAnnouncement, ApprovedHostClub };
 
 const supportClubsPage = paginatedSchema(supportClubSchema);
 const delegationsPage = paginatedSchema(delegationSchema);
@@ -63,6 +65,7 @@ export async function upsertSupportClub(input: UpsertSupportClubInput): Promise<
 export interface DelegationListParams {
   status?: DelegationStatus;
   ryYear?: number;
+  approvedOnly?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -71,6 +74,7 @@ export async function fetchDelegations(params: DelegationListParams = {}) {
   const qs = query({
     'filter[status]': params.status,
     'filter[ryYear]': params.ryYear,
+    'filter[approvedOnly]': params.approvedOnly ? 'true' : undefined,
     page: params.page,
     pageSize: params.pageSize,
   });
@@ -79,6 +83,12 @@ export async function fetchDelegations(params: DelegationListParams = {}) {
 
 export async function fetchDelegation(id: string): Promise<Delegation> {
   return apiFetch(`/ride/delegations/${encodeURIComponent(id)}`, { schema: delegationSchema });
+}
+
+export async function fetchApprovedHostClubs(): Promise<ApprovedHostClub[]> {
+  return apiFetch('/ride/delegations/approved-hosts', {
+    schema: z.array(approvedHostClubSchema),
+  });
 }
 
 export interface CreateDelegationInput {
@@ -116,12 +126,19 @@ export interface HostAssignmentInput {
   clubId: string;
   daysHosted: number;
   membersSent: number;
+  hostFamilyName?: string;
+  hostFamilyPhone?: string;
+  hostAddress?: string;
 }
 
-export async function assignHosts(id: string, hosts: HostAssignmentInput[]): Promise<Delegation> {
+export async function assignHosts(
+  id: string,
+  hosts: HostAssignmentInput[],
+  participantIds?: string[],
+): Promise<Delegation> {
   return apiFetch(`/ride/delegations/${encodeURIComponent(id)}/hosts`, {
     method: 'PUT',
-    body: { hosts },
+    body: { hosts, participantIds },
     schema: delegationSchema,
   });
 }
