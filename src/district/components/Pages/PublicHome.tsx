@@ -7,6 +7,7 @@ import type { FocusArea, ImpactMetric, Achievement } from '../../data/districtDa
 import { ArrowUp, ArrowDown, Sparkles, CheckCircle2, Calculator, Send, X, Layers } from 'lucide-react';
 const rotaryWheelImg = '/images.webp';
 import Footer from '../Layout/Footer';
+import InteractiveDotGrid from '../Layout/InteractiveDotGrid';
 import DistrictBentoMatrix from '../Home/DistrictBentoMatrix';
 import MobileHomeExperience from '../Home/MobileHomeExperience';
 import DistrictRoadmap from '../Home/DistrictRoadmap';
@@ -820,7 +821,9 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
             inset: 0,
             zIndex: 1,
             pointerEvents: 'none',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            maskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 100%)'
           }}
         >
           <img
@@ -835,15 +838,18 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
               filter: 'saturate(1.05) contrast(1.02)'
             }}
           />
-          {/* Subtle natural fade to blend smoothly into the white page background */}
+          {/* Subtle natural contrast on the left to keep headline typography crisp */}
           <div
             style={{
               position: 'absolute',
               inset: 0,
-              background: 'linear-gradient(180deg, transparent 65%, #FFFFFF 100%), linear-gradient(90deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 45%, transparent 100%)'
+              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0.45) 45%, transparent 100%)'
             }}
           />
         </div>
+
+        {/* Interactive "Fellowship through service" Dot Grid Canvas */}
+        <InteractiveDotGrid />
 
         <div
           className="section-content-animate"

@@ -36,7 +36,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         this.radius = isText ? 1.5 : 1.2;
       }
 
-      update() {
+      update(): boolean {
         const spring = this.isText ? 0.08 : 0.05;
         const damping = 0.88;
         const repulsionRadius = this.isText ? 35 : 60;
@@ -65,6 +65,13 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
 
         this.x += this.vx;
         this.y += this.vy;
+
+        return (
+          Math.abs(this.vx) > 0.015 ||
+          Math.abs(this.vy) > 0.015 ||
+          Math.abs(this.x - this.targetX) > 0.05 ||
+          Math.abs(this.y - this.targetY) > 0.05
+        );
       }
 
       draw() {
@@ -164,6 +171,48 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
       canvas.width = width;
       canvas.height = height;
       initDots();
+      startAnimation();
+    };
+
+    let isIntersecting = true;
+    let isAnimating = false;
+
+    const startAnimation = () => {
+      if (!isAnimating && isIntersecting) {
+        isAnimating = true;
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    const stopAnimation = () => {
+      if (isAnimating) {
+        isAnimating = false;
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+
+    const animate = () => {
+      if (!isIntersecting) {
+        isAnimating = false;
+        return;
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let anyMoving = false;
+      dots.forEach((dot) => {
+        const moving = dot.update();
+        if (moving) anyMoving = true;
+        dot.draw();
+      });
+
+      // If mouse is active or any particle is still settling into place, continue RAF.
+      // Otherwise, halt RAF to preserve CPU/battery when idle.
+      if (mouse.active || anyMoving) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        isAnimating = false;
+      }
     };
 
     const parent = canvas.closest('.snap-section') || canvas.parentElement;
@@ -174,12 +223,15 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
       mouse.x = e.clientX - rect.left;
       mouse.y = e.clientY - rect.top;
       mouse.active = true;
+      startAnimation();
     };
 
     const handleMouseLeave = () => {
       mouse.active = false;
       mouse.x = -1000;
       mouse.y = -1000;
+      // Allow particles to spring back to equilibrium
+      startAnimation();
     };
 
     // Canvas fillText does not trigger a webfont fetch, and document.fonts.ready
@@ -190,10 +242,10 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
       .then(() => resizeCanvas());
 
     resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas, { passive: true });
 
     if (parent) {
-      parent.addEventListener('mousemove', handleMouseMove as EventListener);
+      parent.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
       parent.addEventListener('mouseleave', handleMouseLeave);
 
       const handleTouchMove = (e: TouchEvent) => {
@@ -202,6 +254,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
           mouse.x = e.touches[0].clientX - rect.left;
           mouse.y = e.touches[0].clientY - rect.top;
           mouse.active = true;
+          startAnimation();
         }
       };
       parent.addEventListener('touchmove', handleTouchMove as EventListener, { passive: true });
@@ -225,7 +278,6 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
 
       if (canvas) {
         canvas.style.opacity = opacity.toFixed(3);
-        canvas.style.pointerEvents = opacity === 0 ? 'none' : 'auto';
       }
     };
 
@@ -234,39 +286,6 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
     if (snapContainer) {
       snapContainer.addEventListener('scroll', handleScroll, { passive: true });
     }
-
-    let isIntersecting = true;
-    let isAnimating = false;
-
-    const startAnimation = () => {
-      if (!isAnimating && isIntersecting) {
-        isAnimating = true;
-        animate();
-      }
-    };
-
-    const stopAnimation = () => {
-      if (isAnimating) {
-        isAnimating = false;
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-
-    const animate = () => {
-      if (!isIntersecting) {
-        isAnimating = false;
-        return;
-      }
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      dots.forEach((dot) => {
-        dot.update();
-        dot.draw();
-      });
-
-      animationFrameId = requestAnimationFrame(animate);
-    };
 
     // IntersectionObserver to completely halt CPU/GPU cycles when out of view
     const observer = new IntersectionObserver(
@@ -314,7 +333,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         width: '100%',
         height: '100%',
         zIndex: 2,
-        pointerEvents: 'auto',
+        pointerEvents: 'none',
         transition: 'opacity 0.15s ease-out'
       }}
     />
