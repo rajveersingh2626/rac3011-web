@@ -83,6 +83,10 @@ export function ParticipantAuthProvider({ children }: { children: ReactNode }) {
         body: { identifier, password },
       });
 
+      if (res?.token && typeof window !== 'undefined') {
+        localStorage.setItem('ride_participant_token', res.token);
+      }
+
       qc.setQueryData(PARTICIPANT_ME_QUERY_KEY, res.participant);
       return res.participant;
     },
@@ -94,6 +98,9 @@ export function ParticipantAuthProvider({ children }: { children: ReactNode }) {
       await apiFetch('/ride/auth/logout', { method: 'POST' });
     } catch {
       // ignore
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('ride_participant_token');
     }
     qc.setQueryData(PARTICIPANT_ME_QUERY_KEY, null);
   }, [qc]);

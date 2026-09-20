@@ -88,7 +88,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-drr-calendar', label: 'DRR Calendar', to: '/portal/admin/drr-calendar', perm: 'drr_calendar:manage' },
       { key: 'admin-feedback', label: 'Feedback', to: '/portal/admin/feedback', perm: 'feedback:review' },
       { key: 'admin-content', label: 'Content', to: '/portal/content', perm: 'content:edit' },
-      { key: 'admin-ride', label: 'RIDE Youth Exchange', to: '/portal/admin/ride', perm: 'subdomain:ride:manage' },
+      { key: 'admin-ride', label: 'RIDE Youth Exchange', to: '/portal/admin/ride', perm: 'subdomain:ride:manage,ride:manage,ride:delegates:manage' },
       { key: 'admin-users', label: 'Give / Revoke Access', to: '/portal/admin/users', perm: 'roles:manage' },
       { key: 'admin-sessions', label: 'Active Logins', to: '/portal/admin/sessions', perm: 'roles:manage' },
       { key: 'admin-roles', label: 'Role Capabilities (43)', to: '/portal/admin/roles', perm: 'roles:manage' },

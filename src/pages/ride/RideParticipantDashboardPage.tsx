@@ -4,7 +4,7 @@ import {
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
   Smartphone, Monitor, LogOut, 
-  ShieldCheck
+  ShieldCheck, Sparkles
 } from 'lucide-react';
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
@@ -181,32 +181,57 @@ export function RideParticipantDashboardPage() {
     setTimeout(() => setCopiedResId(null), 2500);
   };
 
-  const approvalStatus = (participant?.approvalStatus || participant?.status || 'pending').toLowerCase();
-  const isApproved = approvalStatus === 'approved' || approvalStatus === 'confirmed';
-  const isRejected = approvalStatus === 'rejected';
-  const isWaitlist = approvalStatus === 'waitlist';
+  const rawStatus = (participant?.status || participant?.approvalStatus || 'submitted').toLowerCase();
+  const isApproved = rawStatus === 'approved' || rawStatus === 'confirmed';
+  const isRejected = rawStatus === 'rejected' || rawStatus === 'declined';
+  const isWaitlist = rawStatus === 'waitlist';
+  const isUnderReview = rawStatus === 'under_review';
 
-  const statusBadgeTone: BadgeTone = isApproved ? 'green' : isRejected ? 'red' : isWaitlist ? 'neutral' : 'amber';
-  const statusBadgeLabel = isApproved ? 'Approved Delegate' : isRejected ? 'Verification Declined' : isWaitlist ? 'Waitlist' : 'Pending Verification';
+  const statusBadgeTone: BadgeTone = isApproved ? 'green' : isRejected ? 'red' : isWaitlist ? 'amber' : isUnderReview ? 'blue' : 'neutral';
+  const statusBadgeLabel = isApproved ? 'Confirmed Delegate' : isRejected ? 'Application Declined' : isWaitlist ? 'Waitlist' : isUnderReview ? 'Under Active Review' : 'Registration Received';
 
   const dynamicMilestones = [
     {
       step: '01',
       title: 'Registration Submitted',
-      desc: userDistrict ? `Logged from RID ${userDistrict}` : 'Account verified & active',
+      desc: userDistrict ? `Logged for RID ${userDistrict} · ${userClub || 'Visiting Delegation'}` : 'Delegate credentials active',
       status: 'completed' as const,
     },
     {
       step: '02',
-      title: isApproved ? 'District Approved' : isRejected ? 'Verification Declined' : isWaitlist ? 'Waitlist Pending' : 'District Verification',
+      title: isApproved ? 'District Vetted & Approved' : isRejected ? 'Review Concluded' : isWaitlist ? 'Waitlisted' : isUnderReview ? 'Under Active Review' : 'Secretariat Verification',
       desc: isApproved
-        ? 'Official delegation approved by RID 3011'
+        ? 'Official delegation accepted by RID 3011 RIDE Committee'
         : isRejected
-          ? 'Application not accepted. Contact Exchange Secretariat.'
+          ? 'Application not accepted for this exchange edition'
           : isWaitlist
-            ? 'Placed on waitlist pending host club capacity'
-            : 'Under active review by RID 3011 Exchange Secretariat',
+            ? 'Candidate placed on waitlist pending host club allocations'
+            : isUnderReview
+              ? 'Application dossier currently being vetted by the Secretariat'
+              : 'Queue assigned for RID 3011 Exchange Secretariat review',
       status: isApproved ? ('completed' as const) : isRejected ? ('rejected' as const) : ('active' as const),
+    },
+    {
+      step: '03',
+      title: isApproved ? 'Delegation Confirmed' : isRejected ? 'Exchange Seat Closed' : isWaitlist ? 'Waitlist Pool' : 'Seat Allocation',
+      desc: isApproved
+        ? 'Exchange seat guaranteed for Delhi Meri Jaan 2026'
+        : isRejected
+          ? 'Seat allocation closed'
+          : isWaitlist
+            ? 'Awaiting capacity opening in subsequent rounds'
+            : 'Seat allocation will unlock upon approval',
+      status: isApproved ? ('completed' as const) : isRejected ? ('rejected' as const) : ('pending' as const),
+    },
+    {
+      step: '04',
+      title: participant?.hostClub ? `Host: ${participant.hostClub.name}` : participant?.hostFamilyName ? `Host: ${participant.hostFamilyName}` : 'Host Club Allocation',
+      desc: participant?.hostClub || participant?.hostFamilyName
+        ? `Allocated to ${participant.hostClub?.name || participant.hostFamilyName}${participant.hostClub?.zone ? ` (${participant.hostClub.zone})` : ''}`
+        : isApproved
+          ? 'Host family and club pairing currently in progress by Committee'
+          : 'Pending final delegation confirmation',
+      status: (participant?.hostClub || participant?.hostFamilyName) ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
     },
   ];
 
@@ -254,7 +279,7 @@ export function RideParticipantDashboardPage() {
         {/* Dashboard Section Navigation Tabs */}
         <div className="flex flex-wrap items-center gap-2 pb-2 border-b-2 border-neutral-200">
           {[
-            { id: 'status', label: 'Approval Status', count: undefined },
+            { id: 'status', label: 'Dashboard', count: undefined },
             { id: 'forms', label: 'Pending Forms', count: pendingForms.length },
             { id: 'resources', label: 'Drive Resources', count: resources.length },
             { id: 'inbox', label: 'Inbox & Announcements', count: announcements.length },
@@ -282,9 +307,40 @@ export function RideParticipantDashboardPage() {
           ))}
         </div>
 
-        {/* TAB 1: APPROVAL STATUS TRACKER */}
+        {/* TAB 1: DASHBOARD & PROGRESS */}
         {activeTab === 'status' && (
           <div className="space-y-6">
+            {/* The Aesthetic Delhi Chapter Card */}
+            <div className="relative overflow-hidden rounded-3xl border-3 border-[#171515] bg-[#FFFDF7] p-6 sm:p-8 ride-pop shadow-xl">
+              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 rounded-full bg-[#EA6623]/10 blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-48 h-48 rounded-full bg-[#19539D]/10 blur-2xl pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="space-y-3 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#171515] bg-[#FBC02D] text-[#171515] text-[10px] font-black uppercase tracking-wider ride-pop-sm">
+                    <Sparkles size={12} />
+                    <span>Delhi Meri Jaan 2026 • Official Exchange</span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#171515]">
+                    Your Delhi Chapter Awaits.
+                  </h2>
+
+                  <p className="text-sm sm:text-base text-neutral-700 leading-relaxed font-medium">
+                    From the historic lanes of Chandni Chowk to the majestic lawns of India Gate, the capital is gearing up to welcome you with open arms, legendary hospitality, and memories of a lifetime. Get ready to experience Dilwaalon Ki Dilli like never before!
+                  </p>
+                </div>
+
+                <div className="shrink-0 flex md:flex-col items-center gap-3 w-full md:w-auto pt-2 md:pt-0">
+                  <img
+                    src="/ride/logos/2026_logo_coloured.png?v=2"
+                    alt="Delhi Meri Jaan"
+                    className="h-20 sm:h-24 w-auto object-contain ride-pop-sm p-2 rounded-2xl bg-white border-2 border-[#171515]"
+                  />
+                </div>
+              </div>
+            </div>
+
             <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm space-y-6 bg-white">
               <div>
                 <h3 className="text-base font-black text-[#171515] uppercase tracking-wide">
@@ -295,27 +351,31 @@ export function RideParticipantDashboardPage() {
                 </p>
               </div>
 
-              {/* Progress Milestones (Step 01 and Step 02) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+              {/* Progress Milestones (4 Multi-Step Tracker) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {dynamicMilestones.map((item) => (
                   <div
                     key={item.step}
-                    className={`p-5 rounded-2xl border-2 transition-all min-h-[140px] flex flex-col justify-between ${
+                    className={`p-5 rounded-2xl border-2 transition-all min-h-[150px] flex flex-col justify-between ${
                       item.status === 'completed'
-                        ? 'border-[#171515] bg-emerald-50 text-emerald-950'
+                        ? 'border-[#171515] bg-emerald-50 text-emerald-950 shadow-xs'
                         : item.status === 'rejected'
                           ? 'border-red-400 bg-red-50 text-red-950'
-                          : 'border-[#171515] bg-[#FFFDF7] ride-pop-sm ring-2 ring-[#FBC02D]'
+                          : item.status === 'active'
+                            ? 'border-[#171515] bg-[#FFFDF7] ride-pop-sm ring-2 ring-[#FBC02D]'
+                            : 'border-neutral-200 bg-neutral-50/70 text-neutral-500'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs font-black mb-2">
                       <span className="font-mono">{item.step}</span>
                       {item.status === 'completed' ? (
-                        <CheckCircle2 size={18} className="text-emerald-700" />
+                        <CheckCircle2 size={18} className="text-emerald-700 shrink-0" />
                       ) : item.status === 'rejected' ? (
-                        <AlertCircle size={18} className="text-red-600" />
+                        <AlertCircle size={18} className="text-red-600 shrink-0" />
+                      ) : item.status === 'active' ? (
+                        <Clock size={18} className="text-[#EA6623] shrink-0" />
                       ) : (
-                        <Clock size={18} className="text-[#EA6623]" />
+                        <div className="w-4 h-4 rounded-full border border-neutral-300 shrink-0" />
                       )}
                     </div>
                     <div>
@@ -327,7 +387,7 @@ export function RideParticipantDashboardPage() {
               </div>
 
               {/* Status Update Notice Banner */}
-              <div className="max-w-2xl mx-auto p-5 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex items-center justify-center text-center">
+              <div className="max-w-3xl mx-auto p-5 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex items-center justify-center text-center">
                 <p className="text-sm sm:text-base font-extrabold text-[#171515] leading-relaxed">
                   Keep checking for more updates on your application we hope to see you soon!
                 </p>

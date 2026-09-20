@@ -11,6 +11,30 @@ interface TeamMember {
 
 const TEAM_MEMBERS: TeamMember[] = [
   {
+    name: 'DRR PHF Rtn. Rtr. Archit Bhatia',
+    role: 'DRR',
+    designation: 'District Rotaract Representative · RID 3011',
+    image: '/leadership/archit-bhatia.webp',
+    tagline: 'Empowering youth diplomacy, leadership excellence, and national Rotaract fellowship.',
+    accentColor: '#C72425',
+  },
+  {
+    name: 'Rtr. Divyanshu Katiyar',
+    role: 'Deputy DRR',
+    designation: 'Deputy District Rotaract Representative · RID 3011',
+    image: '/leadership/divyanshu-katiyar.webp',
+    tagline: 'Spearheading district administration, strategic partnerships, and delegate immersion.',
+    accentColor: '#19539D',
+  },
+  {
+    name: 'Rtr. Shefali Prakash',
+    role: 'DRS',
+    designation: 'District Rotaract Secretary · RID 3011',
+    image: '/leadership/shefali-prakash.webp',
+    tagline: 'Guiding governance, delegation communications, and seamless administrative stewardship.',
+    accentColor: '#EA6623',
+  },
+  {
     name: 'Rtr. Ritik Varshney',
     role: 'RIDE Chair',
     designation: 'Project Lead · Delhi Meri Jaan',
@@ -50,14 +74,6 @@ const TEAM_MEMBERS: TeamMember[] = [
     tagline: 'Ensuring round-the-clock delegate care, safety, and inter-district etiquette.',
     accentColor: '#8E24AA',
   },
-  {
-    name: 'DRR PHF Rtn. Rtr. Archit Bhatia',
-    role: 'DRR',
-    designation: 'District Rotaract Representative · RID 3011',
-    image: '/leadership/archit-bhatia.webp',
-    tagline: 'Empowering youth diplomacy and national Rotaract fellowship.',
-    accentColor: '#C72425',
-  },
 ];
 
 export function RideTeamSection() {
@@ -78,8 +94,8 @@ export function RideTeamSection() {
           </p>
         </div>
 
-        {/* 6 Team Cards Grid (3 cols on large, 2 cols on tablet, 1 on mobile) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* 8 Team Cards Grid (4 cols on large, 2 cols on tablet/mobile) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {TEAM_MEMBERS.map((member) => (
             <div
               key={member.name}

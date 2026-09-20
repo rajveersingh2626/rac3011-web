@@ -41,10 +41,19 @@ async function readBody(res: Response): Promise<unknown> {
 }
 
 export async function apiFetch<T = unknown>(path: string, opts: Options<T> = {}): Promise<T> {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (opts.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  const participantToken = typeof window !== 'undefined' ? localStorage.getItem('ride_participant_token') : null;
+  if (participantToken) {
+    headers['Authorization'] = `Bearer ${participantToken}`;
+  }
+
   const res = await fetch(`${API_ORIGIN}${path}`, {
     method: opts.method ?? 'GET',
     credentials: 'include',
-    headers: opts.body !== undefined ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
+    headers,
     body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
     signal: opts.signal,
   });
