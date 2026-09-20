@@ -9,7 +9,6 @@ import {
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
 import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -329,6 +328,51 @@ export function RideParticipantDashboardPage() {
                   <p className="text-sm sm:text-base text-neutral-700 leading-relaxed font-medium">
                     From the historic lanes of Chandni Chowk to the majestic lawns of India Gate, the capital is gearing up to welcome you with open arms, legendary hospitality, and memories of a lifetime. Get ready to experience Dilwaalon Ki Dilli like never before!
                   </p>
+
+                  {/* ── Event Dates & Inclusions ── */}
+                  <div className="pt-4 mt-4 border-t-2 border-dashed border-[#171515]/20 space-y-4">
+                    <p className="text-base sm:text-lg font-black text-[#171515] tracking-tight">
+                      20 &bull; 21 &bull; 22 November 2026
+                    </p>
+                    <p className="text-sm text-neutral-700 font-medium leading-relaxed">
+                      Three days, two nights, and a city waiting to be experienced.
+                    </p>
+
+                    <div>
+                      <p className="text-sm font-black text-[#171515] uppercase tracking-wide mb-2">
+                        Your registration includes:
+                      </p>
+                      <ul className="space-y-1.5 text-sm text-neutral-700 font-medium">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                          Three days &amp; two nights of accommodation
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                          All meals: breakfast, lunch and dinner, with a taste of Delhi&rsquo;s culinary heritage
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                          Guided sightseeing, including entry tickets and curated group experiences
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                          Internal transportation within the city
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="p-3 rounded-xl border border-neutral-300 bg-neutral-50/80">
+                      <p className="text-xs font-black text-neutral-600 uppercase tracking-wide mb-1">Not included</p>
+                      <p className="text-xs text-neutral-600 leading-relaxed">
+                        Travel to and from Delhi, personal shopping, and expenses outside the official programme.
+                      </p>
+                    </div>
+
+                    <p className="text-sm text-neutral-600 italic leading-relaxed">
+                      Come with an open heart, a curious mind, and a little room for the unexpected.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="shrink-0 flex md:flex-col items-center gap-3 w-full md:w-auto pt-2 md:pt-0">
@@ -341,60 +385,85 @@ export function RideParticipantDashboardPage() {
               </div>
             </div>
 
-            <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm space-y-6 bg-white">
-              <div>
+            <div className="rounded-3xl border-2 border-[#171515] bg-white ride-pop-sm flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="px-6 pt-6 pb-4 border-b-2 border-neutral-100">
                 <h3 className="text-base font-black text-[#171515] uppercase tracking-wide">
-                  Delegate Exchange Progress & Dossier Status
+                  Delegate Exchange Progress &amp; Dossier Status
                 </h3>
-                <p className="text-xs text-neutral-600 mt-0.5">
+                <p className="text-xs text-neutral-500 mt-1">
                   Follow your application review and district verification status for Delhi Meri Jaan 2026.
+                  {' '}<span className="font-semibold text-neutral-700">Status reflects live data from the RID 3011 database.</span>
                 </p>
               </div>
 
-              {/* Progress Milestones (4 Multi-Step Tracker) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {dynamicMilestones.map((item) => (
-                  <div
-                    key={item.step}
-                    className={`p-5 rounded-2xl border-2 transition-all min-h-[150px] flex flex-col justify-between ${
-                      item.status === 'completed'
-                        ? 'border-[#171515] bg-emerald-50 text-emerald-950 shadow-xs'
-                        : item.status === 'rejected'
-                          ? 'border-red-400 bg-red-50 text-red-950'
-                          : item.status === 'active'
-                            ? 'border-[#171515] bg-[#FFFDF7] ride-pop-sm ring-2 ring-[#FBC02D]'
-                            : 'border-neutral-200 bg-neutral-50/70 text-neutral-500'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between text-xs font-black mb-2">
-                      <span className="font-mono">{item.step}</span>
-                      {item.status === 'completed' ? (
-                        <CheckCircle2 size={18} className="text-emerald-700 shrink-0" />
-                      ) : item.status === 'rejected' ? (
-                        <AlertCircle size={18} className="text-red-600 shrink-0" />
-                      ) : item.status === 'active' ? (
-                        <Clock size={18} className="text-[#EA6623] shrink-0" />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full border border-neutral-300 shrink-0" />
-                      )}
+              {/* Vertical Stepper */}
+              <div className="px-6 py-6 space-y-0">
+                {dynamicMilestones.map((item, idx) => {
+                  const isLast = idx === dynamicMilestones.length - 1;
+                  const iconColor =
+                    item.status === 'completed' ? 'bg-emerald-600 border-emerald-600' :
+                    item.status === 'rejected'  ? 'bg-red-500 border-red-500' :
+                    item.status === 'active'    ? 'bg-[#FBC02D] border-[#171515]' :
+                                                  'bg-white border-neutral-300';
+                  const connectorColor =
+                    item.status === 'completed' ? 'bg-emerald-300' : 'bg-neutral-200';
+
+                  return (
+                    <div key={item.step} className="flex gap-4">
+                      {/* Icon column */}
+                      <div className="flex flex-col items-center shrink-0">
+                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center shrink-0 ${iconColor}`}>
+                          {item.status === 'completed' ? (
+                            <CheckCircle2 size={18} className="text-white" />
+                          ) : item.status === 'rejected' ? (
+                            <AlertCircle size={18} className="text-white" />
+                          ) : item.status === 'active' ? (
+                            <Clock size={18} className="text-[#171515]" />
+                          ) : (
+                            <span className="text-xs font-black text-neutral-400">{item.step}</span>
+                          )}
+                        </div>
+                        {!isLast && (
+                          <div className={`w-0.5 flex-1 min-h-[32px] my-1 rounded-full ${connectorColor}`} />
+                        )}
+                      </div>
+
+                      {/* Content column */}
+                      <div className={`flex-1 pb-6 ${isLast ? 'pb-0' : ''}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-black font-mono text-neutral-400 uppercase">Step {item.step}</span>
+                          {item.status === 'completed' && (
+                            <span className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full uppercase tracking-wide">Complete</span>
+                          )}
+                          {item.status === 'active' && (
+                            <span className="text-[10px] font-black bg-[#FBC02D]/20 text-[#171515] px-2 py-0.5 rounded-full uppercase tracking-wide border border-[#FBC02D]">In Progress</span>
+                          )}
+                          {item.status === 'rejected' && (
+                            <span className="text-[10px] font-black bg-red-100 text-red-700 px-2 py-0.5 rounded-full uppercase tracking-wide">Declined</span>
+                          )}
+                          {item.status === 'pending' && (
+                            <span className="text-[10px] font-black bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full uppercase tracking-wide">Pending</span>
+                          )}
+                        </div>
+                        <div className="font-black text-sm text-[#171515] leading-snug">{item.title}</div>
+                        <div className="text-xs text-neutral-600 mt-1 leading-relaxed">{item.desc}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-black text-sm text-[#171515]">{item.title}</div>
-                      <div className="text-xs text-neutral-600 mt-1 leading-relaxed">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
-              {/* Status Update Notice Banner */}
-              <div className="max-w-3xl mx-auto p-5 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex items-center justify-center text-center">
-                <p className="text-sm sm:text-base font-extrabold text-[#171515] leading-relaxed">
-                  Keep checking for more updates on your application we hope to see you soon!
+              {/* Status Update Banner — naturally inside the container, no overlap */}
+              <div className="mx-6 mb-6 p-4 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7]">
+                <p className="text-sm font-extrabold text-[#171515] text-center leading-relaxed">
+                  Keep checking for more updates on your application — we hope to see you soon!
                 </p>
               </div>
-            </Card>
+            </div>
           </div>
         )}
+
 
         {/* TAB 2: PENDING FORMS DASHBOARD (CRITICAL ENGINE) */}
         {activeTab === 'forms' && (
