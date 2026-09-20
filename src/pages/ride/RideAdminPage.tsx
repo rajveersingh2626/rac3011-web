@@ -20,7 +20,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Building2, CheckCircle2, Users, ShieldCheck, Home, ExternalLink, Filter } from 'lucide-react';
 import {
   assignHosts,
   createDelegation,
@@ -29,6 +29,8 @@ import {
   fetchDelegations,
   fetchGalleryItems,
   fetchSupportClubs,
+  fetchApprovedHostClubs,
+  type ApprovedHostClub,
 } from '@/lib/ride/api';
 import type { Delegation, DelegationStatus, GalleryItem, GalleryItemKind, SupportClub } from '@/lib/ride/types';
 import { ApiError } from '@/lib/api';
@@ -41,6 +43,7 @@ import { RideUsersManagementTab } from './components/RideUsersManagementTab';
 
 const DELEGATIONS_KEY = ['ride', 'admin', 'delegations'];
 const SUPPORT_CLUBS_KEY = ['ride', 'admin', 'support-clubs'];
+const APPROVED_HOSTS_KEY = ['ride', 'admin', 'approved-hosts'];
 const GALLERY_KEY = ['ride', 'admin', 'gallery'];
 
 const STATUS_TONE: Record<DelegationStatus, BadgeTone> = {
@@ -149,32 +152,42 @@ interface HostRowState {
   included: boolean;
   daysHosted: string;
   membersSent: string;
+  hostFamilyName: string;
+  hostFamilyPhone: string;
+  hostAddress: string;
 }
 
 interface HostAssignmentDrawerProps {
   delegation: Delegation | null;
-  supportClubs: SupportClub[];
+  approvedHostClubs: ApprovedHostClub[];
   onClose: () => void;
   onSaved: () => void;
 }
 
-function HostAssignmentDrawer({ delegation, supportClubs, onClose, onSaved }: HostAssignmentDrawerProps) {
+function HostAssignmentDrawer({ delegation, approvedHostClubs, onClose, onSaved }: HostAssignmentDrawerProps) {
   const [rows, setRows] = useState<Record<string, HostRowState>>({});
+  const [targetScope, setTargetScope] = useState<'all' | 'selected'>('all');
+  const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Re-seed local state whenever a different delegation opens.
   const [seededFor, setSeededFor] = useState<string | undefined>(undefined);
   if (delegation && seededFor !== delegation.id) {
     const next: Record<string, HostRowState> = {};
-    for (const club of supportClubs) {
-      const existing = delegation.hosts.find((h) => h.club.id === club.club.id);
-      next[club.club.id] = {
+    for (const host of approvedHostClubs) {
+      const existing = delegation.hosts.find((h) => h.club.id === host.clubId);
+      next[host.clubId] = {
         included: Boolean(existing),
-        daysHosted: existing ? String(existing.daysHosted) : '',
+        daysHosted: existing ? String(existing.daysHosted) : '3',
         membersSent: existing ? String(existing.membersSent) : '0',
+        hostFamilyName: '',
+        hostFamilyPhone: '',
+        hostAddress: '',
       };
     }
     setRows(next);
+    setTargetScope('all');
+    setSelectedParticipantIds((delegation.participants || []).map((p) => p.id));
     setSeededFor(delegation.id);
   }
 
@@ -186,8 +199,12 @@ function HostAssignmentDrawer({ delegation, supportClubs, onClose, onSaved }: Ho
           clubId,
           daysHosted: Number(r.daysHosted || 0),
           membersSent: Number(r.membersSent || 0),
+          hostFamilyName: r.hostFamilyName.trim() || undefined,
+          hostFamilyPhone: r.hostFamilyPhone.trim() || undefined,
+          hostAddress: r.hostAddress.trim() || undefined,
         }));
-      return assignHosts(delegation!.id, hosts);
+      const pids = targetScope === 'selected' ? selectedParticipantIds : undefined;
+      return assignHosts(delegation!.id, hosts, pids);
     },
     onSuccess: () => {
       onSaved();
@@ -196,66 +213,278 @@ function HostAssignmentDrawer({ delegation, supportClubs, onClose, onSaved }: Ho
     onError: (e: unknown) => setError(e instanceof ApiError ? e.message : 'Could not save host assignments.'),
   });
 
+  const participants = delegation?.participants || [];
+
   return (
     <Drawer
       open={Boolean(delegation)}
       onClose={onClose}
-      title={delegation ? `Assign hosts: ${delegation.country}` : 'Assign hosts'}
+      title={delegation ? `Host Allocation • District ${delegation.visitingDistrict} (${delegation.country})` : 'Assign hosts'}
       footer={
         <Button loading={mutation.isPending} onClick={() => mutation.mutate()}>
-          Save host assignments
+          Save & Propagate Host Allocation
         </Button>
       }
     >
       {error && (
-        <div className="mb-3">
-          <Alert tone="error" title="Something went wrong">
+        <div className="mb-4">
+          <Alert tone="error" title="Assignment Error">
             {error}
           </Alert>
         </div>
       )}
-      {supportClubs.length === 0 ? (
-        <EmptyState title="No registered support clubs" body="No club has registered to host this Rotary year yet." />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {supportClubs.map((club) => {
-            const row = rows[club.club.id] ?? { included: false, daysHosted: '', membersSent: '0' };
-            return (
-              <div key={club.club.id} className="rounded-[10px] border border-line p-3">
-                <Checkbox
-                  label={`${club.club.name} (capacity ${club.capacityDelegates}${club.homestayAvailable ? ', homestay' : ''})`}
-                  checked={row.included}
-                  onChange={(e) =>
-                    setRows((prev) => ({ ...prev, [club.club.id]: { ...row, included: e.target.checked } }))
-                  }
-                />
-                {row.included && (
-                  <div className="mt-2 grid grid-cols-2 gap-2.5">
-                    <Field label="Days hosted">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={row.daysHosted}
-                        onChange={(e) =>
-                          setRows((prev) => ({ ...prev, [club.club.id]: { ...row, daysHosted: e.target.value } }))
-                        }
-                      />
-                    </Field>
-                    <Field label="Members sent">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={row.membersSent}
-                        onChange={(e) =>
-                          setRows((prev) => ({ ...prev, [club.club.id]: { ...row, membersSent: e.target.value } }))
-                        }
-                      />
-                    </Field>
+
+      {delegation && (
+        <div className="space-y-6">
+          {/* Delegation Summary Card */}
+          <div className="p-4 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-[#19539D] text-white">
+                  <ShieldCheck size={16} />
+                </span>
+                <span className="text-sm font-black uppercase text-[#171515]">
+                  RID {delegation.visitingDistrict} • {delegation.country}
+                </span>
+              </div>
+              <p className="text-xs text-neutral-600 mt-1 font-medium">
+                {formatDate(delegation.startsAt)} – {formatDate(delegation.endsAt)} · Headcount: {delegation.headcount}
+              </p>
+            </div>
+            <Badge tone="success">
+              {delegation.approvedParticipantsCount ?? participants.length} Approved Delegates
+            </Badge>
+          </div>
+
+          {/* Allocation Scope Selection */}
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4 space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
+              <Users size={14} className="text-[#19539D]" />
+              Delegate Allocation Scope
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setTargetScope('all')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  targetScope === 'all'
+                    ? 'border-[#19539D] bg-blue-50/50 text-[#19539D] font-bold shadow-xs'
+                    : 'border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300'
+                }`}
+              >
+                <p className="text-xs font-black">All Delegates</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Assign host to entire delegation</p>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTargetScope('selected')}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  targetScope === 'selected'
+                    ? 'border-[#19539D] bg-blue-50/50 text-[#19539D] font-bold shadow-xs'
+                    : 'border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300'
+                }`}
+              >
+                <p className="text-xs font-black">Selected Delegates</p>
+                <p className="text-[11px] opacity-80 mt-0.5">Granular individual selection</p>
+              </button>
+            </div>
+
+            {targetScope === 'selected' && (
+              <div className="pt-2 border-t border-neutral-100 space-y-2">
+                <p className="text-[11px] font-bold text-neutral-500 uppercase">Select Participants to allocate:</p>
+                {participants.length === 0 ? (
+                  <p className="text-xs text-neutral-400 italic">No registered participant profiles found for this district yet.</p>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    {participants.map((p) => {
+                      const isChecked = selectedParticipantIds.includes(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            setSelectedParticipantIds((prev) =>
+                              isChecked ? prev.filter((id) => id !== p.id) : [...prev, p.id]
+                            );
+                          }}
+                          className={`p-2.5 rounded-lg border text-xs flex items-center justify-between cursor-pointer transition-all ${
+                            isChecked ? 'border-blue-400 bg-blue-50/40 text-neutral-900' : 'border-neutral-200 bg-white text-neutral-600'
+                          }`}
+                        >
+                          <div>
+                            <span className="font-bold">{p.fullName}</span>
+                            <span className="text-neutral-400 ml-1.5">({p.email})</span>
+                          </div>
+                          <Badge tone={p.approvalStatus === 'approved' ? 'success' : 'neutral'}>
+                            {p.approvalStatus}
+                          </Badge>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Approved Host Clubs List */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
+                <Building2 size={14} className="text-[#EA6623]" />
+                Approved Host Clubs Only ({approvedHostClubs.length})
+              </h4>
+              <span className="text-[11px] text-neutral-500 font-medium">Verified via Form Builder</span>
+            </div>
+
+            {approvedHostClubs.length === 0 ? (
+              <EmptyState
+                title="No Approved Host Clubs"
+                body="Host Clubs must submit the Host Club Application in Form Builder and be marked as 'Approved' before they can be assigned here."
+              />
+            ) : (
+              <div className="space-y-3">
+                {approvedHostClubs.map((host) => {
+                  const row = rows[host.clubId] ?? {
+                    included: false,
+                    daysHosted: '3',
+                    membersSent: '0',
+                    hostFamilyName: '',
+                    hostFamilyPhone: '',
+                    hostAddress: '',
+                  };
+
+                  return (
+                    <div
+                      key={host.clubId}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        row.included
+                          ? 'border-[#19539D] bg-blue-50/20 ride-pop-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={row.included}
+                            onChange={(e) =>
+                              setRows((prev) => ({
+                                ...prev,
+                                [host.clubId]: { ...row, included: e.target.checked },
+                              }))
+                            }
+                          />
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-black text-neutral-900">
+                                {host.club.name}
+                              </span>
+                              {host.zone && (
+                                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-bold">
+                                  {host.zone}
+                                </span>
+                              )}
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 text-[10px] font-bold flex items-center gap-1">
+                                <CheckCircle2 size={10} /> Verified Host Club
+                              </span>
+                            </div>
+                            <p className="text-xs text-neutral-600 mt-1">
+                              Capacity: {host.capacityDelegates} delegates · {host.homestayAvailable ? 'Homestay Available' : 'No Homestay'} · POC: {host.applicantName} ({host.applicantPhone})
+                            </p>
+                          </div>
+                        </div>
+
+                        {host.proposalDriveUrl && (
+                          <a
+                            href={host.proposalDriveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg border border-neutral-200 hover:border-neutral-400 text-neutral-600 hover:text-neutral-900 shrink-0"
+                            title="View Club Proposal"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                        )}
+                      </div>
+
+                      {row.included && (
+                        <div className="mt-4 pt-3 border-t border-neutral-200/80 space-y-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <Field label="Days Hosted">
+                              <Input
+                                type="number"
+                                min={1}
+                                value={row.daysHosted}
+                                onChange={(e) =>
+                                  setRows((prev) => ({
+                                    ...prev,
+                                    [host.clubId]: { ...row, daysHosted: e.target.value },
+                                  }))
+                                }
+                              />
+                            </Field>
+                            <Field label="Members Sent / Liaison Count">
+                              <Input
+                                type="number"
+                                min={0}
+                                value={row.membersSent}
+                                onChange={(e) =>
+                                  setRows((prev) => ({
+                                    ...prev,
+                                    [host.clubId]: { ...row, membersSent: e.target.value },
+                                  }))
+                                }
+                              />
+                            </Field>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Field label="Host Family / Coordinator Name (Optional)">
+                              <Input
+                                placeholder="e.g. Rtn. Sharma Family"
+                                value={row.hostFamilyName}
+                                onChange={(e) =>
+                                  setRows((prev) => ({
+                                    ...prev,
+                                    [host.clubId]: { ...row, hostFamilyName: e.target.value },
+                                  }))
+                                }
+                              />
+                            </Field>
+                            <Field label="Host Family Contact Phone (Optional)">
+                              <Input
+                                placeholder="+91 98765 XXXXX"
+                                value={row.hostFamilyPhone}
+                                onChange={(e) =>
+                                  setRows((prev) => ({
+                                    ...prev,
+                                    [host.clubId]: { ...row, hostFamilyPhone: e.target.value },
+                                  }))
+                                }
+                              />
+                            </Field>
+                          </div>
+
+                          <Field label="Homestay Area / Host Address (Optional)">
+                            <Input
+                              placeholder="e.g. South Extension, New Delhi"
+                              value={row.hostAddress}
+                              onChange={(e) =>
+                                setRows((prev) => ({
+                                  ...prev,
+                                  [host.clubId]: { ...row, hostAddress: e.target.value },
+                                }))
+                              }
+                            />
+                          </Field>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </Drawer>
@@ -446,41 +675,86 @@ function GalleryAdminSection() {
 export function RideAdminPage() {
   useDocumentMeta({ title: 'RIDE admin' });
   const [activeTab, setActiveTab] = useState<'dmj' | 'users' | 'forms' | 'email' | 'resources' | 'logins' | 'delegations' | 'gallery'>('dmj');
+  const [approvedOnly, setApprovedOnly] = useState(true);
   const qc = useQueryClient();
+
   const delegationsQuery = useQuery({
-    queryKey: DELEGATIONS_KEY,
-    queryFn: () => fetchDelegations({ pageSize: 100 }),
+    queryKey: [...DELEGATIONS_KEY, { approvedOnly }],
+    queryFn: () => fetchDelegations({ approvedOnly, pageSize: 100 }),
   });
-  const supportClubsQuery = useQuery({
-    queryKey: SUPPORT_CLUBS_KEY,
-    queryFn: () => fetchSupportClubs({ ryYear: currentRyYear(), pageSize: 200 }),
+
+  const approvedHostsQuery = useQuery({
+    queryKey: APPROVED_HOSTS_KEY,
+    queryFn: () => fetchApprovedHostClubs(),
   });
 
   const [creating, setCreating] = useState(false);
   const [assigning, setAssigning] = useState<Delegation | null>(null);
 
-  const invalidateDelegations = () => void qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
+  const invalidateDelegations = () => {
+    void qc.invalidateQueries({ queryKey: DELEGATIONS_KEY });
+    void qc.invalidateQueries({ queryKey: APPROVED_HOSTS_KEY });
+  };
 
   const columns: Column<Delegation>[] = [
     {
       key: 'delegation',
-      header: 'Delegation',
+      header: 'District & Delegation',
       cell: (d) => (
         <div>
-          <p className="m-0 text-[13px] font-bold text-fg">
-            {d.country} · {d.visitingDistrict}
-          </p>
-          <p className="m-0 text-[11px] text-fg-3">
-            {formatDate(d.startsAt)} – {formatDate(d.endsAt)} · {d.headcount} delegate{d.headcount === 1 ? '' : 's'}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[13px] font-black text-fg">
+              District {d.visitingDistrict} • {d.country}
+            </span>
+            {d.status === 'confirmed' ? (
+              <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold">
+                Confirmed Delegation
+              </span>
+            ) : (
+              <Badge tone={STATUS_TONE[d.status]}>{d.status}</Badge>
+            )}
+          </div>
+          <p className="m-0 text-[11px] text-fg-3 mt-0.5">
+            {formatDate(d.startsAt)} – {formatDate(d.endsAt)} · POC: {d.contactName} {d.contactEmail ? `(${d.contactEmail})` : ''}
           </p>
         </div>
       ),
     },
-    { key: 'status', header: 'Status', cell: (d) => <Badge tone={STATUS_TONE[d.status]}>{d.status}</Badge> },
+    {
+      key: 'delegates',
+      header: 'Approved Delegates',
+      cell: (d) => (
+        <div className="flex items-center gap-2">
+          <Badge tone={(d.approvedParticipantsCount ?? 0) > 0 ? 'success' : 'neutral'}>
+            {d.approvedParticipantsCount ?? 0} Approved
+          </Badge>
+          <span className="text-[11px] text-fg-3">
+            / {d.headcount} Expected
+          </span>
+        </div>
+      ),
+    },
     {
       key: 'hosts',
-      header: 'Hosts',
-      cell: (d) => (d.hosts.length === 0 ? <span className="text-[12px] text-fg-3">Unassigned</span> : d.hosts.map((h) => h.club.shortName ?? h.club.name).join(', ')),
+      header: 'Assigned Host Clubs',
+      cell: (d) =>
+        d.hosts.length === 0 ? (
+          <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 text-[11px] font-bold border border-amber-200">
+            Pending Host Allocation
+          </span>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {d.hosts.map((h) => (
+              <span
+                key={h.id}
+                className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-950 text-[11px] font-bold border border-emerald-300 flex items-center gap-1"
+              >
+                <Building2 size={11} className="text-emerald-700" />
+                {h.club.shortName ?? h.club.name} ({h.daysHosted}d)
+              </span>
+            ))}
+          </div>
+        ),
     },
     {
       key: 'actions',
@@ -493,6 +767,12 @@ export function RideAdminPage() {
       ),
     },
   ];
+
+  const delegations = delegationsQuery.data?.items ?? [];
+  const totalApprovedDelegates = delegations.reduce(
+    (acc, cur) => acc + (cur.approvedParticipantsCount ?? 0),
+    0
+  );
 
   return (
     <div className="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -537,17 +817,76 @@ export function RideAdminPage() {
 
       {activeTab === 'delegations' && (
         <Section
-          eyebrow="RIDE admin"
-          title="Delegations"
-          description="Add incoming delegations and assign the district clubs hosting each one."
-          action={<Button onClick={() => setCreating(true)}>Add delegation</Button>}
+          eyebrow="RIDE Admin"
+          title="Delegations & Host Allocation"
+          description="Manage approved incoming district delegations and assign verified Host Clubs with homestay details."
+          action={
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setCreating(true)}>Add delegation</Button>
+            </div>
+          }
         >
+          {/* Dynamic Filter & Status Bar */}
+          <div className="mb-4 p-4 rounded-2xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setApprovedOnly(true)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    approvedOnly
+                      ? 'bg-[#19539D] text-white shadow-xs'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  Approved Districts Only
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApprovedOnly(false)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                    !approvedOnly
+                      ? 'bg-[#19539D] text-white shadow-xs'
+                      : 'text-neutral-600 hover:text-neutral-900'
+                  }`}
+                >
+                  Show All Delegations
+                </button>
+              </div>
+
+              <span className="text-xs text-neutral-500 font-medium">
+                {approvedOnly
+                  ? 'Displaying delegations with confirmed status or approved registered participants.'
+                  : 'Displaying all delegations including planned/draft visits.'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
+                {delegations.length} {approvedOnly ? 'Approved Districts' : 'Delegations'}
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold">
+                {totalApprovedDelegates} Approved Delegates
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold">
+                {approvedHostsQuery.data?.length ?? 0} Approved Host Clubs
+              </span>
+            </div>
+          </div>
+
           {delegationsQuery.isPending ? (
             <Skeleton shape="rect" className="h-64" />
           ) : delegationsQuery.isError ? (
             <ErrorState title="Couldn't load delegations" onRetry={() => void delegationsQuery.refetch()} />
           ) : delegationsQuery.data.items.length === 0 ? (
-            <EmptyState title="No delegations yet" body="Add the first incoming delegation above." />
+            <EmptyState
+              title={approvedOnly ? 'No Approved Delegations Found' : 'No delegations yet'}
+              body={
+                approvedOnly
+                  ? 'No delegation is currently marked as Confirmed or has Approved participants. Toggle "Show All Delegations" or approve incoming forms in Submissions & Forms.'
+                  : 'Add the first incoming delegation above.'
+              }
+            />
           ) : (
             <Card rule="accent" padding="compact" className="overflow-x-auto">
               <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
@@ -561,7 +900,7 @@ export function RideAdminPage() {
       <CreateDelegationModal open={creating} onClose={() => setCreating(false)} onCreated={invalidateDelegations} />
       <HostAssignmentDrawer
         delegation={assigning}
-        supportClubs={supportClubsQuery.data?.items ?? []}
+        approvedHostClubs={approvedHostsQuery.data ?? []}
         onClose={() => setAssigning(null)}
         onSaved={invalidateDelegations}
       />
