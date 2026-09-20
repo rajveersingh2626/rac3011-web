@@ -10,6 +10,7 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
+import { apiFetch } from '@/lib/api';
 import { 
   fetchRideResources,
   createRideResource,
@@ -47,6 +48,17 @@ export function RideResourcesPortalTab() {
     queryKey: ['ride', 'resources'],
     queryFn: () => fetchRideResources({ pageSize: 100 }),
   });
+
+  const { data: participantsData } = useQuery({
+    queryKey: ['ride-admin-participants-dropdown'],
+    queryFn: async () => {
+      const res = await apiFetch<{ items: Array<{ id: string; fullName: string; email: string; rotaryId?: string | null; homeDistrict?: string }> }>(
+        '/ride/participants?pageSize=200',
+      );
+      return res?.items ?? [];
+    },
+  });
+  const participants = participantsData || [];
 
   const resources: RideResource[] = resData?.items || [];
 
@@ -185,8 +197,7 @@ export function RideResourcesPortalTab() {
             >
               <option value="all">All Access Scopes</option>
               <option value="all">Public / All Participants</option>
-              <option value="club">Club Restricted Only</option>
-              <option value="member">Member Specific Only</option>
+              <option value="member">Specific Participant Only</option>
             </select>
           </div>
         </div>
@@ -352,36 +363,39 @@ export function RideResourcesPortalTab() {
                 onChange={(e) => setNewScope(e.target.value as ResourceScope)}
                 options={[
                   { value: 'all', label: 'All Participants (Public)' },
-                  { value: 'club', label: 'Specific Host Club' },
-                  { value: 'member', label: 'Specific Member' },
+                  { value: 'member', label: 'Specific Individual Participant' },
                 ]}
               />
             </div>
           </div>
 
-          {newScope === 'club' && (
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1">
-                Target Club Name / Zone
-              </label>
-              <Input
-                value={newClubName}
-                onChange={(e) => setNewClubName(e.target.value)}
-                placeholder="e.g. Rotaract Club of Delhi South Central"
-              />
-            </div>
-          )}
-
           {newScope === 'member' && (
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-neutral-700 mb-1">
-                Target Member Email Address
+            <div className="space-y-2 p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+              <label className="block text-xs font-black uppercase tracking-wider text-neutral-700">
+                Target Participant (From Registry / Credentials) *
               </label>
-              <Input
+              <select
                 value={newMemberEmail}
                 onChange={(e) => setNewMemberEmail(e.target.value)}
-                placeholder="e.g. lead.hospitality@rotaract3011.org"
-              />
+                className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#19539D] bg-white text-[#171515]"
+              >
+                <option value="">-- Choose Registered Participant ({participants.length}) --</option>
+                {participants.map((p) => (
+                  <option key={p.id} value={p.email}>
+                    {p.fullName} ({p.email}){p.rotaryId ? ` • ID: ${p.rotaryId}` : ''}{p.homeDistrict ? ` • RID ${p.homeDistrict}` : ''}
+                  </option>
+                ))}
+              </select>
+
+              <div className="flex items-center gap-2 pt-1">
+                <span className="text-[11px] text-neutral-500 font-bold whitespace-nowrap">Or custom email:</span>
+                <Input
+                  value={newMemberEmail}
+                  onChange={(e) => setNewMemberEmail(e.target.value)}
+                  placeholder="delegate@rotaract.org"
+                  className="text-xs flex-1"
+                />
+              </div>
             </div>
           )}
 

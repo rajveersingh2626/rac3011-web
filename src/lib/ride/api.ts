@@ -208,11 +208,11 @@ export async function fetchRideDistricts(): Promise<string[]> {
 
 export async function resetRideRegistrations(
   confirmation = 'RESET',
-  mode: 'soft' | 'hard' = 'soft',
+  mode: 'soft' | 'hard' = 'hard',
 ): Promise<{ count: number; mode: 'soft' | 'hard' }> {
   return apiFetch<{ count: number; mode: 'soft' | 'hard' }>('/ride/participants/admin/reset', {
     method: 'POST',
-    body: JSON.stringify({ confirmation, mode }),
+    body: { confirmation, mode },
   });
 }
 

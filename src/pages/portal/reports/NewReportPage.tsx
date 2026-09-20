@@ -10,6 +10,7 @@ import { Field } from '@/components/ui/Field';
 import { Textarea } from '@/components/ui/Textarea';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { Alert } from '@/components/ui/Alert';
 import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
 import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
 import { useToast } from '@/components/ui/Toast';
@@ -115,6 +116,8 @@ export function NewReportPage() {
   const saveMutation = useMutation({
     mutationFn: (payload: { values: Record<string, unknown>; notes: string }) => {
       if (!reportQuery.data) return Promise.resolve(null);
+      const isReportEditable = reportQuery.data.status === 'draft' || reportQuery.data.status === 'queried';
+      if (!isReportEditable) return Promise.resolve(reportQuery.data);
       return updateReport(reportQuery.data.id, { values: payload.values, notes: payload.notes });
     },
     onSuccess: (updatedReport) => {
@@ -191,7 +194,8 @@ export function NewReportPage() {
     return empty;
   }, [editingIndex, activities, activityFields, activeAvenue]);
 
-  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data), storageKey);
+  const isEditable = !reportQuery.data || reportQuery.data.status === 'draft' || reportQuery.data.status === 'queried';
+  const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data && isEditable), storageKey);
 
   if (!clubId) {
     return (
@@ -228,14 +232,21 @@ export function NewReportPage() {
 
   const handleProceedToReview = async () => {
     setIsNavigatingToReview(true);
+    autosave.cancel();
     try {
-      autosave.flush();
-      const updated = await saveMutation.mutateAsync({ values, notes });
-      if (updated) {
-        qc.setQueryData(['reports', updated.id], updated);
+      if (isEditable) {
+        autosave.flush();
+        const updated = await saveMutation.mutateAsync({ values, notes });
+        if (updated) {
+          qc.setQueryData(['reports', updated.id], updated);
+        }
       }
       navigate(`/portal/reports/${report.id}/review`);
     } catch (err) {
+      if (err instanceof ApiError && (err.status === 409 || err.message.toLowerCase().includes('submitted'))) {
+        navigate(`/portal/reports/${report.id}/review`);
+        return;
+      }
       console.error('Failed to save report before reviewing:', err);
       toast({
         title: 'Could not save report draft',
@@ -300,12 +311,31 @@ export function NewReportPage() {
         title="Monthly Avenue Reporting"
         description="6 avenues to report club activities and impact. Add events and projects under each respective avenue below."
         action={
-          <Button variant="secondary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
-            Review and submit →
-          </Button>
+          isEditable ? (
+            <Button variant="secondary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
+              Review and submit →
+            </Button>
+          ) : (
+            <Button variant="secondary" onClick={() => navigate(`/portal/reports/${report.id}`)}>
+              View submitted report →
+            </Button>
+          )
         }
       >
         <div className="flex flex-col gap-8">
+          {!isEditable && (
+            <Alert tone="info" title="This report has already been submitted">
+              The report for {monthLabel} has already been submitted and cannot be edited.
+              <div className="mt-3 flex gap-3">
+                <Button variant="secondary" size="sm" onClick={() => navigate(`/portal/reports/${report.id}`)}>
+                  View Report Details
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/portal/reports')}>
+                  Report History
+                </Button>
+              </div>
+            </Alert>
+          )}
           {topFields.length > 0 && (
             <div className="rounded-[16px] border border-line-accent bg-surface p-5 shadow-sm">
               <p className="m-0 mb-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Monthly Club Statistics</p>

@@ -51,6 +51,15 @@ export function ReviewSubmitPage() {
 
   useEffect(() => {
     if (storageKey && typeof window !== 'undefined' && reportData) {
+      const isEditable = reportData.status === 'draft' || reportData.status === 'queried';
+      if (!isEditable) {
+        try {
+          window.localStorage.removeItem(storageKey);
+        } catch {
+          // ignore
+        }
+        return;
+      }
       try {
         const cached = window.localStorage.getItem(storageKey);
         if (cached) {
@@ -58,19 +67,23 @@ export function ReviewSubmitPage() {
           const cachedActivities = parsed.values?.activities;
           const serverActivities = activitiesOf(reportData.values);
           if (Array.isArray(cachedActivities) && cachedActivities.length > serverActivities.length) {
-            updateReport(reportData.id, { values: parsed.values, notes: parsed.notes }).then((updated) => {
-              if (updated) {
-                qc.setQueryData(['reports', reportData.id], updated);
-                qc.invalidateQueries({ queryKey: ['reports', reportData.id] });
-              }
-            });
+            updateReport(reportData.id, { values: parsed.values, notes: parsed.notes })
+              .then((updated) => {
+                if (updated) {
+                  qc.setQueryData(['reports', reportData.id], updated);
+                  qc.invalidateQueries({ queryKey: ['reports', reportData.id] });
+                }
+              })
+              .catch(() => {
+                // Ignore late sync error if status transitioned concurrently
+              });
           }
         }
       } catch {
         // ignore
       }
     }
-  }, [storageKey, reportData?.id, qc]);
+  }, [storageKey, reportData?.id, reportData?.status, qc]);
 
   const submitMutation = useMutation({
     mutationFn: () => updateReport(id, { status: 'submitted' }),
@@ -87,6 +100,18 @@ export function ReviewSubmitPage() {
     },
     onError: (e: unknown) => {
       if (e instanceof ApiError) {
+        if (e.status === 409 && e.message.toLowerCase().includes('submitted')) {
+          if (storageKey && typeof window !== 'undefined') {
+            try {
+              window.localStorage.removeItem(storageKey);
+            } catch {
+              // ignore
+            }
+          }
+          void qc.invalidateQueries({ queryKey: ['reports'] });
+          navigate(`/portal/reports/${id}`);
+          return;
+        }
         const detail = e.details?.map((d) => d.message).join(' ');
         setSubmitError(detail || e.message);
       } else {

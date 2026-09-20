@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
-import { ArrowLeft, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowLeft, Lock, Mail, ArrowRight, AlertCircle, ShieldCheck, Sparkles, X, CheckCircle } from 'lucide-react';
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
-import { ApiError } from '@/lib/api';
+import { apiFetch, ApiError } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Button } from '@/components/ui/Button';
 
@@ -16,6 +16,13 @@ export function RideParticipantLoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Forgot Password modal state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
 
   // If already authenticated as a participant, redirect to dashboard
   useEffect(() => {
@@ -46,6 +53,30 @@ export function RideParticipantLoginPage() {
           : err?.message || 'Invalid credentials or participant account not found. Please contact RIDE administration.',
       );
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    if (!forgotIdentifier.trim()) {
+      setForgotError('Please enter your registered email or Rotary ID.');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const res = await apiFetch<{ success: boolean; message: string }>('/ride/auth/forgot-password', {
+        method: 'POST',
+        body: { identifier: forgotIdentifier.trim() },
+      });
+      setForgotSuccess(res?.message || 'If an account matches our records, a password reset link has been dispatched to your email.');
+    } catch (err: any) {
+      setForgotError(err instanceof ApiError ? err.message : err?.message || 'Failed to request password reset link.');
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -135,6 +166,21 @@ export function RideParticipantLoginPage() {
               </div>
             </div>
 
+            <div className="flex justify-end pt-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotModal(true);
+                  setForgotError(null);
+                  setForgotSuccess(null);
+                  setForgotIdentifier(email);
+                }}
+                className="text-[11px] font-bold text-[#EA6623] hover:underline cursor-pointer transition-colors"
+              >
+                Forgot your password?
+              </button>
+            </div>
+
             <Button
               type="submit"
               variant="primary"
@@ -157,6 +203,96 @@ export function RideParticipantLoginPage() {
             </p>
           </div>
         </div>
+
+        {/* Forgot Password Modal */}
+        {showForgotModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-white rounded-3xl border-3 border-[#171515] ride-pop-lg p-6 sm:p-8 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="absolute right-4 top-4 text-neutral-400 hover:text-[#171515] p-1 rounded-lg hover:bg-neutral-100 transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="text-left mb-5">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#171515] bg-[#FBC02D] text-[#171515] text-[10px] font-black uppercase tracking-wider mb-2 ride-pop-sm">
+                  <Lock size={12} />
+                  <span>Password Assistance</span>
+                </div>
+                <h3 className="text-xl font-black uppercase tracking-tight text-[#171515]">
+                  Reset Participant Password
+                </h3>
+                <p className="text-xs text-neutral-600 mt-1 font-medium">
+                  Enter your registered delegate email or Rotary ID. If an active dossier exists, we'll send a password reset link to your email.
+                </p>
+              </div>
+
+              {forgotError && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 border-2 border-red-500 text-red-950 text-xs font-bold flex items-center gap-2">
+                  <AlertCircle size={16} className="text-red-600 shrink-0" />
+                  <span>{forgotError}</span>
+                </div>
+              )}
+
+              {forgotSuccess ? (
+                <div className="space-y-4 py-2">
+                  <div className="p-4 rounded-xl bg-emerald-50 border-2 border-emerald-500 text-emerald-950 text-xs font-bold flex items-start gap-2.5">
+                    <CheckCircle size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                    <span>{forgotSuccess}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowForgotModal(false)}
+                    className="w-full py-2.5 rounded-xl border-2 border-[#171515] font-black text-xs uppercase tracking-wider"
+                  >
+                    Close
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-black uppercase tracking-wider text-neutral-700">
+                      Email or Rotary ID
+                    </label>
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+                      <input
+                        type="text"
+                        required
+                        value={forgotIdentifier}
+                        onChange={(e) => setForgotIdentifier(e.target.value)}
+                        placeholder="delegate@rotaract.org or Rotary ID"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-neutral-300 text-xs font-medium focus:outline-none focus:border-[#19539D] focus:ring-1 focus:ring-[#19539D] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(false)}
+                      className="flex-1 py-2.5 rounded-xl border-2 border-neutral-300 text-neutral-700 font-bold text-xs uppercase tracking-wider hover:bg-neutral-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      loading={forgotLoading}
+                      className="flex-1 py-2.5 rounded-xl bg-[#EA6623] hover:bg-orange-600 text-white font-black text-xs uppercase tracking-wider ride-pop-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Send Link</span>
+                      <ArrowRight size={14} />
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}

@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { createBrowserRouter, Navigate, Outlet, ScrollRestoration, type RouteObject } from 'react-router';
+import { surfaceHref } from '@/app/host';
 import { PublicLayout, PortalLayout, AdminLayout } from './layouts';
 import { RequireAuth } from './guards';
 import { AuthLayout } from '@/components/layout/AuthLayout';
@@ -12,6 +14,13 @@ import { publicMainRouteObjects } from './publicMain.routes';
 import { portalMemberRouteObjects } from './portalMember.routes';
 import { portalAdminRouteObjects } from './portalAdmin.routes';
 import DistrictApp from '@/district/App';
+
+function RideSubdomainRedirect() {
+  useEffect(() => {
+    window.location.replace(surfaceHref('ride'));
+  }, []);
+  return null;
+}
 
 // Outside PublicLayout: the district site renders its own chrome and self-routes via pushState.
 const districtSitePaths = [
@@ -33,7 +42,9 @@ const routes: RouteObject[] = [
   { path: '/login', element: <Navigate to="/portal/login" replace /> },
   { path: '/admin/ride', element: <Navigate to="/portal/admin/ride" replace /> },
   { path: '/portal/ride', element: <Navigate to="/portal/admin/ride" replace /> },
-  { path: '/ride', element: <Navigate to="/portal/admin/ride" replace /> },
+  { path: '/ride', element: <RideSubdomainRedirect /> },
+  { path: '/ride/*', element: <RideSubdomainRedirect /> },
+  { path: '/delhi-meri-jaan', element: <RideSubdomainRedirect /> },
   { path: '/admin', element: <Navigate to="/portal/admin/clubs" replace /> },
   { path: '/portal/admin', element: <Navigate to="/portal/admin/clubs" replace /> },
   { path: '/forgot-password', element: <Navigate to="/portal/forgot-password" replace /> },

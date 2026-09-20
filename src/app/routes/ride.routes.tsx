@@ -14,6 +14,9 @@ const RideParticipantDashboardPage = lazy(() =>
 const RideParticipantLoginPage = lazy(() =>
   import('@/pages/ride/RideParticipantLoginPage').then((m) => ({ default: m.RideParticipantLoginPage }))
 );
+const RideResetPasswordPage = lazy(() =>
+  import('@/pages/ride/RideResetPasswordPage').then((m) => ({ default: m.RideResetPasswordPage }))
+);
 import { PublicEventPassPage } from '@/pages/public/PublicEventPassPage';
 
 function SubdomainAdminRedirect() {
@@ -91,6 +94,8 @@ const routes: RouteObject[] = [
       { path: '/delhi-meri-jaan', element: <RideHomePage /> },
       { path: '/gallery', element: <RideGalleryPage /> },
       { path: '/login', element: <RideParticipantLoginPage /> },
+      { path: '/participant-login', element: <RideParticipantLoginPage /> },
+      { path: '/reset-password', element: <RideResetPasswordPage /> },
       {
         element: <RequireRideParticipantAuth />,
         children: [

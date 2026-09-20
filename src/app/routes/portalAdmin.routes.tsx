@@ -62,7 +62,7 @@ function guarded(perm: string, path: string, element: ReactElement): RouteObject
 }
 
 export const portalAdminRouteObjects: RouteObject[] = [
-  guarded('subdomain:ride:manage', '/portal/admin/ride', <RideAdminPage />),
+  guarded('subdomain:ride:manage,ride:manage,ride:delegates:manage', '/portal/admin/ride', <RideAdminPage />),
   guarded('reports:review', '/portal/admin/clubs', <AdminClubsPage />),
   guarded('reports:score', '/portal/admin/clubs/:clubId/:month', <ScoreMonthPage />),
   guarded('club_facts:edit', '/portal/admin/clubs/:clubId/facts', <ClubFactsPage />),
