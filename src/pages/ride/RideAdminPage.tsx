@@ -20,7 +20,7 @@ import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Trash2, Building2, CheckCircle2, Users, ShieldCheck, Home, ExternalLink, Filter } from 'lucide-react';
+import { Trash2, Building2, CheckCircle2, Users, ShieldCheck, ExternalLink } from 'lucide-react';
 import {
   assignHosts,
   createDelegation,
@@ -28,11 +28,10 @@ import {
   deleteGalleryItem,
   fetchDelegations,
   fetchGalleryItems,
-  fetchSupportClubs,
   fetchApprovedHostClubs,
   type ApprovedHostClub,
 } from '@/lib/ride/api';
-import type { Delegation, DelegationStatus, GalleryItem, GalleryItemKind, SupportClub } from '@/lib/ride/types';
+import type { Delegation, DelegationStatus, GalleryItem, GalleryItemKind } from '@/lib/ride/types';
 import { ApiError } from '@/lib/api';
 import { DelhiMeriJaanAdminTab } from './components/DelhiMeriJaanAdminTab';
 import { RideEmailStudioTab } from './components/RideEmailStudioTab';
@@ -42,7 +41,6 @@ import { RideActiveLoginsTab } from './components/RideActiveLoginsTab';
 import { RideUsersManagementTab } from './components/RideUsersManagementTab';
 
 const DELEGATIONS_KEY = ['ride', 'admin', 'delegations'];
-const SUPPORT_CLUBS_KEY = ['ride', 'admin', 'support-clubs'];
 const APPROVED_HOSTS_KEY = ['ride', 'admin', 'approved-hosts'];
 const GALLERY_KEY = ['ride', 'admin', 'gallery'];
 
@@ -251,7 +249,7 @@ function HostAssignmentDrawer({ delegation, approvedHostClubs, onClose, onSaved 
                 {formatDate(delegation.startsAt)} – {formatDate(delegation.endsAt)} · Headcount: {delegation.headcount}
               </p>
             </div>
-            <Badge tone="success">
+            <Badge tone="green">
               {delegation.approvedParticipantsCount ?? participants.length} Approved Delegates
             </Badge>
           </div>
@@ -315,7 +313,7 @@ function HostAssignmentDrawer({ delegation, approvedHostClubs, onClose, onSaved 
                             <span className="font-bold">{p.fullName}</span>
                             <span className="text-neutral-400 ml-1.5">({p.email})</span>
                           </div>
-                          <Badge tone={p.approvalStatus === 'approved' ? 'success' : 'neutral'}>
+                          <Badge tone={p.approvalStatus === 'approved' ? 'green' : 'neutral'}>
                             {p.approvalStatus}
                           </Badge>
                         </div>
@@ -366,6 +364,7 @@ function HostAssignmentDrawer({ delegation, approvedHostClubs, onClose, onSaved 
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3">
                           <Checkbox
+                            label=""
                             checked={row.included}
                             onChange={(e) =>
                               setRows((prev) => ({
@@ -725,7 +724,7 @@ export function RideAdminPage() {
       header: 'Approved Delegates',
       cell: (d) => (
         <div className="flex items-center gap-2">
-          <Badge tone={(d.approvedParticipantsCount ?? 0) > 0 ? 'success' : 'neutral'}>
+          <Badge tone={(d.approvedParticipantsCount ?? 0) > 0 ? 'green' : 'neutral'}>
             {d.approvedParticipantsCount ?? 0} Approved
           </Badge>
           <span className="text-[11px] text-fg-3">
