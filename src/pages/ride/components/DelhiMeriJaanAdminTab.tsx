@@ -76,11 +76,12 @@ export function DelhiMeriJaanAdminTab() {
   const districts = Array.from(new Set(participants.map((p) => p.districtNumber)));
 
   const filtered = participants.filter((p) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      p.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      p.email.toLowerCase().includes(search.toLowerCase()) ||
-      p.clubName.toLowerCase().includes(search.toLowerCase()) ||
-      p.id.toLowerCase().includes(search.toLowerCase());
+      (p.fullName?.toLowerCase() ?? '').includes(q) ||
+      (p.email?.toLowerCase() ?? '').includes(q) ||
+      (p.clubName?.toLowerCase() ?? '').includes(q) ||
+      (p.id?.toLowerCase() ?? '').includes(q);
     const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
     const matchesDistrict = districtFilter === 'all' || p.districtNumber === districtFilter;
     return matchesSearch && matchesStatus && matchesDistrict;

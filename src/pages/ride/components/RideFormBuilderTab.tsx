@@ -57,8 +57,8 @@ export function RideFormBuilderTab() {
       if (!search.trim()) return true;
       const q = search.toLowerCase();
       return (
-        s.participantName.toLowerCase().includes(q) ||
-        s.participantEmail.toLowerCase().includes(q) ||
+        (s.participantName?.toLowerCase() ?? '').includes(q) ||
+        (s.participantEmail?.toLowerCase() ?? '').includes(q) ||
         (s.clubName && s.clubName.toLowerCase().includes(q)) ||
         (s.homeDistrict && s.homeDistrict.toLowerCase().includes(q)) ||
         (s.values?.drrName && String(s.values.drrName).toLowerCase().includes(q)) ||

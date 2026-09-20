@@ -877,7 +877,7 @@ export function RideAdminPage() {
             <Skeleton shape="rect" className="h-64" />
           ) : delegationsQuery.isError ? (
             <ErrorState title="Couldn't load delegations" onRetry={() => void delegationsQuery.refetch()} />
-          ) : delegationsQuery.data.items.length === 0 ? (
+          ) : (delegationsQuery.data?.items ?? []).length === 0 ? (
             <EmptyState
               title={approvedOnly ? 'No Approved Delegations Found' : 'No delegations yet'}
               body={
@@ -888,7 +888,7 @@ export function RideAdminPage() {
             />
           ) : (
             <Card rule="accent" padding="compact" className="overflow-x-auto">
-              <Table columns={columns} rows={delegationsQuery.data.items} rowKey={(d) => d.id} empty="No delegations yet." />
+              <Table columns={columns} rows={delegationsQuery.data?.items ?? []} rowKey={(d) => d.id} empty="No delegations yet." />
             </Card>
           )}
         </Section>

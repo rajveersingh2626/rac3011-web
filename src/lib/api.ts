@@ -45,8 +45,12 @@ export async function apiFetch<T = unknown>(path: string, opts: Options<T> = {})
   if (opts.body !== undefined) {
     headers['Content-Type'] = 'application/json';
   }
+  const isParticipantPath =
+    path.startsWith('/ride/auth') ||
+    path.startsWith('/ride/participant') ||
+    path.startsWith('/public/ride/participant');
   const participantToken = typeof window !== 'undefined' ? localStorage.getItem('ride_participant_token') : null;
-  if (participantToken) {
+  if (participantToken && isParticipantPath) {
     headers['Authorization'] = `Bearer ${participantToken}`;
   }
 
@@ -59,7 +63,7 @@ export async function apiFetch<T = unknown>(path: string, opts: Options<T> = {})
   });
   const data = await readBody(res);
   if (!res.ok) {
-    if (res.status === 401) unauthorizedListeners.forEach((l) => l());
+    if (res.status === 401 && !isParticipantPath) unauthorizedListeners.forEach((l) => l());
     const obj = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
     const details = Array.isArray(obj.details) ? (obj.details as { path: string; message: string }[]) : undefined;
     const detailMsg = details?.length ? details.map((d) => (d.path ? `${d.path}: ${d.message}` : d.message)).join('; ') : undefined;
