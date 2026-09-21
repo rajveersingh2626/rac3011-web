@@ -329,6 +329,12 @@ label {
   overflow: visible;
 }
 
+/* Offscreen snap sections skip layout and paint until scrolled near */
+.snap-section:not(.hero-section) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
 .snap-section.hero-section {
   min-height: 100vh;
   padding-top: clamp(60px, 9vh, 100px);
@@ -337,6 +343,14 @@ label {
 
 .snap-section-footer {
   width: 100%;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+.rotary-wheel-element {
+  will-change: transform;
+  contain: strict;
+  pointer-events: none;
 }
 
 /* Specific optimizations for smaller laptops (1024px to 1440px or shorter viewports <= 850px) */

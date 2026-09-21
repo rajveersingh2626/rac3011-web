@@ -263,6 +263,7 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
 
     const snapContainer = document.querySelector('.snap-container') || (canvas && canvas.closest ? canvas.closest('.snap-container') : null);
 
+    let lastOpacity = -1;
     const handleScroll = () => {
       const containerScroll = snapContainer ? snapContainer.scrollTop : 0;
       const windowScroll = window.scrollY || document.documentElement.scrollTop;
@@ -276,8 +277,10 @@ const InteractiveDotGrid: FC<InteractiveDotGridProps> = () => {
         opacity = Math.max(0, 1 - (scrollY - fadeStart) / (fadeEnd - fadeStart));
       }
 
-      if (canvas) {
-        canvas.style.opacity = opacity.toFixed(3);
+      const rounded = Math.round(opacity * 50) / 50;
+      if (rounded !== lastOpacity && canvas) {
+        lastOpacity = rounded;
+        canvas.style.opacity = String(rounded);
       }
     };
 

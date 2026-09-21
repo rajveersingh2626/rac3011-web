@@ -129,8 +129,12 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
     targetScrollYRef.current = initialScroll;
     smoothScrollYRef.current = initialScroll;
 
-    const handleScroll = () => {
-      targetScrollYRef.current = getScrollTop();
+    const handleScroll = (e?: Event) => {
+      if (e?.target && e.target !== window && e.target !== document) {
+        targetScrollYRef.current = (e.target as HTMLElement).scrollTop || 0;
+      } else {
+        targetScrollYRef.current = window.scrollY || document.documentElement.scrollTop || 0;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -193,7 +197,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
   return (
     <div
       ref={wheelRef}
-      className="wide-only"
+      className="wide-only rotary-wheel-element"
       style={{
         position: 'fixed',
         top: '50%',
@@ -211,6 +215,7 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
         justifyContent: 'center',
         transformOrigin: 'center center',
         opacity: 0.70,
+        contain: 'strict',
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden'
       }}
@@ -218,8 +223,9 @@ function BigRotaryWheel({ containerRef }: BigRotaryWheelProps) {
       <img
         src={rotaryWheelImg}
         alt="Rotary Wheel Anchor"
-        loading="lazy"
+        loading="eager"
         decoding="async"
+        fetchPriority="high"
         style={{
           width: '100%',
           height: '100%',
@@ -598,10 +604,8 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
   useVisitOnce();
   useLiveVisits();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const currentSectionRef = useRef(0);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(() => window.innerWidth >= 768 && window.innerWidth < 1024);
-  const [, setScrollProgress] = useState(0);
 
   const handleScrollToTop = () => {
     if (containerRef.current) {
@@ -626,37 +630,6 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
     };
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const handleScrollSync = () => {
-      const sections = Array.from(el.querySelectorAll<HTMLElement>('.snap-section, .snap-section-footer'));
-      const scrollTop = el.scrollTop;
-      let closestIndex = 0;
-      let minDiff = Infinity;
-
-      sections.forEach((sec: HTMLElement, idx) => {
-        const diff = Math.abs(sec.offsetTop - scrollTop);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestIndex = idx;
-        }
-      });
-      currentSectionRef.current = closestIndex;
-      if (el.scrollHeight > el.clientHeight) {
-        setScrollProgress(el.scrollTop / (el.scrollHeight - el.clientHeight));
-      }
-    };
-
-    el.addEventListener('scroll', handleScrollSync, { passive: true });
-    handleScrollSync();
-
-    return () => {
-      el.removeEventListener('scroll', handleScrollSync);
-    };
   }, []);
 
   const homeContentQuery = useContentQuery('home');
@@ -829,6 +802,9 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
           <img
             src="/hero-dac-oath.webp"
             alt="Rotaract District 3011 Administrative Council Oath"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             style={{
               width: '100%',
               height: '100%',

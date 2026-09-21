@@ -59,34 +59,27 @@ export default function Navbar({
   ];
 
   useEffect(() => {
+    const snapContainer = document.querySelector<HTMLElement>('.snap-container');
+
     const handleScroll = () => {
-      const snapContainer = document.querySelector('.snap-container');
       const containerScroll = snapContainer ? snapContainer.scrollTop : 0;
       const windowScroll = window.scrollY || document.documentElement.scrollTop;
       const currentScroll = Math.max(windowScroll, containerScroll);
+      const next = currentScroll > 200;
 
-      if (currentScroll > 200) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled((prev) => (prev !== next ? next : prev));
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    const snapContainer = document.querySelector('.snap-container');
     if (snapContainer) {
       snapContainer.addEventListener('scroll', handleScroll, { passive: true });
     }
-
-    const interval = setInterval(handleScroll, 300);
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       if (snapContainer) {
         snapContainer.removeEventListener('scroll', handleScroll);
       }
-      clearInterval(interval);
       if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
   }, [activePage]);
