@@ -31,6 +31,7 @@ export interface ParticipantUser {
   hostFamilyName?: string | null;
   hostFamilyPhone?: string | null;
   hostAddress?: string | null;
+  formSubmissions?: Array<{ id: string; formId: string; createdAt: string | Date }>;
 }
 
 interface ParticipantAuthContextValue {

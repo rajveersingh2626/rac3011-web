@@ -123,6 +123,10 @@ export async function updateDelegation(id: string, input: UpdateDelegationInput)
   return apiFetch(`/ride/delegations/${encodeURIComponent(id)}`, { method: 'PATCH', body: input, schema: delegationSchema });
 }
 
+export async function deleteDelegation(id: string): Promise<void> {
+  await apiFetch(`/ride/delegations/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
 export interface HostAssignmentInput {
   clubId: string;
   daysHosted: number;

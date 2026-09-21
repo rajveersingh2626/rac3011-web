@@ -228,7 +228,15 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
   const { me, can } = useAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const groups = useMemo(() => visibleGroups(PORTAL_NAV_GROUPS, (perm) => can(perm)), [me, can]);
-  const hasAdminPerm = can('roles:manage') || can('reports:review') || can('settings:manage');
+  const hasAdminItems = (groups.find((g) => g.key === 'admin')?.items.length ?? 0) > 0;
+  const hasAdminPerm =
+    can('roles:manage') ||
+    can('reports:review') ||
+    can('settings:manage') ||
+    can('subdomain:ride:manage') ||
+    can('ride:manage') ||
+    can('ride:delegates:manage') ||
+    hasAdminItems;
   const shouldOpenAdmin = adminOpenDefault ?? hasAdminPerm;
 
   return (

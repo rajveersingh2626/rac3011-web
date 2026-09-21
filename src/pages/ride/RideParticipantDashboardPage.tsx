@@ -101,10 +101,21 @@ export function RideParticipantDashboardPage() {
       ? resourcesData.items 
       : localResources;
 
+  // Isolate fallback announcements by recipient email/district or broadcast
+  const filteredLocalAnnouncements = localAnnouncements.filter((a) => {
+    if (a.targetDistricts && a.targetDistricts.length > 0) {
+      if (!userDistrict || !a.targetDistricts.includes(userDistrict)) return false;
+    }
+    if (a.targetEmails && a.targetEmails.length > 0) {
+      if (!userEmail || !a.targetEmails.map((e) => e.toLowerCase()).includes(userEmail.toLowerCase())) return false;
+    }
+    return true;
+  });
+
   const announcements: (RideAnnouncement | StoredRideAnnouncement)[] = 
     announcementsData?.items && announcementsData.items.length > 0 
       ? announcementsData.items 
-      : localAnnouncements;
+      : filteredLocalAnnouncements;
 
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
   const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
@@ -181,57 +192,130 @@ export function RideParticipantDashboardPage() {
     setTimeout(() => setCopiedResId(null), 2500);
   };
 
-  const rawStatus = (participant?.status || participant?.approvalStatus || 'submitted').toLowerCase();
-  const isApproved = rawStatus === 'approved' || rawStatus === 'confirmed';
-  const isRejected = rawStatus === 'rejected' || rawStatus === 'declined';
-  const isWaitlist = rawStatus === 'waitlist';
-  const isUnderReview = rawStatus === 'under_review';
+  // Dossier & Registration Verification States
+  const hasSubmittedRegistration = 
+    userSubmissions.length > 0 || 
+    Boolean(participant?.formSubmissions && participant.formSubmissions.length > 0) || 
+    Boolean(participant?.dossierData && Object.keys(participant.dossierData).length > 0);
 
-  const statusBadgeTone: BadgeTone = isApproved ? 'green' : isRejected ? 'red' : isWaitlist ? 'amber' : isUnderReview ? 'blue' : 'neutral';
-  const statusBadgeLabel = isApproved ? 'Confirmed Delegate' : isRejected ? 'Application Declined' : isWaitlist ? 'Waitlist' : isUnderReview ? 'Under Active Review' : 'Registration Received';
+  const rawApproval = (participant?.approvalStatus || '').toLowerCase();
+  const rawStatus = (participant?.status || '').toLowerCase();
+  const isDistrictApproved = rawApproval === 'approved' || (rawStatus === 'approved' && rawApproval !== 'rejected' && rawApproval !== 'declined');
+  const isDistrictRejected = rawApproval === 'rejected' || rawApproval === 'declined' || rawStatus === 'rejected';
+  const isDistrictWaitlist = rawApproval === 'waitlist' || rawStatus === 'waitlist';
+  const isDistrictUnderReview = rawApproval === 'under_review' || (hasSubmittedRegistration && !isDistrictApproved && !isDistrictRejected);
+
+  const isDelegationConfirmed = isDistrictApproved && (rawStatus === 'confirmed' || participant?.dossierStatus === 'confirmed' || participant?.dossierStatus === 'completed');
+  const hasHostClub = Boolean(participant?.hostClub?.name || participant?.hostFamilyName);
+  const hostClubName = participant?.hostClub?.name || participant?.hostFamilyName || '';
+  const hostClubZone = participant?.hostClub?.zone ? ` (${participant.hostClub.zone})` : '';
+
+  const statusBadgeTone: BadgeTone = 
+    isDelegationConfirmed && hasHostClub 
+      ? 'green' 
+      : isDelegationConfirmed 
+        ? 'green' 
+        : isDistrictRejected 
+          ? 'red' 
+          : isDistrictWaitlist 
+            ? 'amber' 
+            : isDistrictApproved 
+              ? 'blue' 
+              : hasSubmittedRegistration 
+                ? 'blue' 
+                : 'neutral';
+
+  const statusBadgeLabel = 
+    isDelegationConfirmed && hasHostClub
+      ? 'Confirmed & Allocated'
+      : isDelegationConfirmed
+        ? 'Confirmed Delegate'
+        : isDistrictRejected
+          ? 'Application Declined'
+          : isDistrictWaitlist
+            ? 'Waitlist'
+            : isDistrictApproved
+              ? 'District Approved'
+              : hasSubmittedRegistration
+                ? 'Under Active Review'
+                : 'In Progress';
 
   const dynamicMilestones = [
     {
       step: '01',
-      title: 'Registration Submitted',
-      desc: userDistrict ? `Logged for RID ${userDistrict} · ${userClub || 'Visiting Delegation'}` : 'Delegate credentials active',
-      status: 'completed' as const,
+      title: hasSubmittedRegistration ? 'Registration Submitted' : 'Registration Dossier',
+      desc: hasSubmittedRegistration
+        ? (userDistrict ? `Submitted for RID ${userDistrict} · ${userClub || 'Visiting Delegation'}` : 'Dossier registration submitted to Secretariat')
+        : 'Registration form pending submission. Please complete required fields.',
+      status: hasSubmittedRegistration ? ('completed' as const) : ('active' as const),
     },
     {
       step: '02',
-      title: isApproved ? 'District Vetted & Approved' : isRejected ? 'Review Concluded' : isWaitlist ? 'Waitlisted' : isUnderReview ? 'Under Active Review' : 'Secretariat Verification',
-      desc: isApproved
+      title: isDistrictApproved 
+        ? 'District Vetted & Approved' 
+        : isDistrictRejected 
+          ? 'Review Concluded' 
+          : isDistrictWaitlist 
+            ? 'Waitlisted' 
+            : isDistrictUnderReview 
+              ? 'Under Active Review' 
+              : 'Secretariat Verification',
+      desc: isDistrictApproved
         ? 'Official delegation accepted by RID 3011 RIDE Committee'
-        : isRejected
+        : isDistrictRejected
           ? 'Application not accepted for this exchange edition'
-          : isWaitlist
+          : isDistrictWaitlist
             ? 'Candidate placed on waitlist pending host club allocations'
-            : isUnderReview
+            : isDistrictUnderReview
               ? 'Application dossier currently being vetted by the Secretariat'
               : 'Queue assigned for RID 3011 Exchange Secretariat review',
-      status: isApproved ? ('completed' as const) : isRejected ? ('rejected' as const) : ('active' as const),
+      status: isDistrictApproved 
+        ? ('completed' as const) 
+        : isDistrictRejected 
+          ? ('rejected' as const) 
+          : isDistrictUnderReview || isDistrictWaitlist 
+            ? ('active' as const) 
+            : ('pending' as const),
     },
     {
       step: '03',
-      title: isApproved ? 'Delegation Confirmed' : isRejected ? 'Exchange Seat Closed' : isWaitlist ? 'Waitlist Pool' : 'Seat Allocation',
-      desc: isApproved
+      title: isDelegationConfirmed 
+        ? 'Delegation Confirmed' 
+        : isDistrictRejected 
+          ? 'Exchange Seat Closed' 
+          : isDistrictWaitlist 
+            ? 'Waitlist Pool' 
+            : 'Seat Allocation',
+      desc: isDelegationConfirmed
         ? 'Exchange seat guaranteed for Delhi Meri Jaan 2026'
-        : isRejected
+        : isDistrictRejected
           ? 'Seat allocation closed'
-          : isWaitlist
+          : isDistrictWaitlist
             ? 'Awaiting capacity opening in subsequent rounds'
-            : 'Seat allocation will unlock upon approval',
-      status: isApproved ? ('completed' as const) : isRejected ? ('rejected' as const) : ('pending' as const),
+            : isDistrictApproved
+              ? 'Awaiting final seat confirmation from Exchange Secretariat'
+              : 'Seat allocation will unlock upon approval',
+      status: isDelegationConfirmed 
+        ? ('completed' as const) 
+        : isDistrictRejected 
+          ? ('rejected' as const) 
+          : isDistrictApproved 
+            ? ('active' as const) 
+            : ('pending' as const),
     },
     {
       step: '04',
-      title: participant?.hostClub ? `Host: ${participant.hostClub.name}` : participant?.hostFamilyName ? `Host: ${participant.hostFamilyName}` : 'Host Club Allocation',
-      desc: participant?.hostClub || participant?.hostFamilyName
-        ? `Allocated to ${participant.hostClub?.name || participant.hostFamilyName}${participant.hostClub?.zone ? ` (${participant.hostClub.zone})` : ''}`
-        : isApproved
+      title: hasHostClub ? `Host: ${hostClubName}` : 'Host Club Allocation',
+      desc: hasHostClub
+        ? `Allocated to ${hostClubName}${hostClubZone}`
+        : isDelegationConfirmed
           ? 'Host family and club pairing currently in progress by Committee'
           : 'Pending final delegation confirmation',
-      status: (participant?.hostClub || participant?.hostFamilyName) ? ('completed' as const) : isApproved ? ('active' as const) : ('pending' as const),
+      status: hasHostClub 
+        ? ('completed' as const) 
+        : isDelegationConfirmed 
+          ? ('active' as const) 
+          : ('pending' as const),
     },
   ];
 

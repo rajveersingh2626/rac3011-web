@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Send, Check, Copy, Trash2, Mail, Users, Building, ShieldCheck, 
-  MessageSquare, History, CheckCircle2, Search, X, Sparkles, Filter
+  MessageSquare, History, CheckCircle2, Search, X, Filter
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -14,15 +14,31 @@ import {
 import { dispatchRideBroadcast } from '@/lib/ride/rideBroadcastApi';
 import { fetchRideDistricts } from '@/lib/ride/api';
 
-const DEFAULT_ROTARY_DISTRICTS = [
-  '3011', '3040', '3054', '3070', '3080', '3110', '3120', 
-  '3131', '3141', '3142', '3190', '3201', '3232', '3292'
-];
-
-function generateBespokeRideEmailHtml(title: string, rawBody: string): string {
+function generateBespokeRideEmailHtml(
+  title: string,
+  rawBody: string,
+  cta?: { label?: string; url?: string } | null,
+): string {
   const paragraphs = rawBody
     .split('\n\n')
     .filter((p) => p.trim());
+
+  const ctaLabel = cta?.label?.trim() || 'Join the RIDE';
+  const ctaUrl = cta?.url?.trim() || 'https://ride.rotar3011.org';
+  const ctaBlock =
+    cta !== null
+      ? `
+              <!-- Integrated Editable CTA Button -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin: 28px 0 16px; text-align: center;">
+                <tr>
+                  <td align="center">
+                    <a href="${ctaUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 34px; background: linear-gradient(135deg, #19539D 0%, #0D2C54 100%); background-color: #19539D; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; border: 2px solid #171515; border-radius: 12px; box-shadow: 4px 4px 0px #171515;">
+                      ${ctaLabel} &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>`
+      : '';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -72,6 +88,8 @@ function generateBespokeRideEmailHtml(title: string, rawBody: string): string {
 
               ${paragraphs.map((p) => `<p style="margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: #374151;">${p.replace(/\n/g, '<br/>')}</p>`).join('')}
 
+              ${ctaBlock}
+
               <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px; padding-top: 16px; border-top: 2px dashed #E5E7EB; text-align: center;">
                 <tr>
                   <td style="font-size: 11px; color: #6B7280; line-height: 1.5;">
@@ -111,20 +129,23 @@ export function RideEmailStudioTab() {
   const [customEmailsInput, setCustomEmailsInput] = useState('');
   const [publishAsAnnouncement, setPublishAsAnnouncement] = useState(true);
 
-  // Dynamic districts from registered participants
+  // Dynamic districts pulled directly from actual registered user credentials in database
   const { data: dynamicDistricts = [] } = useQuery({
     queryKey: ['ride', 'districts'],
     queryFn: fetchRideDistricts,
   });
 
-  const allAvailableDistricts = Array.from(
-    new Set([...dynamicDistricts, ...DEFAULT_ROTARY_DISTRICTS])
-  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  const allAvailableDistricts = [...dynamicDistricts].sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true }),
+  );
 
   // Form State
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [previewMode, setPreviewMode] = useState<'visual' | 'html'>('visual');
+  const [includeCta, setIncludeCta] = useState(true);
+  const [ctaLabel, setCtaLabel] = useState('Join the RIDE');
+  const [ctaUrl, setCtaUrl] = useState('https://ride.rotar3011.org');
   const [sending, setSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -161,7 +182,11 @@ export function RideEmailStudioTab() {
     selectedDistricts,
   );
 
-  const bespokeHtml = generateBespokeRideEmailHtml(previewSubject, previewBody);
+  const bespokeHtml = generateBespokeRideEmailHtml(
+    previewSubject,
+    previewBody,
+    includeCta ? { label: ctaLabel, url: ctaUrl } : null,
+  );
 
   const handleCopyHtml = () => {
     navigator.clipboard.writeText(bespokeHtml);
@@ -180,18 +205,26 @@ export function RideEmailStudioTab() {
       .map((s) => s.trim())
       .filter((s) => s.includes('@'));
 
+    const isExplicitAll =
+      targetAll &&
+      selectedDistricts.length === 0 &&
+      customEmails.length === 0 &&
+      !targetHostClubsOnly;
+
     try {
       const result = await dispatchRideBroadcast({
         subject: subject.trim(),
         body: body.trim(),
-        all: targetAll,
+        all: isExplicitAll,
         hostClubsOnly: targetHostClubsOnly,
         districtNumbers: selectedDistricts.length > 0 ? selectedDistricts : undefined,
         customEmails: customEmails.length > 0 ? customEmails : undefined,
         publishAsAnnouncement,
+        ctaLabel: includeCta ? ctaLabel.trim() : undefined,
+        ctaUrl: includeCta ? ctaUrl.trim() : undefined,
       });
 
-      const audienceDesc = targetAll
+      const audienceDesc = isExplicitAll
         ? 'All Registered Delegates'
         : selectedDistricts.length > 0
           ? `Districts: ${selectedDistricts.join(', ')}`
@@ -201,14 +234,18 @@ export function RideEmailStudioTab() {
               ? `${customEmails.length} Custom Email(s)`
               : 'Targeted Audience';
 
-      saveStoredRideAnnouncement({
-        subject: subject.trim(),
-        body: body.trim(),
-        audienceScope: targetAll ? 'all' : selectedDistricts.length > 0 ? 'district' : 'individual',
-        targetValue: audienceDesc,
-        sender: 'RIDE Organizing Committee (RID 3011)',
-        recipientCount: result.dispatchedCount,
-      });
+      if (publishAsAnnouncement) {
+        saveStoredRideAnnouncement({
+          subject: subject.trim(),
+          body: body.trim(),
+          audienceScope: isExplicitAll ? 'all' : selectedDistricts.length > 0 ? 'district' : 'individual',
+          targetValue: audienceDesc,
+          targetDistricts: selectedDistricts,
+          targetEmails: customEmails,
+          sender: 'RIDE Organizing Committee (RID 3011)',
+          recipientCount: result.dispatchedCount,
+        });
+      }
 
       setAnnouncements(getStoredRideAnnouncements());
       setSendSuccess(`Successfully queued ${result.dispatchedCount} email(s) for delivery!`);
@@ -363,26 +400,36 @@ export function RideEmailStudioTab() {
                   </div>
 
                   {/* District Pills Grid */}
-                  <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1">
-                    {filteredDistricts.map((d) => {
-                      const isSelected = selectedDistricts.includes(d);
-                      return (
-                        <button
-                          key={d}
-                          type="button"
-                          onClick={() => toggleDistrict(d)}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
-                            isSelected
-                              ? 'bg-[#19539D] text-white border border-[#19539D] shadow-sm'
-                              : 'bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100'
-                          }`}
-                        >
-                          <span>RID {d}</span>
-                          {isSelected && <Check size={11} />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  {allAvailableDistricts.length === 0 ? (
+                    <p className="text-xs text-neutral-500 italic py-2 px-1">
+                      No registered participant districts found in database.
+                    </p>
+                  ) : filteredDistricts.length === 0 ? (
+                    <p className="text-xs text-neutral-500 italic py-2 px-1">
+                      No registered districts match &quot;{districtSearch}&quot;.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1">
+                      {filteredDistricts.map((d) => {
+                        const isSelected = selectedDistricts.includes(d);
+                        return (
+                          <button
+                            key={d}
+                            type="button"
+                            onClick={() => toggleDistrict(d)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#19539D] text-white border border-[#19539D] shadow-sm'
+                                : 'bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100'
+                            }`}
+                          >
+                            <span>RID {d}</span>
+                            {isSelected && <Check size={11} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Custom Email Input */}
@@ -394,7 +441,10 @@ export function RideEmailStudioTab() {
                   <textarea
                     rows={2}
                     value={customEmailsInput}
-                    onChange={(e) => setCustomEmailsInput(e.target.value)}
+                    onChange={(e) => {
+                      setCustomEmailsInput(e.target.value);
+                      if (e.target.value.trim() && targetAll) setTargetAll(false);
+                    }}
                     placeholder="Enter additional emails separated by commas or newlines..."
                     className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#19539D] bg-white"
                   />
@@ -418,24 +468,21 @@ export function RideEmailStudioTab() {
               {/* Variable Token Chips */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-neutral-500 font-bold">
-                  <span className="flex items-center gap-1">
-                    <Sparkles size={12} className="text-[#EA6623]" />
-                    <span>Dynamic Personalization Tokens:</span>
-                  </span>
-                  <span className="text-[10px] text-[#EA6623]">Click to insert</span>
+                  <span>Dynamic Insertion Tokens</span>
+                  <span className="text-[10px] text-neutral-400 font-normal">Click to insert at cursor</span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {[
-                    { token: '{{name}}', label: 'Delegate Name' },
-                    { token: '{{district_number}}', label: 'District No.' },
-                    { token: '{{pass_reference}}', label: 'Pass Ref' },
-                    { token: '{{host_club}}', label: 'Host Club' },
+                    { label: 'Delegate Name', token: '{{name}}' },
+                    { label: 'Home District', token: '{{district_number}}' },
+                    { label: 'Pass Reference', token: '{{pass_reference}}' },
+                    { label: 'Assigned Host Club', token: '{{host_club}}' },
                   ].map((chip) => (
                     <button
                       key={chip.token}
                       type="button"
                       onClick={() => insertToken(chip.token)}
-                      className="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[11px] font-mono font-bold transition-all cursor-pointer border border-neutral-300"
+                      className="px-2.5 py-1 rounded-lg border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[11px] font-mono font-bold transition-all cursor-pointer"
                     >
                       {chip.label} &bull; <span className="text-[#EA6623]">{chip.token}</span>
                     </button>
@@ -455,6 +502,58 @@ export function RideEmailStudioTab() {
                   placeholder="Dear {{name}}, Welcome to RID {{district_number}} delegation. Your pass reference is {{pass_reference}} and your designated host club is {{host_club}}..."
                   className="w-full px-3 py-2.5 rounded-xl border border-neutral-300 text-xs font-sans leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#19539D]"
                 />
+              </div>
+
+              {/* Editable CTA Button Setting */}
+              <div className="p-3.5 rounded-xl border border-neutral-200 bg-neutral-50/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="includeCta"
+                      checked={includeCta}
+                      onChange={(e) => setIncludeCta(e.target.checked)}
+                      className="rounded text-[#19539D] focus:ring-[#19539D] h-4 w-4 cursor-pointer"
+                    />
+                    <label htmlFor="includeCta" className="text-xs font-black text-neutral-800 uppercase tracking-wider cursor-pointer">
+                      Integrated Action Button (CTA)
+                    </label>
+                  </div>
+                  {includeCta && (
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-100 text-[#19539D]">
+                      Active in Email
+                    </span>
+                  )}
+                </div>
+
+                {includeCta && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-neutral-600 block">
+                        Button Label
+                      </label>
+                      <input
+                        type="text"
+                        value={ctaLabel}
+                        onChange={(e) => setCtaLabel(e.target.value)}
+                        placeholder="e.g. Join the RIDE"
+                        className="w-full px-3 py-1.5 rounded-xl border border-neutral-300 text-xs font-bold text-[#171515] bg-white focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-neutral-600 block">
+                        Hyperlink URL
+                      </label>
+                      <input
+                        type="text"
+                        value={ctaUrl}
+                        onChange={(e) => setCtaUrl(e.target.value)}
+                        placeholder="https://ride.rotar3011.org"
+                        className="w-full px-3 py-1.5 rounded-xl border border-neutral-300 text-xs font-medium text-[#171515] bg-white focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Status and Error Banners */}

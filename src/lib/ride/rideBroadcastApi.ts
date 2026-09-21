@@ -16,6 +16,8 @@ export interface DispatchBroadcastPayload {
   all?: boolean;
   customEmails?: string[];
   publishAsAnnouncement?: boolean;
+  ctaLabel?: string;
+  ctaUrl?: string;
 }
 
 export async function dispatchRideBroadcast(payload: DispatchBroadcastPayload): Promise<DispatchBroadcastResult> {

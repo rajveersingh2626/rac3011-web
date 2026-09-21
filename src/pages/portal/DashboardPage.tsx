@@ -12,6 +12,7 @@ import {
   Send,
   UserCheck,
   CheckCircle2,
+  Globe,
 } from 'lucide-react';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
@@ -342,6 +343,7 @@ export function DashboardPage() {
   const canSendAnnouncements = can('announcements:send');
   const canApproveMembers = can('members:approve');
   const canManageEvents = can('events:manage');
+  const canManageRide = can('subdomain:ride:manage') || can('ride:manage') || can('ride:delegates:manage');
   const canReport = Boolean(clubId) && !isDistrictOffice && can('reports:submit', { type: 'club', id: clubId ?? undefined });
 
   const dashboardAppsQuery = useQuery({
@@ -378,16 +380,18 @@ export function DashboardPage() {
       can('reports:submit') ||
       Boolean(clubId));
   const canViewPoints = Boolean(clubId) && !isDistrictOffice && can('clubs:view', { type: 'club', id: clubId ?? undefined });
-  const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements;
+  const isGeneralMember = !canManageAccess && !canReviewReports && !canReport && !canSendAnnouncements && !canManageRide;
 
   const greeting = getTimeGreeting();
   const primaryRoleLabel = canManageAccess
     ? 'Super Admin'
-    : canReviewReports
-      ? 'District Officer'
-      : canReport
-        ? 'Club President / Secretary'
-        : 'Rotaract Member';
+    : canManageRide
+      ? 'RIDE Exchange Admin'
+      : canReviewReports
+        ? 'District Officer'
+        : canReport
+          ? 'Club President / Secretary'
+          : 'Rotaract Member';
 
   return (
     <Container>
@@ -476,7 +480,7 @@ export function DashboardPage() {
           )}
 
           {/* 2. DISTRICT REVIEWER & OFFICER WORKFLOW QUEUE */}
-          {(canReviewReports || canSendAnnouncements || canApproveMembers || canManageEvents) && (
+          {(canReviewReports || canSendAnnouncements || canApproveMembers || canManageEvents || canManageRide) && (
             <div className="lg:col-span-2">
               <Card
                 eyebrow="District Operations"
@@ -485,6 +489,20 @@ export function DashboardPage() {
                 className="bg-surface border-line-accent shadow-sm"
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  {canManageRide && (
+                    <div
+                      onClick={() => navigate('/portal/admin/ride')}
+                      className="cursor-pointer rounded-xl border border-line-subtle bg-surface-2/40 p-4 transition-all hover:border-[#19539D] hover:shadow-sm"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <Globe className="h-5 w-5 text-[#19539D]" />
+                        <ArrowRight className="h-4 w-4 text-fg-3" />
+                      </div>
+                      <h4 className="m-0 text-sm font-bold text-fg">The RIDE Console</h4>
+                      <p className="m-0 mt-1 text-xs text-fg-3">Manage exchange delegates & hosts</p>
+                    </div>
+                  )}
+
                   {canReviewReports && (
                     <div
                       onClick={() => navigate('/portal/admin/clubs')}

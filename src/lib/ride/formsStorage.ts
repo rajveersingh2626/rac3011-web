@@ -254,6 +254,8 @@ export interface StoredRideAnnouncement {
   body: string;
   audienceScope: 'all' | 'district' | 'host_club' | 'individual';
   targetValue?: string;
+  targetDistricts?: string[];
+  targetEmails?: string[];
   sender: string;
   sentAt: string;
   recipientCount: number;

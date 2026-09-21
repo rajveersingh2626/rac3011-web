@@ -27,6 +27,7 @@ import {
   createGalleryItem,
   deleteGalleryItem,
   fetchDelegations,
+  deleteDelegation,
   fetchGalleryItems,
   fetchApprovedHostClubs,
   type ApprovedHostClub,
@@ -695,6 +696,23 @@ export function RideAdminPage() {
     void qc.invalidateQueries({ queryKey: APPROVED_HOSTS_KEY });
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDelegation(id),
+    onSuccess: () => {
+      invalidateDelegations();
+    },
+  });
+
+  const handleDeleteDelegation = async (d: Delegation) => {
+    if (window.confirm(`Are you sure you want to delete the delegation for District ${d.visitingDistrict} (${d.country})? It will be removed immediately from the portal.`)) {
+      try {
+        await deleteMutation.mutateAsync(d.id);
+      } catch (err: any) {
+        alert(err?.message || 'Failed to delete delegation');
+      }
+    }
+  };
+
   const columns: Column<Delegation>[] = [
     {
       key: 'delegation',
@@ -760,9 +778,20 @@ export function RideAdminPage() {
       header: '',
       align: 'right',
       cell: (d) => (
-        <Button size="sm" variant="secondary" onClick={() => setAssigning(d)}>
-          Assign hosts
-        </Button>
+        <div className="flex items-center justify-end gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setAssigning(d)}>
+            Assign hosts
+          </Button>
+          <button
+            type="button"
+            className="p-1.5 rounded-md text-red-600 hover:text-red-700 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors disabled:opacity-50"
+            onClick={() => handleDeleteDelegation(d)}
+            disabled={deleteMutation.isPending}
+            title="Delete delegation"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
       ),
     },
   ];
