@@ -18,7 +18,16 @@ import { Switch } from '@/components/ui/Switch';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { fetchReports, addReportQuery, downloadZoneReportsCsv, downloadDistrictReportsCsv } from '@/lib/reports/api';
+import { useToast } from '@/components/ui/Toast';
+import {
+  fetchReports,
+  addReportQuery,
+  downloadZoneReportsCsv,
+  downloadDistrictReportsCsv,
+  fetchReportingMonths,
+  resetReport,
+  deleteReport,
+} from '@/lib/reports/api';
 import type { Report, ReportStatus } from '@/lib/reports/types';
 import {
   fetchPublicClubs,
@@ -85,19 +94,27 @@ export function AdminClubsPage() {
   useDocumentMeta({ title: 'Clubs & reports' });
   const { me, can } = useAuth();
   const qc = useQueryClient();
+  const { toast } = useToast();
   const zrrZoneId = me?.roles.find((r) => r.roleKey === 'zrr')?.scope.id ?? '';
   const canEditClubs = can('clubs:edit') || can('public_content:manage');
+  const canManageReports = can('reports:manage') || can('reports:score') || can('super_admin');
 
   const [activeTab, setActiveTab] = useState<string>('directory');
-  const [month] = useState(() => currentReportMonth());
+  const [month, setMonth] = useState<string>(() => currentReportMonth());
   const [zoneId, setZoneId] = useState(zrrZoneId);
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Reports queries
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [reportSearch, setReportSearch] = useState<string>('');
+
+  // Reports queries & privileged operations
   const [queryingId, setQueryingId] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
   const [exportingZone, setExportingZone] = useState(false);
   const [exportingDistrict, setExportingDistrict] = useState(false);
+  const [resettingReport, setResettingReport] = useState<Report | null>(null);
+  const [resetReason, setResetReason] = useState('');
+  const [deletingReport, setDeletingReport] = useState<Report | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
 
   // Club CRUD State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -106,6 +123,7 @@ export function AdminClubsPage() {
   const [formData, setFormData] = useState<ClubFormData>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
 
+  const monthsQuery = useQuery({ queryKey: ['reports', 'months'], queryFn: () => fetchReportingMonths() });
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
   const publicClubsQuery = useQuery({
     queryKey: ['public-clubs', zoneId],
@@ -118,6 +136,56 @@ export function AdminClubsPage() {
   const reportsQuery = useQuery({
     queryKey: ['reports', 'admin-overview', month],
     queryFn: () => fetchReports({ month, include: ['club'], pageSize: 200 }),
+  });
+
+  const resetMutation = useMutation({
+    mutationFn: () => {
+      if (!resettingReport) return Promise.resolve(null);
+      return resetReport(resettingReport.id, resetReason);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['reports'] });
+      void qc.invalidateQueries({ queryKey: ['club-points'] });
+      toast({
+        title: 'Report Reset to Draft',
+        body: 'The report was reopened and points were reset.',
+        tone: 'success',
+      });
+      setResettingReport(null);
+      setResetReason('');
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to reset report',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const deleteReportMutation = useMutation({
+    mutationFn: () => {
+      if (!deletingReport) return Promise.resolve(null);
+      return deleteReport(deletingReport.id, deleteReason);
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['reports'] });
+      void qc.invalidateQueries({ queryKey: ['club-points'] });
+      toast({
+        title: 'Report Permanently Deleted',
+        body: 'The report and associated points have been purged.',
+        tone: 'success',
+      });
+      setDeletingReport(null);
+      setDeleteReason('');
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to delete report',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
   });
 
   const saveClubMutation = useMutation({
@@ -317,6 +385,17 @@ export function AdminClubsPage() {
     },
     { key: 'activities', header: 'Activities', cell: (r) => activitiesOf(r.values).length },
     {
+      key: 'flags',
+      header: 'Review Flags',
+      cell: (r) => {
+        const flaggedCount = (r.flags ?? []).filter((f) => f.status === 'flagged').length;
+        if (flaggedCount > 0) {
+          return <Badge tone="amber">{flaggedCount} FLAGGED</Badge>;
+        }
+        return <span className="text-fg-3 text-xs">—</span>;
+      },
+    },
+    {
       key: 'status',
       header: 'Status',
       cell: (r) => <Badge tone={STATUS_TONE[r.status]}>{r.status.toUpperCase()}</Badge>,
@@ -326,19 +405,65 @@ export function AdminClubsPage() {
       header: '',
       align: 'right',
       cell: (r) => (
-        <div className="flex items-center justify-end gap-3">
-          <Link to={`/portal/reports/${r.id}`} className="font-bold text-accent">
+        <div className="flex items-center justify-end gap-3 text-[12px]">
+          <Link to={`/portal/reports/${r.id}`} className="font-bold text-accent hover:underline">
             View
           </Link>
           {r.status === 'submitted' && (
-            <button type="button" onClick={() => setQueryingId(r.id)} className="font-bold text-danger-fg">
+            <button
+              type="button"
+              onClick={() => setQueryingId(r.id)}
+              className="font-bold text-amber-600 hover:underline"
+            >
               Query
+            </button>
+          )}
+          {canManageReports && r.status !== 'draft' && (
+            <button
+              type="button"
+              onClick={() => {
+                setResettingReport(r);
+                setResetReason('');
+              }}
+              className="font-bold text-amber-700 hover:underline"
+              title="Reset report to draft"
+            >
+              Reset
+            </button>
+          )}
+          {canManageReports && (
+            <button
+              type="button"
+              onClick={() => {
+                setDeletingReport(r);
+                setDeleteReason('');
+              }}
+              className="font-bold text-danger-fg hover:underline"
+              title="Delete report"
+            >
+              Delete
             </button>
           )}
         </div>
       ),
     },
   ];
+
+  const filteredReports = useMemo(() => {
+    let list = filedInZone.map((c) => filedByClub.get(c.id)!).filter(Boolean);
+    if (statusFilter !== 'all') {
+      list = list.filter((r) => r.status === statusFilter);
+    }
+    if (reportSearch.trim()) {
+      const q = reportSearch.toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.club?.name?.toLowerCase().includes(q) ||
+          r.club?.shortName?.toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [filedInZone, filedByClub, statusFilter, reportSearch]);
 
   return (
     <Container width="wide">
@@ -408,6 +533,9 @@ export function AdminClubsPage() {
           </div>
         ) : (
           <div>
+            <p className="text-xs text-fg-3 -mt-2 mb-4">
+              Review reports, assign points, and track monthly compliance across all district clubs.
+            </p>
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
               <Stat label="Awaiting a score" value={awaitingScore} />
               <Stat label="Filed this month" value={filedInZone.length} />
@@ -415,16 +543,53 @@ export function AdminClubsPage() {
               <Stat label="Scored" value={scored} />
             </div>
 
+            {/* Filter toolbar */}
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="w-full sm:max-w-[220px]">
-                <Select
-                  aria-label="Filter by zone"
-                  value={zoneId}
-                  onChange={(e) => setZoneId(e.target.value)}
-                  placeholder="All zones"
-                  options={(zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
-                />
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div className="w-full sm:w-[170px]">
+                  <Select
+                    aria-label="Filter by month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    options={(monthsQuery.data?.months ?? []).map((m) => ({
+                      value: m.key,
+                      label: `${m.label}${m.isLocked ? ' 🔒' : m.isCurrent ? ' (Current)' : ''}`,
+                    }))}
+                  />
+                </div>
+                <div className="w-full sm:w-[150px]">
+                  <Select
+                    aria-label="Filter by zone"
+                    value={zoneId}
+                    onChange={(e) => setZoneId(e.target.value)}
+                    placeholder="All zones"
+                    options={(zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
+                  />
+                </div>
+                <div className="w-full sm:w-[140px]">
+                  <Select
+                    aria-label="Filter by status"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: 'All Statuses' },
+                      { value: 'submitted', label: 'Submitted' },
+                      { value: 'queried', label: 'Queried' },
+                      { value: 'scored', label: 'Scored' },
+                      { value: 'draft', label: 'Draft' },
+                    ]}
+                  />
+                </div>
+                <div className="w-full sm:w-[180px]">
+                  <Input
+                    placeholder="Search club..."
+                    value={reportSearch}
+                    onChange={(e) => setReportSearch(e.target.value)}
+                    aria-label="Search club"
+                  />
+                </div>
               </div>
+
               <div className="flex flex-wrap items-center gap-2">
                 <Button
                   variant="secondary"
@@ -466,9 +631,9 @@ export function AdminClubsPage() {
             ) : (
               <Table
                 columns={reportColumns}
-                rows={filedInZone.map((c) => filedByClub.get(c.id)!).filter(Boolean)}
+                rows={filteredReports}
                 rowKey={(r) => r.id}
-                empty="No club in this zone has filed for this month yet."
+                empty={`No club reports found matching filters for ${formatMonthLabel(month)}.`}
               />
             )}
 
@@ -480,6 +645,7 @@ export function AdminClubsPage() {
           </div>
         )}
       </Section>
+
 
       {/* Add / Edit Club Modal */}
       <Modal
@@ -695,6 +861,87 @@ export function AdminClubsPage() {
       >
         <Textarea rows={3} value={question} onChange={(e) => setQuestion(e.target.value)} aria-label="Question" />
       </Modal>
+
+      {/* Reset Report Modal */}
+      <Modal
+        open={Boolean(resettingReport)}
+        onClose={() => setResettingReport(null)}
+        title="Reset Report to Draft"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={() => setResettingReport(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              loading={resetMutation.isPending}
+              disabled={!resetReason.trim()}
+              onClick={() => resetMutation.mutate()}
+            >
+              Confirm Reset
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg bg-amber-500/10 p-3 text-xs text-amber-800 border border-amber-500/20">
+            <p className="m-0 font-bold">Privileged Action</p>
+            <p className="m-0 mt-1">
+              Resetting will reopen {resettingReport?.club?.name ?? 'club'}'s report for editing and wipe calculated points for this month until resubmitted.
+            </p>
+          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-bold text-fg">Reason for Reset *</span>
+            <Textarea
+              rows={3}
+              value={resetReason}
+              onChange={(e) => setResetReason(e.target.value)}
+              placeholder="e.g. Club requested unlock to re-enter attendance figures..."
+            />
+          </label>
+        </div>
+      </Modal>
+
+      {/* Delete Report Modal */}
+      <Modal
+        open={Boolean(deletingReport)}
+        onClose={() => setDeletingReport(null)}
+        title="Delete Monthly Report"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="ghost" onClick={() => setDeletingReport(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={deleteReportMutation.isPending}
+              disabled={!deleteReason.trim()}
+              onClick={() => deleteReportMutation.mutate()}
+            >
+              Permanently Delete
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg bg-danger-bg p-3 text-xs text-danger-fg border border-danger-line">
+            <p className="m-0 font-bold">Warning: Irreversible Deletion</p>
+            <p className="m-0 mt-1">
+              Permanently deletes the {deletingReport?.club?.name ?? 'club'} report for {formatMonthLabel(month)} and resets points. This action is permanently logged.
+            </p>
+          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-bold text-fg">Reason for Deletion *</span>
+            <Textarea
+              rows={3}
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="e.g. Duplicate report submission..."
+            />
+          </label>
+        </div>
+      </Modal>
     </Container>
   );
 }
+

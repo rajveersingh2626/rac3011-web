@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
 import { useDocumentMeta } from '@/lib/meta';
@@ -11,8 +11,24 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Alert } from '@/components/ui/Alert';
-import { Calendar, Users, Heart, Globe, Briefcase, Award } from 'lucide-react';
-import { fetchActiveReportSchema, fetchReports, createReport, updateReport } from '@/lib/reports/api';
+import {
+  Calendar,
+  Users,
+  Heart,
+  Globe,
+  Briefcase,
+  Award,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
+import {
+  fetchActiveReportSchema,
+  fetchReports,
+  createReport,
+  updateReport,
+  fetchReportingMonths,
+} from '@/lib/reports/api';
 import { useToast } from '@/components/ui/Toast';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
@@ -55,9 +71,28 @@ export function NewReportPage() {
   const { me } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
   const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
-  const month = useMemo(() => currentReportMonth(), []);
+
+  const monthsQuery = useQuery({
+    queryKey: ['reports', 'months'],
+    queryFn: () => fetchReportingMonths(),
+  });
+
+  const availableMonths = monthsQuery.data?.months ?? [];
+  const currentMonthKey = monthsQuery.data?.currentMonth ?? currentReportMonth();
+  const requestedMonth = searchParams.get('month');
+
+  const month = useMemo(() => {
+    if (requestedMonth && /^\d{4}-\d{2}$/.test(requestedMonth)) {
+      const match = availableMonths.find((m) => m.key === requestedMonth);
+      if (match && !match.isLocked) return requestedMonth;
+      if (!availableMonths.length) return requestedMonth;
+    }
+    return currentMonthKey;
+  }, [requestedMonth, availableMonths, currentMonthKey]);
+
   const monthLabel = formatMonthLabel(month);
   useDocumentMeta({ title: `Monthly report · ${monthLabel}` });
 
@@ -65,7 +100,7 @@ export function NewReportPage() {
   const reportQuery = useQuery({
     queryKey: ['reports', 'draft', clubId, month],
     queryFn: () => ensureDraftReport(clubId, month),
-    enabled: Boolean(clubId),
+    enabled: Boolean(clubId && month),
   });
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
 
@@ -146,6 +181,13 @@ export function NewReportPage() {
     [values.activities],
   );
 
+  const activeFlags = useMemo(() => {
+    return (reportQuery.data?.flags ?? []).filter((f) => f.status === 'flagged');
+  }, [reportQuery.data?.flags]);
+
+  const isRevisionMode = reportQuery.data?.status === 'queried' || activeFlags.length > 0;
+
+
   const REPORT_AVENUES = useMemo(() => [
     {
       id: 'Club Meetings',
@@ -193,6 +235,11 @@ export function NewReportPage() {
     if (activeAvenue) empty.avenue = activeAvenue;
     return empty;
   }, [editingIndex, activities, activityFields, activeAvenue]);
+
+  const currentActFlag = useMemo(() => {
+    if (editingIndex === null) return undefined;
+    return activeFlags.find((f) => f.targetType === 'activity' && f.activityIndex === editingIndex);
+  }, [editingIndex, activeFlags]);
 
   const isEditable = !reportQuery.data || reportQuery.data.status === 'draft' || reportQuery.data.status === 'queried';
   const autosave = useAutosave(autosavePayload, (p) => saveMutation.mutateAsync(p), Boolean(reportQuery.data && isEditable), storageKey);
@@ -303,7 +350,6 @@ export function NewReportPage() {
     setIsAddingOrEditing(false);
   };
 
-
   return (
     <Container>
       <Section
@@ -313,7 +359,7 @@ export function NewReportPage() {
         action={
           isEditable ? (
             <Button variant="secondary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
-              Review and submit →
+              {isRevisionMode ? 'Review corrections →' : 'Review and submit →'}
             </Button>
           ) : (
             <Button variant="secondary" onClick={() => navigate(`/portal/reports/${report.id}`)}>
@@ -322,7 +368,68 @@ export function NewReportPage() {
           )
         }
       >
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
+          {/* Rotary Year Time-Bound Month Selector */}
+          <div className="rounded-[16px] border border-line-accent bg-surface p-4 shadow-sm">
+            <div className="mb-2.5 flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-fg-3">
+                Active Rotary Year Reporting Cycles (July – June)
+              </span>
+              {monthsQuery.isPending && <span className="text-[11px] text-fg-3">Checking cycle dates…</span>}
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+              {availableMonths.map((m) => {
+                const isSelected = m.key === month;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    disabled={m.isLocked}
+                    onClick={() => {
+                      if (!m.isLocked && m.key !== month) {
+                        setSearchParams({ month: m.key });
+                        setEditingIndex(null);
+                        setIsAddingOrEditing(false);
+                      }
+                    }}
+                    title={
+                      m.isLocked
+                        ? `${m.label} is a future cycle and remains strictly locked until the 1st of that month.`
+                        : `Switch reporting view to ${m.label}`
+                    }
+                    className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      isSelected
+                        ? 'bg-[#D81B60] text-white shadow-sm font-bold ring-2 ring-[#D81B60]/30'
+                        : m.isLocked
+                          ? 'cursor-not-allowed bg-page/70 text-fg-3/60 border border-line/50 opacity-60'
+                          : 'bg-page border border-line text-fg hover:border-line-accent hover:bg-surface-2'
+                    }`}
+                  >
+                    {m.isLocked && <Lock size={12} className="shrink-0" />}
+                    <span>{m.label}</span>
+                    {m.isCurrent && (
+                      <span
+                        className={`ml-1 rounded px-1.5 py-0.2 text-[9.5px] font-bold uppercase ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-[#D81B60]/10 text-[#D81B60]'
+                        }`}
+                      >
+                        Current
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Focused Revision Feedback Mode Alert */}
+          {isRevisionMode && (
+            <Alert tone="warning" title="Secretariat Feedback Pending · Targeted Revision Mode">
+              The District Secretariat flagged specific fields or activities in this report.
+              Approved sections are locked to protect verified data, while items needing adjustment are highlighted below for your targeted correction.
+            </Alert>
+          )}
+
           {!isEditable && (
             <Alert tone="info" title="This report has already been submitted">
               The report for {monthLabel} has already been submitted and cannot be edited.
@@ -336,20 +443,60 @@ export function NewReportPage() {
               </div>
             </Alert>
           )}
+
           {topFields.length > 0 && (
             <div className="rounded-[16px] border border-line-accent bg-surface p-5 shadow-sm">
-              <p className="m-0 mb-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">Monthly Club Statistics</p>
+              <p className="m-0 mb-4 text-[10.5px] font-bold uppercase tracking-[0.1em] text-accent">
+                Monthly Club Statistics
+              </p>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {topFields.map((field) => (
-                  <ReportFieldControl
-                    key={field.id}
-                    field={field}
-                    value={values[field.fieldKey]}
-                    onChange={(v) => setTopField(field.fieldKey, v)}
-                    onBlur={autosave.flush}
-                    clubOptions={clubOptions}
-                  />
-                ))}
+                {topFields.map((field) => {
+                  const flag = activeFlags.find((f) => f.targetType === 'field' && f.fieldKey === field.fieldKey);
+                  const isFieldFlagged = Boolean(flag);
+                  const isFieldLocked = isRevisionMode && !isFieldFlagged;
+
+                  if (isFieldFlagged) {
+                    return (
+                      <div key={field.id} className="rounded-xl border-2 border-amber-500/50 bg-amber-500/5 p-4 sm:col-span-2">
+                        <div className="mb-2 flex items-center justify-between gap-2 text-xs font-bold text-amber-800">
+                          <span className="flex items-center gap-1.5">
+                            <AlertCircle size={15} className="shrink-0 text-amber-600" />
+                            Revision Note: {flag?.comment}
+                          </span>
+                          {flag?.flaggedByName && (
+                            <span className="text-[11px] font-medium text-amber-700">by {flag.flaggedByName}</span>
+                          )}
+                        </div>
+                        <ReportFieldControl
+                          field={field}
+                          value={values[field.fieldKey]}
+                          onChange={(v) => setTopField(field.fieldKey, v)}
+                          onBlur={autosave.flush}
+                          clubOptions={clubOptions}
+                        />
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div key={field.id} className={isFieldLocked ? 'relative' : undefined}>
+                      {isFieldLocked && (
+                        <div className="mb-1 flex items-center gap-1 text-[10.5px] font-semibold text-emerald-600">
+                          <CheckCircle2 size={12} />
+                          <span>Approved · Locked</span>
+                        </div>
+                      )}
+                      <ReportFieldControl
+                        field={field}
+                        value={values[field.fieldKey]}
+                        onChange={(v) => setTopField(field.fieldKey, v)}
+                        onBlur={autosave.flush}
+                        clubOptions={clubOptions}
+                        disabled={isFieldLocked}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -382,6 +529,8 @@ export function NewReportPage() {
                 clubOptions={clubOptions}
                 onSave={handleSaveActivity}
                 onCancel={cancelAddOrEdit}
+                flagComment={currentActFlag?.comment}
+                flaggedFieldKeys={currentActFlag?.activityFieldKey ? [currentActFlag.activityFieldKey] : undefined}
               />
             </div>
           ) : (
@@ -398,7 +547,7 @@ export function NewReportPage() {
                 {REPORT_AVENUES.map((av) => {
                   const avenueActivities = activities
                     .map((act, origIndex) => ({ act, origIndex }))
-                    .filter(({ act }) => (act.avenue === av.id) || (act.avenue === av.title));
+                    .filter(({ act }) => act.avenue === av.id || act.avenue === av.title);
 
                   const Icon = av.icon;
                   return (
@@ -414,7 +563,11 @@ export function NewReportPage() {
                             </div>
                             <h4 className="m-0 text-base font-extrabold text-fg">{av.title}</h4>
                           </div>
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${avenueActivities.length > 0 ? 'bg-[#D81B60]/10 text-[#D81B60]' : 'bg-page text-fg-3'}`}>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                              avenueActivities.length > 0 ? 'bg-[#D81B60]/10 text-[#D81B60]' : 'bg-page text-fg-3'
+                            }`}
+                          >
                             {avenueActivities.length} {avenueActivities.length === 1 ? 'project' : 'projects'}
                           </span>
                         </div>
@@ -424,40 +577,81 @@ export function NewReportPage() {
 
                         {/* List of projects already under this avenue */}
                         {avenueActivities.length > 0 && (
-                          <div className="mt-4 space-y-2 border-t border-line pt-3">
-                            {avenueActivities.map(({ act, origIndex }) => (
-                              <div
-                                key={origIndex}
-                                className="flex items-start justify-between gap-2 rounded-lg bg-page p-2.5 text-xs"
-                              >
-                                <div className="min-w-0 flex-1">
-                                  <p className="m-0 truncate font-bold text-fg">
-                                    {activitySummaryLabel(act)}
-                                  </p>
-                                  <p className="m-0 truncate text-[11px] text-fg-3">
-                                    {activitySummaryDetail(act) || 'No details'}
-                                  </p>
+                          <div className="mt-4 space-y-2.5 border-t border-line pt-3">
+                            {avenueActivities.map(({ act, origIndex }) => {
+                              const actFlag = activeFlags.find(
+                                (f) => f.targetType === 'activity' && f.activityIndex === origIndex,
+                              );
+                              const isActFlagged = Boolean(actFlag);
+                              const isActLocked = isRevisionMode && !isActFlagged;
+
+                              return (
+                                <div
+                                  key={origIndex}
+                                  className={`flex flex-col gap-2 rounded-lg p-2.5 text-xs transition-all ${
+                                    isActFlagged
+                                      ? 'border-2 border-amber-500/50 bg-amber-500/10 shadow-sm'
+                                      : 'bg-page'
+                                  }`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="m-0 truncate font-bold text-fg">
+                                          {activitySummaryLabel(act)}
+                                        </p>
+                                        {isActFlagged && (
+                                          <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-amber-700">
+                                            Feedback
+                                          </span>
+                                        )}
+                                        {isActLocked && (
+                                          <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                            Verified
+                                          </span>
+                                        )}
+                                      </div>
+                                      <p className="m-0 truncate text-[11px] text-fg-3">
+                                        {activitySummaryDetail(act) || 'No details'}
+                                      </p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => startEditActivity(origIndex)}
+                                        disabled={isActLocked}
+                                        className={`rounded p-1 font-semibold ${
+                                          isActFlagged
+                                            ? 'bg-amber-600 px-2 py-0.5 text-white hover:bg-amber-700'
+                                            : isActLocked
+                                              ? 'cursor-not-allowed opacity-40 text-fg-3'
+                                              : 'text-fg-3 hover:bg-surface hover:text-[#D81B60]'
+                                        }`}
+                                        title={isActLocked ? 'Activity verified by District' : 'Edit project'}
+                                      >
+                                        {isActFlagged ? 'Address Feedback' : 'Edit'}
+                                      </button>
+                                      {!isRevisionMode && (
+                                        <button
+                                          type="button"
+                                          onClick={() => removeActivity(origIndex)}
+                                          className="rounded p-1 text-fg-3 hover:bg-surface hover:text-danger-fg"
+                                          title="Remove project"
+                                        >
+                                          Remove
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {isActFlagged && actFlag?.comment && (
+                                    <div className="text-[11.5px] text-amber-900 bg-amber-500/15 rounded p-1.5 font-medium">
+                                      <span className="font-bold">Secretariat Note: </span>
+                                      {actFlag.comment}
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="flex shrink-0 items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => startEditActivity(origIndex)}
-                                    className="rounded p-1 text-fg-3 hover:bg-surface hover:text-[#D81B60]"
-                                    title="Edit project"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => removeActivity(origIndex)}
-                                    className="rounded p-1 text-fg-3 hover:bg-surface hover:text-danger-fg"
-                                    title="Remove project"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -479,8 +673,17 @@ export function NewReportPage() {
             </div>
           )}
 
-          <Field label="Notes for the district secretariat" hint="Anything you'd like the district to know while reviewing this month's report.">
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} onBlur={autosave.flush} maxLength={5000} rows={4} />
+          <Field
+            label="Notes for the district secretariat"
+            hint="Anything you'd like the district to know while reviewing this month's report."
+          >
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              onBlur={autosave.flush}
+              maxLength={5000}
+              rows={4}
+            />
           </Field>
 
           <div className="flex items-center justify-between pt-2">
@@ -491,7 +694,9 @@ export function NewReportPage() {
               {statusMessage(autosave.status)}
             </p>
             <Button variant="primary" onClick={handleProceedToReview} loading={isNavigatingToReview}>
-              Proceed to Review &amp; Submit ({activities.length} Projects) →
+              {isRevisionMode
+                ? 'Proceed to Review & Re-submit Corrections →'
+                : `Proceed to Review & Submit (${activities.length} Projects) →`}
             </Button>
           </div>
         </div>
@@ -499,3 +704,4 @@ export function NewReportPage() {
     </Container>
   );
 }
+

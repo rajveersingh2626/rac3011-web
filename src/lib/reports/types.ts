@@ -67,6 +67,35 @@ export const reportClubSchema = z.object({
 });
 export type ReportClub = z.infer<typeof reportClubSchema>;
 
+export const reportReviewFlagSchema = z.object({
+  id: z.string(),
+  targetType: z.enum(['field', 'activity', 'general']),
+  fieldKey: z.string().optional(),
+  activityIndex: z.number().optional(),
+  activityFieldKey: z.string().optional(),
+  section: z.string().optional(),
+  comment: z.string(),
+  status: z.enum(['flagged', 'resolved']),
+  flaggedById: z.string(),
+  flaggedByName: z.string().optional(),
+  flaggedAt: z.string(),
+  resolvedAt: z.string().optional(),
+  resolvedById: z.string().optional(),
+  reply: z.string().optional(),
+});
+export type ReportReviewFlag = z.infer<typeof reportReviewFlagSchema>;
+
+export const reportingMonthInfoSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  ryYear: z.number(),
+  isPast: z.boolean(),
+  isCurrent: z.boolean(),
+  isFuture: z.boolean(),
+  isLocked: z.boolean(),
+});
+export type ReportingMonthInfo = z.infer<typeof reportingMonthInfoSchema>;
+
 export const reportSchema = z.object({
   id: z.string(),
   clubId: z.string(),
@@ -76,6 +105,7 @@ export const reportSchema = z.object({
   status: reportStatusSchema,
   values: z.record(z.string(), z.unknown()),
   notes: z.string().nullable(),
+  flags: z.array(reportReviewFlagSchema).nullable().optional(),
   submittedById: z.string().nullable(),
   submittedAt: z.string().nullable(),
   filedOnTime: z.boolean().nullable(),
@@ -121,3 +151,17 @@ export const assistResultSchema = z.object({
   suggestions: z.array(z.object({ fieldKey: z.string().optional(), message: z.string() })),
 });
 export type AssistResult = z.infer<typeof assistResultSchema>;
+
+export const reportAuditLogSchema = z.object({
+  id: z.string(),
+  action: z.string(),
+  targetType: z.string(),
+  targetId: z.string(),
+  actorId: z.string().nullable().optional(),
+  actorName: z.string().nullable().optional(),
+  actorEmail: z.string().nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  createdAt: z.string(),
+});
+export type ReportAuditLog = z.infer<typeof reportAuditLogSchema>;
+

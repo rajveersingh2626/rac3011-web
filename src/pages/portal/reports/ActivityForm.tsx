@@ -11,6 +11,8 @@ export interface ActivityFormProps {
   clubOptions: ComboboxOption[];
   onSave: (activity: Record<string, unknown>) => void;
   onCancel?: () => void;
+  flagComment?: string;
+  flaggedFieldKeys?: string[];
 }
 
 function validate(fields: ReportField[], activity: Record<string, unknown>): Record<string, string> {
@@ -23,7 +25,7 @@ function validate(fields: ReportField[], activity: Record<string, unknown>): Rec
   return errors;
 }
 
-export function ActivityForm({ fields, activity, index, clubOptions, onSave, onCancel }: ActivityFormProps) {
+export function ActivityForm({ fields, activity, index, clubOptions, onSave, onCancel, flagComment, flaggedFieldKeys }: ActivityFormProps) {
   const [draft, setDraft] = useState(activity);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -48,16 +50,32 @@ export function ActivityForm({ fields, activity, index, clubOptions, onSave, onC
         <p className="m-0 text-[11px] font-bold uppercase tracking-[0.12em] text-accent">Activity {index + 1}</p>
         <div aria-hidden className="h-px flex-1 bg-line" />
       </div>
-      {fields.map((field) => (
-        <ReportFieldControl
-          key={field.id}
-          field={field}
-          value={draft[field.fieldKey]}
-          onChange={(v) => setField(field.fieldKey, v)}
-          error={errors[field.fieldKey]}
-          clubOptions={clubOptions}
-        />
-      ))}
+      {flagComment && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700">
+          <span className="font-bold">District Feedback: </span>
+          {flagComment}
+        </div>
+      )}
+      {fields.map((field) => {
+        const isFieldFlagged = flaggedFieldKeys?.includes(field.fieldKey);
+        return (
+          <div key={field.id} className={isFieldFlagged ? 'rounded-xl border border-amber-500/40 bg-amber-500/5 p-3' : undefined}>
+            {isFieldFlagged && (
+              <p className="m-0 mb-1.5 text-[11px] font-bold text-amber-600">
+                ⚠ Specific field flagged for revision
+              </p>
+            )}
+            <ReportFieldControl
+              field={field}
+              value={draft[field.fieldKey]}
+              onChange={(v) => setField(field.fieldKey, v)}
+              error={errors[field.fieldKey]}
+              clubOptions={clubOptions}
+            />
+          </div>
+        );
+      })}
+
       <div className="flex flex-wrap items-center gap-4 border-t border-line pt-5">
         <Button type="button" onClick={() => save(true)}>
           Save this activity, add another

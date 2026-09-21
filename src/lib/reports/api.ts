@@ -3,13 +3,17 @@ import { apiFetch, API_ORIGIN } from '@/lib/api';
 import {
   assistResultSchema,
   paginatedSchema,
+  reportAuditLogSchema,
   reportRequestResponseSchema,
   reportRequestSchema,
   reportSchema,
   reportSchemaSummarySchema,
   reportSchemaWithFieldsSchema,
+  reportingMonthInfoSchema,
   type AssistResult,
   type Report,
+  type ReportAuditLog,
+  type ReportingMonthInfo,
   type ReportRequest,
   type ReportRequestAudience,
   type ReportRequestResponse,
@@ -17,6 +21,7 @@ import {
   type ReportSchemaWithFields,
   type ReportStatus,
 } from './types';
+
 
 const reportsPage = paginatedSchema(reportSchema);
 
@@ -240,4 +245,68 @@ export async function downloadDistrictReportsCsv(month?: string) {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(link.href);
+}
+
+const reportingMonthsResponseSchema = z.object({
+  ryYear: z.number(),
+  currentMonth: z.string(),
+  months: z.array(reportingMonthInfoSchema),
+});
+
+export async function fetchReportingMonths(ryYear?: number): Promise<{
+  ryYear: number;
+  currentMonth: string;
+  months: ReportingMonthInfo[];
+}> {
+  const qs = query({ ryYear });
+  return apiFetch(`/reports/months${qs}`, { schema: reportingMonthsResponseSchema });
+}
+
+export async function resetReport(id: string, reason: string): Promise<Report> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/reset`, {
+    method: 'POST',
+    body: { reason },
+    schema: reportSchema,
+  });
+}
+
+export async function deleteReport(id: string, reason?: string): Promise<{ deleted: boolean; id: string }> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    body: reason ? { reason } : undefined,
+    schema: z.object({ deleted: z.boolean(), id: z.string() }),
+  });
+}
+
+export interface CreateReportFlagItem {
+  targetType: 'field' | 'activity' | 'general';
+  fieldKey?: string;
+  activityIndex?: number;
+  activityFieldKey?: string;
+  section?: string;
+  comment: string;
+}
+
+export async function flagReportItems(id: string, flags: CreateReportFlagItem[]): Promise<Report> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/flags`, {
+    method: 'POST',
+    body: { flags },
+    schema: reportSchema,
+  });
+}
+
+export async function resolveReportFlag(id: string, flagId: string, reply?: string): Promise<Report> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/flags/${encodeURIComponent(flagId)}/resolve`, {
+    method: 'PATCH',
+    body: reply ? { reply } : undefined,
+    schema: reportSchema,
+  });
+}
+
+const reportAuditLogsSchema = z.array(reportAuditLogSchema);
+
+export async function fetchReportAuditLogs(id: string): Promise<ReportAuditLog[]> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/audit`, {
+    schema: reportAuditLogsSchema,
+  });
 }

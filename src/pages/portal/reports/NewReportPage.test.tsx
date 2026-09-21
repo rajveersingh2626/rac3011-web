@@ -53,6 +53,14 @@ function installHandlers(report = draftReport()) {
       return HttpResponse.json(current);
     }),
     http.get('/public/clubs', () => HttpResponse.json({ items: [{ id: 'club_other', name: 'Other Club', shortName: 'OC', slug: 'other', zoneId: 'zone_agni' }], total: 1 })),
+    http.get('/reports/months', () => HttpResponse.json({
+      activeRyYear: 2026,
+      currentMonth: '2026-08-01',
+      months: [
+        { key: '2026-07-01', label: 'July 2026', ryYear: 2026, isPast: true, isCurrent: false, isFuture: false, isLocked: false },
+        { key: '2026-08-01', label: 'August 2026', ryYear: 2026, isPast: false, isCurrent: true, isFuture: false, isLocked: false },
+      ],
+    })),
   );
   return () => current;
 }
