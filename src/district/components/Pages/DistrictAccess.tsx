@@ -156,15 +156,15 @@ export default function DistrictAccess({
   return (
     <div style={{
       background: districtTabBackground,
-      minHeight: '100vh',
+      minHeight: '100dvh',
       padding: (activeDistrictTab === 'map-clubs' || !activeDistrictTab)
         ? '0px'
-        : (isMobile ? '76px 12px calc(84px + env(safe-area-inset-bottom, 8px)) 12px' : '40px 24px 80px 24px'),
+        : (isMobile ? 'calc(max(12px, env(safe-area-inset-top, 12px)) + 58px) 12px calc(90px + env(safe-area-inset-bottom, 16px)) 12px' : '40px 24px 80px 24px'),
       color: 'var(--text-primary)',
       boxSizing: 'border-box'
     }}>
       {(!activeDistrictTab || activeDistrictTab === 'map-clubs') ? (
-        <div style={{ width: '100%', minHeight: 'calc(100vh - 70px)' }}>
+        <div style={{ width: '100%', minHeight: 'calc(100dvh - 70px)' }}>
           <DistrictMap
             clubs={clubs}
             isLoggedIn={isLoggedIn}

@@ -287,7 +287,7 @@ export default function DistrictApp() {
         onLogout={() => void handleLogout()}
       />
 
-      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: isMobile ? '76px' : '0px' }}>
+      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingBottom: isMobile ? 'calc(env(safe-area-inset-bottom, 0px) + 80px)' : '0px' }}>
         {activePage === 'home' && (
           <PublicHome
             onNavigateDistrict={(tab?: string) => handlePageChange('district', tab || 'map-clubs')}

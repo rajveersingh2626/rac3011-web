@@ -62,7 +62,7 @@ export const MobileBottomNav: FC<MobileBottomNavProps> = memo(({
       aria-label="Mobile Navigation"
       style={{
         position: 'fixed',
-        bottom: 'max(10px, env(safe-area-inset-bottom, 10px))',
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 12px)',
         left: '12px',
         right: '12px',
         maxWidth: '430px',
