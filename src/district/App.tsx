@@ -104,9 +104,13 @@ export default function DistrictApp() {
   const liveVisitsQuery = useLiveVisits();
   const visitsCount = liveVisitsQuery.data?.count ?? 14850;
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -230,10 +234,10 @@ export default function DistrictApp() {
         className="top-left-global-visitors-badge"
         style={{
           position: 'fixed',
-          // On phones the centred navbar pill owns the top band, anchor above bottom bar instead.
-          top: isMobile ? 'auto' : '22px',
-          bottom: isMobile ? 'calc(env(safe-area-inset-bottom, 0px) + 72px)' : 'auto',
-          left: isMobile ? '14px' : '28px',
+          // On phones and tablets the top band is reserved for navbar, anchor badge at bottom instead.
+          top: (isMobile || isTablet) ? 'auto' : '22px',
+          bottom: isMobile ? 'calc(env(safe-area-inset-bottom, 0px) + 72px)' : (isTablet ? '20px' : 'auto'),
+          left: isMobile ? '14px' : (isTablet ? '20px' : '28px'),
           zIndex: 998,
           display: 'inline-flex',
           alignItems: 'center',

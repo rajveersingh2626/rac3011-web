@@ -239,9 +239,13 @@ export default function DistrictMap({
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [viewMode, setViewMode] = useState<'map' | 'cards'>('map');
   const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 768 : false));
+  const [isTablet, setIsTablet] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 768 && window.innerWidth < 1024 : false));
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -544,14 +548,14 @@ export default function DistrictMap({
         transition: 'all 0.3s ease'
       }}
     >
-      {/* Top Floating View Mode Switcher (Desktop only, mobile has bottom bar) */}
+      {/* Top Floating View Mode Switcher (Desktop only, mobile/tablet have bottom bar) */}
       <div
         style={{
           position: 'absolute',
           top: '20px',
           right: '24px',
           zIndex: 1000,
-          display: isMobile ? 'none' : 'flex',
+          display: (isMobile || isTablet) ? 'none' : 'flex',
           alignItems: 'center',
           gap: '10px',
           pointerEvents: 'auto',
