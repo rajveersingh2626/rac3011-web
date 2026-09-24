@@ -316,7 +316,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
       <div
         style={{
           position: 'relative',
-          padding: '24px 16px 20px',
+          padding: 'calc(max(12px, env(safe-area-inset-top, 12px)) + 56px) 16px 20px',
           background: '#FFFFFF',
           borderBottom: '1px solid rgba(18, 52, 153, 0.08)',
           overflow: 'hidden'

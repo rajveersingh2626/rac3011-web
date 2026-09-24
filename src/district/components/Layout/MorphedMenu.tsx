@@ -252,7 +252,7 @@ export default function MorphedMenu({
   ];
 
   return (
-    <div ref={menuRef} style={{ position: 'relative', display: 'inline-block', zIndex: 9999 }}>
+    <div ref={menuRef} style={{ position: 'relative', display: isMobile ? (isOpen ? 'block' : 'none') : 'inline-block', zIndex: 9999 }}>
 
         {/* Mobile Backdrop Overlay when Menu is Open */}
         {isOpen && isMobile && (
@@ -276,12 +276,12 @@ export default function MorphedMenu({
             position: isMobile && isOpen ? 'fixed' : 'absolute',
             top: isMobile && isOpen ? '16px' : '-7px',
             left: isMobile && isOpen ? '50%' : 'auto',
-            right: isMobile && isOpen ? 'auto' : '-18px',
+            right: isMobile && isOpen ? 'auto' : (isOpen ? '-18px' : '0px'),
             transform: isMobile && isOpen ? 'translateX(-50%)' : 'none',
-            width: isOpen ? (isMobile ? 'calc(100vw - 24px)' : 'min(410px, 92vw)') : (isMobile ? '64px' : '60px'),
+            width: isOpen ? (isMobile ? 'calc(100vw - 24px)' : 'min(410px, 92vw)') : 'auto',
             maxWidth: '410px',
-            height: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'auto') : (isMobile ? '44px' : '36px'),
-            maxHeight: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'min(650px, calc(100vh - 24px))') : (isMobile ? '44px' : '36px'),
+            height: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'auto') : 'auto',
+            maxHeight: isOpen ? (isMobile ? 'min(640px, calc(100dvh - 24px))' : 'min(650px, calc(100dvh - 24px))') : '0px',
             backgroundColor: 'rgba(15, 18, 26, 0.94)',
             backdropFilter: 'blur(32px) saturate(190%)',
             WebkitBackdropFilter: 'blur(32px) saturate(190%)',

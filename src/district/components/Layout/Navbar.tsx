@@ -117,13 +117,13 @@ export default function Navbar({
       onMouseLeave={handleMouseLeave}
       style={{
         position: 'fixed',
-        top: '12px',
+        top: 'max(12px, env(safe-area-inset-top, 12px))',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 1000,
         pointerEvents: 'auto',
-        width: isMobile ? 'calc(100% - 24px)' : 'auto',
-        maxWidth: isMobile ? '460px' : '1100px',
+        width: 'auto',
+        maxWidth: isMobile ? 'calc(100vw - 24px)' : '1100px',
         display: 'flex',
         justifyContent: 'center'
       }}
@@ -132,10 +132,10 @@ export default function Navbar({
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          justifyContent: isMobile ? 'space-between' : 'center',
-          width: isMobile ? '100%' : 'auto',
+          justifyContent: 'center',
+          width: 'auto',
           gap: isMobile ? '8px' : '10px',
-          padding: isMobile ? '6px 12px' : '7px 16px 7px 12px',
+          padding: isMobile ? '6px 14px' : '7px 16px 7px 12px',
           backgroundColor: isMenuOpen ? 'transparent' : 'rgba(15, 23, 42, 0.90)',
           backdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: isMenuOpen ? 'none' : 'blur(20px) saturate(180%)',
@@ -211,8 +211,8 @@ export default function Navbar({
               {districtSubTabs.map((tab) => {
                 const isTabActive = activePage === 'district' && activeDistrictTab === tab.id;
                 const isTabHovered = hoveredSubTab === tab.id;
-                // On tablet: only expand active tab labels to save space
-                const isExpanded = isTablet ? isTabActive : (isTabHovered || isTabActive);
+                // On tablet: keep compact icon-only buttons to prevent collision with visitor badge & map switcher
+                const isExpanded = isTablet ? false : (isTabHovered || isTabActive);
 
                 return (
                   <button
@@ -231,8 +231,8 @@ export default function Navbar({
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      padding: isExpanded ? '6px 10px' : '6px 8px',
+                      gap: isExpanded ? '6px' : '0px',
+                      padding: isTablet ? '6px 7px' : (isExpanded ? '6px 10px' : '6px 8px'),
                       borderRadius: '16px',
                       border: 'none',
                       backgroundColor: isTabActive 

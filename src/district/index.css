@@ -306,11 +306,13 @@ label {
   padding: 0;
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .snap-container {
   overflow-y: auto;
   height: 100vh;
+  height: 100dvh;
   width: 100%;
   -webkit-overflow-scrolling: touch;
 }
@@ -337,6 +339,7 @@ label {
 
 .snap-section.hero-section {
   min-height: 100vh;
+  min-height: 100dvh;
   padding-top: clamp(60px, 9vh, 100px);
   padding-bottom: clamp(40px, 5vh, 60px);
 }
@@ -362,6 +365,7 @@ label {
 
   .snap-section.hero-section {
     min-height: 100vh !important;
+    min-height: 100dvh !important;
     padding-top: clamp(60px, 8vh, 90px) !important;
     padding-bottom: clamp(32px, 4vh, 48px) !important;
   }
@@ -751,6 +755,7 @@ button,
 .curtain-strip {
   flex: 1;
   height: 100vh;
+  height: 100dvh;
   background-color: var(--rotaract-pink);
   transform: translateY(0);
   transition: transform 1.4s cubic-bezier(0.85, 0, 0.15, 1);

@@ -132,7 +132,8 @@ function ScopeSwitcher() {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-[11.5px] font-bold text-white shadow-xs">
         <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
-        <span className="hidden sm:inline">District 3011 · Super Admin</span>
+        <span className="hidden lg:inline">District 3011 · Super Admin</span>
+        <span className="hidden sm:inline lg:hidden">Super Admin</span>
         <span className="sm:hidden">Admin</span>
       </span>
     );
@@ -143,7 +144,8 @@ function ScopeSwitcher() {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 sm:px-3 py-1 text-[11px] sm:text-[11.5px] font-bold text-white shadow-xs">
         <span className="size-2 rounded-full bg-[#D81B60] shadow-[0_0_8px_#D81B60]" />
-        <span className="hidden sm:inline">District Secretariat · {roleKey.toUpperCase()}</span>
+        <span className="hidden lg:inline">District Secretariat · {roleKey.toUpperCase()}</span>
+        <span className="hidden sm:inline lg:hidden">{roleKey.toUpperCase()}</span>
         <span className="sm:hidden">{roleKey.toUpperCase()}</span>
       </span>
     );
@@ -240,7 +242,7 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
   const shouldOpenAdmin = adminOpenDefault ?? hasAdminPerm;
 
   return (
-    <div className="flex h-screen max-h-screen flex-col bg-page overflow-hidden">
+    <div className="flex h-[100dvh] max-h-[100dvh] flex-col bg-page overflow-hidden">
       {/* Top Portal Quote Ribbon */}
       <div className="relative z-30 flex shrink-0 items-center justify-center bg-gradient-to-r from-[#123499] via-[#880E4F] to-[#D81B60] py-1 px-4 text-center shadow-xs">
         <span className="font-['Dancing_Script',cursive] text-[13.5px] font-semibold text-white tracking-wide drop-shadow-xs">
@@ -269,8 +271,8 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
           </Link>
         </div>
 
-        {/* Center: Main Website Quick Navigator */}
-        <div className="hidden md:flex items-center gap-1.5 text-[12px] font-semibold text-white/80">
+        {/* Center: Main Website Quick Navigator (shown on desktop xl+ to avoid crowding on tablets) */}
+        <div className="hidden xl:flex items-center gap-1.5 text-[12px] font-semibold text-white/80">
           <a
             href="/"
             className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors px-2 py-1 rounded-md hover:bg-white/10"

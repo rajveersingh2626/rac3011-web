@@ -440,14 +440,14 @@ export function DashboardPage() {
                 rule="accent"
                 className="bg-gradient-to-r from-accent/10 via-surface to-accent/5 border-accent/30 shadow-md"
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                  <div className="max-w-2xl">
+                <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 sm:gap-5">
+                  <div className="min-w-0 flex-1 max-w-2xl">
                     <p className="text-sm text-fg leading-relaxed m-0 font-medium">
                       You have full root oversight across all <strong>41 District capabilities</strong>.
                       Grant, inspect, or revoke permissions across all <strong>145+ official leader accounts</strong> (Presidents, Secretaries, Council, ZRR, DRR, and Project Admins).
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                     <Button
                       variant="primary"
                       onClick={() => navigate('/portal/admin/users')}

@@ -215,7 +215,7 @@ export default function DistrictApp() {
   };
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ height: '100dvh', minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF', position: 'relative', overflow: 'hidden' }}>
       {showCurtain && (
         <div className={`curtain-container ${curtainAnimated ? 'animate' : ''}`}>
           <div className="curtain-strip" />
@@ -230,9 +230,9 @@ export default function DistrictApp() {
         className="top-left-global-visitors-badge"
         style={{
           position: 'fixed',
-          // On phones the centred navbar pill owns the whole top band, so anchor bottom-left instead.
+          // On phones the centred navbar pill owns the top band, anchor above bottom bar instead.
           top: isMobile ? 'auto' : '22px',
-          bottom: isMobile ? '14px' : 'auto',
+          bottom: isMobile ? 'calc(env(safe-area-inset-bottom, 0px) + 72px)' : 'auto',
           left: isMobile ? '14px' : '28px',
           zIndex: 998,
           display: 'inline-flex',
