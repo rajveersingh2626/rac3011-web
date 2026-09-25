@@ -230,7 +230,7 @@ export function RideHomePage() {
         </h1>
 
         <p className="text-base sm:text-xl md:text-2xl font-extrabold text-neutral-800 max-w-4xl leading-relaxed mb-8 px-4 z-10">
-          The flagship Rotaract Youth & National District Exchange. 4 days of timeless monument trails, authentic culinary safaris, host family warmth, and lifelong global fellowship.
+          The flagship Rotaract Youth & National District Exchange. 3 days of timeless monument trails, authentic culinary safaris, host family warmth, and lifelong global fellowship.
         </p>
 
         {/* Action Buttons */}
