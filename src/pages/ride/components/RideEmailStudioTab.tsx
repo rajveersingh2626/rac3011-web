@@ -11,7 +11,7 @@ import {
   getStoredRideAnnouncements, saveStoredRideAnnouncement, deleteStoredRideAnnouncement,
   type StoredRideAnnouncement 
 } from '@/lib/ride/formsStorage';
-import { dispatchRideBroadcast } from '@/lib/ride/rideBroadcastApi';
+import { dispatchRideBroadcast, fetchRideEmailSettings } from '@/lib/ride/rideBroadcastApi';
 import { fetchRideDistricts } from '@/lib/ride/api';
 
 function generateBespokeRideEmailHtml(
@@ -129,6 +129,40 @@ export function RideEmailStudioTab() {
   const [customEmailsInput, setCustomEmailsInput] = useState('');
   const [publishAsAnnouncement, setPublishAsAnnouncement] = useState(true);
 
+  // Load configured default CC stakeholders from database setting
+  const { data: emailSettings } = useQuery({
+    queryKey: ['ride', 'emailSettings'],
+    queryFn: fetchRideEmailSettings,
+  });
+
+  const [ccEmails, setCcEmails] = useState<string[]>([]);
+  const [ccInput, setCcInput] = useState('');
+  const [saveCcDefault, setSaveCcDefault] = useState(false);
+  const [initialCcLoaded, setInitialCcLoaded] = useState(false);
+
+  useEffect(() => {
+    if (emailSettings?.defaultCc && !initialCcLoaded) {
+      if (emailSettings.defaultCc.length > 0) {
+        setCcEmails(emailSettings.defaultCc);
+      }
+      setInitialCcLoaded(true);
+    }
+  }, [emailSettings, initialCcLoaded]);
+
+  const addCcEmail = (raw: string) => {
+    const candidates = raw
+      .split(/[\s,;]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter((s) => s.includes('@'));
+    if (candidates.length === 0) return;
+    setCcEmails((prev) => Array.from(new Set([...prev, ...candidates])));
+    setCcInput('');
+  };
+
+  const removeCcEmail = (emailToRemove: string) => {
+    setCcEmails((prev) => prev.filter((e) => e !== emailToRemove));
+  };
+
   // Dynamic districts pulled directly from actual registered user credentials in database
   const { data: dynamicDistricts = [] } = useQuery({
     queryKey: ['ride', 'districts'],
@@ -219,6 +253,8 @@ export function RideEmailStudioTab() {
         hostClubsOnly: targetHostClubsOnly,
         districtNumbers: selectedDistricts.length > 0 ? selectedDistricts : undefined,
         customEmails: customEmails.length > 0 ? customEmails : undefined,
+        cc: ccEmails.length > 0 ? ccEmails : undefined,
+        saveCcAsDefault: saveCcDefault,
         publishAsAnnouncement,
         ctaLabel: includeCta ? ctaLabel.trim() : undefined,
         ctaUrl: includeCta ? ctaUrl.trim() : undefined,
@@ -242,6 +278,7 @@ export function RideEmailStudioTab() {
           targetValue: audienceDesc,
           targetDistricts: selectedDistricts,
           targetEmails: customEmails,
+          ccEmails: ccEmails,
           sender: 'RIDE Organizing Committee (RID 3011)',
           recipientCount: result.dispatchedCount,
         });
@@ -320,6 +357,31 @@ export function RideEmailStudioTab() {
                 <p className="text-xs text-neutral-500 mt-0.5">
                   Broadcast notices, travel alerts, and hosting updates to visiting delegates and host clubs.
                 </p>
+              </div>
+
+              {/* Sender Identity Verification Badge */}
+              <div className="flex items-center justify-between p-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50/70">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0">
+                    <Mail size={15} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                        Dispatching From
+                      </span>
+                      <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-emerald-200/80 text-emerald-900">
+                        Verified RIDE Sender
+                      </span>
+                    </div>
+                    <div className="text-xs font-mono font-bold text-emerald-950">
+                      delhimerijaan@rotaract3011.org
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[10px] text-right font-medium text-emerald-700 hidden sm:block">
+                  Reply-To: delhimerijaan@rotaract3011.org
+                </div>
               </div>
 
               {/* Enhanced Recipient Targeting Controls */}
@@ -448,6 +510,87 @@ export function RideEmailStudioTab() {
                     placeholder="Enter additional emails separated by commas or newlines..."
                     className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#19539D] bg-white"
                   />
+                </div>
+
+                {/* CC Stakeholders (Optional) */}
+                <div className="space-y-2 pt-2 border-t border-neutral-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-black uppercase text-neutral-700 flex items-center gap-1">
+                      <Users size={12} className="text-[#19539D]" />
+                      <span>CC Stakeholders & Committee ({ccEmails.length})</span>
+                    </label>
+                    {ccEmails.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setCcEmails([])}
+                        className="text-[10px] font-bold text-red-600 hover:underline cursor-pointer"
+                      >
+                        Clear CC
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-neutral-500 leading-normal">
+                    Carbon-copy stakeholders will receive a copy of each broadcast sent via delhimerijaan@rotaract3011.org.
+                  </p>
+
+                  {/* CC Email Tag Pills */}
+                  {ccEmails.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 p-1">
+                      {ccEmails.map((email) => (
+                        <span
+                          key={email}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-white border border-neutral-300 text-xs font-mono font-bold text-[#171515] shadow-xs"
+                        >
+                          <span>{email}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeCcEmail(email)}
+                            className="text-neutral-400 hover:text-red-600 transition-colors cursor-pointer"
+                            title={`Remove ${email}`}
+                          >
+                            <X size={11} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add CC Input */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={ccInput}
+                      onChange={(e) => setCcInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          addCcEmail(ccInput);
+                        }
+                      }}
+                      placeholder="Add CC email (press Enter or comma)..."
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-neutral-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-[#19539D]"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => addCcEmail(ccInput)}
+                      disabled={!ccInput.trim()}
+                    >
+                      Add CC
+                    </Button>
+                  </div>
+
+                  {/* Save Default CC Checkbox */}
+                  <label className="flex items-center gap-2 pt-1 text-[11px] font-bold text-neutral-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={saveCcDefault}
+                      onChange={(e) => setSaveCcDefault(e.target.checked)}
+                      className="rounded text-[#19539D] focus:ring-[#19539D]"
+                    />
+                    <span>Save these CC stakeholders as default for future broadcasts</span>
+                  </label>
                 </div>
               </div>
 
@@ -646,6 +789,36 @@ export function RideEmailStudioTab() {
                 </button>
               </div>
 
+              {/* Transmission Envelope Metadata */}
+              <div className="text-[11px] font-mono p-3 rounded-xl border border-neutral-200 bg-neutral-50/80 space-y-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-black text-neutral-800 uppercase tracking-wider text-[10px]">From:</span>
+                  <span className="text-emerald-800 font-bold">Delhi Meri Jaan • The RIDE &lt;delhimerijaan@rotaract3011.org&gt;</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-black text-neutral-800 uppercase tracking-wider text-[10px]">Reply-To:</span>
+                  <span className="text-neutral-700">delhimerijaan@rotaract3011.org</span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="font-black text-neutral-800 uppercase tracking-wider text-[10px]">Audience:</span>
+                  <span className="text-neutral-700 font-semibold">
+                    {targetAll
+                      ? 'All Registered Delegates'
+                      : selectedDistricts.length > 0
+                        ? `Districts (${selectedDistricts.join(', ')})`
+                        : targetHostClubsOnly
+                          ? 'Host Clubs Only'
+                          : `${customEmailsInput.split(/[\n,;]+/).filter((s) => s.includes('@')).length} Custom Recipient(s)`}
+                  </span>
+                </div>
+                {ccEmails.length > 0 && (
+                  <div className="flex items-start gap-1.5 pt-1 border-t border-neutral-200 text-[#19539D] flex-wrap">
+                    <span className="font-black uppercase tracking-wider text-[10px] shrink-0">CC ({ccEmails.length}):</span>
+                    <span className="font-bold break-all">{ccEmails.join(', ')}</span>
+                  </div>
+                )}
+              </div>
+
               {previewMode === 'visual' ? (
                 <div className="rounded-2xl border-2 border-[#171515] overflow-hidden bg-neutral-100 shadow-inner">
                   <iframe
@@ -715,6 +888,15 @@ export function RideEmailStudioTab() {
                       <span>Sent: {new Date(ann.sentAt).toLocaleString()}</span>
                       <span>Recipients: ~{ann.recipientCount}</span>
                     </div>
+
+                    {ann.ccEmails && ann.ccEmails.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 font-mono pt-0.5">
+                        <span className="font-bold text-neutral-600">CC ({ann.ccEmails.length}):</span>
+                        <span className="truncate max-w-md" title={ann.ccEmails.join(', ')}>
+                          {ann.ccEmails.join(', ')}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">

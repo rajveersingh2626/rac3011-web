@@ -15,9 +15,26 @@ export interface DispatchBroadcastPayload {
   hostClubsOnly?: boolean;
   all?: boolean;
   customEmails?: string[];
+  cc?: string[];
+  saveCcAsDefault?: boolean;
   publishAsAnnouncement?: boolean;
   ctaLabel?: string;
   ctaUrl?: string;
+}
+
+export async function fetchRideEmailSettings(): Promise<{ defaultCc: string[] }> {
+  try {
+    return await apiFetch<{ defaultCc: string[] }>('/ride/participants/settings/email');
+  } catch {
+    return { defaultCc: [] };
+  }
+}
+
+export async function updateRideEmailSettings(defaultCc: string[]): Promise<{ defaultCc: string[] }> {
+  return apiFetch<{ defaultCc: string[] }>('/ride/participants/settings/email', {
+    method: 'PUT',
+    body: { defaultCc },
+  });
 }
 
 export async function dispatchRideBroadcast(payload: DispatchBroadcastPayload): Promise<DispatchBroadcastResult> {

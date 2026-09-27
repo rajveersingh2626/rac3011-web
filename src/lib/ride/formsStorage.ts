@@ -256,6 +256,7 @@ export interface StoredRideAnnouncement {
   targetValue?: string;
   targetDistricts?: string[];
   targetEmails?: string[];
+  ccEmails?: string[];
   sender: string;
   sentAt: string;
   recipientCount: number;
