@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
@@ -26,6 +26,12 @@ import {
   type RideAnnouncement,
 } from '@/lib/ride/api';
 
+interface ExtendedFormDefinition extends FormDefinition {
+  category?: 'external_delegation' | 'internal_host_club';
+  hasSubmitted?: boolean;
+  mySubmission?: any;
+}
+
 export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
   const { participant, logout } = useParticipantAuth();
@@ -42,7 +48,7 @@ export function RideParticipantDashboardPage() {
   const [localAnnouncements, setLocalAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
   
   // Fill Form Modal State
-  const [activeFillingForm, setActiveFillingForm] = useState<FormDefinition | null>(null);
+  const [activeFillingForm, setActiveFillingForm] = useState<ExtendedFormDefinition | FormDefinition | null>(null);
   const [formFieldValues, setFormFieldValues] = useState<Record<string, any>>({});
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -117,13 +123,49 @@ export function RideParticipantDashboardPage() {
       ? announcementsData.items 
       : filteredLocalAnnouncements;
 
+  const qc = useQueryClient();
+
+  const { data: serverDmjForms = [] } = useQuery({
+    queryKey: ['forms', 'dmj-active'],
+    queryFn: async () => {
+      try {
+        const res = await apiFetch<any[]>('/forms/dmj-active');
+        return Array.isArray(res) ? res : [];
+      } catch {
+        return [];
+      }
+    },
+    refetchInterval: 15000,
+  });
+
+  const dynamicDmjForms: ExtendedFormDefinition[] = (serverDmjForms as any[]).map((f: any) => ({
+    id: f.id,
+    slug: f.slug || f.id,
+    version: f.version || 1,
+    isPublic: true,
+    createdAt: f.createdAt || new Date().toISOString(),
+    title: f.title,
+    description: f.description || '',
+    category: 'external_delegation' as const,
+    isActive: f.status === 'published',
+    fields: Array.isArray(f.fields) ? f.fields : [],
+    hasSubmitted: f.hasSubmitted,
+    mySubmission: f.mySubmission,
+  }));
+
+  const serverMap = new Map(dynamicDmjForms.map((df) => [df.id, df]));
+  const localFiltered = allForms.filter((f) => f.id !== 'form-host-club-app' && !serverMap.has(f.id));
+  const participantForms: (FormDefinition | ExtendedFormDefinition)[] = [...dynamicDmjForms, ...localFiltered];
+
   const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
-  const submittedFormIds = new Set(userSubmissions.map((s) => s.formId));
-  const participantForms = allForms.filter((f) => f.id !== 'form-host-club-app');
+  const submittedFormIds = new Set([
+    ...userSubmissions.map((s) => s.formId),
+    ...dynamicDmjForms.filter((df) => df.hasSubmitted).map((df) => df.id),
+  ]);
   const pendingForms = participantForms.filter((f) => f.isActive && !submittedFormIds.has(f.id));
   const completedForms = participantForms.filter((f) => submittedFormIds.has(f.id));
 
-  const handleOpenForm = (form: FormDefinition) => {
+  const handleOpenForm = (form: FormDefinition | ExtendedFormDefinition) => {
     setActiveFillingForm(form);
     const initial: Record<string, any> = {};
     if (userDistrict) {
@@ -138,13 +180,28 @@ export function RideParticipantDashboardPage() {
     setFormFieldValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmitForm = () => {
+  const handleSubmitForm = async () => {
     if (!activeFillingForm) return;
     setFormSubmitting(true);
 
     const finalHomeDistrict = userDistrict || formFieldValues.homeDistrict || '3141';
 
-    setTimeout(() => {
+    try {
+      // 1. Submit to Forms API endpoint
+      await apiFetch(`/forms/${encodeURIComponent(activeFillingForm.id)}/submit`, {
+        method: 'POST',
+        body: {
+          applicantName: userName,
+          applicantEmail: userEmail,
+          applicantPhone: participant?.phone || '',
+          values: {
+            ...formFieldValues,
+            homeDistrict: finalHomeDistrict,
+          },
+        },
+      }).catch(() => undefined);
+
+      // 2. Also save to local storage fallback
       saveStoredSubmission({
         formId: activeFillingForm.id,
         formTitle: activeFillingForm.title,
@@ -159,31 +216,18 @@ export function RideParticipantDashboardPage() {
         },
       });
 
-      // Persist directly to PostgreSQL database via API
-      apiFetch('/public/ride/participants', {
-        method: 'POST',
-        body: {
-          fullName: formFieldValues.pocName || formFieldValues.drrName || userName,
-          email: formFieldValues.pocEmail || formFieldValues.drrEmail || userEmail,
-          phone: formFieldValues.pocPhone || formFieldValues.drrPhone || '+91 99999 99999',
-          homeDistrict: finalHomeDistrict,
-          homeClubName: formFieldValues.clubName || userClub || 'Rotaract Visiting Club',
-          cityState: 'Visiting District Delegation',
-          country: 'India',
-          edition: 'delhi_meri_jaan_2026',
-          arrivalMode: formFieldValues.modeOfArrival || 'Train/Flight',
-          allergiesNotes: JSON.stringify(formFieldValues),
-        },
-      }).catch(() => undefined);
-
       setAllSubmissions(getStoredSubmissions());
+      await qc.invalidateQueries({ queryKey: ['forms', 'dmj-active'] });
       setFormSubmitting(false);
       setSubmissionSuccess(true);
       setTimeout(() => {
         setActiveFillingForm(null);
         setSubmissionSuccess(false);
       }, 1500);
-    }, 600);
+    } catch {
+      setFormSubmitting(false);
+      setActiveFillingForm(null);
+    }
   };
 
   const handleCopyLink = (res: { id: string; driveUrl: string }) => {

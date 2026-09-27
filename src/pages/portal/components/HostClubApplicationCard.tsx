@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   Building2, Sparkles, CheckCircle2, ArrowRight, 
   ExternalLink, FileText, AlertCircle, Clock 
@@ -23,10 +23,24 @@ export function HostClubApplicationCard() {
   const { me } = useAuth();
   const user = me?.user;
   const userProfile = me?.profile;
+  const qc = useQueryClient();
 
   const [isOpen, setIsOpen] = useState(false);
   const [viewSubmittedModal, setViewSubmittedModal] = useState(false);
   const [submissions, setSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
+
+  // Live Forms API status
+  const { data: dashboardActiveForms = [] } = useQuery({
+    queryKey: ['forms', 'dashboard-active'],
+    queryFn: () => apiFetch<any[]>('/forms/dashboard-active'),
+  });
+
+  const canonicalForm = dashboardActiveForms.find(
+    (f: any) =>
+      f.slug === 'delhi-meri-jaan-host-club-application-2026' ||
+      f.title?.toLowerCase().includes('host club application'),
+  );
+  const serverSubmission = canonicalForm?.mySubmission;
 
   // Form states
   const [email, setEmail] = useState(user?.email || '');
@@ -56,7 +70,7 @@ export function HostClubApplicationCard() {
     return () => window.removeEventListener('ride_submissions_updated', handleSubmissionsUpdated);
   }, []);
 
-  // Check if current user or club has already submitted
+  // Check if current user or club has already submitted locally or on server
   const currentSubmission = submissions.find(
     (s) => s.formId === 'form-host-club-app' && (
       s.participantEmail.toLowerCase() === (user?.email || '').toLowerCase() ||
@@ -64,7 +78,20 @@ export function HostClubApplicationCard() {
     )
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const effectiveSubmission = serverSubmission
+    ? {
+        id: serverSubmission.id,
+        formId: serverSubmission.formId,
+        participantName: serverSubmission.applicantName || serverSubmission.values?.name || '',
+        participantEmail: serverSubmission.applicantEmail || serverSubmission.values?.email || '',
+        clubName: serverSubmission.clubName || serverSubmission.values?.clubName || '',
+        status: serverSubmission.status,
+        values: serverSubmission.values || {},
+        submittedAt: serverSubmission.submittedAt,
+      }
+    : currentSubmission;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -100,7 +127,36 @@ export function HostClubApplicationCard() {
 
     setSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const targetClubId = (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id;
+
+      // Submit to PostgreSQL database custom_form_submissions via Forms API
+      await apiFetch<any>('/forms/delhi-meri-jaan-host-club-application-2026/submit', {
+        method: 'POST',
+        body: {
+          applicantName: name.trim(),
+          applicantEmail: email.trim(),
+          applicantPhone: phone.trim(),
+          clubId: targetClubId,
+          clubName: clubName.trim(),
+          values: {
+            email: email.trim(),
+            name: name.trim(),
+            phone: phone.trim(),
+            position: position.trim(),
+            clubName: clubName.trim(),
+            parentRotaryClub: parentRotaryClub.trim(),
+            zone,
+            motivation: motivation.trim(),
+            pastHostingExperience: pastHostingExperience.trim(),
+            proposalDriveUrl: proposalDriveUrl.trim(),
+            capacityDelegates: 10,
+            homestayAvailable: true,
+          },
+        },
+      });
+
+      // Synchronize to fallback storage
       saveStoredSubmission({
         formId: 'form-host-club-app',
         formTitle: 'Delhi Meri Jaan - Rotaract Inter-District Exchange (RIDE) – Host Club Application',
@@ -125,45 +181,8 @@ export function HostClubApplicationCard() {
       });
 
       setSubmissions(getStoredSubmissions());
-
-      // Persist to PostgreSQL database custom_form_submissions via Forms API
-      apiFetch('/forms/delhi-meri-jaan-host-club-application-2026/submit', {
-        method: 'POST',
-        body: {
-          applicantName: name.trim(),
-          applicantEmail: email.trim(),
-          applicantPhone: phone.trim(),
-          clubId: (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id,
-          clubName: clubName.trim(),
-          values: {
-            email: email.trim(),
-            name: name.trim(),
-            phone: phone.trim(),
-            position: position.trim(),
-            clubName: clubName.trim(),
-            parentRotaryClub: parentRotaryClub.trim(),
-            zone,
-            motivation: motivation.trim(),
-            pastHostingExperience: pastHostingExperience.trim(),
-            proposalDriveUrl: proposalDriveUrl.trim(),
-          },
-        },
-      }).catch(() => undefined);
-
-      const targetClubId = (userProfile as any)?.clubId || (me as any)?.clubs?.[0]?.id;
-      if (targetClubId) {
-        apiFetch('/ride/support-clubs', {
-          method: 'POST',
-          body: {
-            clubId: targetClubId,
-            ryYear: 2026,
-            capacityDelegates: 10,
-            homestayAvailable: true,
-            contactPhone: phone.trim(),
-            notes: `Google Drive Proposal: ${proposalDriveUrl.trim()} | Position: ${position.trim()} | Zone: ${zone} | Motivation: ${motivation.trim()}`,
-          },
-        }).catch(() => undefined);
-      }
+      await qc.invalidateQueries({ queryKey: ['forms'] });
+      await qc.invalidateQueries({ queryKey: ['ride'] });
 
       setSubmitting(false);
       setSuccess(true);
@@ -171,7 +190,10 @@ export function HostClubApplicationCard() {
         setSuccess(false);
         setIsOpen(false);
       }, 2000);
-    }, 600);
+    } catch (err: any) {
+      setSubmitting(false);
+      setError(err?.message || 'Failed to submit application. Please try again.');
+    }
   };
 
   return (
@@ -189,13 +211,13 @@ export function HostClubApplicationCard() {
                 <Sparkles size={13} />
                 <span>Delhi Meri Jaan 2026</span>
               </span>
-              <Badge tone={currentSubmission ? 'blue' : 'amber'}>
-                {currentSubmission ? 'Application Registered' : 'Host Club Call Open'}
+              <Badge tone={effectiveSubmission ? (effectiveSubmission.status === 'approved' ? 'green' : 'blue') : 'amber'}>
+                {effectiveSubmission ? 'Application Registered' : 'Host Club Call Open'}
               </Badge>
-              {currentSubmission && (
+              {effectiveSubmission && (
                 <span className="text-xs font-bold text-neutral-600 flex items-center gap-1">
                   <Clock size={13} className="text-[#19539D]" />
-                  <span>Status: <strong className="capitalize text-[#19539D]">{currentSubmission.status.replace('_', ' ')}</strong></span>
+                  <span>Status: <strong className="capitalize text-[#19539D]">{effectiveSubmission.status.replace('_', ' ')}</strong></span>
                 </span>
               )}
             </div>
@@ -211,7 +233,7 @@ export function HostClubApplicationCard() {
           </div>
 
           <div className="shrink-0 flex items-center gap-3">
-            {currentSubmission ? (
+            {effectiveSubmission ? (
               <Button
                 variant="secondary"
                 size="md"
@@ -396,46 +418,46 @@ export function HostClubApplicationCard() {
         title="Your Submitted Host Club Application"
         size="md"
       >
-        {currentSubmission && (
+        {effectiveSubmission && (
           <div className="space-y-4 pt-2 text-xs">
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
               <div>
                 <div className="text-[10px] font-black uppercase text-blue-700">Application Status</div>
-                <div className="text-sm font-black capitalize text-blue-950">{currentSubmission.status.replace('_', ' ')}</div>
+                <div className="text-sm font-black capitalize text-blue-950">{effectiveSubmission.status.replace('_', ' ')}</div>
               </div>
-              <Badge tone={currentSubmission.status === 'approved' ? 'green' : 'blue'}>
-                {currentSubmission.status}
+              <Badge tone={effectiveSubmission.status === 'approved' ? 'green' : 'blue'}>
+                {effectiveSubmission.status}
               </Badge>
             </div>
 
             <div className="grid grid-cols-2 gap-3 border p-3 rounded-xl bg-neutral-50">
               <div>
                 <div className="text-[10px] font-bold text-neutral-500 uppercase">Club Name</div>
-                <div className="font-black text-neutral-900">{currentSubmission.clubName}</div>
+                <div className="font-black text-neutral-900">{effectiveSubmission.clubName}</div>
               </div>
               <div>
                 <div className="text-[10px] font-bold text-neutral-500 uppercase">Applicant</div>
-                <div className="font-black text-neutral-900">{currentSubmission.participantName} ({currentSubmission.values?.position})</div>
+                <div className="font-black text-neutral-900">{effectiveSubmission.participantName} ({effectiveSubmission.values?.position})</div>
               </div>
               <div>
                 <div className="text-[10px] font-bold text-neutral-500 uppercase">Contact</div>
-                <div className="font-mono">{currentSubmission.values?.phone} · {currentSubmission.participantEmail}</div>
+                <div className="font-mono">{effectiveSubmission.values?.phone} · {effectiveSubmission.participantEmail}</div>
               </div>
               <div>
                 <div className="text-[10px] font-bold text-neutral-500 uppercase">Zone & Parent Rotary</div>
-                <div className="font-semibold">{currentSubmission.values?.zone} · {currentSubmission.values?.parentRotaryClub}</div>
+                <div className="font-semibold">{effectiveSubmission.values?.zone} · {effectiveSubmission.values?.parentRotaryClub}</div>
               </div>
             </div>
 
             <div className="space-y-1">
               <div className="font-bold text-neutral-700">Why Selected:</div>
-              <p className="p-3 bg-neutral-50 rounded-xl border text-neutral-700">{currentSubmission.values?.motivation}</p>
+              <p className="p-3 bg-neutral-50 rounded-xl border text-neutral-700">{effectiveSubmission.values?.motivation}</p>
             </div>
 
-            {currentSubmission.values?.proposalDriveUrl && (
+            {effectiveSubmission.values?.proposalDriveUrl && (
               <div className="pt-2">
                 <a
-                  href={currentSubmission.values.proposalDriveUrl}
+                  href={effectiveSubmission.values.proposalDriveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-[#171515] bg-[#FBC02D] text-[#171515] font-black hover:bg-yellow-400 transition-all ride-pop-sm"
