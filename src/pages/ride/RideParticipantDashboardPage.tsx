@@ -1,22 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   CheckCircle2, Clock, AlertCircle, 
   ExternalLink, Copy, Check, 
   Smartphone, Monitor, LogOut, 
-  ShieldCheck, Sparkles
+  Sparkles
 } from 'lucide-react';
 import { useParticipantAuth } from '@/lib/ride/participantAuth';
-import { apiFetch } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { 
-  getStoredForms, getStoredSubmissions, saveStoredSubmission,
   getStoredResources, getStoredRideAnnouncements,
-  type FormDefinition, type FormSubmissionRecord,
   type StoredDriveResource, type StoredRideAnnouncement
 } from '@/lib/ride/formsStorage';
 import { 
@@ -25,12 +22,11 @@ import {
   type RideResource,
   type RideAnnouncement,
 } from '@/lib/ride/api';
-
-interface ExtendedFormDefinition extends FormDefinition {
-  category?: 'external_delegation' | 'internal_host_club';
-  hasSubmitted?: boolean;
-  mySubmission?: any;
-}
+import {
+  fetchParticipantActiveForms,
+  submitParticipantForm,
+  type RideParticipantActiveFormItem,
+} from '@/lib/ride/rideFormsApi';
 
 export function RideParticipantDashboardPage() {
   useDocumentMeta({ title: 'Participant Portal • Delhi Meri Jaan 2026' });
@@ -42,32 +38,24 @@ export function RideParticipantDashboardPage() {
   };
 
   const [activeTab, setActiveTab] = useState<'status' | 'forms' | 'resources' | 'inbox' | 'sessions'>('status');
-  const [allForms, setAllForms] = useState<FormDefinition[]>(() => getStoredForms());
-  const [allSubmissions, setAllSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
   const [localResources, setLocalResources] = useState<StoredDriveResource[]>(() => getStoredResources());
   const [localAnnouncements, setLocalAnnouncements] = useState<StoredRideAnnouncement[]>(() => getStoredRideAnnouncements());
   
   // Fill Form Modal State
-  const [activeFillingForm, setActiveFillingForm] = useState<ExtendedFormDefinition | FormDefinition | null>(null);
+  const [activeFillingForm, setActiveFillingForm] = useState<RideParticipantActiveFormItem | null>(null);
   const [formFieldValues, setFormFieldValues] = useState<Record<string, any>>({});
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [copiedResId, setCopiedResId] = useState<string | null>(null);
 
-  // Sync with storage updates
+  // Sync with storage updates for resources & announcements
   useEffect(() => {
-    const handleFormsUpdated = () => setAllForms(getStoredForms());
-    const handleSubmissionsUpdated = () => setAllSubmissions(getStoredSubmissions());
     const handleResourcesUpdated = () => setLocalResources(getStoredResources());
     const handleAnnouncementsUpdated = () => setLocalAnnouncements(getStoredRideAnnouncements());
 
-    window.addEventListener('ride_forms_updated', handleFormsUpdated);
-    window.addEventListener('ride_submissions_updated', handleSubmissionsUpdated);
     window.addEventListener('ride_resources_updated', handleResourcesUpdated);
     window.addEventListener('ride_announcements_updated', handleAnnouncementsUpdated);
     return () => {
-      window.removeEventListener('ride_forms_updated', handleFormsUpdated);
-      window.removeEventListener('ride_submissions_updated', handleSubmissionsUpdated);
       window.removeEventListener('ride_resources_updated', handleResourcesUpdated);
       window.removeEventListener('ride_announcements_updated', handleAnnouncementsUpdated);
     };
@@ -125,54 +113,40 @@ export function RideParticipantDashboardPage() {
 
   const qc = useQueryClient();
 
-  const { data: serverDmjForms = [] } = useQuery({
-    queryKey: ['forms', 'dmj-active'],
-    queryFn: async () => {
-      try {
-        const res = await apiFetch<any[]>('/forms/dmj-active');
-        return Array.isArray(res) ? res : [];
-      } catch {
-        return [];
-      }
-    },
+  // Fetch live active questionnaires assigned to this participant
+  const participantFormsQuery = useQuery({
+    queryKey: ['ride', 'participant-active-forms'],
+    queryFn: fetchParticipantActiveForms,
     refetchInterval: 15000,
   });
 
-  const dynamicDmjForms: ExtendedFormDefinition[] = (serverDmjForms as any[]).map((f: any) => ({
-    id: f.id,
-    slug: f.slug || f.id,
-    version: f.version || 1,
-    isPublic: true,
-    createdAt: f.createdAt || new Date().toISOString(),
-    title: f.title,
-    description: f.description || '',
-    category: 'external_delegation' as const,
-    isActive: f.status === 'published',
-    fields: Array.isArray(f.fields) ? f.fields : [],
-    hasSubmitted: f.hasSubmitted,
-    mySubmission: f.mySubmission,
-  }));
+  const participantActiveForms: RideParticipantActiveFormItem[] = useMemo(
+    () => participantFormsQuery.data ?? [],
+    [participantFormsQuery.data]
+  );
 
-  const serverMap = new Map(dynamicDmjForms.map((df) => [df.id, df]));
-  const localFiltered = allForms.filter((f) => f.id !== 'form-host-club-app' && !serverMap.has(f.id));
-  const participantForms: (FormDefinition | ExtendedFormDefinition)[] = [...dynamicDmjForms, ...localFiltered];
+  const pendingForms = useMemo(
+    () => participantActiveForms.filter((f) => !f.hasSubmitted),
+    [participantActiveForms]
+  );
 
-  const userSubmissions = allSubmissions.filter((s) => s.participantEmail.toLowerCase() === userEmail.toLowerCase());
-  const submittedFormIds = new Set([
-    ...userSubmissions.map((s) => s.formId),
-    ...dynamicDmjForms.filter((df) => df.hasSubmitted).map((df) => df.id),
-  ]);
-  const pendingForms = participantForms.filter((f) => f.isActive && !submittedFormIds.has(f.id));
-  const completedForms = participantForms.filter((f) => submittedFormIds.has(f.id));
+  const completedForms = useMemo(
+    () => participantActiveForms.filter((f) => f.hasSubmitted),
+    [participantActiveForms]
+  );
 
-  const handleOpenForm = (form: FormDefinition | ExtendedFormDefinition) => {
+  const handleOpenForm = (form: RideParticipantActiveFormItem) => {
     setActiveFillingForm(form);
-    const initial: Record<string, any> = {};
-    if (userDistrict) {
-      initial['homeDistrict'] = userDistrict;
-      initial['rotaryDistrict'] = userDistrict;
+    if (form.hasSubmitted && form.mySubmission?.values) {
+      setFormFieldValues({ ...form.mySubmission.values });
+    } else {
+      const initial: Record<string, any> = {};
+      if (userDistrict) {
+        initial['homeDistrict'] = userDistrict;
+        initial['rotaryDistrict'] = userDistrict;
+      }
+      setFormFieldValues(initial);
     }
-    setFormFieldValues(initial);
     setSubmissionSuccess(false);
   };
 
@@ -184,49 +158,24 @@ export function RideParticipantDashboardPage() {
     if (!activeFillingForm) return;
     setFormSubmitting(true);
 
-    const finalHomeDistrict = userDistrict || formFieldValues.homeDistrict || '3141';
+    const finalHomeDistrict = userDistrict || formFieldValues.homeDistrict || '3011';
 
     try {
-      // 1. Submit to Forms API endpoint
-      await apiFetch(`/forms/${encodeURIComponent(activeFillingForm.id)}/submit`, {
-        method: 'POST',
-        body: {
-          applicantName: userName,
-          applicantEmail: userEmail,
-          applicantPhone: participant?.phone || '',
-          values: {
-            ...formFieldValues,
-            homeDistrict: finalHomeDistrict,
-          },
-        },
-      }).catch(() => undefined);
-
-      // 2. Also save to local storage fallback
-      saveStoredSubmission({
-        formId: activeFillingForm.id,
-        formTitle: activeFillingForm.title,
-        category: 'external_delegation',
-        participantName: userName,
-        participantEmail: userEmail,
+      await submitParticipantForm(activeFillingForm.id, {
+        ...formFieldValues,
         homeDistrict: finalHomeDistrict,
-        status: 'submitted',
-        values: {
-          ...formFieldValues,
-          homeDistrict: finalHomeDistrict,
-        },
       });
 
-      setAllSubmissions(getStoredSubmissions());
-      await qc.invalidateQueries({ queryKey: ['forms', 'dmj-active'] });
+      await qc.invalidateQueries({ queryKey: ['ride', 'participant-active-forms'] });
       setFormSubmitting(false);
       setSubmissionSuccess(true);
       setTimeout(() => {
         setActiveFillingForm(null);
         setSubmissionSuccess(false);
       }, 1500);
-    } catch {
+    } catch (err: any) {
       setFormSubmitting(false);
-      setActiveFillingForm(null);
+      alert(err?.message || 'Submission failed. Please check required fields.');
     }
   };
 
@@ -238,7 +187,7 @@ export function RideParticipantDashboardPage() {
 
   // Dossier & Registration Verification States
   const hasSubmittedRegistration = 
-    userSubmissions.length > 0 || 
+    completedForms.length > 0 || 
     Boolean(participant?.formSubmissions && participant.formSubmissions.length > 0) || 
     Boolean(participant?.dossierData && Object.keys(participant.dossierData).length > 0);
 
@@ -623,7 +572,7 @@ export function RideParticipantDashboardPage() {
                   Forms Awaiting Your Completion
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {pendingForms.map((form) => (
+                  {pendingForms.map((form: RideParticipantActiveFormItem) => (
                     <Card
                       key={form.id}
                       rule="accent"
@@ -670,8 +619,8 @@ export function RideParticipantDashboardPage() {
                   Completed Questionnaires ({completedForms.length})
                 </h3>
                 <div className="space-y-2">
-                  {completedForms.map((form) => {
-                    const matchSub = userSubmissions.find((s) => s.formId === form.id);
+                  {completedForms.map((form: RideParticipantActiveFormItem) => {
+                    const matchSub = form.mySubmission;
                     return (
                       <div
                         key={form.id}
@@ -683,7 +632,7 @@ export function RideParticipantDashboardPage() {
                             <Badge tone="green">Submitted</Badge>
                           </div>
                           <div className="text-[11px] text-neutral-500 mt-0.5">
-                            {matchSub ? `Submitted on ${new Date(matchSub.submittedAt).toLocaleDateString('en-GB')}` : 'Recorded'}
+                            {matchSub?.createdAt ? `Submitted on ${new Date(matchSub.createdAt).toLocaleDateString('en-GB')}` : 'Recorded'}
                           </div>
                         </div>
 
@@ -909,17 +858,25 @@ export function RideParticipantDashboardPage() {
           title={`Intake Form • ${activeFillingForm.title}`}
           footer={
             <div className="flex items-center justify-end gap-2 w-full">
-              <Button variant="secondary" onClick={() => setActiveFillingForm(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                loading={formSubmitting}
-                disabled={formSubmitting}
-                onClick={handleSubmitForm}
-              >
-                Submit Form to RID 3011
-              </Button>
+              {activeFillingForm.hasSubmitted ? (
+                <Button variant="secondary" onClick={() => setActiveFillingForm(null)}>
+                  Close
+                </Button>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={() => setActiveFillingForm(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    loading={formSubmitting}
+                    disabled={formSubmitting}
+                    onClick={handleSubmitForm}
+                  >
+                    Submit Form to RID 3011
+                  </Button>
+                </>
+              )}
             </div>
           }
         >
@@ -928,10 +885,21 @@ export function RideParticipantDashboardPage() {
               <div className="p-6 text-center space-y-2 bg-green-50 rounded-2xl border-2 border-green-600">
                 <CheckCircle2 size={32} className="mx-auto text-green-700" />
                 <h4 className="text-sm font-black text-green-950 uppercase">Form Submitted Successfully!</h4>
-                <p className="text-xs text-green-800">Your answers have been securely routed back to the District 3011 Admin Portal.</p>
+                <p className="text-xs text-green-800">Your answers have been securely routed back to the District 3011 Organizing Committee.</p>
               </div>
             ) : (
               <>
+                {activeFillingForm.hasSubmitted && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                    <span>
+                      You completed this questionnaire on{' '}
+                      {new Date(activeFillingForm.mySubmission?.createdAt || Date.now()).toLocaleDateString('en-GB')}.
+                      Displaying your recorded answers below.
+                    </span>
+                  </div>
+                )}
+
                 <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200">
                   <h4 className="text-xs font-black text-[#171515]">{activeFillingForm.title}</h4>
                   <p className="text-[11px] text-neutral-600 mt-0.5">{activeFillingForm.description}</p>
@@ -941,7 +909,7 @@ export function RideParticipantDashboardPage() {
                   {activeFillingForm.fields.map((field) => (
                     <div key={field.id} className="space-y-1">
                       <label className="block text-xs font-black text-neutral-800">
-                        {field.label} {field.required && <span className="text-red-500">*</span>}
+                        {field.label} {field.required && !activeFillingForm.hasSubmitted && <span className="text-red-500">*</span>}
                       </label>
                       {field.helperText && (
                         <p className="text-[11px] text-neutral-500 font-medium leading-tight mb-1">{field.helperText}</p>
@@ -951,59 +919,115 @@ export function RideParticipantDashboardPage() {
                         <select
                           value={formFieldValues[field.name] || ''}
                           onChange={(e) => handleFieldChange(field.name, e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs bg-white font-medium"
+                          disabled={activeFillingForm.hasSubmitted}
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs bg-white font-medium disabled:bg-neutral-100"
                         >
                           <option value="">-- Choose an option --</option>
                           {(field.options || []).map((opt) => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
+                      ) : field.type === 'radio' ? (
+                        <div className="space-y-1.5 pt-1">
+                          {(field.options || ['Yes', 'No']).map((opt) => (
+                            <label key={opt} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={field.name}
+                                value={opt}
+                                checked={formFieldValues[field.name] === opt}
+                                onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                                disabled={activeFillingForm.hasSubmitted}
+                                className="text-[#19539D]"
+                              />
+                              <span>{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      ) : field.type === 'multiselect' ? (
+                        <div className="space-y-1.5 pt-1">
+                          {(field.options || []).map((opt) => {
+                            const current = Array.isArray(formFieldValues[field.name]) ? formFieldValues[field.name] : [];
+                            const isChecked = current.includes(opt);
+                            return (
+                              <label key={opt} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  disabled={activeFillingForm.hasSubmitted}
+                                  onChange={() => {
+                                    if (activeFillingForm.hasSubmitted) return;
+                                    const next = isChecked ? current.filter((x: string) => x !== opt) : [...current, opt];
+                                    handleFieldChange(field.name, next);
+                                  }}
+                                  className="text-[#19539D] rounded"
+                                />
+                                <span>{opt}</span>
+                              </label>
+                            );
+                          })}
+                        </div>
                       ) : field.type === 'textarea' ? (
                         <textarea
                           rows={3}
                           value={formFieldValues[field.name] || ''}
                           onChange={(e) => handleFieldChange(field.name, e.target.value)}
                           placeholder={field.placeholder}
-                          className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-sans"
+                          disabled={activeFillingForm.hasSubmitted}
+                          className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs font-sans disabled:bg-neutral-100"
                         />
                       ) : field.type === 'checkbox' ? (
                         <label className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer pt-1">
                           <input
                             type="checkbox"
                             checked={!!formFieldValues[field.name]}
+                            disabled={activeFillingForm.hasSubmitted}
                             onChange={(e) => handleFieldChange(field.name, e.target.checked)}
                             className="rounded text-[#19539D]"
                           />
                           <span>{field.placeholder || 'I acknowledge and agree'}</span>
                         </label>
+                      ) : field.type === 'link' || field.type === 'file' ? (
+                        <div className="space-y-1">
+                          <input
+                            type="url"
+                            value={formFieldValues[field.name] || ''}
+                            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                            disabled={activeFillingForm.hasSubmitted}
+                            placeholder={field.placeholder || 'https://drive.google.com/...'}
+                            className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs disabled:bg-neutral-100"
+                          />
+                          {formFieldValues[field.name] && typeof formFieldValues[field.name] === 'string' && formFieldValues[field.name].startsWith('http') && (
+                            <a
+                              href={formFieldValues[field.name]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-[#19539D] font-bold hover:underline"
+                            >
+                              <ExternalLink size={12} /> Test Link in New Tab
+                            </a>
+                          )}
+                        </div>
                       ) : (
                         <div>
                           <input
-                            type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'}
-                            value={
-                              field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))
-                                ? (userDistrict || formFieldValues[field.name] || '')
-                                : (formFieldValues[field.name] || '')
+                            type={
+                              field.type === 'date'
+                                ? 'date'
+                                : field.type === 'number'
+                                  ? 'number'
+                                  : field.type === 'email'
+                                    ? 'email'
+                                    : field.type === 'phone'
+                                      ? 'tel'
+                                      : 'text'
                             }
-                            onChange={(e) => {
-                              if (field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))) return;
-                              handleFieldChange(field.name, e.target.value);
-                            }}
-                            disabled={field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))}
-                            readOnly={field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))}
+                            value={formFieldValues[field.name] || ''}
+                            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                            disabled={activeFillingForm.hasSubmitted}
                             placeholder={field.placeholder}
-                            className={`w-full px-3 py-2 rounded-xl border text-xs ${
-                              field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation'))
-                                ? 'bg-neutral-100 border-neutral-300 text-neutral-600 font-bold cursor-not-allowed select-none'
-                                : 'border-neutral-300'
-                            }`}
+                            className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-xs disabled:bg-neutral-100"
                           />
-                          {field.name === 'homeDistrict' && (activeFillingForm.id === 'form-delegation-confirm' || activeFillingForm.slug?.includes('confirmation')) && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1 mt-1 font-semibold">
-                              <ShieldCheck size={13} className="shrink-0" />
-                              <span>Locked: Registered Rotary International District assignment</span>
-                            </div>
-                          )}
                         </div>
                       )}
                     </div>

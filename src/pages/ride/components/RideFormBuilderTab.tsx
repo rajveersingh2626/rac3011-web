@@ -1,860 +1,1148 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Building2, Users, Search, ExternalLink, 
-  CheckCircle2, Clock, Eye, Download, RefreshCw, 
-  FileSpreadsheet, Plus, Trash2, Layers, AlertCircle
+  Plus, Trash2, ArrowUp, ArrowDown, Save, Eye, 
+  Layers, Download, Search, ExternalLink, RefreshCw, FileText, Check
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
-import { Field } from '@/components/ui/Field';
-import { apiFetch } from '@/lib/api';
-import { 
-  getStoredSubmissions, 
-  updateStoredSubmissionStatus,
-  type FormSubmissionRecord 
-} from '@/lib/ride/formsStorage';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
+import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
+import {
+  fetchRideAdminForms,
+  createRideAdminForm,
+  updateRideAdminForm,
+  deleteRideAdminForm,
+  fetchRideFormSubmissions,
+  updateRideSubmissionStatus,
+  type RideFormItem,
+  type RideFormFieldDefinition,
+  type RideFormFieldType,
+  type RideFormSubmissionItem,
+} from '@/lib/ride/rideFormsApi';
+
+const FIELD_PALETTE: { type: RideFormFieldType; label: string; icon: string }[] = [
+  { type: 'text', label: 'Single Line Text', icon: 'Aa' },
+  { type: 'textarea', label: 'Paragraph Text', icon: '¶' },
+  { type: 'link', label: 'Google Drive / URL', icon: '🔗' },
+  { type: 'select', label: 'Dropdown Select', icon: '▾' },
+  { type: 'radio', label: 'Radio Options', icon: '◉' },
+  { type: 'multiselect', label: 'Multi-Select', icon: '☑' },
+  { type: 'email', label: 'Email Address', icon: '@' },
+  { type: 'phone', label: 'Phone Number', icon: '#' },
+  { type: 'number', label: 'Numeric Value', icon: '123' },
+  { type: 'date', label: 'Date Picker', icon: '📅' },
+  { type: 'checkbox', label: 'Checkbox / Consent', icon: '✓' },
+  { type: 'file', label: 'File Upload Link', icon: '📁' },
+];
+
+const TARGET_ROLE_OPTIONS = [
+  { value: 'all', label: 'All Registered Participants' },
+  { value: 'external', label: 'External District Delegates' },
+  { value: 'delhi_host', label: 'RID 3011 Host Members & Families' },
+];
 
 export function RideFormBuilderTab() {
   const qc = useQueryClient();
-  const [submissions, setSubmissions] = useState<FormSubmissionRecord[]>(() => getStoredSubmissions());
-  const [activeFormCategory, setActiveFormCategory] = useState<'internal_host_club' | 'external_delegation' | 'dmj_forms'>('internal_host_club');
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'submitted' | 'under_review' | 'approved' | 'declined'>('all');
-  const [filterTodayOnly, setFilterTodayOnly] = useState(false);
-  const [selectedSubmission, setSelectedSubmission] = useState<FormSubmissionRecord | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // New Intake Form Modal State
-  const [createFormOpen, setCreateFormOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState('');
-  const [newSlug, setNewSlug] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [creatingForm, setCreatingForm] = useState(false);
-  const [formCreateError, setFormCreateError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'builder' | 'responses'>('builder');
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // 1. Fetch live PostgreSQL host club submissions
-  const hostClubSubmissionsQuery = useQuery({
-    queryKey: ['forms', 'submissions', 'delhi-meri-jaan-host-club-application-2026'],
-    queryFn: async () => {
-      try {
-        const res = await apiFetch<any[]>('/forms/delhi-meri-jaan-host-club-application-2026/submissions');
-        return Array.isArray(res) ? res : [];
-      } catch {
-        return [];
-      }
-    },
-    refetchInterval: 20000,
+  // Forms query from backend
+  const formsQuery = useQuery({
+    queryKey: ['ride-admin-forms'],
+    queryFn: fetchRideAdminForms,
+    refetchInterval: 15000,
   });
 
-  // 2. Fetch all published/draft CustomForms
-  const allFormsQuery = useQuery({
-    queryKey: ['forms', 'list'],
-    queryFn: async () => {
-      try {
-        const res = await apiFetch<any[]>('/forms');
-        return Array.isArray(res) ? res : [];
-      } catch {
-        return [];
+  const forms: RideFormItem[] = useMemo(() => formsQuery.data ?? [], [formsQuery.data]);
+
+  // ==========================================
+  // TAB 1: FORM BUILDER STATE
+  // ==========================================
+  const [editingFormId, setEditingFormId] = useState<string | 'new'>('new');
+  const [formTitle, setFormTitle] = useState('');
+  const [formSlug, setFormSlug] = useState('');
+  const [formDescription, setFormDescription] = useState('');
+  const [formCategory, setFormCategory] = useState('Delegate Intake');
+  const [formStatus, setFormStatus] = useState<'draft' | 'published' | 'archived'>('published');
+  const [formTargetRoles, setFormTargetRoles] = useState<string[]>(['all']);
+  const [formFields, setFormFields] = useState<RideFormFieldDefinition[]>([
+    { id: 'f1', name: 'tShirtSize', label: 'T-Shirt Size', type: 'select', required: true, options: ['S', 'M', 'L', 'XL', 'XXL'] },
+    { id: 'f2', name: 'flightTicketLink', label: 'Travel Ticket / Flight PDF (Google Drive Link)', type: 'link', required: true, placeholder: 'https://drive.google.com/...' },
+  ]);
+
+  const handleSelectFormToEdit = (f: RideFormItem) => {
+    setEditingFormId(f.id);
+    setFormTitle(f.title);
+    setFormSlug(f.slug);
+    setFormDescription(f.description || '');
+    setFormCategory(f.category || 'Delegate Intake');
+    setFormStatus(f.status || 'published');
+    setFormTargetRoles(Array.isArray(f.targetRoles) && f.targetRoles.length > 0 ? f.targetRoles : ['all']);
+    setFormFields(Array.isArray(f.fields) && f.fields.length > 0 ? f.fields : []);
+  };
+
+  const handleResetFormBuilder = () => {
+    setEditingFormId('new');
+    setFormTitle('');
+    setFormSlug('');
+    setFormDescription('');
+    setFormCategory('Delegate Intake');
+    setFormStatus('published');
+    setFormTargetRoles(['all']);
+    setFormFields([
+      { id: `f_${Date.now()}_1`, name: 'dietaryRequirements', label: 'Special Dietary Requirements', type: 'text', required: false, placeholder: 'e.g. Jain / Vegan / Nut allergy' },
+      { id: `f_${Date.now()}_2`, name: 'emergencyProof', label: 'Emergency Identity / Insurance Document Link', type: 'link', required: false, placeholder: 'https://drive.google.com/...' },
+    ]);
+  };
+
+  const handleAddField = (type: RideFormFieldType) => {
+    const id = `f_${Date.now()}`;
+    const fieldIndex = formFields.length + 1;
+    const newField: RideFormFieldDefinition = {
+      id,
+      name: `field_${fieldIndex}`,
+      label: type === 'link' 
+        ? 'Document / Proposal Link' 
+        : type === 'textarea' 
+          ? 'Detailed Statement' 
+          : type === 'date'
+            ? 'Date Selection'
+            : 'New Question',
+      type,
+      required: false,
+      placeholder: type === 'link' ? 'https://drive.google.com/...' : 'Enter response...',
+      helperText: type === 'link' ? 'Ensure link sharing is set to Anyone with link can view' : '',
+      options: ['select', 'radio', 'multiselect'].includes(type) ? ['Option 1', 'Option 2', 'Option 3'] : undefined,
+    };
+    setFormFields((prev) => [...prev, newField]);
+  };
+
+  const handleRemoveField = (id: string) => {
+    setFormFields((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleMoveField = (index: number, direction: 'up' | 'down') => {
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === formFields.length - 1)) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const updated = [...formFields];
+    const [moved] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, moved);
+    setFormFields(updated);
+  };
+
+  const handleUpdateFieldProp = (id: string, prop: keyof RideFormFieldDefinition, value: any) => {
+    setFormFields((prev) =>
+      prev.map((f) => (f.id === id ? { ...f, [prop]: value } : f))
+    );
+  };
+
+  const handleUpdateFieldOptions = (id: string, rawOptions: string) => {
+    const opts = rawOptions.split(',').map((o) => o.trim()).filter(Boolean);
+    handleUpdateFieldProp(id, 'options', opts);
+  };
+
+  // Create or Update Form Mutation
+  const saveFormMutation = useMutation({
+    mutationFn: async () => {
+      const slugVal = formSlug.trim() || formTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const payload = {
+        title: formTitle.trim(),
+        slug: slugVal,
+        description: formDescription.trim() || undefined,
+        category: formCategory.trim() || 'Delegate Intake',
+        status: formStatus,
+        targetRoles: formTargetRoles,
+        fields: formFields,
+        isActive: formStatus === 'published',
+        isPublic: true,
+      };
+
+      if (editingFormId === 'new') {
+        return createRideAdminForm(payload);
+      } else {
+        return updateRideAdminForm(editingFormId, payload);
       }
     },
-    refetchInterval: 20000,
+    onSuccess: (data) => {
+      toast({
+        title: editingFormId === 'new' ? 'Form Published' : 'Form Updated',
+        body: `Successfully saved "${data.title}" with ${data.fields.length} dynamic questions.`,
+        tone: 'success',
+      });
+      qc.invalidateQueries({ queryKey: ['ride-admin-forms'] });
+      setEditingFormId(data.id);
+    },
+    onError: (err: any) => {
+      toast({
+        title: 'Form Save Failed',
+        body: err?.message || 'Could not save form configuration.',
+        tone: 'error',
+      });
+    },
   });
+
+  // Delete Form Mutation
+  const deleteFormMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!window.confirm('Are you sure you want to delete this form? All participant submissions for this form will also be permanently deleted.')) {
+        throw new Error('Cancelled');
+      }
+      return deleteRideAdminForm(id);
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Form Deleted',
+        body: 'The form and all its submissions have been removed.',
+        tone: 'info',
+      });
+      qc.invalidateQueries({ queryKey: ['ride-admin-forms'] });
+      handleResetFormBuilder();
+    },
+    onError: (err: any) => {
+      if (err?.message !== 'Cancelled') {
+        toast({
+          title: 'Delete Failed',
+          body: err?.message || 'Failed to delete form.',
+          tone: 'error',
+        });
+      }
+    },
+  });
+
+  // ==========================================
+  // TAB 2: RESPONSES & DOSSIER REVIEW STATE
+  // ==========================================
+  const [selectedResponseFormId, setSelectedResponseFormId] = useState<string>('');
+  const [responseStatusFilter, setResponseStatusFilter] = useState<string>('all');
+  const [searchResponses, setSearchResponses] = useState('');
+  const [selectedSubmission, setSelectedSubmission] = useState<RideFormSubmissionItem | null>(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [reviewStatus, setReviewStatus] = useState<'submitted' | 'under_review' | 'approved' | 'declined'>('under_review');
 
   useEffect(() => {
-    const handleSubmissionsUpdated = () => setSubmissions(getStoredSubmissions());
-    window.addEventListener('ride_submissions_updated', handleSubmissionsUpdated);
-    return () => window.removeEventListener('ride_submissions_updated', handleSubmissionsUpdated);
-  }, []);
+    if (forms.length > 0 && !selectedResponseFormId) {
+      setSelectedResponseFormId(forms[0].id);
+    }
+  }, [forms, selectedResponseFormId]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
+  const submissionsQuery = useQuery({
+    queryKey: ['ride-form-submissions', selectedResponseFormId, responseStatusFilter],
+    queryFn: () => {
+      if (!selectedResponseFormId) return Promise.resolve([]);
+      return fetchRideFormSubmissions(selectedResponseFormId, responseStatusFilter);
+    },
+    enabled: Boolean(selectedResponseFormId),
+    refetchInterval: 15000,
+  });
 
-  // Map server submissions to FormSubmissionRecord
-  const serverHostClubSubs: FormSubmissionRecord[] = useMemo(() => {
-    const raw = hostClubSubmissionsQuery.data || [];
-    return raw.map((s: any) => ({
-      id: s.id,
-      formId: s.formId || 'delhi-meri-jaan-host-club-application-2026',
-      formTitle: 'Delhi Meri Jaan - Rotaract Inter-District Exchange (RIDE) – Host Club Application',
-      category: 'internal_host_club',
-      participantName: s.applicantName || s.values?.name || 'Applicant',
-      participantEmail: s.applicantEmail || s.values?.email || '',
-      homeDistrict: '3011',
-      clubName: s.clubName || s.values?.clubName || 'RID 3011 Club',
-      status: s.status,
-      values: s.values || {},
-      submittedAt: s.submittedAt ? new Date(s.submittedAt).toISOString() : new Date().toISOString(),
-    }));
-  }, [hostClubSubmissionsQuery.data]);
+  const submissions: RideFormSubmissionItem[] = useMemo(
+    () => submissionsQuery.data ?? [],
+    [submissionsQuery.data]
+  );
 
-  // Merge server and fallback submissions
-  const combinedSubmissions = useMemo(() => {
-    const serverMap = new Map(serverHostClubSubs.map((s) => [s.id, s]));
-    const localFiltered = submissions.filter((ls) => !serverMap.has(ls.id));
-    return [...serverHostClubSubs, ...localFiltered];
-  }, [serverHostClubSubs, submissions]);
-
-  // Internal Host Club Applications
-  const hostClubSubmissions = useMemo(() => {
-    return combinedSubmissions.filter((s) => s.formId === 'form-host-club-app' || s.category === 'internal_host_club' || s.formId === 'delhi-meri-jaan-host-club-application-2026');
-  }, [combinedSubmissions]);
-
-  // External Delegation Confirmations
-  const delegationSubmissions = useMemo(() => {
-    return combinedSubmissions.filter((s) => s.formId === 'form-delegation-confirm' || s.category === 'external_delegation');
-  }, [combinedSubmissions]);
-
-  // Compute pending applications for Needs Attention Queue
-  const pendingHostClubCount = useMemo(() => {
-    return hostClubSubmissions.filter((s) => s.status === 'submitted' || s.status === 'under_review').length;
-  }, [hostClubSubmissions]);
-
-  // Count submissions received today
-  const todayCount = useMemo(() => {
-    const todayStr = new Date().toDateString();
-    return combinedSubmissions.filter((s) => {
-      try {
-        return new Date(s.submittedAt).toDateString() === todayStr;
-      } catch {
-        return false;
-      }
-    }).length;
-  }, [combinedSubmissions]);
-
-  // Current active list
-  const activeList = activeFormCategory === 'internal_host_club' ? hostClubSubmissions : delegationSubmissions;
-
-  const filteredList = useMemo(() => {
-    return activeList.filter((s) => {
-      if (statusFilter !== 'all' && s.status !== statusFilter) return false;
-      if (filterTodayOnly) {
-        try {
-          if (new Date(s.submittedAt).toDateString() !== new Date().toDateString()) return false;
-        } catch {
-          return false;
-        }
-      }
-      if (!search.trim()) return true;
-      const q = search.toLowerCase();
+  const filteredSubmissions = useMemo(() => {
+    if (!searchResponses.trim()) return submissions;
+    const q = searchResponses.toLowerCase();
+    return submissions.filter((s) => {
       return (
-        (s.participantName?.toLowerCase() ?? '').includes(q) ||
-        (s.participantEmail?.toLowerCase() ?? '').includes(q) ||
-        (s.clubName && s.clubName.toLowerCase().includes(q)) ||
-        (s.homeDistrict && s.homeDistrict.toLowerCase().includes(q)) ||
-        (s.values?.drrName && String(s.values.drrName).toLowerCase().includes(q)) ||
-        (s.values?.pocName && String(s.values.pocName).toLowerCase().includes(q))
+        s.participant.fullName.toLowerCase().includes(q) ||
+        s.participant.email.toLowerCase().includes(q) ||
+        s.participant.phone.toLowerCase().includes(q) ||
+        s.participant.homeDistrict.toLowerCase().includes(q) ||
+        s.participant.homeClubName.toLowerCase().includes(q)
       );
     });
-  }, [activeList, statusFilter, filterTodayOnly, search]);
+  }, [submissions, searchResponses]);
 
-  const handleUpdateStatus = async (
-    id: string,
-    status: 'submitted' | 'under_review' | 'approved' | 'declined',
-    label: string,
-  ) => {
-    // 1. Update fallback storage
-    updateStoredSubmissionStatus(id, status);
-    setSubmissions(getStoredSubmissions());
-    if (selectedSubmission && selectedSubmission.id === id) {
-      setSelectedSubmission({ ...selectedSubmission, status });
-    }
+  const activeFormObj = useMemo(
+    () => forms.find((f) => f.id === selectedResponseFormId) || null,
+    [forms, selectedResponseFormId]
+  );
 
-    // 2. Call backend Forms API
-    try {
-      await apiFetch(`/forms/delhi-meri-jaan-host-club-application-2026/submissions/${encodeURIComponent(id)}/status`, {
-        method: 'PATCH',
-        body: { status },
-      });
-      await qc.invalidateQueries({ queryKey: ['forms'] });
-      await qc.invalidateQueries({ queryKey: ['ride', 'admin', 'approved-hosts'] });
-      await qc.invalidateQueries({ queryKey: ['ride', 'admin', 'delegations'] });
-      showToast(`Application successfully marked as "${label}" and synchronized to Host Allocation.`);
-    } catch {
-      showToast(`Application marked as "${label}" (saved locally).`);
-    }
+  const handleOpenSubmission = (sub: RideFormSubmissionItem) => {
+    setSelectedSubmission(sub);
+    setReviewStatus(sub.status);
+    setReviewNotes(sub.reviewNotes || '');
   };
 
-  const handleExportCSV = () => {
-    if (filteredList.length === 0) return;
-    const headers = Object.keys(filteredList[0].values || {}).concat(['Applicant', 'Email', 'District', 'Club', 'Status', 'SubmittedAt']);
-    const rows = filteredList.map((item) => {
-      const vals = Object.values(item.values || {}).map((v) => `"${String(v).replace(/"/g, '""')}"`);
-      return [...vals, `"${item.participantName}"`, `"${item.participantEmail}"`, `"${item.homeDistrict}"`, `"${item.clubName || ''}"`, `"${item.status}"`, `"${item.submittedAt}"`].join(',');
+  const updateStatusMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedSubmission || !selectedResponseFormId) return;
+      return updateRideSubmissionStatus(
+        selectedResponseFormId,
+        selectedSubmission.id,
+        reviewStatus,
+        reviewNotes.trim() || undefined
+      );
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Dossier Updated',
+        body: `Submission status successfully updated to ${reviewStatus.toUpperCase()}.`,
+        tone: 'success',
+      });
+      qc.invalidateQueries({ queryKey: ['ride-form-submissions'] });
+      setSelectedSubmission(null);
+    },
+    onError: (err: any) => {
+      toast({
+        title: 'Status Update Failed',
+        body: err?.message || 'Could not update submission status.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const exportSubmissionsCsv = () => {
+    if (!activeFormObj || filteredSubmissions.length === 0) {
+      toast({ title: 'Export Empty', body: 'No submissions available to export.', tone: 'info' });
+      return;
+    }
+
+    const fieldCols = activeFormObj.fields.map((f) => f.name);
+    const fieldHeaders = activeFormObj.fields.map((f) => `"${f.label.replace(/"/g, '""')}"`);
+
+    const headers = [
+      'Submission ID',
+      'Delegate Name',
+      'Email',
+      'Phone',
+      'Home District',
+      'Home Club',
+      'Review Status',
+      'Review Notes',
+      'Submitted At',
+      ...fieldHeaders,
+    ];
+
+    const rows = filteredSubmissions.map((s) => {
+      const vals = s.values || {};
+      const answerCols = fieldCols.map((col) => {
+        const raw = vals[col];
+        const str = raw === undefined || raw === null ? '' : typeof raw === 'object' ? JSON.stringify(raw) : String(raw);
+        return `"${str.replace(/"/g, '""')}"`;
+      });
+
+      return [
+        `"${s.id}"`,
+        `"${s.participant.fullName.replace(/"/g, '""')}"`,
+        `"${s.participant.email}"`,
+        `"${s.participant.phone}"`,
+        `"${s.participant.homeDistrict}"`,
+        `"${s.participant.homeClubName.replace(/"/g, '""')}"`,
+        `"${s.status}"`,
+        `"${(s.reviewNotes || '').replace(/"/g, '""')}"`,
+        `"${new Date(s.createdAt).toISOString()}"`,
+        ...answerCols,
+      ].join(',');
     });
+
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${activeFormCategory}_submissions_${Date.now()}.csv`);
+    link.setAttribute('download', `${activeFormObj.slug}_submissions_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const handleCreateForm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormCreateError(null);
-    if (!newTitle.trim() || !newSlug.trim()) {
-      setFormCreateError('Please provide a form title and URL slug.');
-      return;
-    }
-    setCreatingForm(true);
-    try {
-      await apiFetch('/forms', {
-        method: 'POST',
-        body: {
-          title: newTitle.trim(),
-          slug: newSlug.trim().toLowerCase().replace(/\s+/g, '-'),
-          description: newDesc.trim() || null,
-          category: 'DMJ Intake',
-          status: 'published',
-          accessMode: 'all',
-          targetSurface: 'dmj',
-          fields: [
-            { id: 'f1', name: 'arrivalDateTime', label: 'Arrival Date & Time', type: 'datetime', required: true },
-            { id: 'f2', name: 'arrivalMode', label: 'Mode of Travel', type: 'select', required: true, options: ['Flight', 'Train', 'Bus', 'Personal Car'] },
-            { id: 'f3', name: 'flightTrainNumber', label: 'Flight / Train Number', type: 'text', required: true },
-            { id: 'f4', name: 'dietaryRestrictions', label: 'Dietary Preferences & Allergies', type: 'textarea', required: false },
-          ],
-        },
-      });
-      await qc.invalidateQueries({ queryKey: ['forms'] });
-      setCreatingForm(false);
-      setCreateFormOpen(false);
-      setNewTitle('');
-      setNewSlug('');
-      setNewDesc('');
-      showToast('Participant intake questionnaire created successfully.');
-    } catch (err: any) {
-      setCreatingForm(false);
-      setFormCreateError(err?.message || 'Failed to create form.');
-    }
-  };
-
-  const handleDeleteForm = async (form: any) => {
-    if (window.confirm(`Are you sure you want to delete form "${form.title}"? All submissions associated with this form will also be cleanly removed.`)) {
-      try {
-        await apiFetch(`/forms/${encodeURIComponent(form.id)}`, { method: 'DELETE' });
-        await qc.invalidateQueries({ queryKey: ['forms'] });
-        showToast(`Form "${form.title}" removed.`);
-      } catch (err: any) {
-        alert(err?.message || 'Failed to delete form.');
-      }
-    }
-  };
-
-  const dmjForms = (allFormsQuery.data || []).filter(
-    (f: any) => f.targetSurface === 'dmj' || f.category === 'DMJ Intake'
-  );
-
   return (
     <div className="space-y-6">
-      {/* Top Header & Overview */}
-      <div className="p-6 rounded-3xl border-2 border-[#171515] bg-[#FFFDF7] ride-pop-sm flex flex-wrap items-center justify-between gap-4">
+      {/* Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white border-2 border-[#171515] ride-pop">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-[#19539D] text-white">
-              <Building2 size={20} />
-            </span>
-            <h2 className="text-xl font-black text-[#171515] uppercase tracking-wide">
-              Delhi Meri Jaan • Submissions & Applications Aggregator
+            <h2 className="text-xl font-black text-[#171515] uppercase tracking-tight">
+              DMJ Custom Intake Form Manager
             </h2>
+            <Badge tone="blue">RIDE Ecosystem</Badge>
           </div>
-          <p className="text-xs text-neutral-600 mt-1 max-w-3xl font-medium">
-            Unified administrative data pipeline aggregating submissions from the external visiting districts Confirmation Form and internal RID 3011 Host Club Applications.
+          <p className="text-xs text-neutral-600 mt-1 font-medium">
+            Architect custom dynamic registration questionnaires for Delhi Meri Jaan delegates and inspect submissions in real-time.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => {
-              void hostClubSubmissionsQuery.refetch();
-              void allFormsQuery.refetch();
-              setSubmissions(getStoredSubmissions());
-            }}
-            leading={<RefreshCw size={14} className={hostClubSubmissionsQuery.isFetching ? 'animate-spin' : ''} />}
+        {/* Tab Navigation */}
+        <div className="flex items-center gap-2 bg-[#F5F2EB] p-1.5 rounded-2xl border border-neutral-300">
+          <button
+            type="button"
+            onClick={() => setActiveTab('builder')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === 'builder'
+                ? 'bg-[#19539D] text-white ride-pop-sm'
+                : 'text-neutral-700 hover:text-black'
+            }`}
           >
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={handleExportCSV}
-            leading={<Download size={14} />}
-            disabled={activeFormCategory === 'dmj_forms' || filteredList.length === 0}
+            <Layers size={14} /> Form Architect
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('responses')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              activeTab === 'responses'
+                ? 'bg-[#19539D] text-white ride-pop-sm'
+                : 'text-neutral-700 hover:text-black'
+            }`}
           >
-            Export CSV
-          </Button>
+            <FileText size={14} /> Submissions Dossier
+          </button>
         </div>
       </div>
 
-      {toastMessage && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border-2 border-emerald-600 text-emerald-950 text-xs font-bold flex items-center gap-2 ride-pop-sm">
-          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* "NEEDS ATTENTION" APPLICATION TRIAGE QUEUE BANNER */}
-      {pendingHostClubCount > 0 && (
-        <div className="p-5 rounded-2xl border-2 border-[#171515] bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50/50 ride-pop-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-[#EA6623] border-2 border-[#171515] flex items-center justify-center text-white ride-pop-sm shrink-0">
-              <Clock size={24} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-black uppercase text-[#171515]">
-                  Needs Attention • Internal Host Club Applications Queue
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-[#C72425] text-white text-[10px] font-black">
-                  {pendingHostClubCount} Pending Review
-                </span>
-              </div>
-              <p className="text-xs text-neutral-600 mt-0.5 font-medium">
-                RID 3011 Club Presidents & Secretaries have submitted applications and proposals to host incoming national delegates. Review their Google Drive proposals and assign hosting status below.
-              </p>
-            </div>
-          </div>
-
-          <div className="shrink-0">
-            <button
-              type="button"
-              onClick={() => {
-                setActiveFormCategory('internal_host_club');
-                setStatusFilter('submitted');
-                setFilterTodayOnly(false);
-              }}
-              className="px-4 py-2 rounded-xl border-2 border-[#171515] bg-[#FBC02D] text-[#171515] text-xs font-black uppercase tracking-wider ride-pop-sm hover:bg-yellow-400 transition-all cursor-pointer"
+      {/* ========================================== */}
+      {/* TAB 1: FORM BUILDER CANVAS                 */}
+      {/* ========================================== */}
+      {activeTab === 'builder' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column: Form Selector & Form Metadata */}
+          <div className="lg:col-span-1 space-y-6">
+            <Card
+              title="Forms Registry"
+              eyebrow="DMJ Questionnaires"
+              className="border-2 border-[#171515] ride-pop-sm bg-white"
             >
-              Filter Needs Attention ({pendingHostClubCount})
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Section Navigation Switcher */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-neutral-200 pb-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveFormCategory('internal_host_club');
-              setStatusFilter('all');
-              setFilterTodayOnly(false);
-            }}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
-              activeFormCategory === 'internal_host_club'
-                ? 'bg-[#19539D] text-white ride-pop-sm border-2 border-[#171515]'
-                : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-300'
-            }`}
-          >
-            <Building2 size={16} />
-            <span>RID 3011 Host Club Applications</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeFormCategory === 'internal_host_club' ? 'bg-[#FBC02D] text-[#171515]' : 'bg-neutral-200 text-neutral-800'
-            }`}>
-              {hostClubSubmissions.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveFormCategory('external_delegation');
-              setStatusFilter('all');
-              setFilterTodayOnly(false);
-            }}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
-              activeFormCategory === 'external_delegation'
-                ? 'bg-[#19539D] text-white ride-pop-sm border-2 border-[#171515]'
-                : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-300'
-            }`}
-          >
-            <Users size={16} />
-            <span>Outside District Confirmations</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeFormCategory === 'external_delegation' ? 'bg-[#FBC02D] text-[#171515]' : 'bg-neutral-200 text-neutral-800'
-            }`}>
-              {delegationSubmissions.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveFormCategory('dmj_forms');
-            }}
-            className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
-              activeFormCategory === 'dmj_forms'
-                ? 'bg-[#19539D] text-white ride-pop-sm border-2 border-[#171515]'
-                : 'bg-white text-neutral-700 hover:bg-neutral-100 border border-neutral-300'
-            }`}
-          >
-            <Layers size={16} />
-            <span>DMJ Participant Forms Manager</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-              activeFormCategory === 'dmj_forms' ? 'bg-[#FBC02D] text-[#171515]' : 'bg-neutral-200 text-neutral-800'
-            }`}>
-              {dmjForms.length}
-            </span>
-          </button>
-        </div>
-
-        {/* Search & Status Filter (Submissions View) */}
-        {activeFormCategory !== 'dmj_forms' && (
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by club, name, district..."
-                className="pl-8 pr-3 py-1.5 rounded-xl border border-neutral-300 text-xs w-52 sm:w-64 focus:outline-none focus:ring-2 focus:ring-[#19539D]"
-              />
-            </div>
-
-            {/* Today's Submissions Toggle */}
-            <button
-              type="button"
-              onClick={() => setFilterTodayOnly(!filterTodayOnly)}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                filterTodayOnly
-                  ? 'bg-[#EA6623] text-white shadow-xs'
-                  : 'bg-orange-50 text-orange-900 border border-orange-200 hover:bg-orange-100'
-              }`}
-            >
-              <Clock size={12} />
-              <span>Today ({todayCount})</span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              {(['all', 'submitted', 'under_review', 'approved', 'declined'] as const).map((st) => (
+              <div className="space-y-2 mb-4">
                 <button
-                  key={st}
                   type="button"
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer capitalize ${
-                    statusFilter === st
-                      ? 'bg-[#171515] text-white'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  onClick={handleResetFormBuilder}
+                  className={`w-full text-left p-3 rounded-2xl border-2 text-xs font-black transition-all flex items-center justify-between ${
+                    editingFormId === 'new'
+                      ? 'border-[#19539D] bg-blue-50/70 text-[#19539D]'
+                      : 'border-dashed border-neutral-300 hover:border-neutral-400 text-neutral-700'
                   }`}
                 >
-                  {st === 'all' ? 'All' : st.replace('_', ' ')}
+                  <span className="flex items-center gap-2">
+                    <Plus size={14} /> Create New Intake Form
+                  </span>
+                  <Badge tone="amber">New</Badge>
                 </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* CATEGORY 3: DMJ PARTICIPANT FORMS MANAGER */}
-      {activeFormCategory === 'dmj_forms' ? (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-black uppercase text-[#171515]">Participant Intake Questionnaires</h3>
-              <p className="text-xs text-neutral-500 font-medium">Forms published here are automatically displayed on the DMJ Participant Portal under the "Pending Forms" tab.</p>
-            </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setCreateFormOpen(true)}
-              leading={<Plus size={15} />}
-              className="bg-[#19539D] text-white font-black"
-            >
-              Create New Intake Form
-            </Button>
-          </div>
-
-          {dmjForms.length === 0 ? (
-            <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm p-8 text-center space-y-2">
-              <Layers size={36} className="mx-auto text-neutral-400" />
-              <p className="text-sm font-black text-[#171515]">No Custom Intake Forms Yet</p>
-              <p className="text-xs text-neutral-500 max-w-md mx-auto">Create supplemental participant questionnaires for travel itinerary, dietary requirements, or emergency waivers.</p>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {dmjForms.map((form: any) => (
-                <div
-                  key={form.id}
-                  className="p-5 rounded-2xl border-2 border-[#171515] bg-white ride-pop-sm flex flex-col justify-between space-y-4"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <Badge tone={form.status === 'published' ? 'green' : 'neutral'}>
-                        {form.status}
-                      </Badge>
-                      <span className="text-[10px] font-mono text-neutral-400">/{form.slug}</span>
+                <div className="divide-y divide-neutral-200 border-2 border-neutral-200 rounded-2xl overflow-hidden bg-[#FAF8F5] max-h-64 overflow-y-auto">
+                  {forms.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-neutral-500 font-medium">
+                      No custom forms found. Click above to create the first questionnaire!
                     </div>
-                    <h4 className="text-sm font-black text-[#171515] mt-2">{form.title}</h4>
-                    {form.description && (
-                      <p className="text-xs text-neutral-600 mt-1 line-clamp-2">{form.description}</p>
-                    )}
-                    <div className="text-[11px] text-neutral-500 mt-3 font-medium">
-                      Submissions: <strong>{form.submissionCount ?? 0}</strong> responses
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                    <span className="text-[10px] text-neutral-400">Surface: Participant Portal</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteForm(form)}
-                      className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
-                      title="Delete Form"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        /* SUBMISSIONS LISTING CARD */
-        <Card rule="accent" padding="compact" className="border-2 border-[#171515] ride-pop-sm overflow-hidden">
-          {filteredList.length === 0 ? (
-            <div className="p-12 text-center space-y-3">
-              <FileSpreadsheet className="mx-auto text-neutral-400" size={40} />
-              <h3 className="text-sm font-black text-[#171515]">No submissions found</h3>
-              <p className="text-xs text-neutral-500 max-w-md mx-auto">
-                No applications match your active search or status filter. Once submitted via the participant or main portal, they will appear here in real time.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-neutral-200 bg-[#FDFBF7] text-[11px] font-black uppercase tracking-wider text-neutral-600">
-                    <th className="p-3.5">
-                      {activeFormCategory === 'internal_host_club' ? 'Club & Zone' : 'District & Country'}
-                    </th>
-                    <th className="p-3.5">
-                      {activeFormCategory === 'internal_host_club' ? 'Lead Applicant & Position' : 'DRR & Contact'}
-                    </th>
-                    <th className="p-3.5">
-                      {activeFormCategory === 'internal_host_club' ? 'Club Proposal' : 'Liaison POC'}
-                    </th>
-                    <th className="p-3.5">Status</th>
-                    <th className="p-3.5">Submitted</th>
-                    <th className="p-3.5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100 text-xs">
-                  {filteredList.map((item) => (
-                    <tr key={item.id} className="hover:bg-neutral-50/80 transition-colors">
-                      {/* Column 1: Identity */}
-                      <td className="p-3.5">
-                        {activeFormCategory === 'internal_host_club' ? (
-                          <div>
-                            <div className="font-black text-[#171515]">{item.clubName || 'RID 3011 Club'}</div>
-                            <div className="text-[10px] text-neutral-500 font-semibold mt-0.5">
-                              {item.values?.zone || 'Zone Prithvi'} · Parent: {item.values?.parentRotaryClub || 'NA'}
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="font-black text-[#171515] font-mono">
-                              District {item.homeDistrict || item.values?.homeDistrict || '3011'}
-                            </div>
-                            <div className="text-[10px] text-neutral-500 font-semibold mt-0.5">
-                              Outside Visiting District
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Column 2: Lead / DRR */}
-                      <td className="p-3.5">
-                        {activeFormCategory === 'internal_host_club' ? (
-                          <div>
-                            <div className="font-bold text-[#171515]">{item.participantName}</div>
-                            <div className="text-[11px] text-neutral-500 font-mono">
-                              {item.values?.position || 'President'} · {item.values?.phone}
-                            </div>
-                            <div className="text-[10px] text-neutral-400 font-mono">{item.participantEmail}</div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="font-bold text-[#171515]">{item.values?.drrName || item.participantName}</div>
-                            <div className="text-[11px] text-neutral-500 font-mono">
-                              {item.values?.drrPhone} · {item.values?.drrEmail || item.participantEmail}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Column 3: Proposal / POC */}
-                      <td className="p-3.5">
-                        {activeFormCategory === 'internal_host_club' ? (
-                          <div>
-                            {item.values?.proposalDriveUrl ? (
-                              <a
-                                href={item.values.proposalDriveUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#171515] bg-[#FBC02D] text-[#171515] font-black text-[11px] hover:bg-yellow-400 transition-all ride-pop-sm"
-                              >
-                                <ExternalLink size={12} />
-                                <span>Open Google Drive Proposal</span>
-                              </a>
-                            ) : (
-                              <span className="text-neutral-400 text-xs italic">No proposal link provided</span>
-                            )}
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="font-bold text-[#171515]">{item.values?.pocName || 'Liaison POC'}</div>
-                            <div className="text-[11px] text-neutral-500 font-mono">
-                              {item.values?.pocPhone} · {item.values?.pocEmail}
-                            </div>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Column 4: Status Badge */}
-                      <td className="p-3.5">
-                        <Badge tone={
-                          item.status === 'approved' ? 'green' :
-                          item.status === 'declined' ? 'red' :
-                          item.status === 'under_review' ? 'blue' : 'amber'
-                        }>
-                          {item.status.replace('_', ' ')}
-                        </Badge>
-                      </td>
-
-                      {/* Column 5: Date */}
-                      <td className="p-3.5 text-neutral-500 text-[11px] font-mono">
-                        {new Date(item.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </td>
-
-                      {/* Column 6: Actions */}
-                      <td className="p-3.5 text-right">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => setSelectedSubmission(item)}
-                            leading={<Eye size={13} />}
-                          >
-                            Details
-                          </Button>
-
-                          {item.status !== 'approved' && (
-                            <Button
-                              size="sm"
-                              variant="primary"
-                              onClick={() => handleUpdateStatus(item.id, 'approved', 'Approved')}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                            >
-                              Approve
-                            </Button>
-                          )}
-
-                          {item.status === 'submitted' && (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={() => handleUpdateStatus(item.id, 'under_review', 'Under Review')}
-                              className="text-blue-700"
-                            >
-                              Review
-                            </Button>
-                          )}
-
-                          {item.status !== 'declined' && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleUpdateStatus(item.id, 'declined', 'Declined')}
-                              className="text-red-600 hover:bg-red-50"
-                            >
-                              Decline
-                            </Button>
-                          )}
+                  ) : (
+                    forms.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleSelectFormToEdit(f)}
+                        className={`w-full text-left p-3 transition-colors text-xs flex flex-col gap-1 ${
+                          editingFormId === f.id
+                            ? 'bg-blue-100/70 text-[#19539D] font-black'
+                            : 'hover:bg-white text-neutral-800'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="truncate pr-2 font-bold">{f.title}</span>
+                          <Badge tone={f.status === 'published' ? 'green' : 'amber'}>
+                            {f.status}
+                          </Badge>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      )}
-
-      {/* Detailed Submission Inspection Modal */}
-      <Modal
-        open={Boolean(selectedSubmission)}
-        onClose={() => setSelectedSubmission(null)}
-        title={selectedSubmission?.formTitle || 'Submission Dossier'}
-        size="lg"
-      >
-        {selectedSubmission && (
-          <div className="space-y-4 pt-2 text-xs">
-            <div className="p-4 bg-gradient-to-r from-amber-50 to-blue-50 border border-neutral-300 rounded-2xl flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <span className="text-[10px] font-black uppercase text-neutral-500 tracking-wider">Submission Reference</span>
-                <div className="text-base font-black text-[#171515] font-mono">{selectedSubmission.id}</div>
-                <div className="text-[11px] text-neutral-600 mt-0.5">
-                  Logged on {new Date(selectedSubmission.submittedAt).toLocaleString()}
+                        <div className="text-[10px] text-neutral-500 flex items-center justify-between">
+                          <span>{f.fields?.length || 0} questions</span>
+                          <span>{f.submissionCount || 0} responses</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-neutral-600">Status:</span>
-                <Badge tone={
-                  selectedSubmission.status === 'approved' ? 'green' :
-                  selectedSubmission.status === 'declined' ? 'red' :
-                  selectedSubmission.status === 'under_review' ? 'blue' : 'amber'
-                }>
-                  {selectedSubmission.status.replace('_', ' ')}
-                </Badge>
+              {/* Form Metadata Fields */}
+              <div className="space-y-3 pt-4 border-t-2 border-neutral-200">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Form Title *
+                  </label>
+                  <Input
+                    value={formTitle}
+                    onChange={(e) => {
+                      setFormTitle(e.target.value);
+                      if (editingFormId === 'new') {
+                        setFormSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+                      }
+                    }}
+                    placeholder="e.g. Travel & Flight Details Intake"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    URL Slug *
+                  </label>
+                  <Input
+                    value={formSlug}
+                    onChange={(e) => setFormSlug(e.target.value)}
+                    placeholder="e.g. travel-and-flight-details"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Category
+                  </label>
+                  <Input
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value)}
+                    placeholder="e.g. Delegate Intake / Feedback"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Description
+                  </label>
+                  <Textarea
+                    value={formDescription}
+                    onChange={(e) => setFormDescription(e.target.value)}
+                    placeholder="Instructions for participants filling this form..."
+                    rows={2}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Publish Status
+                  </label>
+                  <Select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    options={[
+                      { value: 'published', label: 'Published (Live on Participant Portal)' },
+                      { value: 'draft', label: 'Draft (Admin Hidden)' },
+                      { value: 'archived', label: 'Archived (Closed)' },
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Target Roles
+                  </label>
+                  <div className="space-y-1.5 border border-neutral-300 rounded-xl p-2.5 bg-neutral-50 text-xs">
+                    {TARGET_ROLE_OPTIONS.map((r) => {
+                      const checked = formTargetRoles.includes(r.value);
+                      return (
+                        <label key={r.value} className="flex items-center gap-2 cursor-pointer font-medium text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setFormTargetRoles((prev) =>
+                                checked ? prev.filter((k) => k !== r.value) : [...prev, r.value]
+                              );
+                            }}
+                            className="rounded border-neutral-300 text-[#19539D] focus:ring-0"
+                          />
+                          <span>{r.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Render Detailed Key-Value Grid */}
-            <div className="border border-neutral-200 rounded-2xl p-4 bg-white space-y-3">
-              <h4 className="text-xs font-black uppercase tracking-wider text-neutral-700 border-b pb-2">
-                Submitted Field Values
-              </h4>
+              {/* Action Buttons */}
+              <div className="mt-6 pt-4 border-t-2 border-neutral-200 flex flex-col gap-2">
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="w-full"
+                  onClick={() => saveFormMutation.mutate()}
+                  disabled={!formTitle.trim() || saveFormMutation.isPending}
+                  leading={<Save size={15} />}
+                >
+                  {saveFormMutation.isPending ? 'Saving...' : editingFormId === 'new' ? 'Create Form' : 'Update Form'}
+                </Button>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {Object.entries(selectedSubmission.values || {}).map(([key, val]) => {
-                  const isUrl = String(val).startsWith('http://') || String(val).startsWith('https://');
-                  return (
-                    <div key={key} className="space-y-1">
-                      <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
-                        {key.replace(/([A-Z])/g, ' $1')}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setShowPreviewModal(true)}
+                    disabled={formFields.length === 0}
+                    leading={<Eye size={14} />}
+                  >
+                    Interactive Preview
+                  </Button>
+
+                  {editingFormId !== 'new' && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => deleteFormMutation.mutate(editingFormId)}
+                      disabled={deleteFormMutation.isPending}
+                      leading={<Trash2 size={14} />}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column: Interactive Field Palette and Question Canvas */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card
+              title={`Canvas: ${formTitle || 'Untitled Form'}`}
+              eyebrow="Dynamic Questions Canvas"
+              className="border-2 border-[#171515] ride-pop-sm bg-white"
+            >
+              {/* Field Palette Actions (12 Field Types) */}
+              <div className="mb-6 p-4 rounded-2xl bg-[#F8F6F0] border-2 border-neutral-300">
+                <div className="text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-3 flex items-center justify-between">
+                  <span>Add Input Field (12 Supported Types)</span>
+                  <span className="text-neutral-400 font-mono">{formFields.length} configured</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {FIELD_PALETTE.map((pal) => (
+                    <button
+                      key={pal.type}
+                      type="button"
+                      onClick={() => handleAddField(pal.type)}
+                      className="p-2.5 rounded-xl border border-neutral-300 bg-white hover:border-[#19539D] hover:bg-blue-50/50 transition-all text-left flex flex-col gap-1 group"
+                    >
+                      <span className="text-sm font-black text-neutral-700 group-hover:text-[#19539D]">{pal.icon}</span>
+                      <span className="text-[10px] font-bold text-neutral-600 leading-tight">{pal.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dynamic Field Cards */}
+              <div className="space-y-4">
+                {formFields.length === 0 ? (
+                  <div className="p-12 text-center text-xs text-neutral-500 border-2 border-dashed border-neutral-300 rounded-2xl bg-neutral-50">
+                    No questions configured yet. Click any field type in the palette above to add your first question!
+                  </div>
+                ) : (
+                  formFields.map((field, idx) => (
+                    <div
+                      key={field.id}
+                      className="p-4 rounded-2xl border-2 border-neutral-300 bg-white hover:border-neutral-500 transition-colors space-y-3 ride-pop-sm"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-full bg-[#19539D] text-white flex items-center justify-center font-black text-[11px]">
+                            {idx + 1}
+                          </span>
+                          <span className="text-xs font-black uppercase tracking-wider text-neutral-800">
+                            {field.type}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMoveField(idx, 'up')}
+                            disabled={idx === 0}
+                          >
+                            <ArrowUp size={14} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMoveField(idx, 'down')}
+                            disabled={idx === formFields.length - 1}
+                          >
+                            <ArrowDown size={14} />
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleRemoveField(field.id)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </div>
                       </div>
-                      {isUrl ? (
-                        <a
-                          href={String(val)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#19539D] hover:underline"
-                        >
-                          <ExternalLink size={13} />
-                          <span>Open Link in New Tab</span>
-                        </a>
-                      ) : (
-                        <div className="text-xs font-semibold text-neutral-900 bg-neutral-50 p-2 rounded-lg border border-neutral-100">
-                          {String(val) || '—'}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                            Question / Label *
+                          </label>
+                          <Input
+                            value={field.label}
+                            onChange={(e) => handleUpdateFieldProp(field.id, 'label', e.target.value)}
+                            placeholder="e.g. Dietary Preferences"
+                            className="text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                            Variable Key (Unique Identifier)
+                          </label>
+                          <Input
+                            value={field.name}
+                            onChange={(e) => handleUpdateFieldProp(field.id, 'name', e.target.value)}
+                            placeholder="e.g. dietary_preference"
+                            className="text-xs font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                            Placeholder / Hint
+                          </label>
+                          <Input
+                            value={field.placeholder || ''}
+                            onChange={(e) => handleUpdateFieldProp(field.id, 'placeholder', e.target.value)}
+                            placeholder="e.g. Type response here..."
+                            className="text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                            Helper Text / Notes
+                          </label>
+                          <Input
+                            value={field.helperText || ''}
+                            onChange={(e) => handleUpdateFieldProp(field.id, 'helperText', e.target.value)}
+                            placeholder="e.g. Please ensure link is accessible"
+                            className="text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Options Editor for Select / Radio / Multiselect */}
+                      {['select', 'radio', 'multiselect'].includes(field.type) && (
+                        <div className="pt-2 border-t border-neutral-200">
+                          <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                            Dropdown / Choice Options (comma-separated)
+                          </label>
+                          <Input
+                            value={(field.options || []).join(', ')}
+                            onChange={(e) => handleUpdateFieldOptions(field.id, e.target.value)}
+                            placeholder="Option A, Option B, Option C"
+                            className="text-xs"
+                          />
                         </div>
                       )}
+
+                      <div className="flex items-center justify-between pt-2 border-t border-neutral-200">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={field.required}
+                            onChange={(e) => handleUpdateFieldProp(field.id, 'required', e.target.checked)}
+                            className="rounded border-neutral-300 text-[#19539D] focus:ring-0"
+                          />
+                          <span>Mandatory / Required Field</span>
+                        </label>
+
+                        {field.options && field.options.length > 0 && (
+                          <span className="text-[10px] text-neutral-500 font-semibold">
+                            {field.options.length} options defined
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================== */}
+      {/* TAB 2: RESPONSES & DOSSIER VIEWER          */}
+      {/* ========================================== */}
+      {activeTab === 'responses' && (
+        <div className="space-y-6">
+          <Card
+            title="Participant Form Responses & Dossier Review"
+            eyebrow="Response Dossier"
+            className="border-2 border-[#171515] ride-pop-sm bg-white"
+          >
+            {/* Filter Bar */}
+            <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-[#F5F2EB] border-2 border-neutral-300">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="w-64">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Select Questionnaire
+                  </label>
+                  <Select
+                    value={selectedResponseFormId}
+                    onChange={(e) => setSelectedResponseFormId(e.target.value)}
+                    options={forms.map((f) => ({
+                      value: f.id,
+                      label: `${f.title} (${f.submissionCount || 0})`,
+                    }))}
+                  />
+                </div>
+
+                <div className="w-44">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Status Filter
+                  </label>
+                  <Select
+                    value={responseStatusFilter}
+                    onChange={(e) => setResponseStatusFilter(e.target.value)}
+                    options={[
+                      { value: 'all', label: 'All Statuses' },
+                      { value: 'submitted', label: 'Submitted (New)' },
+                      { value: 'under_review', label: 'Under Review' },
+                      { value: 'approved', label: 'Approved' },
+                      { value: 'declined', label: 'Declined' },
+                    ]}
+                  />
+                </div>
+
+                <div className="w-64">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Search Delegate
+                  </label>
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                    <Input
+                      value={searchResponses}
+                      onChange={(e) => setSearchResponses(e.target.value)}
+                      placeholder="Name, email, district..."
+                      className="pl-8 text-xs py-1.5"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-end md:self-center">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => qc.invalidateQueries({ queryKey: ['ride-form-submissions'] })}
+                  leading={<RefreshCw size={13} />}
+                >
+                  Refresh
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={exportSubmissionsCsv}
+                  disabled={filteredSubmissions.length === 0}
+                  leading={<Download size={13} />}
+                >
+                  Export CSV ({filteredSubmissions.length})
+                </Button>
+              </div>
+            </div>
+
+            {/* Submissions Table */}
+            {filteredSubmissions.length === 0 ? (
+              <div className="p-12 text-center text-xs text-neutral-500 border-2 border-dashed border-neutral-300 rounded-2xl bg-neutral-50">
+                {submissions.length === 0
+                  ? 'No responses have been submitted for this questionnaire yet.'
+                  : 'No submissions matched your search criteria.'}
+              </div>
+            ) : (
+              <div className="overflow-x-auto border-2 border-neutral-200 rounded-2xl">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF8F5] border-b-2 border-neutral-200 text-neutral-600 uppercase font-black tracking-wider text-[10px]">
+                      <th className="p-3">Participant</th>
+                      <th className="p-3">District & Club</th>
+                      <th className="p-3">Status</th>
+                      <th className="p-3">Submitted At</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-200 bg-white">
+                    {filteredSubmissions.map((sub) => {
+                      const tone =
+                        sub.status === 'approved'
+                          ? 'green'
+                          : sub.status === 'under_review'
+                            ? 'amber'
+                            : sub.status === 'declined'
+                              ? 'red'
+                              : 'blue';
+
+                      return (
+                        <tr key={sub.id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="p-3">
+                            <div className="font-bold text-neutral-900">{sub.participant.fullName}</div>
+                            <div className="text-[11px] text-neutral-500">{sub.participant.email} · {sub.participant.phone}</div>
+                          </td>
+                          <td className="p-3">
+                            <div className="font-semibold text-neutral-800">RID {sub.participant.homeDistrict}</div>
+                            <div className="text-[11px] text-neutral-500">{sub.participant.homeClubName}</div>
+                          </td>
+                          <td className="p-3">
+                            <Badge tone={tone}>{sub.status.replace('_', ' ')}</Badge>
+                          </td>
+                          <td className="p-3 text-neutral-600 text-[11px]">
+                            {new Date(sub.createdAt).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="p-3 text-right">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleOpenSubmission(sub)}
+                              leading={<Eye size={13} />}
+                            >
+                              Inspect Dossier
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* ========================================== */}
+      {/* INSPECT SUBMISSION DOSSIER MODAL           */}
+      {/* ========================================== */}
+      {selectedSubmission && activeFormObj && (
+        <Modal
+          open={Boolean(selectedSubmission)}
+          onClose={() => setSelectedSubmission(null)}
+          title={`Response Dossier: ${selectedSubmission.participant.fullName}`}
+          size="lg"
+        >
+          <div className="space-y-6">
+            {/* Participant Profile Banner */}
+            <div className="p-4 rounded-2xl bg-[#F5F2EB] border-2 border-neutral-300 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h4 className="text-base font-black text-neutral-900">
+                  {selectedSubmission.participant.fullName}
+                </h4>
+                <p className="text-xs text-neutral-600 mt-0.5">
+                  RID {selectedSubmission.participant.homeDistrict} · {selectedSubmission.participant.homeClubName} · {selectedSubmission.participant.participantType}
+                </p>
+                <p className="text-xs text-neutral-600 mt-0.5">
+                  Email: <span className="font-semibold">{selectedSubmission.participant.email}</span> · Phone: <span className="font-semibold">{selectedSubmission.participant.phone}</span>
+                </p>
+              </div>
+
+              <div className="text-right">
+                <div className="text-[10px] font-black uppercase text-neutral-500">Submitted On</div>
+                <div className="text-xs font-bold text-neutral-800">
+                  {new Date(selectedSubmission.createdAt).toLocaleString('en-GB')}
+                </div>
+              </div>
+            </div>
+
+            {/* Questions & Answers */}
+            <div className="space-y-3">
+              <h5 className="text-xs font-black uppercase tracking-wider text-neutral-700">
+                Submitted Answers ({activeFormObj.fields.length} Questions)
+              </h5>
+              <div className="divide-y divide-neutral-200 border-2 border-neutral-200 rounded-2xl overflow-hidden bg-white">
+                {activeFormObj.fields.map((f) => {
+                  const val = selectedSubmission.values[f.name];
+                  const isLink = f.type === 'link' || (typeof val === 'string' && val.startsWith('http'));
+
+                  return (
+                    <div key={f.id} className="p-4 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <div className="sm:w-1/3">
+                        <span className="text-xs font-black text-neutral-800">{f.label}</span>
+                        {f.helperText && <p className="text-[10px] text-neutral-500 mt-0.5">{f.helperText}</p>}
+                      </div>
+                      <div className="sm:w-2/3">
+                        {val === undefined || val === null || val === '' ? (
+                          <span className="text-xs text-neutral-400 italic">No answer provided</span>
+                        ) : isLink ? (
+                          <a
+                            href={String(val)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-black text-[#19539D] hover:underline bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200"
+                          >
+                            <ExternalLink size={13} /> Open Attached Link
+                          </a>
+                        ) : (
+                          <div className="text-xs text-neutral-800 whitespace-pre-wrap font-medium">
+                            {typeof val === 'object' ? JSON.stringify(val, null, 2) : String(val)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Quick Status Action Controls */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-neutral-500">Change Status:</span>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateStatus(selectedSubmission.id, 'approved', 'Approved')}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-xs font-bold transition-all cursor-pointer"
-                >
-                  ✓ Approve
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateStatus(selectedSubmission.id, 'under_review', 'Under Review')}
-                  className="px-3 py-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-bold transition-all cursor-pointer"
-                >
-                  Clock Under Review
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateStatus(selectedSubmission.id, 'declined', 'Declined')}
-                  className="px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-800 text-xs font-bold transition-all cursor-pointer"
-                >
-                  ✕ Decline
-                </button>
+            {/* Review Decision Controls */}
+            <div className="p-4 rounded-2xl border-2 border-neutral-300 bg-neutral-50 space-y-4">
+              <h5 className="text-xs font-black uppercase tracking-wider text-neutral-700">
+                Committee Review Decision
+              </h5>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Review Status
+                  </label>
+                  <Select
+                    value={reviewStatus}
+                    onChange={(e) => setReviewStatus(e.target.value as any)}
+                    options={[
+                      { value: 'submitted', label: 'Submitted (Pending Review)' },
+                      { value: 'under_review', label: 'Under Review' },
+                      { value: 'approved', label: 'Approved / Verified' },
+                      { value: 'declined', label: 'Declined / Needs Revision' },
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-neutral-600 mb-1">
+                    Internal Notes / Comments
+                  </label>
+                  <Input
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    placeholder="e.g. Flight ticket verified for Dec 26 arrival"
+                    className="text-xs"
+                  />
+                </div>
               </div>
 
-              <Button variant="secondary" onClick={() => setSelectedSubmission(null)}>
-                Close
-              </Button>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-200">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setSelectedSubmission(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => updateStatusMutation.mutate()}
+                  disabled={updateStatusMutation.isPending}
+                  leading={<Check size={14} />}
+                >
+                  {updateStatusMutation.isPending ? 'Saving...' : 'Save Decision'}
+                </Button>
+              </div>
             </div>
           </div>
-        )}
-      </Modal>
+        </Modal>
+      )}
 
-      {/* Create DMJ Intake Form Modal */}
-      <Modal
-        open={createFormOpen}
-        onClose={() => setCreateFormOpen(false)}
-        title="Create DMJ Participant Intake Form"
-        size="md"
-      >
-        <form onSubmit={handleCreateForm} className="space-y-4 pt-2">
-          {formCreateError && (
-            <div className="p-3 rounded-xl bg-red-50 text-red-900 border border-red-200 text-xs font-bold flex items-center gap-2">
-              <AlertCircle size={15} className="text-red-600 shrink-0" />
-              <span>{formCreateError}</span>
+      {/* ========================================== */}
+      {/* LIVE INTERACTIVE FORM PREVIEW MODAL        */}
+      {/* ========================================== */}
+      {showPreviewModal && (
+        <Modal
+          open={showPreviewModal}
+          onClose={() => setShowPreviewModal(false)}
+          title={`Live Preview: ${formTitle || 'Untitled Questionnaire'}`}
+          size="lg"
+        >
+          <div className="space-y-6">
+            <div className="p-4 rounded-2xl bg-blue-50 border-2 border-[#19539D] text-xs text-blue-900 flex items-start gap-2">
+              <Eye size={18} className="text-[#19539D] shrink-0 mt-0.5" />
+              <div>
+                <strong className="font-black">Interactive Sandbox Preview:</strong> This simulates exactly how DMJ delegates will view, validate, and complete this form in the RIDE Participant Dashboard.
+              </div>
             </div>
-          )}
 
-          <Field label="Form Title" required>
-            <Input
-              value={newTitle}
-              onChange={(e) => {
-                setNewTitle(e.target.value);
-                if (!newSlug) {
-                  setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
-                }
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-neutral-900">{formTitle || 'Untitled Questionnaire'}</h3>
+              <p className="text-xs text-neutral-600">{formDescription || 'Please complete all required fields below.'}</p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                toast({
+                  title: 'Validation Passed',
+                  body: 'All questions satisfied in preview mode!',
+                  tone: 'success',
+                });
               }}
-              placeholder="e.g. Flight & Arrival Details Questionnaire"
-              maxLength={150}
-            />
-          </Field>
-
-          <Field label="Unique Slug" required hint="URL identifier">
-            <Input
-              value={newSlug}
-              onChange={(e) => setNewSlug(e.target.value)}
-              placeholder="e.g. flight-arrival-details"
-              maxLength={100}
-            />
-          </Field>
-
-          <Field label="Description" hint="Optional participant instructions">
-            <Input
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              placeholder="Please submit your arrival travel details at least 7 days before the exchange."
-            />
-          </Field>
-
-          <div className="flex items-center justify-end gap-2 pt-3 border-t">
-            <Button variant="secondary" onClick={() => setCreateFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              loading={creatingForm}
-              className="bg-[#19539D] text-white font-black"
+              className="space-y-4"
             >
-              Publish Intake Form
-            </Button>
+              {formFields.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <label className="block text-xs font-black text-neutral-800">
+                    {field.label} {field.required && <span className="text-red-500">*</span>}
+                  </label>
+
+                  {field.type === 'textarea' ? (
+                    <Textarea placeholder={field.placeholder || ''} rows={3} required={field.required} />
+                  ) : field.type === 'select' ? (
+                    <Select
+                      options={[
+                        { value: '', label: field.placeholder || 'Select an option...' },
+                        ...(field.options || []).map((o) => ({ value: o, label: o })),
+                      ]}
+                      required={field.required}
+                    />
+                  ) : field.type === 'radio' ? (
+                    <div className="space-y-1.5">
+                      {(field.options || ['Yes', 'No']).map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                          <input type="radio" name={field.name} required={field.required} className="text-[#19539D]" />
+                          <span>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : field.type === 'checkbox' ? (
+                    <label className="flex items-center gap-2 text-xs text-neutral-700 cursor-pointer">
+                      <input type="checkbox" required={field.required} className="text-[#19539D] rounded" />
+                      <span>{field.placeholder || 'I confirm and agree to this condition'}</span>
+                    </label>
+                  ) : (
+                    <Input
+                      type={
+                        field.type === 'email'
+                          ? 'email'
+                          : field.type === 'number'
+                            ? 'number'
+                            : field.type === 'date'
+                              ? 'date'
+                              : 'text'
+                      }
+                      placeholder={field.placeholder || ''}
+                      required={field.required}
+                    />
+                  )}
+
+                  {field.helperText && <p className="text-[10px] text-neutral-500">{field.helperText}</p>}
+                </div>
+              ))}
+
+              <div className="pt-4 border-t border-neutral-200 flex items-center justify-between">
+                <Button variant="secondary" size="sm" onClick={() => setShowPreviewModal(false)}>
+                  Close Preview
+                </Button>
+                <Button variant="primary" size="sm" type="submit">
+                  Test Submission
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </Modal>
+      )}
     </div>
   );
 }
