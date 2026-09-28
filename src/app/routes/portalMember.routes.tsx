@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import type { RouteObject } from 'react-router';
+import { Navigate, type RouteObject } from 'react-router';
 import { ComingSoon } from '@/pages/ComingSoon';
 
 const DashboardPage = lazy(() => import('@/pages/portal/DashboardPage').then((m) => ({ default: m.DashboardPage })));
@@ -33,6 +33,7 @@ const PortalEventsPage = lazy(() =>
 
 export const portalMemberRouteObjects: RouteObject[] = [
   { path: '/portal/dashboard', element: <DashboardPage /> },
+  { path: '/portal/reports', element: <Navigate to="/portal/reports/history" replace /> },
   { path: '/portal/reports/new', element: <NewReportPage /> },
   { path: '/portal/reports/:id/review', element: <ReviewSubmitPage /> },
   { path: '/portal/reports/history', element: <ReportHistoryPage /> },

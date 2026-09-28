@@ -158,7 +158,7 @@ export default function MorphedMenu({
         },
         {
           id: 'heritage',
-          title: 'Past DRR & Heritage',
+          title: 'Council of DRRs',
           icon: <Award size={15} />,
           action: () => {
             if (setActiveDistrictTab) {

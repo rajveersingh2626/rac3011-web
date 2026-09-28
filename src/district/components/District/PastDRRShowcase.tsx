@@ -557,10 +557,10 @@ export default function PastDRRShowcase() {
       {/* Page Header */}
       <div style={{ textAlign: 'center', marginBottom: isMobile ? '20px' : '32px' }}>
         <span className="pill-gold" style={{ marginBottom: isMobile ? '8px' : '14px', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.74rem' : '0.82rem' }}>
-          <Award size={14} /> DISTRICT HERITAGE &amp; COUNCIL OF DRRs
+          <Award size={14} /> COUNCIL OF DRRs
         </span>
         <h1 style={{ fontSize: isMobile ? 'clamp(1.8rem, 5vw, 2.5rem)' : '2.8rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.5px', margin: '4px 0 10px 0' }}>
-          Council of Past DRRs
+          Council of DRRs
         </h1>
         <p style={{ color: '#FCE4EC', fontSize: isMobile ? '0.92rem' : '1.1rem', maxWidth: '760px', margin: '0 auto', lineHeight: 1.55 }}>
           Honoring four decades of visionary leadership, selfless service, and transformative impact across our District.

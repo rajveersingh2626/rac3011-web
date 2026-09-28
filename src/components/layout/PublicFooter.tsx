@@ -7,7 +7,7 @@ const COLUMNS = [
     links: [
       { label: 'Clubs & map', to: '/map' },
       { label: 'Leadership', to: '/leadership' },
-      { label: 'Heritage', to: '/heritage' },
+      { label: 'Council of DRRs', to: '/heritage' },
       { label: 'Initiatives', to: '/initiatives' },
       { label: 'Achievements', to: '/achievements' },
     ],

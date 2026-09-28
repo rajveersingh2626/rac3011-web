@@ -285,7 +285,7 @@ export function PortalShell({ children, adminOpenDefault }: PortalShellProps) {
           <span className="text-white/25">·</span>
           <a href="/showcase" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Showcase</a>
           <span className="text-white/25">·</span>
-          <a href="/heritage" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Heritage</a>
+          <a href="/heritage" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Council of DRRs</a>
           <span className="text-white/25">·</span>
           <a href="/governance" className="text-white/70 hover:text-white px-2 py-1 rounded-md hover:bg-white/10 transition-colors text-[11.5px]">Leadership</a>
         </div>

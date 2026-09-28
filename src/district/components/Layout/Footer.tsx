@@ -86,7 +86,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
               </li>
               <li>
                 <button onClick={() => (window.location.href = '/heritage')} style={navLinkStyle}>
-                  Past DRRs (Heritage)
+                  Council of DRRs
                 </button>
               </li>
               <li>

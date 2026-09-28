@@ -247,11 +247,20 @@ export async function downloadDistrictReportsCsv(month?: string) {
   URL.revokeObjectURL(link.href);
 }
 
-const reportingMonthsResponseSchema = z.object({
+const reportingMonthsObjectSchema = z.object({
   ryYear: z.number(),
   currentMonth: z.string(),
   months: z.array(reportingMonthInfoSchema),
 });
+
+const reportingMonthsResponseSchema = z.union([
+  reportingMonthsObjectSchema,
+  z.array(reportingMonthInfoSchema).transform((months) => {
+    const currentMonth = months.find((m) => m.isCurrent)?.key || (months[0]?.key ?? '');
+    const ryYear = Number(currentMonth.split('-')[0]) || new Date().getFullYear();
+    return { ryYear, currentMonth, months };
+  }),
+]);
 
 export async function fetchReportingMonths(ryYear?: number): Promise<{
   ryYear: number;

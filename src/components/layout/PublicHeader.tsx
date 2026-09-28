@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { label: 'Clubs & Map', to: '/map' },
   { label: 'Showcase', to: '/showcase' },
   { label: 'Initiatives', to: '/initiatives' },
-  { label: 'Heritage', to: '/heritage' },
+  { label: 'Council of DRRs', to: '/heritage' },
   { label: 'Leadership', to: '/leadership' },
   { label: 'Resources', to: '/resources' },
 ];
