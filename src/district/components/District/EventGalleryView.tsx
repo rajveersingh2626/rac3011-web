@@ -90,7 +90,7 @@ const FALLBACK_GALLERY_ITEMS: PublicGalleryItem[] = [
     eventName: 'DAC Induction 2026-27',
     category: 'Installations',
     imageUrl: '/hero-dac-oath.webp',
-    caption: 'District Action Committee taking the pledge to serve Rotary International District 3011.',
+    caption: 'District Action Committee taking the pledge to serve Rotaract District Organisation 3011.',
     date: '2026-07-20',
     order: 8,
   },

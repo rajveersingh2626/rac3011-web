@@ -70,7 +70,7 @@ export function RideResetPasswordPage() {
           <ArrowLeft size={16} />
           <span>Back to Sign In</span>
         </Link>
-        <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotary International District 3011</span>
+        <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotaract District Organisation 3011</span>
       </header>
 
       {/* Main Container */}
@@ -191,7 +191,7 @@ export function RideResetPasswordPage() {
       </main>
 
       <footer className="p-4 text-center text-xs text-neutral-500 font-bold relative z-10">
-        Rotary International District 3011 · Delhi Meri Jaan 2026
+        Rotaract District Organisation 3011 · Delhi Meri Jaan 2026
       </footer>
     </div>
   );

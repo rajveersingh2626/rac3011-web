@@ -207,7 +207,7 @@ export function RideHomePage() {
           <AutoRickshawBadge className="scale-85 sm:scale-95 -rotate-2" />
           <DilliDilwalonKiBadge className="rotate-1" />
           <div className="px-3.5 py-1 rounded-full border-2 border-[#171515] bg-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
-            Rotary International District 3011
+            Rotaract District Organisation 3011
           </div>
           <div className="px-3 py-1 rounded-xl border-2 border-[#171515] bg-[#EA6623] text-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
             Edition 2026
@@ -392,7 +392,7 @@ export function RideHomePage() {
             />
             <div>
               <div className="font-black text-sm sm:text-base text-[#171515]">THE RIDE: DELHI MERI JAAN 2026</div>
-              <div className="text-xs text-neutral-500 font-bold">Rotary International District 3011</div>
+              <div className="text-xs text-neutral-500 font-bold">Rotaract District Organisation 3011</div>
             </div>
           </div>
 
