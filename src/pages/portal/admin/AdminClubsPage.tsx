@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
@@ -95,16 +95,28 @@ export function AdminClubsPage() {
   const { me, can } = useAuth();
   const qc = useQueryClient();
   const { toast } = useToast();
-  const zrrZoneId = me?.roles.find((r) => r.roleKey === 'zrr')?.scope.id ?? '';
+
+  // Zonal officers (ZRR or ZRS) are locked to their zone
+  const zonalOfficerRole = me?.roles.find((r) => r.roleKey === 'zrr' || r.roleKey === 'zrs');
+  const zonalOfficerZoneId = zonalOfficerRole?.scope.id ?? '';
+  const isZonalOfficer = Boolean(zonalOfficerZoneId);
+
   const canEditClubs = can('clubs:edit') || can('public_content:manage');
   const canManageReports = can('reports:manage') || can('reports:score') || can('super_admin');
 
   const [activeTab, setActiveTab] = useState<string>('directory');
   const [month, setMonth] = useState<string>(() => currentReportMonth());
-  const [zoneId, setZoneId] = useState(zrrZoneId);
+  const [zoneId, setZoneId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [reportSearch, setReportSearch] = useState<string>('');
+
+  // Sync zone filter once me resolves (avoids useState(zrrZoneId) race condition)
+  useEffect(() => {
+    if (zonalOfficerZoneId) {
+      setZoneId(zonalOfficerZoneId);
+    }
+  }, [zonalOfficerZoneId]);
 
   // Reports queries & privileged operations
   const [queryingId, setQueryingId] = useState<string | null>(null);
@@ -519,6 +531,7 @@ export function AdminClubsPage() {
                     value={zoneId}
                     onChange={(e) => setZoneId(e.target.value)}
                     placeholder="All zones"
+                    disabled={isZonalOfficer}
                     options={(zonesQuery.data ?? []).map((z) => ({ value: z.id, label: z.name }))}
                   />
                 </div>

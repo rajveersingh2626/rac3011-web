@@ -57,6 +57,7 @@ export interface CreateAdminUserInput {
   clubId: string;
   phone?: string;
   roleKey: string;
+  scopeId?: string;
 }
 
 export async function createAdminUser(input: CreateAdminUserInput): Promise<void> {

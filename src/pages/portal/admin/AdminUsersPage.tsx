@@ -155,6 +155,7 @@ export function AdminUsersPage() {
   const [newUserClubId, setNewUserClubId] = useState('DISTRICT');
   const [newUserRoleKey, setNewUserRoleKey] = useState('member');
   const [newUserPhone, setNewUserPhone] = useState('');
+  const [newUserScopeId, setNewUserScopeId] = useState('');
   const [newUserError, setNewUserError] = useState<string | null>(null);
 
   // New grant form state
@@ -218,6 +219,7 @@ export function AdminUsersPage() {
         clubId: newUserClubId,
         roleKey: newUserRoleKey,
         phone: newUserPhone.trim() || undefined,
+        scopeId: newUserScopeId.trim() || undefined,
       }),
     onSuccess: () => {
       setIsAddUserOpen(false);
@@ -227,6 +229,7 @@ export function AdminUsersPage() {
       setNewUserClubId('DISTRICT');
       setNewUserRoleKey('member');
       setNewUserPhone('');
+      setNewUserScopeId('');
       setNewUserError(null);
       toast({ title: 'User ID created and configured successfully', tone: 'success' });
       void qc.invalidateQueries({ queryKey: ['user-directory'] });
@@ -844,15 +847,31 @@ export function AdminUsersPage() {
             <Field label="System Role" required hint="Determines administrative permissions">
               <Select
                 value={newUserRoleKey}
-                onChange={(e) => setNewUserRoleKey(e.target.value)}
+                onChange={(e) => {
+                  setNewUserRoleKey(e.target.value);
+                  setNewUserScopeId('');
+                }}
                 options={[
                   { value: 'member', label: 'Rotaract Member (Club Scope)' },
                   { value: 'club_admin', label: 'Club Admin (President / Secretary)' },
+                  { value: 'zrr', label: 'Zonal Rotaract Representative (ZRR - Zone Scope)' },
+                  { value: 'zrs', label: 'Zonal Rotaract Secretary (ZRS - Zone Scope)' },
                   { value: 'dsc', label: 'District Secretariat / Council (DSC - District-wide)' },
                   { value: 'super_admin', label: 'District Super Admin (Full Governance)' },
                 ]}
               />
             </Field>
+
+            {(newUserRoleKey === 'zrr' || newUserRoleKey === 'zrs') && (
+              <Field label="Zone" required hint="The zone this officer will oversee">
+                <Select
+                  value={newUserScopeId}
+                  onChange={(e) => setNewUserScopeId(e.target.value)}
+                  placeholder="Select zone…"
+                  options={zones.map((z) => ({ value: z.id, label: z.name }))}
+                />
+              </Field>
+            )}
 
             <Field label="Temporary Password" hint="Defaults to Rac3011#2026">
               <Input
