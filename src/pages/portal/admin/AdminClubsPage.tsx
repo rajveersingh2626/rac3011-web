@@ -135,7 +135,7 @@ export function AdminClubsPage() {
   });
   const reportsQuery = useQuery({
     queryKey: ['reports', 'admin-overview', month],
-    queryFn: () => fetchReports({ month, include: ['club'], pageSize: 200 }),
+    queryFn: () => fetchReports({ month: month === 'all' ? undefined : month, include: ['club'], pageSize: 200 }),
   });
 
   const resetMutation = useMutation({
@@ -258,10 +258,11 @@ export function AdminClubsPage() {
   const totalClubsCount = clubsList.filter((c) => c.id !== 'DISTRICT').length;
 
   const clubsInZone = (publicClubsQuery.data ?? []).filter((c) => !zoneId || c.zoneId === zoneId);
+  const reportsList = (reportsQuery.data?.items ?? []).filter((r) => !zoneId || r.club?.zoneId === zoneId);
   const filedInZone = clubsInZone.filter((c) => filedByClub.has(c.id));
   const notFiled = clubsInZone.filter((c) => !filedByClub.has(c.id));
-  const awaitingScore = filedInZone.filter((c) => filedByClub.get(c.id)?.status === 'submitted').length;
-  const scored = filedInZone.filter((c) => filedByClub.get(c.id)?.status === 'scored').length;
+  const awaitingScore = reportsList.filter((r) => r.status === 'submitted').length;
+  const scored = reportsList.filter((r) => r.status === 'scored').length;
 
   const openAddClub = () => {
     setEditingClub(null);
@@ -409,6 +410,15 @@ export function AdminClubsPage() {
           <Link to={`/portal/reports/${r.id}`} className="font-bold text-accent hover:underline">
             View
           </Link>
+          {canManageReports && (r.status === 'submitted' || r.status === 'scored') && (
+            <Link
+              to={`/portal/admin/clubs/${r.clubId}/${r.month.slice(0, 7)}`}
+              className="font-bold text-emerald-600 hover:underline"
+              title={r.status === 'scored' ? 'Re-score report' : 'Score report'}
+            >
+              {r.status === 'scored' ? 'Re-Score' : 'Score'}
+            </Link>
+          )}
           {r.status === 'submitted' && (
             <button
               type="button"
@@ -450,7 +460,10 @@ export function AdminClubsPage() {
   ];
 
   const filteredReports = useMemo(() => {
-    let list = filedInZone.map((c) => filedByClub.get(c.id)!).filter(Boolean);
+    let list = reportsQuery.data?.items ?? [];
+    if (zoneId) {
+      list = list.filter((r) => r.club?.zoneId === zoneId);
+    }
     if (statusFilter !== 'all') {
       list = list.filter((r) => r.status === statusFilter);
     }
@@ -463,7 +476,7 @@ export function AdminClubsPage() {
       );
     }
     return list;
-  }, [filedInZone, filedByClub, statusFilter, reportSearch]);
+  }, [reportsQuery.data, zoneId, statusFilter, reportSearch]);
 
   return (
     <Container width="wide">
@@ -551,10 +564,13 @@ export function AdminClubsPage() {
                     aria-label="Filter by month"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
-                    options={(monthsQuery.data?.months ?? []).map((m) => ({
-                      value: m.key,
-                      label: `${m.label}${m.isLocked ? ' 🔒' : m.isCurrent ? ' (Current)' : ''}`,
-                    }))}
+                    options={[
+                      { value: 'all', label: 'All Months' },
+                      ...(monthsQuery.data?.months ?? []).map((m) => ({
+                        value: m.key,
+                        label: `${m.label}${m.isLocked ? ' 🔒' : m.isCurrent ? ' (Current)' : ''}`,
+                      })),
+                    ]}
                   />
                 </div>
                 <div className="w-full sm:w-[150px]">

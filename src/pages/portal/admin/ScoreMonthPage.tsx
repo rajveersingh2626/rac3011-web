@@ -15,9 +15,10 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { KeyValue } from '@/components/ui/KeyValue';
+import { useToast } from '@/components/ui/Toast';
 import { fetchClub } from '@/lib/clubs';
 import { formatMonthLabel, ryYearOf } from '@/lib/reports/month';
-import { fetchReports, addReportQuery } from '@/lib/reports/api';
+import { fetchReports, addReportQuery, scoreReport } from '@/lib/reports/api';
 import { fetchClubPoints, patchJudgedPoints } from '@/lib/points/api';
 import type { ClubPointsEntry } from '@/lib/points/types';
 
@@ -90,6 +91,7 @@ export function ScoreMonthPage() {
   const { clubId = '', month = '' } = useParams<{ clubId: string; month: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { toast } = useToast();
   const ryYear = useMemo(() => ryYearOf(new Date(`${month}-01T00:00:00Z`)), [month]);
   const monthLabel = formatMonthLabel(month);
 
@@ -120,7 +122,50 @@ export function ScoreMonthPage() {
       }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['club-points', clubId, ryYear, month] });
+      toast({
+        title: 'Points Saved',
+        body: 'Judged points adjustment has been saved.',
+        tone: 'success',
+      });
       navigate('/portal/admin/clubs');
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to save points',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const finalizeScoreMutation = useMutation({
+    mutationFn: async () => {
+      if (judgedPoints.trim() !== '' || reason.trim() !== '') {
+        await patchJudgedPoints(clubId, month, {
+          judgedPoints: judgedPoints.trim() === '' ? null : Number(judgedPoints),
+          reason: reason.trim() || null,
+        });
+      }
+      if (report) {
+        await scoreReport(report.id);
+      }
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['club-points'] });
+      void qc.invalidateQueries({ queryKey: ['reports'] });
+      toast({
+        title: 'Score Finalized',
+        body: `Report and points for ${monthLabel} have been confirmed and scored.`,
+        tone: 'success',
+      });
+      navigate('/portal/admin/clubs');
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to finalize score',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
     },
   });
 
@@ -130,6 +175,11 @@ export function ScoreMonthPage() {
       setQueryOpen(false);
       setQuestion('');
       void qc.invalidateQueries({ queryKey: ['reports', 'score-month', clubId, month] });
+      toast({
+        title: 'Query Sent',
+        body: 'Your question has been sent to the club.',
+        tone: 'success',
+      });
     },
   });
 
@@ -168,11 +218,18 @@ export function ScoreMonthPage() {
         title={`${club?.name ?? clubId} · ${monthLabel}`}
         description={`${computedTotal} points computed from the rules. One number is yours to set.`}
         action={
-          summary.judged ? (
-            <Badge tone="green">Human Review Complete</Badge>
-          ) : (
-            <Badge tone="amber">Pending Human Review</Badge>
-          )
+          <div className="flex items-center gap-2">
+            {report && (
+              <Badge tone={report.status === 'scored' ? 'green' : report.status === 'submitted' ? 'blue' : 'amber'}>
+                {report.status.toUpperCase()}
+              </Badge>
+            )}
+            {summary.judged ? (
+              <Badge tone="green">Human Review Complete</Badge>
+            ) : (
+              <Badge tone="amber">Pending Human Review</Badge>
+            )}
+          </div>
         }
       >
         <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-accent">Computed — from the points document</p>
@@ -230,15 +287,28 @@ export function ScoreMonthPage() {
               {computedTotal} computed + {judgedTotal} judged
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {report && (
               <Button variant="secondary" onClick={() => setQueryOpen(true)}>
                 Query the club
               </Button>
             )}
-            <Button loading={saveMutation.isPending} onClick={() => saveMutation.mutate()}>
-              Save and open the next
+            <Button
+              variant="secondary"
+              loading={saveMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+            >
+              Save Judged Only
             </Button>
+            {report && (
+              <Button
+                variant="primary"
+                loading={finalizeScoreMutation.isPending}
+                onClick={() => finalizeScoreMutation.mutate()}
+              >
+                {report.status === 'scored' ? 'Re-Score & Finalize' : 'Confirm & Finalize Score'}
+              </Button>
+            )}
           </div>
         </div>
       </Section>

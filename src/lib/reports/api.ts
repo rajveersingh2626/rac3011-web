@@ -92,6 +92,33 @@ export async function replyReportQuery(id: string, queryId: string, reply: strin
   });
 }
 
+export interface ReportScorePreviewEntry {
+  ruleId: string;
+  ruleKey: string;
+  ruleLabel: string;
+  ruleType: string;
+  categoryKey: string;
+  categoryName: string;
+  points: number;
+  trace: Record<string, unknown>;
+}
+
+export interface ReportScorePreview {
+  total: number;
+  entries: ReportScorePreviewEntry[];
+}
+
+export async function fetchReportScorePreview(id: string): Promise<ReportScorePreview> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/score-preview`);
+}
+
+export async function scoreReport(id: string): Promise<Report> {
+  return apiFetch(`/reports/${encodeURIComponent(id)}/score`, {
+    method: 'POST',
+    schema: reportSchema,
+  });
+}
+
 const schemaListWithFields = z.object({ items: z.array(reportSchemaWithFieldsSchema) });
 const schemaListSummary = z.object({ items: z.array(reportSchemaSummarySchema) });
 

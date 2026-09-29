@@ -31,6 +31,7 @@ import {
   flagReportItems,
   resolveReportFlag,
   fetchReportAuditLogs,
+  fetchReportScorePreview,
 } from '@/lib/reports/api';
 import { fetchClubPoints } from '@/lib/points/api';
 import type { ClubPointsEntry } from '@/lib/points/types';
@@ -630,11 +631,13 @@ function describeTrace(entry: ClubPointsEntry): string {
 }
 
 function ReportPointsCard({
+  reportId,
   clubId,
   month,
   ryYear,
   reportStatus,
 }: {
+  reportId: string;
   clubId: string;
   month: string;
   ryYear: number;
@@ -645,9 +648,15 @@ function ReportPointsCard({
     queryFn: () => fetchClubPoints(clubId, { ryYear, month }),
   });
 
+  const previewQuery = useQuery({
+    queryKey: ['report-score-preview', reportId],
+    queryFn: () => fetchReportScorePreview(reportId),
+    enabled: Boolean(reportId && reportStatus !== 'scored'),
+  });
+
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  if (pointsQuery.isPending) {
+  if (pointsQuery.isPending && previewQuery.isPending) {
     return (
       <Card eyebrow="POINTS & SCORING RULES">
         <Skeleton shape="rect" className="h-28" />
@@ -655,14 +664,16 @@ function ReportPointsCard({
     );
   }
 
-  if (pointsQuery.isError) {
+  const summary = pointsQuery.data;
+  const preview = previewQuery.data;
+  const hasSavedEntries = (summary?.entries?.length ?? 0) > 0;
+  const entries = hasSavedEntries ? summary!.entries : ((preview?.entries ?? []) as unknown as ClubPointsEntry[]);
+  const total = hasSavedEntries ? summary!.total : (preview?.total ?? 0);
+  const judged = summary?.judged;
+
+  if (!summary && !preview) {
     return null;
   }
-
-  const summary = pointsQuery.data;
-  const entries = summary.entries ?? [];
-  const total = summary.total;
-  const judged = summary.judged;
 
   return (
     <Card
@@ -672,7 +683,7 @@ function ReportPointsCard({
           <span>Monthly Points Breakdown</span>
           <div className="flex items-center gap-2">
             <Badge tone={reportStatus === 'scored' ? 'green' : 'blue'}>
-              {reportStatus === 'scored' ? `${total} PTS CONFIRMED` : `${total} PTS (CALCULATED)`}
+              {reportStatus === 'scored' ? `${total} PTS CONFIRMED` : `${total} PTS (PRELIMINARY)`}
             </Badge>
           </div>
         </div>
@@ -680,9 +691,11 @@ function ReportPointsCard({
     >
       {reportStatus !== 'scored' && (
         <div className="mb-4 rounded-lg border border-line-accent bg-page p-3 text-[12.5px] text-fg-2">
-          <p className="m-0 font-medium text-fg">Pending Final Secretariat Scoring</p>
+          <p className="m-0 font-medium text-fg">
+            {hasSavedEntries ? 'Preliminary Score Recorded' : 'Preliminary Score Preview'}
+          </p>
           <p className="m-0 mt-0.5 text-fg-3 text-[11.5px]">
-            Points below reflect automated rule calculations from your reported activities and metrics. Final scores are verified by the District Secretariat upon review.
+            Points below reflect automated rule calculations from your reported activities and metrics. Final scores are verified and confirmed by the District Secretariat upon review.
           </p>
         </div>
       )}
@@ -759,11 +772,11 @@ function ReportPointsCard({
         </div>
       )}
 
-      {summary.byCategory && summary.byCategory.length > 0 && (
+      {Boolean(summary?.byCategory && summary.byCategory.length > 0) && (
         <div className="mt-4 border-t border-line pt-3">
           <p className="m-0 text-[11px] font-bold uppercase tracking-wider text-fg-3 mb-2">Category Summary</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {summary.byCategory.map((cat) => (
+            {summary?.byCategory?.map((cat) => (
               <div key={cat.categoryId} className="rounded-lg bg-page p-2.5 border border-line">
                 <div className="text-[11px] text-fg-3 truncate">{cat.categoryName}</div>
                 <div className="text-[14px] font-bold text-fg mt-0.5">{cat.points} pts</div>
@@ -872,6 +885,7 @@ export function ReportDetailPage() {
 
 function ReportDetailPageInner() {
   const { id = '' } = useParams();
+  const navigate = useNavigate();
   const { can } = useAuth();
   const qc = useQueryClient();
   useDocumentMeta({ title: 'Report detail' });
@@ -1015,6 +1029,17 @@ function ReportDetailPageInner() {
               >
                 <Trash2 size={13} />
                 <span>Delete</span>
+              </Button>
+            )}
+
+            {canManageReports && (report.status === 'submitted' || report.status === 'scored') && (
+              <Button
+                variant="primary"
+                size="sm"
+                className="flex items-center gap-1.5"
+                onClick={() => navigate(`/portal/admin/clubs/${report.clubId}/${report.month.slice(0, 7)}`)}
+              >
+                <span>{report.status === 'scored' ? 'Re-Score Report' : 'Score this Report'}</span>
               </Button>
             )}
 
@@ -1227,6 +1252,7 @@ function ReportDetailPageInner() {
             </Card>
 
             <ReportPointsCard
+              reportId={report.id}
               clubId={report.clubId}
               month={report.month.slice(0, 7)}
               ryYear={report.ryYear}

@@ -10,7 +10,13 @@ import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Stat } from '@/components/ui/Stat';
-import { fetchActiveReportSchema, fetchReport, fetchReportSchemaVersion, updateReport } from '@/lib/reports/api';
+import {
+  fetchActiveReportSchema,
+  fetchReport,
+  fetchReportSchemaVersion,
+  fetchReportScorePreview,
+  updateReport,
+} from '@/lib/reports/api';
 import { formatMonthLabel } from '@/lib/reports/month';
 import { activitiesOf, activitySummaryDetail, activitySummaryLabel, splitFields } from '@/lib/reports/values';
 import { ApiError } from '@/lib/api';
@@ -42,6 +48,12 @@ export function ReviewSubmitPage() {
       return fetchActiveReportSchema();
     },
     enabled: Boolean(reportQuery.data),
+  });
+
+  const previewQuery = useQuery({
+    queryKey: ['report-score-preview', id],
+    queryFn: () => fetchReportScorePreview(id),
+    enabled: Boolean(id),
   });
 
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -234,10 +246,43 @@ export function ReviewSubmitPage() {
             </div>
           </div>
 
-          <Card title="The nil month" tone="plain">
-            If the club genuinely did nothing this month, submitting with zero activities is the whole report — a single
-            sentence in the compliance record, not a missing one.
-          </Card>
+          <div className="flex flex-col gap-4">
+            <Card
+              eyebrow="PRELIMINARY SCORE"
+              title={
+                <div className="flex items-center justify-between">
+                  <span>Estimated Points</span>
+                  <span className="text-[18px] font-extrabold text-accent">
+                    {previewQuery.data ? `+${previewQuery.data.total} PTS` : '—'}
+                  </span>
+                </div>
+              }
+            >
+              <p className="m-0 text-[12px] text-fg-3 mb-3">
+                Calculated automatically from your reported activities, stats, and on-time filing. Final scores will be verified and scored by the District Secretariat upon review.
+              </p>
+              {previewQuery.data?.entries && previewQuery.data.entries.length > 0 ? (
+                <div className="divide-y divide-line text-xs">
+                  {previewQuery.data.entries.map((entry) => (
+                    <div key={entry.ruleId} className="py-2 flex items-center justify-between first:pt-0 last:pb-0">
+                      <div>
+                        <p className="m-0 font-semibold text-fg">{entry.ruleLabel}</p>
+                        <p className="m-0 text-[11px] text-fg-3">{entry.categoryName}</p>
+                      </div>
+                      <span className="font-bold text-fg shrink-0">+{entry.points}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="m-0 text-xs text-fg-3 italic">No points calculated for this return yet.</p>
+              )}
+            </Card>
+
+            <Card title="The nil month" tone="plain">
+              If the club genuinely did nothing this month, submitting with zero activities is the whole report — a single
+              sentence in the compliance record, not a missing one.
+            </Card>
+          </div>
         </div>
       </Section>
     </Container>
