@@ -255,7 +255,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "lng": 77.2285,
     "location": "Sheikh Sarai, Delhi",
     "address": "COLLEGE OF VOCATIONAL STUDIESDELHI, 110017, IndiaDelhi",
-    "president": "Rtr. Jubin Sabu",
+    "president": "Rtr. Jubin Sahu",
     "isDirector": "",
     "phone": "",
     "email": "rotaractclubofcvs@gmail.com",
