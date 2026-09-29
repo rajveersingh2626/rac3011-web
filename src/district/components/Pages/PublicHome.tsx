@@ -13,6 +13,7 @@ import MobileHomeExperience from '../Home/MobileHomeExperience';
 import DistrictRoadmap from '../Home/DistrictRoadmap';
 import DistrictImpactStats from '../Home/DistrictImpactStats';
 import ClubShowcasePreview from '../Home/ClubShowcasePreview';
+import { useDistrictClubs } from '../../hooks/useDistrictClubs';
 import { postEnquiry } from '@/lib/publicApi/enquiries';
 import { useLiveVisits, useVisitOnce } from '@/lib/publicApi/live';
 import { useContentQuery, type ContentBlocks } from '@/lib/publicApi/content';
@@ -632,6 +633,9 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const { clubs } = useDistrictClubs();
+  const clubCount = clubs.length || 49;
+
   const homeContentQuery = useContentQuery('home');
   const aboutContentQuery = useContentQuery('about');
   const achievementsQuery = useQuery({
@@ -649,18 +653,29 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
 
   const impactMetrics = useMemo<ImpactMetric[]>(() => {
     const stats = listBlockOf(homeContentQuery.data, 'impact-stats', impactStatsSchema);
-    if (!stats || stats.length === 0) return IMPACT_METRICS;
+    if (!stats || stats.length === 0) {
+      return [
+        { ...IMPACT_METRICS[0], value: String(clubCount) },
+        ...IMPACT_METRICS.slice(1),
+      ];
+    }
     return stats.map((stat, idx) => {
       const base = IMPACT_METRICS[idx % IMPACT_METRICS.length];
+      const val =
+        idx === 0 && (stat.value === undefined || stat.value === '' || stat.value === '75')
+          ? String(clubCount)
+          : stat.value === undefined || stat.value === ''
+            ? base.value
+            : String(stat.value);
       return {
         label: stat.label || base.label,
-        value: stat.value === undefined || stat.value === '' ? base.value : String(stat.value),
+        value: val,
         suffix: stat.suffix || base.suffix,
         change: stat.note || base.change,
         color: stat.color || base.color,
       };
     });
-  }, [homeContentQuery.data]);
+  }, [homeContentQuery.data, clubCount]);
 
   const focusAreas = useMemo<FocusArea[]>(() => {
     const areas = listBlockOf(aboutContentQuery.data, 'areas-of-focus', areasOfFocusSchema);
@@ -898,6 +913,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
         <DistrictBentoMatrix
           onNavigateDistrict={onNavigateDistrict}
           onNavigatePage={onNavigatePage}
+          clubCount={clubCount}
         />
       </section>
 

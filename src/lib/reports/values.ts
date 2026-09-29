@@ -162,6 +162,10 @@ export function formatFieldValue(field: ReportField, value: unknown): string {
       return Array.isArray(value) && value.length > 0 ? value.join(', ') : '—';
     case 'link':
       return Array.isArray(value) ? (value.length > 0 ? `${value.length} link(s)` : '—') : String(value);
+    case 'number': {
+      const num = Number(value);
+      return Number.isNaN(num) ? '—' : String(Math.max(0, num));
+    }
     case 'select':
       return humanize(String(value));
     default:

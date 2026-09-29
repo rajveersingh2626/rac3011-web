@@ -20,7 +20,7 @@ const TABS: TabItem[] = [
   { id: 'partners', label: 'Partners' },
   { id: 'publications', label: 'Publications' },
   { id: 'resources', label: 'Resources' },
-  { id: 'past-drrs', label: 'Past DRRs' },
+  { id: 'past-drrs', label: 'Council of DRRs' },
   { id: 'district-team', label: 'District team' },
   { id: 'enquiries', label: 'Enquiries' },
   { id: 'sister-club-requests', label: 'Sister-club requests' },
@@ -35,7 +35,7 @@ export function PublicContentPage() {
 
   return (
     <Container width="wide">
-      <Section title="Public content" description="Simple CRUD tables for the public-facing content that lives outside pages: achievements, event gallery, partners, publications, resources, past DRRs, district team, enquiries and sister-club requests.">
+      <Section title="Public content" description="Simple CRUD tables for the public-facing content that lives outside pages: achievements, event gallery, partners, publications, resources, Council of DRRs, district team, enquiries and sister-club requests.">
         <Tabs
           tabs={TABS}
           value={kind}

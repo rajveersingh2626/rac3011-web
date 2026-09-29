@@ -7,9 +7,10 @@ import {
 export interface DistrictBentoMatrixProps {
   onNavigateDistrict?: (tab: string) => void;
   onNavigatePage?: (page: string, tab?: string) => void;
+  clubCount?: number;
 }
 
-const HERO_SLIDES = [
+const getHeroSlides = (clubCount: number) => [
   {
     id: 'bento-slide-1',
     src: '/slideshow-yugarambh-sitting.webp',
@@ -20,7 +21,7 @@ const HERO_SLIDES = [
     id: 'bento-slide-2',
     src: '/slideshow-yugarambh-standing.webp',
     title: 'United in Purpose: District Council',
-    subtitle: '75 Clubs Across Delhi & NCR'
+    subtitle: `${clubCount} Clubs Across Delhi & NCR`
   },
   {
     id: 'bento-slide-3',
@@ -38,8 +39,10 @@ const HERO_SLIDES = [
 
 export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   onNavigateDistrict,
-  onNavigatePage
+  onNavigatePage,
+  clubCount = 49
 }) => {
+  const heroSlides = getHeroSlides(clubCount);
   const [slideIdx, setSlideIdx] = useState(0);
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
   const [isTablet, setIsTablet] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768 && window.innerWidth < 1024);
@@ -57,10 +60,10 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
   // Auto-advance hero carousel inside bento
   useEffect(() => {
     const timer = setInterval(() => {
-      setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+      setSlideIdx((prev) => (prev + 1) % heroSlides.length);
     }, 4800);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   const navigateTo = (tab: string) => {
     if (onNavigatePage) {
@@ -116,7 +119,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
           }}
         >
           {/* Photos Layer with Crossfade */}
-          {HERO_SLIDES.map((slide, idx) => {
+          {heroSlides.map((slide, idx) => {
             const isActive = idx === slideIdx;
             return (
               <div
@@ -222,7 +225,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setSlideIdx((prev) => (prev === 0 ? HERO_SLIDES.length - 1 : prev - 1));
+                setSlideIdx((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
               }}
               style={{
                 width: '32px',
@@ -244,7 +247,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+                setSlideIdx((prev) => (prev + 1) % heroSlides.length);
               }}
               style={{
                 width: '32px',
@@ -277,7 +280,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                 lineHeight: 1.2
               }}
             >
-              {HERO_SLIDES[slideIdx].title}
+              {heroSlides[slideIdx].title}
             </h3>
             <p
               style={{
@@ -287,12 +290,12 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                 fontWeight: 500
               }}
             >
-              {HERO_SLIDES[slideIdx].subtitle}
+              {heroSlides[slideIdx].subtitle}
             </p>
 
             {/* Slide Dots */}
             <div style={{ display: 'flex', gap: '6px' }}>
-              {HERO_SLIDES.map((_, dotIdx) => {
+              {heroSlides.map((_, dotIdx) => {
                 const isDotActive = dotIdx === slideIdx;
                 return (
                   <button
@@ -383,7 +386,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
                   ZONE RADAR
                 </span>
                 <h4 style={{ fontSize: isMobile ? '1.1rem' : '1.25rem', fontWeight: 900, color: '#FFFFFF', margin: 0 }}>
-                  Interactive Map &amp; 54+ Clubs
+                  Interactive Map &amp; {clubCount} Clubs
                 </h4>
               </div>
             </div>
@@ -569,7 +572,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
         </div>
 
         {/* ===================================================================
-            TILE 4: 1x1 SPAN (Council of Past DRRs & Heritage Vault)
+            TILE 4: 1x1 SPAN (Council of DRRs & Heritage Vault)
            =================================================================== */}
         <div
           role="button"
@@ -649,7 +652,7 @@ export const DistrictBentoMatrix: FC<DistrictBentoMatrixProps> = ({
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
               }}
-              aria-label="View Past DRR Legacy"
+              aria-label="View Council of DRRs Legacy"
             >
               <ArrowUpRight size={16} />
             </button>

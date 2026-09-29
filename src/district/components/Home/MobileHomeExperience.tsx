@@ -150,10 +150,20 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
     staleTime: 60 * 1000,
   });
 
-  const totalClubs = clubsQuery.data?.items?.length || 54;
+  const totalClubs = clubsQuery.data?.items?.filter((c) => c.id !== 'DISTRICT')?.length || 49;
   const totalLeaders = teamQuery.data?.items?.length || 50;
   const totalPastDrrs = pastDrrsQuery.data?.items?.length || 40;
   const totalAchievements = achievementsQuery.data?.items?.length || 6;
+
+  const heroSlides = useMemo(
+    () =>
+      HERO_SLIDES.map((s) =>
+        s.id === 'mob-slide-2'
+          ? { ...s, subtitle: `${totalClubs} Rotaract Clubs Uniting Across Delhi & NCR` }
+          : s,
+      ),
+    [totalClubs],
+  );
 
   // Dynamic zone data computation from live API clubs & zones
   const zonesData = useMemo(() => {
@@ -198,10 +208,10 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+      setSlideIdx((prev) => (prev + 1) % heroSlides.length);
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.touches[0].clientX);
@@ -211,9 +221,9 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
     if (touchStartX === null) return;
     const diff = touchStartX - e.changedTouches[0].clientX;
     if (diff > 40) {
-      setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length);
+      setSlideIdx((prev) => (prev + 1) % heroSlides.length);
     } else if (diff < -40) {
-      setSlideIdx((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
+      setSlideIdx((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
     }
     setTouchStartX(null);
   };
@@ -244,7 +254,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
     }
   };
 
-  const currentSlide = HERO_SLIDES[slideIdx];
+  const currentSlide = heroSlides[slideIdx];
   const activeZoneObj = zonesData.find((z) => z.id === selectedZone) || zonesData[0];
 
   // Secondary Quick District Navigation Cards
@@ -451,7 +461,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             boxSizing: 'border-box'
           }}
         >
-          {HERO_SLIDES.map((slide, idx) => (
+          {heroSlides.map((slide, idx) => (
             <img
               key={slide.id}
               src={slide.src}
@@ -515,7 +525,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 type="button"
-                onClick={() => setSlideIdx((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)}
+                onClick={() => setSlideIdx((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
                 aria-label="Previous slide"
                 style={{
                   width: '30px',
@@ -536,7 +546,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => setSlideIdx((prev) => (prev + 1) % HERO_SLIDES.length)}
+                onClick={() => setSlideIdx((prev) => (prev + 1) % heroSlides.length)}
                 aria-label="Next slide"
                 style={{
                   width: '30px',
@@ -580,7 +590,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
 
             {/* Crisp Pill Indicators (Zero Distortion) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
-              {HERO_SLIDES.map((_, i) => (
+              {heroSlides.map((_, i) => (
                 <button
                   key={i}
                   type="button"
@@ -844,7 +854,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
             </div>
           </div>
 
-          {/* Card B: Council of Past DRRs (Heritage Vault) (Prominent High-Contrast Card) */}
+          {/* Card B: Council of DRRs (Heritage Vault) (Prominent High-Contrast Card) */}
           <div
             onClick={() => navigateTo('heritage')}
             style={{
@@ -883,7 +893,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
                     HISTORICAL ARCHIVE (1985–2026)
                   </span>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', margin: '1px 0 0 0' }}>
-                    Council of Past DRRs
+                    Council of DRRs
                   </h3>
                 </div>
               </div>

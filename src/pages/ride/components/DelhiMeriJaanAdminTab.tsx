@@ -366,8 +366,8 @@ export function DelhiMeriJaanAdminTab() {
                       onClick={() => updateStatus(selectedRecord.id, st)}
                       className={`px-3 py-1.5 rounded-xl border-2 border-[#171515] text-xs font-black transition-all cursor-pointer ${
                         selectedRecord.status === st
-                          ? 'bg-[#EA6623] text-white ride-pop-sm'
-                          : 'bg-neutral-50 hover:bg-neutral-100'
+                          ? 'bg-[#EA6623] text-white ride-pop-sm shadow-sm'
+                          : 'bg-white hover:bg-neutral-100 text-[#171515]'
                       }`}
                     >
                       {st.toUpperCase()}

@@ -143,6 +143,14 @@ export function NewReportPage() {
           }
         }
       }
+      // Sanitize any negative numeric fields in draft values
+      for (const [k, v] of Object.entries(nextValues)) {
+        if (typeof v === 'number' && v < 0) {
+          nextValues[k] = Math.max(0, v);
+        } else if (typeof v === 'string' && /^-?\d+$/.test(v) && Number(v) < 0) {
+          nextValues[k] = Math.max(0, Number(v));
+        }
+      }
       setValues(nextValues);
       setNotes(nextNotes);
     }

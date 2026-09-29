@@ -14,7 +14,6 @@ import {
   fetchActiveReportSchema,
   fetchReport,
   fetchReportSchemaVersion,
-  fetchReportScorePreview,
   updateReport,
 } from '@/lib/reports/api';
 import { formatMonthLabel } from '@/lib/reports/month';
@@ -48,12 +47,6 @@ export function ReviewSubmitPage() {
       return fetchActiveReportSchema();
     },
     enabled: Boolean(reportQuery.data),
-  });
-
-  const previewQuery = useQuery({
-    queryKey: ['report-score-preview', id],
-    queryFn: () => fetchReportScorePreview(id),
-    enabled: Boolean(id),
   });
 
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -248,34 +241,12 @@ export function ReviewSubmitPage() {
 
           <div className="flex flex-col gap-4">
             <Card
-              eyebrow="PRELIMINARY SCORE"
-              title={
-                <div className="flex items-center justify-between">
-                  <span>Estimated Points</span>
-                  <span className="text-[18px] font-extrabold text-accent">
-                    {previewQuery.data ? `+${previewQuery.data.total} PTS` : '—'}
-                  </span>
-                </div>
-              }
+              eyebrow="DISTRICT SECRETARIAT SCORING"
+              title="Official Review & Evaluation"
             >
-              <p className="m-0 text-[12px] text-fg-3 mb-3">
-                Calculated automatically from your reported activities, stats, and on-time filing. Final scores will be verified and scored by the District Secretariat upon review.
+              <p className="m-0 text-[12.5px] text-fg-2 leading-relaxed">
+                Reports are officially reviewed and scored by the District Secretariat (DAC). Points will be verified and awarded exclusively by authorized Secretariat evaluators upon review of your submitted activities and documentation.
               </p>
-              {previewQuery.data?.entries && previewQuery.data.entries.length > 0 ? (
-                <div className="divide-y divide-line text-xs">
-                  {previewQuery.data.entries.map((entry) => (
-                    <div key={entry.ruleId} className="py-2 flex items-center justify-between first:pt-0 last:pb-0">
-                      <div>
-                        <p className="m-0 font-semibold text-fg">{entry.ruleLabel}</p>
-                        <p className="m-0 text-[11px] text-fg-3">{entry.categoryName}</p>
-                      </div>
-                      <span className="font-bold text-fg shrink-0">+{entry.points}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="m-0 text-xs text-fg-3 italic">No points calculated for this return yet.</p>
-              )}
             </Card>
 
             <Card title="The nil month" tone="plain">

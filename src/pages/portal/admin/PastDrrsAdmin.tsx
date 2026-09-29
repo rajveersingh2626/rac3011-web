@@ -19,7 +19,7 @@ function slugify(s: string): string {
 export function PastDrrsAdmin({ canWrite }: { canWrite: boolean }) {
   return (
     <PublicContentTable<PastDrr>
-      title="Past DRR"
+      title="Council of DRRs"
       queryKey="past-drrs-admin"
       crud={pastDrrsApi}
       orderable

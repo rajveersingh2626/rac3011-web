@@ -175,7 +175,7 @@ export const ROTARY_FOCUS_AREAS: FocusArea[] = [
 // Only figures the district can evidence from its own roster. Anything without a
 // verifiable source (money raised, lives impacted, blood units) stays off the site.
 export const IMPACT_METRICS: ImpactMetric[] = [
-  { label: "Active Clubs", value: "75", suffix: "Clubs", change: "RY 2026-27", color: "#123499" },
+  { label: "Active Clubs", value: "49", suffix: "Clubs", change: "RY 2026-27", color: "#123499" },
   { label: "Zones", value: "4", suffix: "Zones", change: "RY 2026-27", color: "#D81B60" },
   { label: "Clubs Chartered", value: "5", suffix: "Clubs", change: "RY 2026-27", color: "#880E4F" }
 ];
@@ -260,7 +260,7 @@ export const INITIAL_CLUBS: DistrictClub[] = [
     "phone": "",
     "email": "rotaractclubofcvs@gmail.com",
     "rotaryId": "216041",
-    "secretary": "Rtr. Mohd Arham",
+    "secretary": "Rtr. Mohd Arham Sahu",
     "secretaryEmail": "",
     "secretaryPhone": "",
     "charterYear": 2018,
@@ -751,9 +751,9 @@ export const INITIAL_CLUBS: DistrictClub[] = [
   },
   {
     "id": "c12",
-    "slug": "ilmaura",
-    "name": "Rotaract Club of Ilmaura",
-    "shortName": "Ilmaura",
+    "slug": "rotaract-club-of-delhi-ilmaura",
+    "name": "Rotaract Club of Delhi Ilmaura",
+    "shortName": "Delhi Ilmaura",
     "zone": "Zone Prithvi",
     "lat": 28.61,
     "lng": 77.23,

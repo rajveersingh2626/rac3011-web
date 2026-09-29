@@ -31,7 +31,6 @@ import {
   flagReportItems,
   resolveReportFlag,
   fetchReportAuditLogs,
-  fetchReportScorePreview,
 } from '@/lib/reports/api';
 import { fetchClubPoints } from '@/lib/points/api';
 import type { ClubPointsEntry } from '@/lib/points/types';
@@ -631,32 +630,44 @@ function describeTrace(entry: ClubPointsEntry): string {
 }
 
 function ReportPointsCard({
-  reportId,
   clubId,
   month,
   ryYear,
   reportStatus,
 }: {
-  reportId: string;
   clubId: string;
   month: string;
   ryYear: number;
   reportStatus: ReportStatus;
+  reportId?: string;
 }) {
   const pointsQuery = useQuery({
     queryKey: ['club-points', clubId, ryYear, month],
     queryFn: () => fetchClubPoints(clubId, { ryYear, month }),
-  });
-
-  const previewQuery = useQuery({
-    queryKey: ['report-score-preview', reportId],
-    queryFn: () => fetchReportScorePreview(reportId),
-    enabled: Boolean(reportId && reportStatus !== 'scored'),
+    enabled: reportStatus === 'scored',
   });
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  if (pointsQuery.isPending && previewQuery.isPending) {
+  if (reportStatus !== 'scored') {
+    return (
+      <Card
+        eyebrow="POINTS & SCORING RULES"
+        title={
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>Monthly Points Breakdown</span>
+            <Badge tone="amber">Awaiting Secretariat Scoring</Badge>
+          </div>
+        }
+      >
+        <p className="m-0 text-[13px] text-fg-3">
+          Reports are officially reviewed and scored by the District Secretariat (DAC). Verified points will appear here once scored by an authorized DAC evaluator.
+        </p>
+      </Card>
+    );
+  }
+
+  if (pointsQuery.isPending) {
     return (
       <Card eyebrow="POINTS & SCORING RULES">
         <Skeleton shape="rect" className="h-28" />
@@ -665,13 +676,11 @@ function ReportPointsCard({
   }
 
   const summary = pointsQuery.data;
-  const preview = previewQuery.data;
-  const hasSavedEntries = (summary?.entries?.length ?? 0) > 0;
-  const entries = hasSavedEntries ? summary!.entries : ((preview?.entries ?? []) as unknown as ClubPointsEntry[]);
-  const total = hasSavedEntries ? summary!.total : (preview?.total ?? 0);
+  const entries = summary?.entries ?? [];
+  const total = summary?.total ?? 0;
   const judged = summary?.judged;
 
-  if (!summary && !preview) {
+  if (!summary) {
     return null;
   }
 
@@ -682,23 +691,13 @@ function ReportPointsCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>Monthly Points Breakdown</span>
           <div className="flex items-center gap-2">
-            <Badge tone={reportStatus === 'scored' ? 'green' : 'blue'}>
-              {reportStatus === 'scored' ? `${total} PTS CONFIRMED` : `${total} PTS (PRELIMINARY)`}
+            <Badge tone="green">
+              {total} PTS CONFIRMED
             </Badge>
           </div>
         </div>
       }
     >
-      {reportStatus !== 'scored' && (
-        <div className="mb-4 rounded-lg border border-line-accent bg-page p-3 text-[12.5px] text-fg-2">
-          <p className="m-0 font-medium text-fg">
-            {hasSavedEntries ? 'Preliminary Score Recorded' : 'Preliminary Score Preview'}
-          </p>
-          <p className="m-0 mt-0.5 text-fg-3 text-[11.5px]">
-            Points below reflect automated rule calculations from your reported activities and metrics. Final scores are verified and confirmed by the District Secretariat upon review.
-          </p>
-        </div>
-      )}
 
       {entries.length === 0 ? (
         <p className="m-0 text-[13px] text-fg-3">

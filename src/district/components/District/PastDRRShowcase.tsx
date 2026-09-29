@@ -317,7 +317,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
             }}
           >
             <Shield size={isMobile ? 12 : 13} />
-            {isMobile ? 'Past DRR' : 'District Rotaract Representative'}
+            {isMobile ? 'DRR' : 'District Rotaract Representative'}
           </div>
 
           {drr.homeClub && (
@@ -593,7 +593,7 @@ export default function PastDRRShowcase() {
           scrollbarWidth: 'none'
         }}>
           {[
-            { id: 'all', label: `All Past DRRs (${counts.all})`, color: 'var(--rotaract-pink)' },
+            { id: 'all', label: `Council of DRRs (${counts.all})`, color: 'var(--rotaract-pink)' },
             { id: '3011', label: `District 3011 (${counts['3011']})`, color: '#D81B60' },
             { id: '3010', label: `District 3010 (${counts['3010']})`, color: '#1E3A8A' },
             { id: '301', label: `District 301 (${counts['301']})`, color: '#065F46' }

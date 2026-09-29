@@ -47,8 +47,23 @@ export function ReportFieldControl({ field, value, onChange, onBlur, error, club
           <Input
             type="number"
             inputMode="numeric"
-            value={typeof value === 'number' ? String(value) : typeof value === 'string' ? value : ''}
-            onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+            min={0}
+            value={
+              typeof value === 'number'
+                ? String(Math.max(0, value))
+                : typeof value === 'string'
+                  ? value
+                  : ''
+            }
+            onChange={(e) => {
+              const raw = e.target.value;
+              if (raw === '') {
+                onChange('');
+              } else {
+                const parsed = Number(raw);
+                onChange(Number.isNaN(parsed) ? 0 : Math.max(0, parsed));
+              }
+            }}
             onBlur={onBlur}
             disabled={disabled}
           />
