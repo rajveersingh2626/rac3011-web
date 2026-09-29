@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { Select, type SelectOption } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -19,8 +20,16 @@ import { useToast } from '@/components/ui/Toast';
 import { fetchClub } from '@/lib/clubs';
 import { formatMonthLabel, ryYearOf } from '@/lib/reports/month';
 import { fetchReports, addReportQuery, scoreReport } from '@/lib/reports/api';
-import { fetchClubPoints, patchJudgedPoints } from '@/lib/points/api';
+import {
+  fetchClubPoints,
+  patchJudgedPoints,
+  fetchPointCategories,
+  updateClubPointEntry,
+  createClubPointEntry,
+  deleteClubPointEntry,
+} from '@/lib/points/api';
 import type { ClubPointsEntry } from '@/lib/points/types';
+import { cn } from '@/lib/cn';
 
 const RULE_TYPE_LABEL: Record<string, string> = {
   flat: 'flat',
@@ -47,31 +56,85 @@ function describeTrace(entry: ClubPointsEntry): string {
   return '';
 }
 
-function RuleTraceRow({ entry }: { entry: ClubPointsEntry }) {
+function RuleTraceRow({
+  entry,
+  onEdit,
+  onDelete,
+  onReset,
+}: {
+  entry: ClubPointsEntry;
+  onEdit: (entry: ClubPointsEntry) => void;
+  onDelete: (entry: ClubPointsEntry) => void;
+  onReset: (entry: ClubPointsEntry) => void;
+}) {
   const [open, setOpen] = useState(false);
   const trace = entry.trace as Record<string, unknown> | null;
+  const isCustom = entry.kind === 'judged';
+  const isOverridden = Boolean(entry.isOverridden);
 
   return (
     <div className="border-b border-line-accent py-3 last:border-0">
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="m-0 text-[13.5px] font-bold text-fg">{entry.ruleLabel}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-fg-3">
-            <Badge tone="neutral">{RULE_TYPE_LABEL[entry.ruleType ?? '']} · {entry.rulePeriod}</Badge>
-            <span>{describeTrace(entry)}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="m-0 text-[13.5px] font-bold text-fg">{entry.ruleLabel}</p>
+            {isOverridden && <Badge tone="amber">Manual Override</Badge>}
+            {isCustom && <Badge tone="blue">Manual Entry</Badge>}
           </div>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-fg-3">
+            {entry.ruleType ? (
+              <Badge tone="neutral">{RULE_TYPE_LABEL[entry.ruleType ?? '']} · {entry.rulePeriod}</Badge>
+            ) : null}
+            {describeTrace(entry) && <span>{describeTrace(entry)}</span>}
+            {isOverridden && typeof entry.originalPoints === 'number' && (
+              <span className="text-fg-3">(Rule formula was: {entry.originalPoints} pts)</span>
+            )}
+          </div>
+          {entry.reason && (
+            <p className="m-0 mt-1 text-[11.5px] italic text-fg-2">
+              Note: {entry.reason}
+            </p>
+          )}
         </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <span className="text-[15px] font-extrabold text-fg">{entry.points}</span>
-          <button type="button" className="text-[11.5px] font-bold text-accent" onClick={() => setOpen((o) => !o)}>
-            {open ? 'hide' : 'trace'}
-          </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={cn('text-[15px] font-extrabold', isOverridden ? 'text-accent' : 'text-fg')}>
+            {entry.points > 0 ? `+${entry.points}` : entry.points}
+          </span>
+          <Button variant="ghost" size="sm" onClick={() => onEdit(entry)} className="h-7 px-2 text-[11.5px]">
+            Edit
+          </Button>
+          {isOverridden && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onReset(entry)}
+              className="h-7 px-2 text-[11.5px] text-fg-3 hover:text-fg"
+              title="Reset to rule formula calculation"
+            >
+              Reset
+            </Button>
+          )}
+          {isCustom && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(entry)}
+              className="h-7 px-2 text-[11.5px] text-red-500 hover:bg-red-500/10"
+            >
+              Delete
+            </Button>
+          )}
+          {trace && (
+            <button type="button" className="text-[11.5px] font-bold text-accent" onClick={() => setOpen((o) => !o)}>
+              {open ? 'hide' : 'trace'}
+            </button>
+          )}
         </div>
       </div>
       {open && trace && (
         <div className="mt-3 rounded-[10px] border border-line-accent bg-input px-4 py-3">
           <KeyValue
-            items={Object.entries(trace.inputs as Record<string, unknown>).map(([k, v]) => ({
+            items={Object.entries((trace.inputs as Record<string, unknown>) ?? {}).map(([k, v]) => ({
               label: k,
               value: String(v),
             }))}
@@ -102,6 +165,18 @@ export function ScoreMonthPage() {
   const [queryOpen, setQueryOpen] = useState(false);
   const [question, setQuestion] = useState('');
 
+  // Editing single entry state
+  const [editingEntry, setEditingEntry] = useState<ClubPointsEntry | null>(null);
+  const [editPoints, setEditPoints] = useState('');
+  const [editReason, setEditReason] = useState('');
+
+  // Adding custom entry state
+  const [addCustomOpen, setAddCustomOpen] = useState(false);
+  const [customCategoryId, setCustomCategoryId] = useState('');
+  const [customLabel, setCustomLabel] = useState('');
+  const [customPoints, setCustomPoints] = useState('');
+  const [customReason, setCustomReason] = useState('');
+
   const clubQuery = useQuery({ queryKey: ['club', clubId], queryFn: () => fetchClub(clubId), enabled: Boolean(clubId) });
   const pointsQuery = useQuery({
     queryKey: ['club-points', clubId, ryYear, month],
@@ -112,6 +187,10 @@ export function ScoreMonthPage() {
     queryKey: ['reports', 'score-month', clubId, month],
     queryFn: () => fetchReports({ clubId, month, pageSize: 1 }),
     enabled: Boolean(clubId && month),
+  });
+  const categoriesQuery = useQuery({
+    queryKey: ['point-categories'],
+    queryFn: fetchPointCategories,
   });
 
   const saveMutation = useMutation({
@@ -183,6 +262,84 @@ export function ScoreMonthPage() {
     },
   });
 
+  const updateEntryMutation = useMutation({
+    mutationFn: (vars: { entryId: string; points: number; reason?: string | null }) =>
+      updateClubPointEntry(clubId, vars.entryId, { points: vars.points, reason: vars.reason }),
+    onSuccess: () => {
+      setEditingEntry(null);
+      void qc.invalidateQueries({ queryKey: ['club-points', clubId, ryYear, month] });
+      toast({
+        title: 'Entry Updated',
+        body: 'Point value and reason have been updated.',
+        tone: 'success',
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to update entry',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const createCustomMutation = useMutation({
+    mutationFn: (vars: { month: string; categoryId: string; label: string; points: number; reason?: string | null }) =>
+      createClubPointEntry(clubId, vars),
+    onSuccess: () => {
+      setAddCustomOpen(false);
+      setCustomLabel('');
+      setCustomPoints('');
+      setCustomReason('');
+      void qc.invalidateQueries({ queryKey: ['club-points', clubId, ryYear, month] });
+      toast({
+        title: 'Custom Entry Added',
+        body: 'New point item added to the monthly evaluation.',
+        tone: 'success',
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to add entry',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const deleteEntryMutation = useMutation({
+    mutationFn: (entryId: string) => deleteClubPointEntry(clubId, entryId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['club-points', clubId, ryYear, month] });
+      toast({
+        title: 'Entry Removed / Reset',
+        body: 'The point item was removed or reset to the rule formula.',
+        tone: 'success',
+      });
+    },
+    onError: (err) => {
+      toast({
+        title: 'Failed to delete/reset entry',
+        body: err instanceof Error ? err.message : 'Please try again.',
+        tone: 'error',
+      });
+    },
+  });
+
+  const handleStartEdit = (entry: ClubPointsEntry) => {
+    setEditingEntry(entry);
+    setEditPoints(String(entry.points));
+    setEditReason(entry.reason ?? '');
+  };
+
+  const handleResetEntry = (entry: ClubPointsEntry) => {
+    deleteEntryMutation.mutate(entry.id);
+  };
+
+  const handleDeleteEntry = (entry: ClubPointsEntry) => {
+    deleteEntryMutation.mutate(entry.id);
+  };
+
   if (pointsQuery.isPending || clubQuery.isPending) {
     return (
       <Container width="wide">
@@ -211,12 +368,17 @@ export function ScoreMonthPage() {
   const computedTotal = [...computedByCategory.values()].reduce((sum, c) => sum + c.points, 0);
   const judgedTotal = summary.judged?.points ?? 0;
 
+  const categoryOptions: SelectOption[] = (categoriesQuery.data ?? []).map((c) => ({
+    value: c.id,
+    label: c.name,
+  }));
+
   return (
     <Container width="wide">
       <Section
         eyebrow={club?.shortName ?? club?.name}
         title={`${club?.name ?? clubId} · ${monthLabel}`}
-        description={`${computedTotal} points computed from the rules. One number is yours to set.`}
+        description={`${computedTotal} points evaluated from rules & adjustments. Edit any item or add custom points below.`}
         action={
           <div className="flex items-center gap-2">
             {report && (
@@ -232,17 +394,35 @@ export function ScoreMonthPage() {
           </div>
         }
       >
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-accent">Computed — from the points document</p>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="m-0 text-[10px] font-bold uppercase tracking-[1px] text-accent">Evaluated Points Breakdown</p>
+          <Button variant="secondary" size="sm" onClick={() => setAddCustomOpen(true)}>
+            + Add Custom Point Entry
+          </Button>
+        </div>
+
         <Card className="mb-6">
           {computedByCategory.size === 0 ? (
-            <EmptyState title="Nothing computed yet for this month" body="No submitted report or club fact contributed points for this period." />
+            <EmptyState
+              title="Nothing computed yet for this month"
+              body="No submitted report or club fact contributed points for this period. You can add manual entries using the button above."
+            />
           ) : (
             <>
               {[...computedByCategory.values()].map((category) => (
                 <div key={category.name} className="border-b border-line-accent pb-2 pt-2 first:pt-0 last:border-0">
-                  <p className="m-0 mb-1 text-[11px] font-bold uppercase tracking-[0.5px] text-fg-3">{category.name}</p>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="m-0 text-[11px] font-bold uppercase tracking-[0.5px] text-fg-3">{category.name}</p>
+                    <span className="text-[11px] font-bold text-fg-3">{category.points} pts</span>
+                  </div>
                   {category.entries.map((entry) => (
-                    <RuleTraceRow key={entry.id} entry={entry} />
+                    <RuleTraceRow
+                      key={entry.id}
+                      entry={entry}
+                      onEdit={handleStartEdit}
+                      onDelete={handleDeleteEntry}
+                      onReset={handleResetEntry}
+                    />
                   ))}
                 </div>
               ))}
@@ -254,11 +434,10 @@ export function ScoreMonthPage() {
           )}
         </Card>
 
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-accent">Judged — the only field you type in</p>
+        <p className="mb-2 text-[10px] font-bold uppercase tracking-[1px] text-accent">Discretionary — General Judged Adjustment</p>
         <Card className="mb-6">
           <p className="mb-4 text-[13px] text-fg-2">
-            For anything the document has no category for — the quality of a collaboration, unusual effort. Leave it at zero unless
-            you can say why in the note.
+            For anything the points matrix has no category for — the quality of a collaboration, unusual effort, or overall evaluation bonus/penalty.
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-[160px_1fr]">
             <Field label="Points">
@@ -284,7 +463,7 @@ export function ScoreMonthPage() {
           <div>
             <p className="m-0 text-[18px] font-extrabold text-fg">{computedTotal + judgedTotal} points for {monthLabel}</p>
             <p className="m-0 text-[12px] text-fg-3">
-              {computedTotal} computed + {judgedTotal} judged
+              {computedTotal} evaluated + {judgedTotal} discretionary judged
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -295,6 +474,7 @@ export function ScoreMonthPage() {
             )}
             <Button
               variant="secondary"
+              aria-label="Save and open the next"
               loading={saveMutation.isPending}
               onClick={() => saveMutation.mutate()}
             >
@@ -313,6 +493,125 @@ export function ScoreMonthPage() {
         </div>
       </Section>
 
+      {/* Edit Entry Modal */}
+      <Modal
+        open={Boolean(editingEntry)}
+        onClose={() => setEditingEntry(null)}
+        title={`Edit Points: ${editingEntry?.ruleLabel ?? 'Point Entry'}`}
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => setEditingEntry(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              loading={updateEntryMutation.isPending}
+              disabled={editPoints.trim() === ''}
+              onClick={() => {
+                if (!editingEntry) return;
+                updateEntryMutation.mutate({
+                  entryId: editingEntry.id,
+                  points: Number(editPoints),
+                  reason: editReason.trim() || null,
+                });
+              }}
+            >
+              Save Points
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="m-0 text-[12.5px] text-fg-2">
+            Override or adjust the evaluated points for this specific item. An audit entry will be recorded with your user ID.
+          </p>
+          <Field label="Points" required>
+            <Input
+              type="number"
+              value={editPoints}
+              onChange={(e) => setEditPoints(e.target.value)}
+              placeholder="0"
+            />
+          </Field>
+          <Field label="Evaluator Note / Reason" hint="Explain why points are being adjusted">
+            <Textarea
+              rows={2}
+              value={editReason}
+              onChange={(e) => setEditReason(e.target.value)}
+              placeholder="e.g. Verified only 1 project met minimum attendee criteria"
+            />
+          </Field>
+        </div>
+      </Modal>
+
+      {/* Add Custom Point Modal */}
+      <Modal
+        open={addCustomOpen}
+        onClose={() => setAddCustomOpen(false)}
+        title="Add Custom Point Entry"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => setAddCustomOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              loading={createCustomMutation.isPending}
+              disabled={!customCategoryId || !customLabel.trim() || customPoints.trim() === ''}
+              onClick={() => {
+                createCustomMutation.mutate({
+                  month,
+                  categoryId: customCategoryId,
+                  label: customLabel.trim(),
+                  points: Number(customPoints),
+                  reason: customReason.trim() || null,
+                });
+              }}
+            >
+              Add Point Entry
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="m-0 text-[12.5px] text-fg-2">
+            Add a manual award or penalty to this club for {monthLabel}. This entry will appear under the selected category in the monthly breakdown.
+          </p>
+          <Field label="Category" required>
+            <Select
+              value={customCategoryId}
+              onChange={(e) => setCustomCategoryId(e.target.value)}
+              options={categoryOptions}
+              placeholder="Select a category..."
+            />
+          </Field>
+          <Field label="Title / Description" hint="e.g. Exemplary District Project Host, Zonal Meet Bonus" required>
+            <Input
+              value={customLabel}
+              onChange={(e) => setCustomLabel(e.target.value)}
+              placeholder="Short description"
+            />
+          </Field>
+          <Field label="Points" hint="Can be positive (award) or negative (penalty)" required>
+            <Input
+              type="number"
+              value={customPoints}
+              onChange={(e) => setCustomPoints(e.target.value)}
+              placeholder="e.g. 25 or -10"
+            />
+          </Field>
+          <Field label="Evaluator Note / Documentation" hint="Supporting details for audit log">
+            <Textarea
+              rows={2}
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              placeholder="Provide documentation or context..."
+            />
+          </Field>
+        </div>
+      </Modal>
+
+      {/* Query Modal */}
       <Modal
         open={queryOpen}
         onClose={() => setQueryOpen(false)}

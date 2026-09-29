@@ -55,9 +55,44 @@ function installHandlers() {
         pageSize: 1,
       }),
     ),
+    http.get('/point-categories', () =>
+      HttpResponse.json([{ id: 'c1', key: 'club_services', name: 'Club Services', order: 1 }]),
+    ),
     http.patch('/clubs/club_a/points', () => HttpResponse.json({ ...POINTS_SUMMARY, judged: { ...POINTS_SUMMARY.judged, points: 10 } })),
     http.post('/reports/:id/queries', () =>
       HttpResponse.json({ id: 'rep_a', clubId: 'club_a', ryYear: 2026, month: '2026-08-01', schemaVersion: 4, status: 'queried', values: { activities: [] }, notes: null, submittedById: 'u1', submittedAt: '2026-09-01T00:00:00Z', filedOnTime: true, scoredAt: null }),
+    ),
+    http.patch('/clubs/club_a/points/entries/:entryId', () =>
+      HttpResponse.json({
+        ...POINTS_SUMMARY,
+        entries: [{ ...POINTS_SUMMARY.entries[0], points: 30, isOverridden: true, reason: 'Extra meeting verified' }],
+      }),
+    ),
+    http.post('/clubs/club_a/points/entries', () =>
+      HttpResponse.json({
+        ...POINTS_SUMMARY,
+        entries: [
+          ...POINTS_SUMMARY.entries,
+          {
+            id: 'custom_1',
+            ruleId: null,
+            ruleKey: null,
+            ruleLabel: 'Zonal Meet Bonus',
+            ruleType: null,
+            rulePeriod: null,
+            categoryId: 'c1',
+            categoryKey: 'club_services',
+            categoryName: 'Club Services',
+            periodKey: '2026-08',
+            points: 15,
+            kind: 'judged',
+            reason: 'Zonal Meet Bonus',
+            isOverridden: false,
+            originalPoints: null,
+            trace: null,
+          },
+        ],
+      }),
     ),
   );
 }
@@ -89,6 +124,45 @@ describe('ScoreMonthPage', () => {
 
     expect(screen.getAllByRole('spinbutton')).toHaveLength(1);
     expect(screen.getByLabelText('Points')).toBeInTheDocument();
+  });
+
+  it('allows editing a computed point entry with points and evaluator reason', async () => {
+    installHandlers();
+    renderPage(<ScoreMonthPage />, {
+      path: '/portal/admin/clubs/:clubId/:month',
+      initialEntries: ['/portal/admin/clubs/club_a/2026-08'],
+    });
+    await screen.findByText('Physical club meetings');
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(await screen.findByText(/Edit Points: Physical club meetings/)).toBeInTheDocument();
+    const reasonInput = screen.getByLabelText(/Evaluator Note \/ Reason/);
+    await user.type(reasonInput, 'Extra meeting verified');
+    await user.click(screen.getByRole('button', { name: 'Save Points' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('allows adding a custom point entry for any category', async () => {
+    installHandlers();
+    renderPage(<ScoreMonthPage />, {
+      path: '/portal/admin/clubs/:clubId/:month',
+      initialEntries: ['/portal/admin/clubs/club_a/2026-08'],
+    });
+    await screen.findByText('Physical club meetings');
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: '+ Add Custom Point Entry' }));
+
+    expect(await screen.findByText('Add Custom Point Entry')).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText(/Category/), 'c1');
+    await user.type(screen.getByLabelText(/Title \/ Description/), 'Zonal Meet Bonus');
+    await user.type(screen.getAllByLabelText(/Points/)[1], '15');
+    await user.click(screen.getByRole('button', { name: 'Add Point Entry' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('saving the judged score PATCHes the club points endpoint', async () => {

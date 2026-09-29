@@ -78,6 +78,39 @@ export async function patchJudgedPoints(
   });
 }
 
+export async function updateClubPointEntry(
+  clubId: string,
+  entryId: string,
+  input: { points: number; reason?: string | null },
+): Promise<ClubPointsSummary> {
+  return apiFetch(`/clubs/${encodeURIComponent(clubId)}/points/entries/${encodeURIComponent(entryId)}`, {
+    method: 'PATCH',
+    body: input,
+    schema: clubPointsSummarySchema,
+  });
+}
+
+export async function createClubPointEntry(
+  clubId: string,
+  input: { month: string; categoryId: string; label: string; points: number; reason?: string | null },
+): Promise<ClubPointsSummary> {
+  return apiFetch(`/clubs/${encodeURIComponent(clubId)}/points/entries`, {
+    method: 'POST',
+    body: input,
+    schema: clubPointsSummarySchema,
+  });
+}
+
+export async function deleteClubPointEntry(
+  clubId: string,
+  entryId: string,
+): Promise<ClubPointsSummary> {
+  return apiFetch(`/clubs/${encodeURIComponent(clubId)}/points/entries/${encodeURIComponent(entryId)}`, {
+    method: 'DELETE',
+    schema: clubPointsSummarySchema,
+  });
+}
+
 export async function fetchClubFacts(clubId: string, ryYear: number): Promise<ClubFacts | null> {
   return apiFetch(`/clubs/${encodeURIComponent(clubId)}/facts${query({ ryYear })}`, {
     schema: clubFactsSchema.nullable(),

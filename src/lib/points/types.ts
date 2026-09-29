@@ -60,6 +60,10 @@ export const clubPointsEntrySchema = z.object({
   periodKey: z.string(),
   points: z.number(),
   trace: z.unknown(),
+  kind: z.enum(['computed', 'judged']).optional(),
+  reason: z.string().nullable().optional(),
+  isOverridden: z.boolean().optional(),
+  originalPoints: z.number().nullable().optional(),
 });
 export type ClubPointsEntry = z.infer<typeof clubPointsEntrySchema>;
 
