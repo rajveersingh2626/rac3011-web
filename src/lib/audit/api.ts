@@ -16,6 +16,7 @@ export interface AuditLogParams {
   resourceType?: string;
   resourceId?: string;
   actorId?: string;
+  actorName?: string;
   from?: string;
   to?: string;
   page?: number;
@@ -27,6 +28,7 @@ export async function fetchAuditLog(params: AuditLogParams = {}) {
     'filter[resourceType]': params.resourceType,
     'filter[resourceId]': params.resourceId,
     'filter[actorId]': params.actorId,
+    'filter[actorName]': params.actorName,
     'filter[from]': params.from,
     'filter[to]': params.to,
     page: params.page,

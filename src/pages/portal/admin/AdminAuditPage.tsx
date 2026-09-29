@@ -23,11 +23,12 @@ interface Filters {
   resourceType: string;
   resourceId: string;
   actorId: string;
+  actorName: string;
   from: string;
   to: string;
 }
 
-const EMPTY_FILTERS: Filters = { resourceType: '', resourceId: '', actorId: '', from: '', to: '' };
+const EMPTY_FILTERS: Filters = { resourceType: '', resourceId: '', actorId: '', actorName: '', from: '', to: '' };
 
 export function AdminAuditPage() {
   useDocumentMeta({ title: 'Audit log' });
@@ -44,6 +45,7 @@ export function AdminAuditPage() {
         resourceType: filters.resourceType || undefined,
         resourceId: filters.resourceId || undefined,
         actorId: filters.actorId || undefined,
+        actorName: filters.actorName || undefined,
         from: filters.from || undefined,
         to: filters.to || undefined,
         page,
@@ -66,7 +68,7 @@ export function AdminAuditPage() {
   }
 
   function filterByActor(actorId: string) {
-    const next = { ...draft, actorId };
+    const next = { ...draft, actorId, actorName: '' };
     setDraft(next);
     applyFilters(next);
   }
@@ -145,6 +147,13 @@ export function AdminAuditPage() {
               value={draft.actorId}
               onChange={(e) => setDraft((d) => ({ ...d, actorId: e.target.value }))}
               placeholder="usr_..."
+            />
+          </Field>
+          <Field label="Actor name / email">
+            <Input
+              value={draft.actorName}
+              onChange={(e) => setDraft((d) => ({ ...d, actorName: e.target.value }))}
+              placeholder="Search by name or email"
             />
           </Field>
           <Field label="From">
