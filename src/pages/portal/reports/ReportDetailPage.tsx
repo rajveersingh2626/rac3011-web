@@ -644,24 +644,19 @@ function ReportPointsCard({
   const pointsQuery = useQuery({
     queryKey: ['club-points', clubId, ryYear, month],
     queryFn: () => fetchClubPoints(clubId, { ryYear, month }),
-    enabled: reportStatus === 'scored',
+    enabled: reportStatus !== 'draft',
   });
 
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  if (reportStatus !== 'scored') {
+  if (reportStatus === 'draft') {
     return (
       <Card
         eyebrow="POINTS & SCORING RULES"
-        title={
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>Monthly Points Breakdown</span>
-            <Badge tone="amber">Awaiting Secretariat Scoring</Badge>
-          </div>
-        }
+        title="Monthly Points Breakdown"
       >
         <p className="m-0 text-[13px] text-fg-3">
-          Reports are officially reviewed and scored by the District Secretariat (DAC). Verified points will appear here once scored by an authorized DAC evaluator.
+          Preliminary points will be calculated automatically upon report submission based on active district scoring rules.
         </p>
       </Card>
     );
@@ -691,13 +686,21 @@ function ReportPointsCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>Monthly Points Breakdown</span>
           <div className="flex items-center gap-2">
-            <Badge tone="green">
-              {total} PTS CONFIRMED
+            <Badge tone={reportStatus === 'scored' ? 'green' : 'blue'}>
+              {reportStatus === 'scored' ? `${total} PTS CONFIRMED` : `${total} PTS (PRELIMINARY)`}
             </Badge>
           </div>
         </div>
       }
     >
+      {reportStatus !== 'scored' && (
+        <div className="mb-4 rounded-lg border border-line-accent bg-page p-3 text-[12.5px] text-fg-2">
+          <p className="m-0 font-medium text-fg">Preliminary Automated Score</p>
+          <p className="m-0 mt-0.5 text-fg-3 text-[11.5px]">
+            Points below reflect automated rule calculations from your reported activities and metrics. Final scores and judged adjustments will be confirmed by the District Secretariat upon human review.
+          </p>
+        </div>
+      )}
 
       {entries.length === 0 ? (
         <p className="m-0 text-[13px] text-fg-3">
