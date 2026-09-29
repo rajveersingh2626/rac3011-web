@@ -20,9 +20,9 @@ export function PublicEventPassPage() {
 
   useEffect(() => {
     if (pass?.event?.title) {
-      document.title = `Event Pass: ${pass.event.title} • Rotaract District 3011`;
+      document.title = `Event Pass: ${pass.event.title} • Rotaract District Organisation 3011`;
     } else {
-      document.title = 'Event Entry Pass • Rotaract District 3011';
+      document.title = 'Event Entry Pass • Rotaract District Organisation 3011';
     }
   }, [pass]);
 
@@ -100,7 +100,7 @@ export function PublicEventPassPage() {
               }}
             />
             <span className="text-[11px] font-black uppercase tracking-wider text-[#171515]">
-              ROTARACT DISTRICT 3011
+              ROTARACT DISTRICT ORGANISATION 3011
             </span>
           </div>
           <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md border border-[#171515] bg-white">
@@ -216,7 +216,7 @@ export function PublicEventPassPage() {
       </div>
 
       <p className="mt-4 text-[11px] font-semibold text-neutral-400 text-center">
-        Rotaract District 3011 &bull; Delhi Meri Jaan Youth Exchange
+        Rotaract District Organisation 3011 &bull; Delhi Meri Jaan Youth Exchange
       </p>
     </div>
   );

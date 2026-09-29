@@ -1277,7 +1277,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Rishika Khanna',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['rishika-khanna'],
     hasPhoto: true
   },
@@ -1289,7 +1289,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Geetika',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['geetika'],
     hasPhoto: true
   },
@@ -1301,7 +1301,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Kriti Malhotra',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['kriti-malhotra'],
     hasPhoto: true
   },
@@ -1313,7 +1313,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Ankit Arvind Singh',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['ankit-arvind'],
     hasPhoto: true
   },
@@ -1325,7 +1325,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Rahul Sanjeev Sharma',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['rahul-sanjeev'],
     hasPhoto: true
   },
@@ -1337,7 +1337,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Niranjan Dev Singh',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['niranjan-dev'],
     hasPhoto: true
   },
@@ -1349,7 +1349,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Sarthak Bansal',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['sarthak-bansal'],
     hasPhoto: true
   },
@@ -1361,7 +1361,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Yaamini Thareja',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['yaamini-thareja'],
     hasPhoto: true
   },
@@ -1373,7 +1373,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Arpit Mehra',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['arpit-mehra'],
     hasPhoto: true
   },
@@ -1385,7 +1385,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Ashima Agarwal Gupta',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['ashima-agarwal'],
     hasPhoto: true
   },
@@ -1397,7 +1397,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Anmol Chawla',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['anmol-chawla'],
     hasPhoto: true
   },
@@ -1409,7 +1409,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Manuj Mittal',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['manuj-mittal'],
     hasPhoto: true
   },
@@ -1421,7 +1421,7 @@ export const PAST_DRRS: PastDrr[] = [
     name: 'Rtr. Harsh Sirohi',
     district: '3011',
     districtEra: 'District 3011',
-    homeClub: 'Rotaract District 3011',
+    homeClub: 'Rotaract District Organisation 3011',
     photo: PDRR_PHOTOS['harsh-sirohi'],
     hasPhoto: true
   },

@@ -193,7 +193,7 @@ export default function EventGalleryView() {
             Moments &amp; District Gallery
           </h2>
           <p style={{ color: '#475569', fontSize: '1rem', marginTop: '8px', maxWidth: '780px', lineHeight: 1.5, fontWeight: 500 }}>
-            Capturing the spirit of youth leadership, high-impact community projects, district assemblies, installations, and fellowships across Rotaract District 3011.
+            Capturing the spirit of youth leadership, high-impact community projects, district assemblies, installations, and fellowships across Rotaract District Organisation 3011.
           </p>
         </div>
       </div>

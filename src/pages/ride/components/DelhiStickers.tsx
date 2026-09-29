@@ -346,7 +346,7 @@ export function CycleRickshawBadge({ className = '', style, quote = 'Chandni cho
   );
 }
 
-export function DilliMeriJaanHeartBadge({ className = '', style, quote = 'Rotaract District 3011 welcoming the nation!' }: StickerProps) {
+export function DilliMeriJaanHeartBadge({ className = '', style, quote = 'Rotaract District Organisation 3011 welcoming the nation!' }: StickerProps) {
   return (
     <StickerContainer quote={quote} className={className} style={style}>
       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border-2 sm:border-3 border-[#171515] bg-[#FF007F] text-white font-black text-xs uppercase tracking-wider ride-pop-sm">

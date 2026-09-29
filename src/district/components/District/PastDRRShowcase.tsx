@@ -471,7 +471,7 @@ export default function PastDRRShowcase() {
         name: live.name,
         district: '3011',
         districtEra: 'District 3011',
-        homeClub: 'Rotaract District 3011',
+        homeClub: 'Rotaract District Organisation 3011',
         photo: photo || '',
         hasPhoto: Boolean(photo),
       };

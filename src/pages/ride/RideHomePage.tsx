@@ -25,7 +25,7 @@ export function RideHomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.title = 'RIDE: Delhi Meri Jaan | Rotaract District 3011';
+    document.title = 'RIDE: Delhi Meri Jaan | Rotaract District Organisation 3011';
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -305,7 +305,7 @@ export function RideHomePage() {
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Homestay Warmth</h3>
               <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
-                Experience authentic Dilli hospitality residing with vetted host families of Rotaract District 3011.
+                Experience authentic Dilli hospitality residing with vetted host families of Rotaract District Organisation 3011.
               </p>
             </div>
             <span className="mt-5 text-xs font-black text-[#19539D] uppercase tracking-wider">

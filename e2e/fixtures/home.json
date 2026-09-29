@@ -1,12 +1,12 @@
 {
   "hero": {
-    "badge": "Rotaract District 3011",
+    "badge": "Rotaract District Organisation 3011",
     "title": "Service above self, across Delhi NCR",
     "subtitle": "Young leaders in clubs across four zones, working on community, vocational and international service.",
     "ctaPrimary": "Explore our clubs",
     "ctaSecondary": "See the showcase"
   },
-  "footerTagline": "Rotaract District 3011 · Rotary International District 3011",
+  "footerTagline": "Rotaract District Organisation 3011 · Rotary International District 3011",
   "stats": { "zones": 4, "focusAreas": 7, "foundedYear": 1968, "ageRange": "18–30" },
   "flagship": [
     { "title": "Mahadan 9.0", "summary": "The district-wide blood donation drive, now in its ninth edition." },

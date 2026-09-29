@@ -24,7 +24,7 @@ function generateBespokeRideEmailHtml(
     .filter((p) => p.trim());
 
   const ctaLabel = cta?.label?.trim() || 'Join the RIDE';
-  const ctaUrl = cta?.url?.trim() || 'https://ride.rotar3011.org';
+  const ctaUrl = cta?.url?.trim() || 'https://ride.rotaract3011.org';
   const ctaBlock =
     cta !== null
       ? `
@@ -179,7 +179,7 @@ export function RideEmailStudioTab() {
   const [previewMode, setPreviewMode] = useState<'visual' | 'html'>('visual');
   const [includeCta, setIncludeCta] = useState(true);
   const [ctaLabel, setCtaLabel] = useState('Join the RIDE');
-  const [ctaUrl, setCtaUrl] = useState('https://ride.rotar3011.org');
+  const [ctaUrl, setCtaUrl] = useState('https://ride.rotaract3011.org');
   const [sending, setSending] = useState(false);
   const [sendSuccess, setSendSuccess] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -691,7 +691,7 @@ export function RideEmailStudioTab() {
                         type="text"
                         value={ctaUrl}
                         onChange={(e) => setCtaUrl(e.target.value)}
-                        placeholder="https://ride.rotar3011.org"
+                        placeholder="https://ride.rotaract3011.org"
                         className="w-full px-3 py-1.5 rounded-xl border border-neutral-300 text-xs font-medium text-[#171515] bg-white focus:outline-none focus:ring-2 focus:ring-[#19539D]"
                       />
                     </div>

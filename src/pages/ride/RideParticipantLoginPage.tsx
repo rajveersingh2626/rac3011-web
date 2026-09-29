@@ -196,7 +196,7 @@ export function RideParticipantLoginPage() {
           <div className="mt-6 pt-4 border-t border-neutral-200 text-center">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-neutral-500">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>Official Rotaract District 3011 Authentication Gateway</span>
+              <span>Official Rotaract District Organisation 3011 Authentication Gateway</span>
             </div>
             <p className="text-[10px] text-neutral-400 mt-1">
               Need assistance? Contact the RIDE Chair or your district liaison coordinator.

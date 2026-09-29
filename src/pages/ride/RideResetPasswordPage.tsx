@@ -184,7 +184,7 @@ export function RideResetPasswordPage() {
           <div className="mt-6 pt-4 border-t border-neutral-200 text-center">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-neutral-500">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>Rotaract District 3011 Credential Gateway</span>
+              <span>Rotaract District Organisation 3011 Credential Gateway</span>
             </div>
           </div>
         </div>
