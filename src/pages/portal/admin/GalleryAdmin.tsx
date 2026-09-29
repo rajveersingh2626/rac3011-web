@@ -118,6 +118,7 @@ export function GalleryAdmin({ canWrite }: { canWrite: boolean }) {
             url={values.imageUrl}
             onChange={(imageUrl) => setValues({ imageUrl: imageUrl ?? '' })}
             resourceType="gallery_photo"
+            tier="dynamic"
           />
           <Field label="Description / Caption" hint="Optional detailed note or photo credits">
             <Textarea

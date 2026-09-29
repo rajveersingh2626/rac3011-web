@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
+import { useAuth } from '@/app/auth';
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from '@/lib/rbac/api';
 import { ROLE_KEY_PATTERN, type CreateRoleInput, type Permission, type RoleRecord, type ScopeType, type UpdateRoleInput } from '@/lib/rbac/types';
 import { SCOPE_LABEL, errorMessageOf } from '@/lib/rbac/ui';
@@ -297,7 +298,14 @@ export function AdminRolesPage() {
   const [creating, setCreating] = useState(false);
   const [deletingRoleId, setDeletingRoleId] = useState<string | null>(null);
 
-  const invalidateRoles = () => void qc.invalidateQueries({ queryKey: ['roles'] });
+  const { refresh } = useAuth();
+  const invalidateRoles = () => {
+    void qc.invalidateQueries({ queryKey: ['roles'] });
+    void qc.invalidateQueries({ queryKey: ['permissions'] });
+    void qc.invalidateQueries({ queryKey: ['me'] });
+    void qc.invalidateQueries({ queryKey: ['user-directory'] });
+    void refresh();
+  };
 
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: UpdateRoleInput }) => updateRole(id, input),

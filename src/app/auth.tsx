@@ -33,7 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
   const [cleared, setCleared] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const query = useQuery({ queryKey: ME_QUERY_KEY, queryFn: fetchMe, staleTime: 60_000, retry: false });
+  const query = useQuery({
+    queryKey: ME_QUERY_KEY,
+    queryFn: fetchMe,
+    staleTime: 15_000,
+    refetchOnWindowFocus: 'always',
+    retry: false,
+  });
 
   useEffect(
     () =>

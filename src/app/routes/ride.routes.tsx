@@ -4,6 +4,7 @@ import { Images, Compass, LayoutDashboard } from 'lucide-react';
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { portalHref } from '@/app/host';
+import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
 import { SurfaceLoading } from './SurfaceLoading';
 
 const RideHomePage = lazy(() => import('@/pages/ride/RideHomePage').then((m) => ({ default: m.RideHomePage })));
@@ -118,6 +119,7 @@ export function createRideRouter() {
           <Outlet />
         </>
       ),
+      errorElement: <RootErrorBoundary />,
       children: routes,
     },
   ]);

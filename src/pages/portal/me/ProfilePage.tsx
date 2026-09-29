@@ -19,6 +19,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Chip } from '@/components/ui/Chip';
 import { KeyValue } from '@/components/ui/KeyValue';
 import { useToast } from '@/components/ui/Toast';
+import { AssetUrlField } from '@/pages/portal/admin/AssetUrlField';
 
 const profileSchema = z.object({
   fullName: z.string().trim().min(1, 'Your name is required').max(120),
@@ -86,7 +87,7 @@ export function ProfilePage() {
       await qc.invalidateQueries({ queryKey: ['me'] });
       await qc.invalidateQueries({ queryKey: ['directory'] });
       await qc.invalidateQueries({ queryKey: ['members'] });
-      toast({ title: 'Profile saved and directory updated', tone: 'success' });
+      toast({ title: 'Profile saved', tone: 'success' });
     },
     onError: (e) => {
       if (e instanceof ApiError && e.details) form.setServerErrors(e.details);
@@ -107,13 +108,16 @@ export function ProfilePage() {
           <Card>
             <Form onSubmit={submit} submitting={mutation.isPending}>
               <p className="m-0 text-[10.5px] font-bold tracking-[1px] text-fg-3">PHOTOGRAPH</p>
-              <Field label="Photo link" error={form.errors.photoUrl} hint="Paste a Drive or Photos link. Square works best.">
-                <Input
-                  value={form.values.photoUrl}
-                  onChange={(e) => form.setValue('photoUrl', e.target.value)}
-                  placeholder="https://"
-                />
-              </Field>
+              <AssetUrlField
+                label="Profile Photo"
+                url={form.values.photoUrl}
+                onChange={(url) => form.setValue('photoUrl', url ?? '')}
+                resourceType="member_photo"
+                tier="dynamic"
+              />
+              {form.errors.photoUrl ? (
+                <p className="m-0 text-xs text-danger">{form.errors.photoUrl}</p>
+              ) : null}
 
               <p className="m-0 mt-2 text-[10.5px] font-bold tracking-[1px] text-fg-3">WHO YOU ARE</p>
               <Field label="Name" error={form.errors.fullName} required>

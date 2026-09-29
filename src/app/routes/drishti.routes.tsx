@@ -2,6 +2,7 @@ import { createBrowserRouter, Outlet, ScrollRestoration, type RouteObject } from
 import { SubdomainShell } from '@/components/layout/SubdomainShell';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { UpcomingSubdomainPage } from '@/pages/subdomains/UpcomingSubdomainPage';
+import { RootErrorBoundary } from '@/components/ui/RootErrorBoundary';
 
 function DrishtiUpcoming() {
   return (
@@ -42,6 +43,7 @@ export function createDrishtiRouter() {
           <Outlet />
         </>
       ),
+      errorElement: <RootErrorBoundary />,
       children: routes,
     },
   ]);

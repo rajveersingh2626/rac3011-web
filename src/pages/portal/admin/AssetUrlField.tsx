@@ -13,15 +13,40 @@ export interface AssetUrlFieldProps {
   tier?: StorageTier;
 }
 
-export function AssetUrlField({ label, url, onChange, resourceType, tier = 'permanent' }: AssetUrlFieldProps) {
+export const RESOURCE_TYPE_TIERS: Record<string, StorageTier> = {
+  gallery_photo: 'dynamic',
+  member_photo: 'dynamic',
+  project_photo: 'dynamic',
+  event_photo: 'dynamic',
+  camp_photo: 'dynamic',
+  ride_gallery: 'dynamic',
+  ride_gallery_item: 'dynamic',
+  report_activity_photo: 'dynamic',
+  resource_document: 'private',
+  partner_logo: 'permanent',
+  past_drr_photo: 'permanent',
+  district_team_photo: 'permanent',
+  publication_cover: 'permanent',
+  achievement_certificate: 'permanent',
+  content_block: 'permanent',
+};
+
+export function AssetUrlField({
+  label,
+  url,
+  onChange,
+  resourceType,
+  tier,
+}: AssetUrlFieldProps) {
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const effectiveTier = tier ?? RESOURCE_TYPE_TIERS[resourceType] ?? 'dynamic';
   const value: FileUploadValue | null = url ? { kind: 'link', url } : null;
 
   return (
     <div className="flex flex-col gap-2">
       <FileUpload
         label={label}
-        tier={tier}
+        tier={effectiveTier}
         resourceType={resourceType}
         value={value}
         onChange={(next) => {

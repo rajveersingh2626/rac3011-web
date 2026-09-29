@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Key, Search, Users, UserPlus, Edit3, Crown } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
+import { useAuth } from '@/app/auth';
 import { cn } from '@/lib/cn';
 import { useDebouncedValue } from '@/lib/useDebouncedValue';
 import { fetchPublicClubs, fetchZones } from '@/lib/clubs';
@@ -184,6 +185,16 @@ export function AdminUsersPage() {
   const selectedRole = roles.find((r) => r.id === grantRoleId) ?? null;
   const grantScopeType = selectedRole?.scopeType ?? 'none';
 
+  const { refresh } = useAuth();
+
+  const invalidateAccessState = () => {
+    void qc.invalidateQueries({ queryKey: ['user-directory'] });
+    void qc.invalidateQueries({ queryKey: ['me'] });
+    void qc.invalidateQueries({ queryKey: ['roles'] });
+    void qc.invalidateQueries({ queryKey: ['permissions'] });
+    void refresh();
+  };
+
   // Mutations
   const grantMutation = useMutation({
     mutationFn: (input: GrantInput) =>
@@ -197,7 +208,7 @@ export function AdminUsersPage() {
       setGrantRoleId('');
       setGrantScopeId('');
       setGrantError(null);
-      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+      invalidateAccessState();
     },
     onError: (err) => setGrantError(errorMessageOf(err)),
   });
@@ -206,7 +217,7 @@ export function AdminUsersPage() {
     mutationFn: (grantId: string) => revokeUserRole(grantId),
     onSuccess: () => {
       setRevokingGrantId(null);
-      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+      invalidateAccessState();
     },
   });
 
@@ -232,7 +243,7 @@ export function AdminUsersPage() {
       setNewUserScopeId('');
       setNewUserError(null);
       toast({ title: 'User ID created and configured successfully', tone: 'success' });
-      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+      invalidateAccessState();
     },
     onError: (err) => setNewUserError(errorMessageOf(err)),
   });
@@ -261,7 +272,7 @@ export function AdminUsersPage() {
       setEditingUser(null);
       setEditError(null);
       toast({ title: 'User ID and profile updated successfully', tone: 'success' });
-      void qc.invalidateQueries({ queryKey: ['user-directory'] });
+      invalidateAccessState();
     },
     onError: (err) => setEditError(errorMessageOf(err)),
   });
