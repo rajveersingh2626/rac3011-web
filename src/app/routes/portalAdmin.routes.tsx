@@ -66,7 +66,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('reports:review', '/portal/admin/clubs', <AdminClubsPage />),
   guarded('reports:score', '/portal/admin/clubs/:clubId/:month', <ScoreMonthPage />),
   guarded('club_facts:edit', '/portal/admin/clubs/:clubId/facts', <ClubFactsPage />),
-  guarded('point_rules:manage', '/portal/admin/point-rules', <PointRulesPage />),
+  guarded('point_rules:manage,reports:manage,roles:manage', '/portal/admin/point-rules', <PointRulesPage />),
   guarded('forms:manage,forms:responses:view,requests:manage,roles:manage', '/portal/admin/form-builder', <FormBuilderAdminPage />),
   guarded('requests:manage', '/portal/admin/report-builder', <ReportFormBuilderPage />),
   guarded('requests:manage', '/portal/admin/report-form', <ReportFormBuilderPage />),
