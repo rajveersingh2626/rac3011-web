@@ -54,6 +54,44 @@ export function humanize(raw: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+export const AVENUE_MAP: Record<string, string> = {
+  club: 'club',
+  'club services': 'club',
+  'club service': 'club',
+  'club meetings': 'club',
+  'club meeting': 'club',
+  meetings: 'club',
+  meeting: 'club',
+
+  community: 'community',
+  'community services': 'community',
+  'community service': 'community',
+
+  international: 'international',
+  'international services': 'international',
+  'international service': 'international',
+
+  vocational: 'vocational',
+  'vocational services': 'vocational',
+  'vocational service': 'vocational',
+
+  district: 'district',
+  'district projects': 'district',
+  'district project': 'district',
+  'district service': 'district',
+
+  flagship: 'flagship',
+  'flagship projects': 'flagship',
+  'flagship project': 'flagship',
+  'flagship initiatives': 'flagship',
+};
+
+export function normalizeAvenue(val: unknown): string {
+  if (typeof val !== 'string') return '';
+  const trimmed = val.trim().toLowerCase();
+  return AVENUE_MAP[trimmed] || trimmed;
+}
+
 export function defaultValueForField(field: ReportField): unknown {
   switch (field.type) {
     case 'boolean':

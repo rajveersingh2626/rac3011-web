@@ -32,7 +32,7 @@ import {
 import { useToast } from '@/components/ui/Toast';
 import { fetchPublicClubs } from '@/lib/clubs';
 import { currentReportMonth, formatMonthLabel } from '@/lib/reports/month';
-import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail } from '@/lib/reports/values';
+import { emptyActivity, splitFields, activitySummaryLabel, activitySummaryDetail, normalizeAvenue } from '@/lib/reports/values';
 import { ApiError } from '@/lib/api';
 import { ActivityForm } from './ActivityForm';
 import { ReportFieldControl } from './ReportFieldControl';
@@ -190,40 +190,40 @@ export function NewReportPage() {
 
   const REPORT_AVENUES = useMemo(() => [
     {
-      id: 'Club Meetings',
-      title: 'Club Meetings',
-      icon: Calendar,
-      description: 'General body meetings, board meetings, speaker sessions, and club assemblies',
-    },
-    {
-      id: 'Club Services',
+      id: 'club',
       title: 'Club Services',
       icon: Users,
       description: 'Internal fellowship, celebrations, orientations, sports, and member development',
     },
     {
-      id: 'Community Services',
+      id: 'community',
       title: 'Community Services',
       icon: Heart,
       description: 'Blood donation, health camps, relief drives, education, and ecological action',
     },
     {
-      id: 'International Services',
+      id: 'international',
       title: 'International Services',
       icon: Globe,
       description: 'Sister club twinings, international meetings, peace initiatives, and global fellowship',
     },
     {
-      id: 'Vocational Services',
+      id: 'vocational',
       title: 'Vocational Services',
       icon: Briefcase,
       description: 'Career conclaves, mentorship, industrial visits, and professional skill workshops',
     },
     {
-      id: 'District Projects',
+      id: 'district',
       title: 'District Projects',
       icon: Award,
       description: 'Participation in Mission 3011, Project Drishti, RCL, RIDE, RYLA, and DISCON',
+    },
+    {
+      id: 'flagship',
+      title: 'Flagship Projects',
+      icon: Calendar,
+      description: 'Signature club initiatives, long-term flagship projects, and high-impact sustained programs',
     },
   ], []);
 
@@ -232,7 +232,7 @@ export function NewReportPage() {
       return activities[editingIndex];
     }
     const empty = emptyActivity(activityFields);
-    if (activeAvenue) empty.avenue = activeAvenue;
+    if (activeAvenue) empty.avenue = normalizeAvenue(activeAvenue);
     return empty;
   }, [editingIndex, activities, activityFields, activeAvenue]);
 
@@ -331,7 +331,7 @@ export function NewReportPage() {
 
   const startEditActivity = (index: number) => {
     const act = activities[index];
-    setActiveAvenue((act?.avenue as string) || null);
+    setActiveAvenue(normalizeAvenue(act?.avenue) || null);
     setEditingIndex(index);
     setIsAddingOrEditing(true);
   };
@@ -344,7 +344,7 @@ export function NewReportPage() {
   const handleSaveActivity = (activity: Record<string, unknown>) => {
     const finalActivity = {
       ...activity,
-      avenue: activeAvenue || activity.avenue || 'Club Services',
+      avenue: normalizeAvenue(activity.avenue || activeAvenue || 'club'),
     };
     saveActivity(finalActivity);
     setIsAddingOrEditing(false);
@@ -547,7 +547,7 @@ export function NewReportPage() {
                 {REPORT_AVENUES.map((av) => {
                   const avenueActivities = activities
                     .map((act, origIndex) => ({ act, origIndex }))
-                    .filter(({ act }) => act.avenue === av.id || act.avenue === av.title);
+                    .filter(({ act }) => normalizeAvenue(act.avenue) === av.id);
 
                   const Icon = av.icon;
                   return (
