@@ -998,7 +998,7 @@ button,
   }
 }
 
-/* Below 360px the inline clamp() floor of 2.8rem makes "ORGANISATION" wider than the viewport. */
+/* Below 360px the inline clamp() floor of 2.8rem makes "ORGANIZATION" wider than the viewport. */
 @media (max-width: 360px) {
   .hero-main-title {
     font-size: clamp(1.9rem, 10.5vw, 2.8rem) !important;

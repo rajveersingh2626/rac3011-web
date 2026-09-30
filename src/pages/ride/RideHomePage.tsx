@@ -25,7 +25,7 @@ export function RideHomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.title = 'RIDE: Delhi Meri Jaan | Rotaract District Organisation 3011';
+    document.title = 'RIDE: Delhi Meri Jaan | Rotaract District Organization 3011';
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -207,7 +207,7 @@ export function RideHomePage() {
           <AutoRickshawBadge className="scale-85 sm:scale-95 -rotate-2" />
           <DilliDilwalonKiBadge className="rotate-1" />
           <div className="px-3.5 py-1 rounded-full border-2 border-[#171515] bg-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
-            Rotaract District Organisation 3011
+            Rotaract District Organization 3011
           </div>
           <div className="px-3 py-1 rounded-xl border-2 border-[#171515] bg-[#EA6623] text-white text-xs sm:text-sm font-black uppercase tracking-wider ride-pop-sm">
             Edition 2026
@@ -305,7 +305,7 @@ export function RideHomePage() {
               </div>
               <h3 className="text-xl sm:text-2xl font-black text-[#171515]">Homestay Warmth</h3>
               <p className="text-sm sm:text-base text-neutral-600 mt-2.5 leading-relaxed font-medium">
-                Experience authentic Dilli hospitality residing with vetted host families of Rotaract District Organisation 3011.
+                Experience authentic Dilli hospitality residing with vetted host families of Rotaract District Organization 3011.
               </p>
             </div>
             <span className="mt-5 text-xs font-black text-[#19539D] uppercase tracking-wider">
@@ -392,7 +392,7 @@ export function RideHomePage() {
             />
             <div>
               <div className="font-black text-sm sm:text-base text-[#171515]">THE RIDE: DELHI MERI JAAN 2026</div>
-              <div className="text-xs text-neutral-500 font-bold">Rotaract District Organisation 3011</div>
+              <div className="text-xs text-neutral-500 font-bold">Rotaract District Organization 3011</div>
             </div>
           </div>
 

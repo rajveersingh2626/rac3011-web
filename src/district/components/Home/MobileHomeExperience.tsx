@@ -344,7 +344,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
         >
           <img
             src="/hero-dac-oath.webp"
-            alt="Rotaract District Organisation 3011 Administrative Council Oath"
+            alt="Rotaract District Organization 3011 Administrative Council Oath"
             style={{
               width: '100%',
               height: '100%',
@@ -393,7 +393,7 @@ export const MobileHomeExperience: FC<MobileHomeExperienceProps> = ({
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#EEF2FF', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(18, 52, 153, 0.20)', marginBottom: '10px' }}>
             <Sparkles size={13} color="#123499" />
             <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#123499', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-              ROTARACT DISTRICT ORGANISATION 3011 • RY 2026-27
+              ROTARACT DISTRICT ORGANIZATION 3011 • RY 2026-27
             </span>
           </div>
 

@@ -52,7 +52,7 @@ test('a visitor posts an opening, verifies by email link, and it reaches the rev
   await page.waitForLoadState('networkidle');
 
   await page.getByLabel('Title', { exact: false }).fill('Copywriting Intern');
-  await page.getByLabel('Company / organisation', { exact: false }).fill('Wordsmith Studio');
+  await page.getByLabel('Company / organization', { exact: false }).fill('Wordsmith Studio');
   await page.getByLabel('Location', { exact: false }).fill('Delhi');
   await page.getByLabel('Description', { exact: false }).fill('Write short-form copy for social campaigns across two brands.');
   await page.getByLabel('Contact email', { exact: false }).fill('contact@wordsmith.example.com');

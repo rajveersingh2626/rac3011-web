@@ -116,7 +116,7 @@ export default function DistrictAccess({
         email: member.email || local?.email || '',
         phone: member.phone || local?.phone || '',
         photo,
-        club: 'Rotaract District Organisation 3011',
+        club: 'Rotaract District Organization 3011',
       };
     });
 

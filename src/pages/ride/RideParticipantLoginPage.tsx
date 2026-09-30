@@ -96,7 +96,7 @@ export function RideParticipantLoginPage() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotaract District Organisation 3011</span>
+          <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotaract District Organization 3011</span>
         </div>
       </header>
 
@@ -196,7 +196,7 @@ export function RideParticipantLoginPage() {
           <div className="mt-6 pt-4 border-t border-neutral-200 text-center">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-neutral-500">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>Official Rotaract District Organisation 3011 Authentication Gateway</span>
+              <span>Official Rotaract District Organization 3011 Authentication Gateway</span>
             </div>
             <p className="text-[10px] text-neutral-400 mt-1">
               Need assistance? Contact the RIDE Chair or your district liaison coordinator.
@@ -297,7 +297,7 @@ export function RideParticipantLoginPage() {
 
       {/* Footer */}
       <footer className="p-4 text-center text-xs text-neutral-500 font-bold relative z-10">
-        Rotaract District Organisation 3011 · Delhi Meri Jaan 2026
+        Rotaract District Organization 3011 · Delhi Meri Jaan 2026
       </footer>
     </div>
   );

@@ -70,7 +70,7 @@ export function RideResetPasswordPage() {
           <ArrowLeft size={16} />
           <span>Back to Sign In</span>
         </Link>
-        <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotaract District Organisation 3011</span>
+        <span className="text-xs font-bold text-neutral-500 hidden sm:inline">Rotaract District Organization 3011</span>
       </header>
 
       {/* Main Container */}
@@ -184,14 +184,14 @@ export function RideResetPasswordPage() {
           <div className="mt-6 pt-4 border-t border-neutral-200 text-center">
             <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-neutral-500">
               <ShieldCheck size={14} className="text-emerald-600" />
-              <span>Rotaract District Organisation 3011 Credential Gateway</span>
+              <span>Rotaract District Organization 3011 Credential Gateway</span>
             </div>
           </div>
         </div>
       </main>
 
       <footer className="p-4 text-center text-xs text-neutral-500 font-bold relative z-10">
-        Rotaract District Organisation 3011 · Delhi Meri Jaan 2026
+        Rotaract District Organization 3011 · Delhi Meri Jaan 2026
       </footer>
     </div>
   );

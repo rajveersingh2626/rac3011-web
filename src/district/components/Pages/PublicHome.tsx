@@ -816,7 +816,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
         >
           <img
             src="/hero-dac-oath.webp"
-            alt="Rotaract District Organisation 3011 Administrative Council Oath"
+            alt="Rotaract District Organization 3011 Administrative Council Oath"
             loading="eager"
             decoding="async"
             fetchPriority="high"
@@ -1325,7 +1325,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
               }}
             >
               <p style={{ margin: '0 0 12px', fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Collaborate with Rotaract District Organisation 3011
+                Collaborate with Rotaract District Organization 3011
               </p>
               <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 We partner with leading institutions, CSR foundations, healthcare bodies, and corporate innovators to amplify youth impact across Delhi and NCR.
@@ -1508,7 +1508,7 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
               <form onSubmit={handleJoinSubmit}>
                 <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                   <span className="pill-pink" style={{ marginBottom: '8px' }}>
-                    JOIN ROTARACT DISTRICT ORGANISATION 3011
+                    JOIN ROTARACT DISTRICT ORGANIZATION 3011
                   </span>
                   <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--text-primary)' }}>
                     Express Your Interest

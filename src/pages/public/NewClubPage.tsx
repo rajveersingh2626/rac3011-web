@@ -19,7 +19,7 @@ const schema = z.object({
   name: z.string().trim().min(1, 'Enter your name'),
   email: z.string().trim().min(1, 'Enter your email').email('Enter a valid email address'),
   phone: z.string().trim(),
-  organisation: z.string().trim().min(1, 'Enter the college or organisation'),
+  organisation: z.string().trim().min(1, 'Enter the college or organization'),
   message: z.string().trim().min(1, 'Tell us about your group'),
   website: z.string(),
 });

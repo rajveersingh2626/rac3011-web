@@ -5,7 +5,7 @@
   },
   "contact": {
     "intro": { "type": "richtext", "value": "<p>Reach the district secretariat.</p>" },
-    "address": { "type": "text", "value": "Rotaract District Organisation 3011, New Delhi" }
+    "address": { "type": "text", "value": "Rotaract District Organization 3011, New Delhi" }
   },
   "privacy-policy": {
     "body": { "type": "richtext", "value": "<p>Placeholder privacy policy. Replace before launch.</p>" }

@@ -142,7 +142,7 @@ export function RideTeamSection() {
 
               {/* Bottom Badge */}
               <div className="mt-5 pt-3 border-t border-neutral-100 flex items-center justify-between text-[11px] font-bold text-neutral-500">
-                <span>Rotaract District Organisation 3011</span>
+                <span>Rotaract District Organization 3011</span>
                 <span className="text-[#EA6623]">DMJ • 2026</span>
               </div>
             </div>

@@ -90,7 +90,7 @@ const FALLBACK_GALLERY_ITEMS: PublicGalleryItem[] = [
     eventName: 'DAC Induction 2026-27',
     category: 'Installations',
     imageUrl: '/hero-dac-oath.webp',
-    caption: 'District Action Committee taking the pledge to serve Rotaract District Organisation 3011.',
+    caption: 'District Action Committee taking the pledge to serve Rotaract District Organization 3011.',
     date: '2026-07-20',
     order: 8,
   },
@@ -193,7 +193,7 @@ export default function EventGalleryView() {
             Moments &amp; District Gallery
           </h2>
           <p style={{ color: '#475569', fontSize: '1rem', marginTop: '8px', maxWidth: '780px', lineHeight: 1.5, fontWeight: 500 }}>
-            Capturing the spirit of youth leadership, high-impact community projects, district assemblies, installations, and fellowships across Rotaract District Organisation 3011.
+            Capturing the spirit of youth leadership, high-impact community projects, district assemblies, installations, and fellowships across Rotaract District Organization 3011.
           </p>
         </div>
       </div>
