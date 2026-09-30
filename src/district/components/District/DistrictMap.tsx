@@ -1099,19 +1099,26 @@ export default function DistrictMap({
             zIndex: 10000
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <div
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                backgroundColor: getClubNeonColor(hoveredClub),
-                boxShadow: `0 0 8px ${getClubNeonColor(hoveredClub)}`
-              }}
-            />
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: getClubNeonColor(hoveredClub), textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {hoveredClub.zone || 'District 3011'}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: getClubNeonColor(hoveredClub),
+                  boxShadow: `0 0 8px ${getClubNeonColor(hoveredClub)}`
+                }}
+              />
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: getClubNeonColor(hoveredClub), textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                {hoveredClub.zone || 'District 3011'}
+              </span>
+            </div>
+            {hoveredClub.rotaryId && hoveredClub.rotaryId !== 'N/A' && (
+              <span style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 700, background: '#F1F5F9', padding: '1px 6px', borderRadius: '4px' }}>
+                ID: {hoveredClub.rotaryId}
+              </span>
+            )}
           </div>
 
           <h4 style={{ fontSize: '1.02rem', fontWeight: 900, color: '#1E1E24', margin: '2px 0 8px 0', lineHeight: 1.35, wordBreak: 'break-word' }}>
