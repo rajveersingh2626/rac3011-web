@@ -1186,9 +1186,30 @@ export default function DistrictMap({
                           {currentSlideoutClub.zone || 'District 3011'}
                         </span>
 
-                        <h2 style={{ fontSize: '1.85rem', fontWeight: 900, color: '#1E1E24', lineHeight: 1.2, margin: 0 }}>
-                          {currentSlideoutClub.name}
-                        </h2>
+                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                          <h2 style={{ fontSize: '1.85rem', fontWeight: 900, color: '#1E1E24', lineHeight: 1.2, margin: 0 }}>
+                            {currentSlideoutClub.name}
+                          </h2>
+                          {currentSlideoutClub.rotaryId && currentSlideoutClub.rotaryId !== 'N/A' && (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                fontSize: '0.78rem',
+                                color: '#475569',
+                                background: '#F1F5F9',
+                                border: '1px solid #CBD5E1',
+                                padding: '3px 10px',
+                                borderRadius: '6px',
+                                fontWeight: 800,
+                                letterSpacing: '0.3px',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Rotary ID: {currentSlideoutClub.rotaryId}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <button
@@ -1235,11 +1256,6 @@ export default function DistrictMap({
                           <span style={{ fontSize: '0.72rem', color: '#D81B60', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <User size={13} /> Club President (RY 2026-27)
                           </span>
-                          {currentSlideoutClub.rotaryId && (
-                            <span style={{ fontSize: '0.68rem', color: '#71717A', background: '#FFFFFF', border: '1px solid #E4E4E7', padding: '2px 8px', borderRadius: '100px', fontWeight: 700 }}>
-                              Rotary ID: {currentSlideoutClub.rotaryId}
-                            </span>
-                          )}
                         </div>
 
                         <div style={{ fontSize: '1.08rem', fontWeight: 900, color: '#18181B' }}>
