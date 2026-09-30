@@ -1255,9 +1255,9 @@ export const INITIAL_CLUBS: DistrictClub[] = [
   },
   {
     "id": "c76",
-    "slug": "rotaract-club-of-galotias-university",
-    "name": "Rotaract Club of Galotias University",
-    "shortName": "Galotias University",
+    "slug": "rotaract-club-of-galgotias-university",
+    "name": "Rotaract Club of Galgotias University",
+    "shortName": "Galgotias University",
     "zone": "Zone Prithvi",
     "lat": 28.3587,
     "lng": 77.5385,
