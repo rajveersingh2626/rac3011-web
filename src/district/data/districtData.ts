@@ -2420,7 +2420,7 @@ export const DISTRICT_RESOURCES: DistrictResource[] = [
     driveUrl: 'https://drive.google.com/drive/folders/1GCqzGf1SGsOE2_CL3-po0Rh7BivEgnDt',
     badge: 'Points Manual',
     sublinks: [
-      { name: 'Official Point System 2026-27 PDF (2.3 MB)', type: 'PDF' }
+      { name: 'Official Point System 2026-27 PDF', type: 'PDF' }
     ]
   },
   {
