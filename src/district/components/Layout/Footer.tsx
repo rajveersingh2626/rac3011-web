@@ -1,4 +1,4 @@
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, useEffect } from 'react';
 import DistrictLogo from './DistrictLogo';
 import { Heart, ExternalLink } from 'lucide-react';
 
