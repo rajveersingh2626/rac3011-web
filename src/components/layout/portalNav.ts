@@ -38,7 +38,6 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
     items: [
       { key: 'new-report', label: 'New report', to: '/portal/reports/new' },
       { key: 'report-history', label: 'History', to: '/portal/reports/history' },
-      { key: 'reporting-point-rules', label: 'Point rules', to: '/portal/admin/point-rules', perm: 'reports:manage,point_rules:manage,reports:review' },
     ],
   },
   {
@@ -93,7 +92,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-ride', label: 'RIDE Youth Exchange', to: '/portal/admin/ride', perm: 'subdomain:ride:manage,ride:manage,ride:delegates:manage' },
       { key: 'admin-users', label: 'Give / Revoke Access', to: '/portal/admin/users', perm: 'roles:manage' },
       { key: 'admin-sessions', label: 'Active Logins', to: '/portal/admin/sessions', perm: 'roles:manage' },
-      { key: 'admin-roles', label: 'Role Capabilities (43)', to: '/portal/admin/roles', perm: 'roles:manage' },
+      { key: 'admin-roles', label: 'Role Capabilities', to: '/portal/admin/roles', perm: 'roles:manage' },
       { key: 'admin-announcements', label: 'Announcements', to: '/portal/admin/announcements', perm: 'announcements:send' },
       { key: 'admin-public-content', label: 'Public content', to: '/portal/admin/public-content', perm: 'public_content:manage' },
       { key: 'admin-settings', label: 'Settings', to: '/portal/admin/settings', perm: 'settings:manage' },

@@ -260,4 +260,28 @@ describe('AdminRolesPage', () => {
 
     expect(await screen.findByText('Revoke all grants of this role before deleting it')).toBeInTheDocument();
   });
+
+  it('filters capabilities with the search bar in the role editor', async () => {
+    installMe();
+    installBase([role()]);
+
+    renderPage(<AdminRolesPage />);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByText('Zone Lead'));
+    const dialog = await screen.findByRole('dialog');
+
+    expect(within(dialog).getByText('roles:manage')).toBeInTheDocument();
+    expect(within(dialog).getByText('events:manage')).toBeInTheDocument();
+    expect(within(dialog).getByText('reports:review')).toBeInTheDocument();
+
+    const searchInput = within(dialog).getByPlaceholderText(/Filter capabilities/);
+    await user.type(searchInput, 'review');
+
+    expect(within(dialog).getByText('reports:review')).toBeInTheDocument();
+    expect(within(dialog).queryByText('roles:manage')).not.toBeInTheDocument();
+    expect(within(dialog).queryByText('events:manage')).not.toBeInTheDocument();
+    expect(within(dialog).getByText(/Showing 1 of 3 capabilities/)).toBeInTheDocument();
+  });
 });
+

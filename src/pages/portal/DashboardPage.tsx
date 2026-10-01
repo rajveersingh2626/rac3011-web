@@ -459,7 +459,7 @@ export function DashboardPage() {
                       variant="secondary"
                       onClick={() => navigate('/portal/admin/roles')}
                     >
-                      Role Capabilities (41)
+                      Role Capabilities
                     </Button>
                     <Button
                       variant="secondary"

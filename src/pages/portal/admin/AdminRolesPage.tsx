@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { useDocumentMeta } from '@/lib/meta';
 import { useAuth } from '@/app/auth';
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from '@/lib/rbac/api';
@@ -37,26 +37,100 @@ function PermissionChecklist({
   permissions,
   selected,
   onToggle,
+  onBatchToggle,
 }: {
   permissions: Permission[];
   selected: Set<string>;
   onToggle: (key: string, checked: boolean) => void;
+  onBatchToggle?: (keys: string[], checked: boolean) => void;
 }) {
+  const [search, setSearch] = useState('');
+
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? permissions.filter(
+        (p) => p.key.toLowerCase().includes(q) || (p.description ?? '').toLowerCase().includes(q),
+      )
+    : permissions;
+
   return (
-    <div className="flex max-h-72 flex-col gap-1 overflow-auto rounded-[8px] border border-line p-2">
-      {permissions.map((p) => (
-        <Checkbox
-          key={p.key}
-          label={
-            <span>
-              <span className="font-mono text-[11.5px]">{p.key}</span>{' '}
-              <span className="ml-2 text-fg-3">{p.description}</span>
-            </span>
-          }
-          checked={selected.has(p.key)}
-          onChange={(e) => onToggle(p.key, e.target.checked)}
+    <div className="flex flex-col gap-2">
+      <div className="relative">
+        <Search
+          size={14}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-fg-3"
         />
-      ))}
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter capabilities (e.g. reports, events, ride)..."
+          className="w-full rounded-[8px] border border-line bg-surface py-1.5 pl-8 pr-8 text-[12px] text-fg placeholder:text-fg-3 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            aria-label="Clear search"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-3 hover:text-fg"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between px-0.5 text-[11px] text-fg-3">
+        <span>
+          Showing {filtered.length} of {permissions.length} capabilities
+          {selected.size > 0 && ` · ${selected.size} assigned`}
+        </span>
+        {filtered.length > 0 && onBatchToggle && (
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              className="font-semibold text-accent hover:underline"
+              onClick={() => onBatchToggle(filtered.map((p) => p.key), true)}
+            >
+              Select all
+            </button>
+            <span>·</span>
+            <button
+              type="button"
+              className="font-semibold text-fg-3 hover:text-fg hover:underline"
+              onClick={() => onBatchToggle(filtered.map((p) => p.key), false)}
+            >
+              Deselect all
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex max-h-72 flex-col gap-1 overflow-auto rounded-[8px] border border-line bg-surface p-2">
+        {filtered.length === 0 ? (
+          <div className="py-6 text-center text-[12px] text-fg-3">
+            No capabilities match &ldquo;{search}&rdquo;
+          </div>
+        ) : (
+          filtered.map((p) => (
+            <div
+              key={p.key}
+              className="rounded-[6px] px-1 py-0.5 transition-colors hover:bg-surface-2"
+            >
+              <Checkbox
+                key={p.key}
+                label={
+                  <span>
+                    <span className="font-mono text-[11.5px] font-semibold text-fg">{p.key}</span>{' '}
+                    <span className="ml-2 text-fg-3">{p.description}</span>
+                  </span>
+                }
+                checked={selected.has(p.key)}
+                onChange={(e) => onToggle(p.key, e.target.checked)}
+              />
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -102,6 +176,17 @@ function RoleEditorModal({ role, permissions, onClose, onSave, saving, errorMess
       const next = new Set(prev);
       if (checked) next.add(key);
       else next.delete(key);
+      return next;
+    });
+  }
+
+  function batchToggle(keys: string[], checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const k of keys) {
+        if (checked) next.add(k);
+        else next.delete(k);
+      }
       return next;
     });
   }
@@ -164,7 +249,12 @@ function RoleEditorModal({ role, permissions, onClose, onSave, saving, errorMess
               </span>
             )}
           </div>
-          <PermissionChecklist permissions={permissions} selected={selected} onToggle={toggle} />
+          <PermissionChecklist
+            permissions={permissions}
+            selected={selected}
+            onToggle={toggle}
+            onBatchToggle={batchToggle}
+          />
         </div>
       </div>
     </Modal>
@@ -204,6 +294,17 @@ function CreateRoleModal({ open, permissions, onClose, onSave, saving, errorMess
       const next = new Set(prev);
       if (checked) next.add(k);
       else next.delete(k);
+      return next;
+    });
+  }
+
+  function batchToggle(keys: string[], checked: boolean) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const k of keys) {
+        if (checked) next.add(k);
+        else next.delete(k);
+      }
       return next;
     });
   }
@@ -280,7 +381,12 @@ function CreateRoleModal({ open, permissions, onClose, onSave, saving, errorMess
         </Field>
         <div>
           <p className="m-0 mb-2 text-[10.5px] font-bold uppercase tracking-[0.9px] text-fg-3">Initial permissions</p>
-          <PermissionChecklist permissions={permissions} selected={selected} onToggle={toggle} />
+          <PermissionChecklist
+            permissions={permissions}
+            selected={selected}
+            onToggle={toggle}
+            onBatchToggle={batchToggle}
+          />
         </div>
       </div>
     </Modal>
