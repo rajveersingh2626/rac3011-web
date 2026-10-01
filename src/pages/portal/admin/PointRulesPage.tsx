@@ -280,14 +280,14 @@ export function PointRulesPage() {
           reason = 'Condition not met (0 pts)';
         }
       } else if (rule.ruleType === 'per_unit') {
-        const count = typeof inputVal === 'number' ? inputVal : inputVal ? 1 : 0;
+        const rawCount = typeof inputVal === 'number' ? inputVal : inputVal ? 1 : 0;
         const rate = rule.points ?? 0;
-        let calculated = count * rate;
-        if (rule.perUnitCap && calculated > rule.perUnitCap) {
-          calculated = rule.perUnitCap;
-          reason = `${count} × ${rate} pts = ${count * rate} pts (capped at ${rule.perUnitCap})`;
+        const units = rule.perUnitCap != null ? Math.min(rawCount, rule.perUnitCap) : rawCount;
+        const calculated = units * rate;
+        if (rule.perUnitCap != null && rawCount > rule.perUnitCap) {
+          reason = `${units} units (capped at ${rule.perUnitCap}) × ${rate} pts = ${calculated} pts`;
         } else {
-          reason = `${count} × ${rate} pts = ${calculated} pts`;
+          reason = `${units} units × ${rate} pts = ${calculated} pts`;
         }
         pts = calculated;
       } else if (rule.ruleType === 'tiered') {

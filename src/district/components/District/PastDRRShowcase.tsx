@@ -1,10 +1,27 @@
-import { memo, useState, useMemo, useEffect } from 'react';
+import { memo, useState, useMemo, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PAST_DRRS } from '../../data/districtData';
 import type { PastDrr } from '../../data/districtData';
 import { findPdrrPhoto, resolvePdrrPhotoUrl } from '../../data/pdrrImages';
+import { getDrrCollages } from '../../data/drrCollages';
 import { fetchPastDrrs } from '@/lib/publicApi/heritage';
-import { Award, Calendar, MapPin, Search, User, Shield } from 'lucide-react';
+import {
+  Award,
+  Calendar,
+  MapPin,
+  Search,
+  User,
+  Shield,
+  RotateCw,
+  Maximize2,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  Layers,
+  Sparkles,
+} from 'lucide-react';
 
 interface EraBadgeConfig {
   label: string;
@@ -27,14 +44,40 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
   const [isHovered, setIsHovered] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string | null>(drr.photo || null);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  const collages = useMemo(() => getDrrCollages(drr.id), [drr.id]);
+  const hasCollages = collages.length > 0;
 
   useEffect(() => {
     setCurrentSrc(drr.photo || null);
     setImgFailed(false);
   }, [drr.photo]);
 
+  // Handle keyboard events for lightbox
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+      } else if (e.key === 'ArrowLeft' && collages.length > 1) {
+        setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : collages.length - 1));
+      } else if (e.key === 'ArrowRight' && collages.length > 1) {
+        setActiveImageIndex((prev) => (prev < collages.length - 1 ? prev + 1 : 0));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isLightboxOpen, collages.length]);
+
   const handleImageError = () => {
-    // If a portal path or normalized path failed, try local bundled asset
     const localAsset = findPdrrPhoto(drr.name, drr.id);
     if (localAsset && currentSrc !== localAsset) {
       setCurrentSrc(localAsset);
@@ -43,336 +86,922 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
     }
   };
 
+  const nextImage = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setActiveImageIndex((prev) => (prev < collages.length - 1 ? prev + 1 : 0));
+    },
+    [collages.length],
+  );
+
+  const prevImage = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : collages.length - 1));
+    },
+    [collages.length],
+  );
+
   return (
-    <div
-      className={`rotaract-card ${isCurrentDRR ? 'current-drr-card' : ''}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        padding: '0px',
-        borderRadius: isMobile ? '16px' : '20px',
-        overflow: 'hidden',
-        border: isCurrentDRR 
-          ? '1.5px solid rgba(216, 27, 96, 0.45)'
-          : (isHovered ? '2px solid var(--rotaract-pink)' : '1px solid rgba(255, 255, 255, 0.2)'),
-        backgroundColor: '#FFFFFF',
-        boxShadow: isCurrentDRR 
-          ? (isHovered ? '0 16px 40px rgba(216, 27, 96, 0.22), 0 0 0 1px rgba(216, 27, 96, 0.4)' : '0 8px 28px rgba(216, 27, 96, 0.12), 0 0 0 1px rgba(216, 27, 96, 0.25)')
-          : (isHovered ? '0 20px 45px rgba(0, 0, 0, 0.28)' : '0 8px 24px rgba(0, 0, 0, 0.12)'),
-        transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
-        transform: isHovered ? 'translateY(-6px)' : 'translateY(0)',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'relative',
-        contentVisibility: 'auto',
-        containIntrinsicSize: isMobile ? '0 280px' : '0 450px'
-      }}
-    >
-      {/* Photo or Themed Fallback Avatar */}
-      <div 
-        style={{ 
-          width: '100%', 
-          height: isMobile ? '185px' : '330px', 
-          position: 'relative', 
-          overflow: 'hidden',
-          backgroundColor: '#1E1E24'
+    <>
+      {/* 3D Perspective Card Container */}
+      <div
+        style={{
+          perspective: '1400px',
+          width: '100%',
+          minHeight: isMobile ? '340px' : '480px',
         }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
       >
-        {currentSrc && !imgFailed ? (
-          <img
-            src={currentSrc}
-            alt={drr.name}
-            loading="lazy"
-            decoding="async"
-            onError={handleImageError}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 18%',
-              transition: 'transform 0.4s ease',
-              transform: isHovered ? 'scale(1.05)' : 'scale(1)'
-            }}
-          />
-        ) : (
-          /* Themed Profile Placeholder for Archival DRRs Without Photos */
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            transformStyle: 'preserve-3d',
+            transition: 'transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            borderRadius: isMobile ? '16px' : '20px',
+          }}
+        >
+          {/* ==================== FRONT FACE (DRR Profile) ==================== */}
           <div
+            className={`rotaract-card ${isCurrentDRR ? 'current-drr-card' : ''}`}
             style={{
               width: '100%',
               height: '100%',
-              background: 'linear-gradient(145deg, #1C1917 0%, #2A0818 45%, #880E4F 85%, #D81B60 100%)',
+              padding: '0px',
+              borderRadius: isMobile ? '16px' : '20px',
+              overflow: 'hidden',
+              border: isCurrentDRR
+                ? '1.5px solid rgba(216, 27, 96, 0.45)'
+                : isHovered
+                ? '2px solid var(--rotaract-pink)'
+                : '1px solid rgba(0, 0, 0, 0.08)',
+              backgroundColor: '#FFFFFF',
+              boxShadow: isCurrentDRR
+                ? isHovered
+                  ? '0 16px 40px rgba(216, 27, 96, 0.22), 0 0 0 1px rgba(216, 27, 96, 0.4)'
+                  : '0 8px 28px rgba(216, 27, 96, 0.12), 0 0 0 1px rgba(216, 27, 96, 0.25)'
+                : isHovered
+                ? '0 20px 45px rgba(0, 0, 0, 0.22)'
+                : '0 6px 20px rgba(0, 0, 0, 0.08)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
               position: 'relative',
-              padding: '24px',
-              boxSizing: 'border-box'
             }}
           >
-            {/* Subtle Rotary Cogwheel Watermark Pattern */}
-            <div 
+            {/* Photo or Themed Fallback Avatar */}
+            <div
               style={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.08,
-                backgroundImage: `radial-gradient(circle at 50% 45%, #FFFFFF 12%, transparent 13%), radial-gradient(circle at 50% 45%, transparent 35%, #FFFFFF 36%, #FFFFFF 42%, transparent 43%)`,
-                pointerEvents: 'none'
-              }}
-            />
-
-            {/* Monogram Avatar Crest */}
-            <div 
-              style={{ 
-                width: isMobile ? '64px' : '94px', 
-                height: isMobile ? '64px' : '94px', 
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 100%)',
-                border: '2px solid rgba(255, 224, 130, 0.65)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: isMobile ? '1.4rem' : '2rem',
-                fontWeight: 900,
-                color: '#FFE082',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
-                marginBottom: isMobile ? '8px' : '14px',
-                transition: 'transform 0.4s ease',
-                transform: isHovered ? 'scale(1.08)' : 'scale(1)'
+                width: '100%',
+                height: isMobile ? '185px' : '310px',
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundColor: '#1E1E24',
               }}
             >
-              {initials}
-            </div>
-
-            <div style={{ fontSize: isMobile ? '0.68rem' : '0.76rem', color: '#FFE082', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Archival Record
-            </div>
-            <div style={{ fontSize: isMobile ? '0.66rem' : '0.72rem', color: 'rgba(255, 255, 255, 0.75)', marginTop: '2px', fontWeight: 600 }}>
-              Rotary International District {drr.district}
-            </div>
-          </div>
-        )}
-
-        {/* Gradient Shadow Vignette for Text Legibility (Desktop only to keep mobile portrait clear) */}
-        {!isMobile && (
-          <div 
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 45%, rgba(0, 0, 0, 0.88) 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              padding: '16px',
-              pointerEvents: 'none'
-            }}
-          >
-            {/* Top Row: District Era Pin Badge & Seniority Badge */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              {isCurrentDRR ? (
-                <>
-                  <span 
-                    style={{
-                      background: 'rgba(15, 23, 42, 0.9)',
-                      color: '#FFFFFF',
-                      padding: '5px 13px',
-                      borderRadius: '100px',
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                      letterSpacing: '0.4px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '7px',
-                      border: '1px solid rgba(216, 27, 96, 0.45)',
-                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)'
-                    }}
-                  >
-                    <span className="live-indicator-dot" />
-                    CURRENT DRR
-                  </span>
-
-                  <span 
-                    style={{
-                      background: 'rgba(0, 0, 0, 0.65)',
-                      color: '#F4F4F5',
-                      padding: '3px 9px',
-                      borderRadius: '100px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
-                    }}
-                  >
-                    #{drr.srNo}
-                  </span>
-                </>
+              {currentSrc && !imgFailed ? (
+                <img
+                  src={currentSrc}
+                  alt={drr.name}
+                  loading="lazy"
+                  decoding="async"
+                  onError={handleImageError}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center 18%',
+                    transition: 'transform 0.4s ease',
+                    transform: isHovered ? 'scale(1.04)' : 'scale(1)',
+                  }}
+                />
               ) : (
-                <>
-                  <span 
+                <div
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    background:
+                      'linear-gradient(145deg, #1C1917 0%, #2A0818 45%, #880E4F 85%, #D81B60 100%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    padding: '24px',
+                    boxSizing: 'border-box',
+                  }}
+                >
+                  <div
                     style={{
-                      background: eraConfig.bg,
-                      color: eraConfig.textColor,
-                      padding: '5px 12px',
-                      borderRadius: '100px',
-                      fontSize: '0.74rem',
-                      fontWeight: 900,
-                      display: 'inline-flex',
+                      width: isMobile ? '64px' : '94px',
+                      height: isMobile ? '64px' : '94px',
+                      borderRadius: '50%',
+                      background:
+                        'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                      border: '2px solid rgba(255, 224, 130, 0.65)',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '5px',
-                      border: `1px solid ${eraConfig.border}`,
-                      boxShadow: eraConfig.shadow
+                      justifyContent: 'center',
+                      fontSize: isMobile ? '1.4rem' : '2rem',
+                      fontWeight: 900,
+                      color: '#FFE082',
+                      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)',
+                      marginBottom: isMobile ? '8px' : '14px',
                     }}
                   >
-                    <MapPin size={12} /> {eraConfig.label}
-                  </span>
-
-                  <span 
+                    {initials}
+                  </div>
+                  <div
                     style={{
-                      background: 'rgba(0, 0, 0, 0.65)',
-                      color: '#F4F4F5',
-                      padding: '3px 9px',
-                      borderRadius: '100px',
-                      fontSize: '0.72rem',
-                      fontWeight: 700,
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                      fontSize: isMobile ? '0.68rem' : '0.76rem',
+                      color: '#FFE082',
+                      fontWeight: 800,
+                      textTransform: 'uppercase',
                     }}
                   >
-                    #{drr.srNo}
-                  </span>
-                </>
+                    Archival Record
+                  </div>
+                </div>
+              )}
+
+              {/* Gradient overlay with tags */}
+              {!isMobile && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background:
+                      'linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, transparent 45%, rgba(0, 0, 0, 0.85) 100%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    padding: '14px',
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    {isCurrentDRR ? (
+                      <span
+                        style={{
+                          background: 'rgba(15, 23, 42, 0.9)',
+                          color: '#FFFFFF',
+                          padding: '4px 10px',
+                          borderRadius: '100px',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          border: '1px solid rgba(216, 27, 96, 0.45)',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <span className="live-indicator-dot" /> CURRENT DRR
+                      </span>
+                    ) : (
+                      <span
+                        style={{
+                          background: eraConfig.bg,
+                          color: eraConfig.textColor,
+                          padding: '4px 10px',
+                          borderRadius: '100px',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                        }}
+                      >
+                        <MapPin size={11} /> {eraConfig.label}
+                      </span>
+                    )}
+
+                    <span
+                      style={{
+                        background: 'rgba(0, 0, 0, 0.65)',
+                        color: '#F4F4F5',
+                        padding: '2px 8px',
+                        borderRadius: '100px',
+                        fontSize: '0.70rem',
+                        fontWeight: 700,
+                      }}
+                    >
+                      #{drr.srNo}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span
+                      className="pill-gold"
+                      style={{
+                        fontSize: '0.75rem',
+                        padding: '3px 8px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                      }}
+                    >
+                      <Calendar size={11} /> {drr.tenure}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Front Flip Badge (Quick Trigger) */}
+              {hasCollages && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFlipped(true);
+                  }}
+                  title="Flip to view tenure collage gallery"
+                  style={{
+                    position: 'absolute',
+                    bottom: '10px',
+                    right: '10px',
+                    background: 'rgba(216, 27, 96, 0.92)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.35)',
+                    borderRadius: '100px',
+                    padding: '5px 11px',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(216, 27, 96, 0.45)',
+                    transition: 'all 0.2s ease',
+                    zIndex: 10,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.06)';
+                    e.currentTarget.style.background = '#C21350';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.background = 'rgba(216, 27, 96, 0.92)';
+                  }}
+                >
+                  <RotateCw size={12} />
+                  <span>Collages ({collages.length})</span>
+                </button>
               )}
             </div>
 
-            {/* Bottom Row inside Photo: Rotary Year Tenure */}
-            <div>
-              <span 
-                className="pill-gold" 
-                style={{ 
-                  fontSize: '0.78rem', 
-                  padding: '4px 10px', 
-                  marginBottom: '6px', 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: '5px' 
-                }}
-              >
-                <Calendar size={12} /> {drr.tenure}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Card Information Body */}
-      <div 
-        style={{ 
-          padding: isMobile ? '10px 10px 12px 10px' : '20px 22px 22px 22px', 
-          display: 'flex', 
-          flexDirection: 'column', 
-          flex: 1,
-          justifyContent: 'space-between',
-          backgroundColor: '#FFFFFF'
-        }}
-      >
-        <div>
-          {isMobile && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }}>
-                {eraConfig.label}
-              </span>
-              <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#71717A', background: '#F4F4F5', padding: '1px 6px', borderRadius: '4px' }}>
-                #{drr.srNo}
-              </span>
-            </div>
-          )}
-          <h3 
-            style={{ 
-              fontSize: isMobile ? '0.94rem' : '1.25rem', 
-              fontWeight: 900, 
-              color: '#18181B', 
-              lineHeight: 1.25, 
-              margin: '0 0 3px 0', 
-              letterSpacing: '-0.3px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              display: '-webkit-box',
-              WebkitLineClamp: isMobile ? 2 : 3,
-              WebkitBoxOrient: 'vertical'
-            }}
-          >
-            {drr.name}
-          </h3>
-
-          <div 
-            style={{ 
-              fontSize: isMobile ? '0.72rem' : '0.84rem', 
-              color: isCurrentDRR ? '#D81B60' : 'var(--rotaract-pink)', 
-              fontWeight: 700, 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '4px', 
-              marginTop: '2px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}
-          >
-            <Shield size={isMobile ? 12 : 13} />
-            {isMobile ? 'DRR' : 'District Rotaract Representative'}
-          </div>
-
-          {drr.homeClub && (
-            <div 
-              style={{ 
-                fontSize: isMobile ? '0.66rem' : '0.76rem', 
-                color: '#64748B', 
-                fontWeight: 600, 
-                marginTop: '4px', 
-                overflow: 'hidden', 
-                textOverflow: 'ellipsis', 
-                whiteSpace: 'nowrap' 
+            {/* Card Information Body */}
+            <div
+              style={{
+                padding: isMobile ? '12px' : '18px 20px',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                justifyContent: 'space-between',
+                backgroundColor: '#FFFFFF',
               }}
             >
-              {drr.homeClub}
-            </div>
-          )}
-        </div>
+              <div>
+                {isMobile && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '4px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
+                      }}
+                    >
+                      {eraConfig.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        color: '#71717A',
+                        background: '#F4F4F5',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      #{drr.srNo}
+                    </span>
+                  </div>
+                )}
+                <h3
+                  style={{
+                    fontSize: isMobile ? '0.96rem' : '1.20rem',
+                    fontWeight: 900,
+                    color: '#18181B',
+                    lineHeight: 1.25,
+                    margin: '0 0 3px 0',
+                    letterSpacing: '-0.3px',
+                  }}
+                >
+                  {drr.name}
+                </h3>
 
-        {/* District & Tenure Footer */}
-        <div 
-          style={{ 
-            marginTop: isMobile ? '8px' : '16px', 
-            paddingTop: isMobile ? '8px' : '12px', 
-            borderTop: '1px solid #F4F4F5',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            fontSize: isMobile ? '0.70rem' : '0.82rem',
-            color: '#52525B'
-          }}
-        >
-          <span style={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: '3px', color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }}>
-            <MapPin size={isMobile ? 11 : 13} style={{ color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor }} /> RID {drr.district}
-          </span>
-          <span 
-            style={{ 
-              fontWeight: 800, 
-              color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
-              background: isCurrentDRR ? '#FFF0F5' : '#FAFAFA',
-              padding: isMobile ? '3px 7px' : '4px 10px',
-              borderRadius: '6px',
-              border: isCurrentDRR ? '1px solid rgba(216, 27, 96, 0.25)' : '1px solid #E4E4E7',
-              fontSize: isMobile ? '0.70rem' : '0.78rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px'
+                <div
+                  style={{
+                    fontSize: isMobile ? '0.72rem' : '0.82rem',
+                    color: isCurrentDRR ? '#D81B60' : 'var(--rotaract-pink)',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    marginTop: '2px',
+                  }}
+                >
+                  <Shield size={isMobile ? 12 : 13} />
+                  {isMobile ? 'DRR' : 'District Rotaract Representative'}
+                </div>
+
+                {drr.homeClub && (
+                  <div
+                    style={{
+                      fontSize: isMobile ? '0.68rem' : '0.76rem',
+                      color: '#64748B',
+                      fontWeight: 600,
+                      marginTop: '4px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {drr.homeClub}
+                  </div>
+                )}
+              </div>
+
+              {/* District & Tenure Footer */}
+              <div
+                style={{
+                  marginTop: '12px',
+                  paddingTop: '10px',
+                  borderTop: '1px solid #F4F4F5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: isMobile ? '0.70rem' : '0.80rem',
+                  color: '#52525B',
+                }}
+              >
+                <span
+                  style={{
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
+                  }}
+                >
+                  <MapPin size={12} /> RID {drr.district}
+                </span>
+
+                <span
+                  style={{
+                    fontWeight: 800,
+                    color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
+                    background: isCurrentDRR ? '#FFF0F5' : '#FAFAFA',
+                    padding: '3px 8px',
+                    borderRadius: '6px',
+                    border: isCurrentDRR
+                      ? '1px solid rgba(216, 27, 96, 0.25)'
+                      : '1px solid #E4E4E7',
+                    fontSize: '0.74rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  {drr.tenure}
+                </span>
+              </div>
+
+              {/* Click to Flip Full Card Trigger */}
+              {hasCollages && (
+                <button
+                  type="button"
+                  onClick={() => setIsFlipped(true)}
+                  style={{
+                    marginTop: '10px',
+                    width: '100%',
+                    padding: '6px 0',
+                    background: '#FDF2F7',
+                    color: '#D81B60',
+                    border: '1px dashed rgba(216, 27, 96, 0.35)',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#FCE7F3';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#FDF2F7';
+                  }}
+                >
+                  <Sparkles size={12} /> Click to Flip & View Tenure Gallery
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ==================== BACK FACE (Collage Gallery) ==================== */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              borderRadius: isMobile ? '16px' : '20px',
+              overflow: 'hidden',
+              backgroundColor: '#111116',
+              border: '2px solid rgba(216, 27, 96, 0.5)',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              transform: 'rotateY(180deg)',
+              display: 'flex',
+              flexDirection: 'column',
+              boxSizing: 'border-box',
             }}
           >
-            {isCurrentDRR && <span className="live-indicator-dot" style={{ width: '5px', height: '5px' }} />}
-            {drr.tenure}
-          </span>
+            {/* Back Header */}
+            <div
+              style={{
+                padding: '12px 14px',
+                background: 'linear-gradient(180deg, #1C1D24 0%, #111116 100%)',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <div>
+                <div style={{ color: '#FFE082', fontSize: '0.72rem', fontWeight: 800 }}>
+                  {drr.tenure} GALLERY
+                </div>
+                <div
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: '0.84rem',
+                    fontWeight: 800,
+                    maxWidth: '140px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {drr.name}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {hasCollages && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLightboxOpen(true);
+                    }}
+                    title="Zoom in to cover screen"
+                    style={{
+                      background: 'rgba(216, 27, 96, 0.85)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '6px 9px',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Maximize2 size={13} />
+                    <span>Zoom</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsFlipped(false);
+                  }}
+                  title="Flip back to profile"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '8px',
+                    padding: '6px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <RotateCw size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Collage Display Area */}
+            <div
+              style={{
+                position: 'relative',
+                flex: 1,
+                minHeight: 0,
+                backgroundColor: '#0A0A0D',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                cursor: hasCollages ? 'pointer' : 'default',
+              }}
+              onClick={() => {
+                if (hasCollages) setIsLightboxOpen(true);
+              }}
+            >
+              {hasCollages ? (
+                <>
+                  <img
+                    src={collages[activeImageIndex]}
+                    alt={`${drr.name} collage ${activeImageIndex + 1}`}
+                    loading="lazy"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
+                  />
+
+                  {/* Left / Right Carousel Chevrons if multi-image */}
+                  {collages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={prevImage}
+                        title="Previous collage"
+                        style={{
+                          position: 'absolute',
+                          left: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(0, 0, 0, 0.7)',
+                          color: '#FFFFFF',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          borderRadius: '50%',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          zIndex: 5,
+                        }}
+                      >
+                        <ChevronLeft size={18} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={nextImage}
+                        title="Next collage"
+                        style={{
+                          position: 'absolute',
+                          right: '8px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'rgba(0, 0, 0, 0.7)',
+                          color: '#FFFFFF',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          borderRadius: '50%',
+                          width: '32px',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          zIndex: 5,
+                        }}
+                      >
+                        <ChevronRight size={18} />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Zoom indicator hover badge */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      bottom: '8px',
+                      background: 'rgba(0, 0, 0, 0.75)',
+                      backdropFilter: 'blur(6px)',
+                      color: '#FFFFFF',
+                      padding: '4px 10px',
+                      borderRadius: '100px',
+                      fontSize: '0.70rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}
+                  >
+                    <ZoomIn size={12} />
+                    <span>
+                      {activeImageIndex + 1} / {collages.length} • Tap to Zoom
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    padding: '24px',
+                    textAlign: 'center',
+                    color: '#A1A1AA',
+                  }}
+                >
+                  <Layers size={36} style={{ color: '#D81B60', marginBottom: '10px' }} />
+                  <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#FFFFFF' }}>
+                    Archival Tenure Record
+                  </div>
+                  <p style={{ fontSize: '0.75rem', marginTop: '6px', color: '#71717A' }}>
+                    Digital photo collages for RY {drr.year} are being digitized and preserved into
+                    the heritage vault.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Back Footer */}
+            <div
+              style={{
+                padding: '10px 14px',
+                background: '#15151A',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setIsFlipped(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#FFE082',
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  cursor: 'pointer',
+                  padding: '0',
+                }}
+              >
+                <RotateCw size={12} /> Flip Back to Profile
+              </button>
+
+              {hasCollages && (
+                <span style={{ fontSize: '0.72rem', color: '#A1A1AA', fontWeight: 700 }}>
+                  {collages.length} Collage{collages.length > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* ==================== FULLSCREEN ZOOM LIGHTBOX MODAL ==================== */}
+      {isLightboxOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99999,
+              backgroundColor: 'rgba(5, 5, 8, 0.96)',
+              backdropFilter: 'blur(16px)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              padding: isMobile ? '12px' : '24px',
+              boxSizing: 'border-box',
+              animation: 'fadeIn 0.25s ease-out',
+            }}
+            onClick={() => setIsLightboxOpen(false)}
+          >
+            {/* Modal Top Bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                color: '#FFFFFF',
+                width: '100%',
+                maxWidth: '1200px',
+                margin: '0 auto',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div>
+                <div style={{ color: '#FFE082', fontSize: '0.85rem', fontWeight: 800 }}>
+                  {drr.tenure} • RID {drr.district}
+                </div>
+                <h2 style={{ fontSize: isMobile ? '1.1rem' : '1.5rem', fontWeight: 900, margin: '2px 0 0 0' }}>
+                  {drr.name}
+                </h2>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: '#F4F4F5',
+                    padding: '4px 12px',
+                    borderRadius: '100px',
+                    fontSize: '0.80rem',
+                    fontWeight: 800,
+                  }}
+                >
+                  {activeImageIndex + 1} of {collages.length}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setIsLightboxOpen(false)}
+                  title="Close (Esc)"
+                  style={{
+                    background: 'rgba(216, 27, 96, 0.9)',
+                    border: 'none',
+                    color: '#FFFFFF',
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 16px rgba(216, 27, 96, 0.4)',
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Image Stage */}
+            <div
+              style={{
+                position: 'relative',
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '16px 0',
+                maxHeight: 'calc(100vh - 160px)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {collages.length > 1 && (
+                <button
+                  type="button"
+                  onClick={prevImage}
+                  style={{
+                    position: 'absolute',
+                    left: isMobile ? '4px' : '20px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(20, 20, 26, 0.85)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    borderRadius: '50%',
+                    width: isMobile ? '40px' : '52px',
+                    height: isMobile ? '40px' : '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                  }}
+                >
+                  <ChevronLeft size={isMobile ? 22 : 28} />
+                </button>
+              )}
+
+              <img
+                src={collages[activeImageIndex]}
+                alt={`${drr.name} collage ${activeImageIndex + 1}`}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: 'contain',
+                  borderRadius: '12px',
+                  boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8)',
+                }}
+              />
+
+              {collages.length > 1 && (
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  style={{
+                    position: 'absolute',
+                    right: isMobile ? '4px' : '20px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(20, 20, 26, 0.85)',
+                    color: '#FFFFFF',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    borderRadius: '50%',
+                    width: isMobile ? '40px' : '52px',
+                    height: isMobile ? '40px' : '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                  }}
+                >
+                  <ChevronRight size={isMobile ? 22 : 28} />
+                </button>
+              )}
+            </div>
+
+            {/* Modal Bottom Filmstrip */}
+            {collages.length > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  overflowX: 'auto',
+                  padding: '6px 0',
+                  maxWidth: '100%',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {collages.map((colUrl, idx) => (
+                  <button
+                    key={colUrl}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    style={{
+                      width: isMobile ? '38px' : '52px',
+                      height: isMobile ? '38px' : '52px',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      padding: 0,
+                      border:
+                        idx === activeImageIndex
+                          ? '2px solid #D81B60'
+                          : '1px solid rgba(255, 255, 255, 0.2)',
+                      opacity: idx === activeImageIndex ? 1 : 0.5,
+                      cursor: 'pointer',
+                      background: '#000',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <img
+                      src={colUrl}
+                      alt={`Thumbnail ${idx + 1}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 });
 
