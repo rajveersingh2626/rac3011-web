@@ -154,14 +154,28 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
               position: 'relative',
             }}
           >
-            {/* Photo or Themed Fallback Avatar */}
+            {/* Photo or Themed Fallback Avatar - Clicking flips card to tenure glimpses */}
             <div
+              onClick={() => {
+                if (hasCollages) setIsFlipped(true);
+              }}
+              role={hasCollages ? 'button' : undefined}
+              tabIndex={hasCollages ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (hasCollages && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  setIsFlipped(true);
+                }
+              }}
+              aria-label={hasCollages ? `View glimpses from ${drr.name}'s tenure` : undefined}
+              title={hasCollages ? 'Click to view glimpses from tenure' : undefined}
               style={{
                 width: '100%',
                 height: isMobile ? '185px' : '310px',
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: '#1E1E24',
+                cursor: hasCollages ? 'pointer' : 'default',
               }}
             >
               {currentSrc && !imgFailed ? (
@@ -310,49 +324,6 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                   </div>
                 </div>
               )}
-
-              {/* Front Flip Badge (Quick Trigger) */}
-              {hasCollages && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsFlipped(true);
-                  }}
-                  title="Flip to view tenure collage gallery"
-                  style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    right: '10px',
-                    background: 'rgba(216, 27, 96, 0.92)',
-                    backdropFilter: 'blur(8px)',
-                    color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.35)',
-                    borderRadius: '100px',
-                    padding: '5px 11px',
-                    fontSize: '0.72rem',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(216, 27, 96, 0.45)',
-                    transition: 'all 0.2s ease',
-                    zIndex: 10,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.06)';
-                    e.currentTarget.style.background = '#C21350';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.background = 'rgba(216, 27, 96, 0.92)';
-                  }}
-                >
-                  <RotateCw size={12} />
-                  <span>Collages ({collages.length})</span>
-                </button>
-              )}
             </div>
 
             {/* Card Information Body */}
@@ -497,7 +468,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                   style={{
                     marginTop: '10px',
                     width: '100%',
-                    padding: '6px 0',
+                    padding: '8px 0',
                     background: '#FDF2F7',
                     color: '#D81B60',
                     border: '1px dashed rgba(216, 27, 96, 0.35)',
@@ -518,7 +489,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                     e.currentTarget.style.background = '#FDF2F7';
                   }}
                 >
-                  <Sparkles size={12} /> Click to Flip & View Tenure Gallery
+                  <Sparkles size={12} /> View glimpses from their tenure
                 </button>
               )}
             </div>
@@ -610,18 +581,29 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                   }}
                   title="Flip back to profile"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.12)',
+                    background: 'rgba(255, 255, 255, 0.14)',
                     color: '#FFFFFF',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                     borderRadius: '8px',
-                    padding: '6px',
+                    padding: '6px 10px',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: '4px',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
                   }}
                 >
-                  <RotateCw size={14} />
+                  <RotateCw size={13} />
+                  <span>Profile</span>
                 </button>
               </div>
             </div>
@@ -753,43 +735,6 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                     the heritage vault.
                   </p>
                 </div>
-              )}
-            </div>
-
-            {/* Back Footer */}
-            <div
-              style={{
-                padding: '10px 14px',
-                background: '#15151A',
-                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setIsFlipped(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#FFE082',
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  cursor: 'pointer',
-                  padding: '0',
-                }}
-              >
-                <RotateCw size={12} /> Flip Back to Profile
-              </button>
-
-              {hasCollages && (
-                <span style={{ fontSize: '0.72rem', color: '#A1A1AA', fontWeight: 700 }}>
-                  {collages.length} Collage{collages.length > 1 ? 's' : ''}
-                </span>
               )}
             </div>
           </div>

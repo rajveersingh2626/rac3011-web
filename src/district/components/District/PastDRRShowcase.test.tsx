@@ -66,10 +66,14 @@ describe('DRR Tenure Collages & Showcase', () => {
       const cardContainer = sarthakHeading.closest('.rotaract-card');
       expect(cardContainer).toBeInTheDocument();
 
-      const flipButtons = screen.getAllByRole('button', { name: /collages/i });
+      const flipButtons = screen.getAllByRole('button', { name: /view glimpses from their tenure/i });
       expect(flipButtons.length).toBeGreaterThan(0);
 
-      // Click flip
+      // Verify photograph is also clickable to flip
+      const photoTrigger = screen.getByLabelText(/View glimpses from Rtr. Sarthak Bansal's tenure/i);
+      expect(photoTrigger).toBeInTheDocument();
+
+      // Click flip button
       fireEvent.click(flipButtons[0]);
 
       // Back side controls should appear
