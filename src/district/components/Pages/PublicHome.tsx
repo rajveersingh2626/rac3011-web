@@ -1355,9 +1355,9 @@ export default function PublicHome({ onNavigateDistrict, onNavigatePage, onOpenL
       <div className="snap-section-footer" style={{ width: '100%', position: 'relative', zIndex: 20, backgroundColor: '#18181B' }}>
         <Footer
           isFullScreen={false}
-          onNavigatePage={(page: string) => {
+          onNavigatePage={(page: string, tab?: string) => {
             if (onNavigatePage) {
-              onNavigatePage(page);
+              onNavigatePage(page, tab);
             } else if (page === 'district' && onNavigateDistrict) {
               onNavigateDistrict();
             } else if (page === 'home') {

@@ -2,8 +2,85 @@ import { useState, useEffect, type CSSProperties } from 'react';
 import DistrictLogo from './DistrictLogo';
 import { Heart, ExternalLink } from 'lucide-react';
 
+interface FooterLinkProps {
+  href: string;
+  label: string;
+  page?: 'home' | 'district' | 'portal';
+  tab?: string;
+  isExternal?: boolean;
+  onNavigatePage?: (page: string, tab?: string) => void;
+  isMobile?: boolean;
+  icon?: React.ReactNode;
+}
+
+function FooterLink({
+  href,
+  label,
+  page,
+  tab,
+  isExternal,
+  onNavigatePage,
+  isMobile,
+  icon,
+}: FooterLinkProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Preserve browser default for modified clicks (e.g. Cmd/Ctrl/Shift/middle click) or external links
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0 || isExternal) {
+      return;
+    }
+
+    if (onNavigatePage) {
+      if (page === 'home') {
+        e.preventDefault();
+        onNavigatePage('home');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (page === 'district') {
+        e.preventDefault();
+        onNavigatePage('district', tab || 'map-clubs');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      if (page === 'portal') {
+        e.preventDefault();
+        onNavigatePage('portal');
+        return;
+      }
+    }
+  };
+
+  return (
+    <a
+      href={href}
+      target={isExternal ? '_blank' : undefined}
+      rel={isExternal ? 'noopener noreferrer' : undefined}
+      onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        color: isHovered ? '#FFFFFF' : '#A1A1AA',
+        fontSize: '0.9rem',
+        textDecoration: 'none',
+        transition: 'color 0.15s ease',
+        padding: isMobile ? '8px 0' : '4px 0',
+        minHeight: isMobile ? '40px' : 'auto',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '6px',
+        cursor: 'pointer',
+      }}
+    >
+      <span>{label}</span>
+      {icon}
+    </a>
+  );
+}
+
 export interface FooterProps {
-  onNavigatePage?: (page: string) => void;
+  onNavigatePage?: (page: string, tab?: string) => void;
   isFullScreen?: boolean;
 }
 
@@ -15,21 +92,6 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
     window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  /* Shared style for nav link buttons — 44px touch target on mobile */
-  const navLinkStyle: CSSProperties = {
-    background: 'none',
-    border: 'none',
-    color: '#A1A1AA',
-    fontSize: '0.9rem',
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'color 0.2s',
-    padding: isMobile ? '10px 0' : '4px 0',
-    minHeight: isMobile ? '44px' : 'auto',
-    display: 'flex',
-    alignItems: 'center'
-  };
 
   return (
     <footer
@@ -53,9 +115,20 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1.3fr 1fr 1fr 1fr', gap: isMobile ? '28px' : '36px', marginBottom: isMobile ? '32px' : '48px' }}>
           
           <div>
-            <div style={{ background: 'transparent', padding: '0px', display: 'inline-block', marginBottom: '16px' }}>
+            <a
+              href="/"
+              onClick={(e) => {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey && e.button === 0 && onNavigatePage) {
+                  e.preventDefault();
+                  onNavigatePage('home');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              style={{ background: 'transparent', padding: '0px', display: 'inline-block', marginBottom: '16px', textDecoration: 'none' }}
+              aria-label="District 3011 Home"
+            >
               <DistrictLogo size="small" />
-            </div>
+            </a>
             <p style={{ color: '#A1A1AA', fontSize: isMobile ? '0.85rem' : '0.88rem', lineHeight: '1.65', marginBottom: '16px' }}>
               Rotaract District Organization 3011 unites 75+ clubs across Delhi NCR &amp; Haryana under Rotary International for service, youth leadership, and international fellowship.
             </p>
@@ -68,31 +141,24 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
             <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
               District &amp; Governance
             </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '4px' }}>
               <li>
-                <button onClick={() => (onNavigatePage ? onNavigatePage('home') : (window.location.href = '/'))} style={navLinkStyle}>
-                  Home Page
-                </button>
+                <FooterLink href="/" label="Home Page" page="home" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (onNavigatePage ? onNavigatePage('district') : (window.location.href = '/map'))} style={navLinkStyle}>
-                  District Map &amp; Directory
-                </button>
+                <FooterLink href="/map" label="District Map & Directory" page="district" tab="map-clubs" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/leadership')} style={navLinkStyle}>
-                  District Team &amp; Council
-                </button>
+                <FooterLink href="/leadership" label="District Team & Council" page="district" tab="leadership" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/heritage')} style={navLinkStyle}>
-                  Council of DRRs
-                </button>
+                <FooterLink href="/heritage" label="Council of DRRs" page="district" tab="heritage" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/governance')} style={navLinkStyle}>
-                  Governance &amp; Demarcations
-                </button>
+                <FooterLink href="/governance" label="Governance & Demarcations" page="district" tab="leadership" onNavigatePage={onNavigatePage} isMobile={isMobile} />
+              </li>
+              <li>
+                <FooterLink href="/calendar" label="District Calendar" page="district" tab="calendar" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
             </ul>
           </div>
@@ -101,31 +167,21 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
             <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
               Impact &amp; Media
             </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '4px' }}>
               <li>
-                <button onClick={() => (window.location.href = '/initiatives')} style={navLinkStyle}>
-                  Flagship Initiatives
-                </button>
+                <FooterLink href="/initiatives" label="Flagship Initiatives" page="district" tab="initiatives" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/showcase')} style={navLinkStyle}>
-                  Project Showcase
-                </button>
+                <FooterLink href="/showcase" label="Project Showcase" page="district" tab="initiatives" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/achievements')} style={navLinkStyle}>
-                  District Achievements
-                </button>
+                <FooterLink href="/achievements" label="District Achievements" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/publications')} style={navLinkStyle}>
-                  District Newsletters
-                </button>
+                <FooterLink href="/publications" label="District Newsletters" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/partners')} style={navLinkStyle}>
-                  Corporate &amp; Community Partners
-                </button>
+                <FooterLink href="/partners" label="Corporate & Community Partners" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
             </ul>
           </div>
@@ -134,41 +190,33 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
             <h4 style={{ color: '#FFFFFF', fontSize: '0.95rem', fontWeight: 700, marginBottom: '14px', letterSpacing: '0.5px' }}>
               Connect &amp; Resources
             </h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '6px' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '4px' }}>
               <li>
-                <button onClick={() => (window.location.href = '/resources')} style={navLinkStyle}>
-                  Official Resources Archive
-                </button>
+                <FooterLink href="/resources" label="Official Resources Archive" page="district" tab="resources" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/resources/sister-club')} style={navLinkStyle}>
-                  Sister-Club Requests
-                </button>
+                <FooterLink href="/resources/sister-club" label="Sister-Club Requests" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/contact')} style={navLinkStyle}>
-                  Contact &amp; Enquiries
-                </button>
+                <FooterLink href="/get-involved/new-club" label="Start a New Club" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/portal/login')} style={navLinkStyle}>
-                  Member Portal Login
-                </button>
+                <FooterLink href="/contact" label="Contact & Enquiries" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <button onClick={() => (window.location.href = '/portal/feedback')} style={navLinkStyle}>
-                  Grievances &amp; Feedback
-                </button>
+                <FooterLink href="/portal/login" label="Member Portal Login" page="portal" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <a
+                <FooterLink href="/portal/feedback" label="Grievances & Feedback" onNavigatePage={onNavigatePage} isMobile={isMobile} />
+              </li>
+              <li>
+                <FooterLink
                   href="https://www.instagram.com/rotaractdistrict.3011/"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ ...navLinkStyle, color: '#A1A1AA', textDecoration: 'none', gap: '6px' }}
-                >
-                  Official Instagram <ExternalLink size={13} />
-                </a>
+                  label="Official Instagram"
+                  isExternal
+                  icon={<ExternalLink size={13} />}
+                  isMobile={isMobile}
+                />
               </li>
             </ul>
           </div>
@@ -199,7 +247,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
           </p>
         </div>
 
-        {/* Bottom copyright bar */}
+        {/* Bottom copyright & legal bar */}
         <div style={{
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           paddingTop: '18px',
@@ -208,7 +256,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
           flexWrap: 'wrap',
           justifyContent: isMobile ? 'center' : 'space-between',
           alignItems: 'center',
-          gap: isMobile ? '10px' : '16px',
+          gap: isMobile ? '12px' : '16px',
           fontSize: '0.85rem',
           color: '#71717A',
           textAlign: isMobile ? 'center' : 'left'
@@ -216,6 +264,27 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
           <div>
             © 2026 Rotaract District Organization 3011. All Rights Reserved.
           </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.82rem' }}>
+            <a
+              href="/privacy-policy"
+              style={{ color: '#A1A1AA', textDecoration: 'none', transition: 'color 0.15s ease' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#A1A1AA')}
+            >
+              Privacy Policy
+            </a>
+            <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+            <a
+              href="/terms-of-service"
+              style={{ color: '#A1A1AA', textDecoration: 'none', transition: 'color 0.15s ease' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#A1A1AA')}
+            >
+              Terms of Service
+            </a>
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             Built with <Heart size={14} fill="#D81B60" color="#D81B60" /> for District 3011 Rotaractors
           </div>

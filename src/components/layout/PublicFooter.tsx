@@ -74,6 +74,15 @@ export function PublicFooter({ visits }: PublicFooterProps) {
       </div>
       <div className="flex flex-col gap-2 pt-5 text-[11.5px] text-white/62 sm:flex-row sm:items-center sm:justify-between">
         <span>© {year} Rotaract District Organization 3011</span>
+        <div className="flex items-center gap-3">
+          <Link to="/privacy-policy" className="hover:text-white transition-colors">
+            Privacy Policy
+          </Link>
+          <span className="text-white/20">•</span>
+          <Link to="/terms-of-service" className="hover:text-white transition-colors">
+            Terms of Service
+          </Link>
+        </div>
         <span>{typeof visits === 'number' ? `${visits.toLocaleString('en-IN')} visits this year · counted server-side` : null}</span>
       </div>
     </footer>

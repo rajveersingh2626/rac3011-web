@@ -307,7 +307,7 @@ export default function DistrictApp() {
           />
         )}
 
-        {activePage !== 'home' && <Footer onNavigatePage={(page: string) => handlePageChange(page)} />}
+        {activePage !== 'home' && <Footer onNavigatePage={handlePageChange} />}
       </main>
 
       {uploaderModalMode && (

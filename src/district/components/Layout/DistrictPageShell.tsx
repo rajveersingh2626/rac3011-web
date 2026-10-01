@@ -70,7 +70,7 @@ export function DistrictPageShell({ children }: DistrictPageShellProps) {
         }}
       />
       <main style={{ flex: 1, minHeight: 0, paddingBottom: '76px' }}>{children}</main>
-      <Footer onNavigatePage={(page: string) => handlePageChange(page)} />
+      <Footer onNavigatePage={handlePageChange} />
     </div>
   );
 }
