@@ -119,7 +119,10 @@ export function LoginPage() {
         });
       }
       await refresh();
-      if (next.startsWith('http://') || next.startsWith('https://')) {
+      let safeNext = '/portal/dashboard';
+      if (next.startsWith('/') && !next.startsWith('//') && !next.includes('\\')) {
+        safeNext = next;
+      } else if (next.startsWith('http://') || next.startsWith('https://')) {
         try {
           const parsed = new URL(next);
           // Only allow safe redirections to rotaract3011.org domains or localhost
@@ -136,7 +139,7 @@ export function LoginPage() {
           // Fallback to internal navigate below
         }
       }
-      navigate(next, { replace: true });
+      navigate(safeNext, { replace: true });
     } catch (e) {
       if (e instanceof ApiError && e.details) secondFactor.setServerErrors(e.details);
       else setFormError(e instanceof ApiError ? e.message : 'Something went wrong. Try again.');

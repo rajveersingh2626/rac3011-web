@@ -106,7 +106,7 @@ describe('ReportFormBuilderPage', () => {
     await user.click(screen.getByText('+ Add a field'));
 
     const modal = screen.getByRole('dialog');
-    await user.type(within(modal).getByLabelText('Label'), 'Photo');
+    await user.type(within(modal).getByLabelText(/Label/i), 'Photo');
     await user.type(within(modal).getByLabelText(/Field key/), 'photo_links');
     await user.click(within(modal).getByRole('button', { name: 'Save field' }));
 

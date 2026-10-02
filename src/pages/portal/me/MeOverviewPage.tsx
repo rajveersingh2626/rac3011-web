@@ -1,7 +1,8 @@
 import { Link } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/app/auth';
-import { fetchMyCard } from '@/lib/members/api';
+import { fetchMyCard, qrSvgUrl } from '@/lib/members/api';
+import { API_ORIGIN } from '@/lib/api';
 import { useDocumentMeta } from '@/lib/meta';
 import { Container } from '@/components/ui/Container';
 import { Section } from '@/components/ui/Section';
@@ -43,6 +44,13 @@ export function MeOverviewPage() {
                     <p className="m-0 text-[10.5px] font-bold tracking-[1px] text-accent-deep">MEMBERSHIP CARD</p>
                     <p className="m-0 text-[16px] font-extrabold text-fg">{cardQuery.data.clubName}</p>
                   </div>
+                </div>
+                <div className="shrink-0 bg-white p-1 rounded-lg border border-line">
+                  <img
+                    src={qrSvgUrl(API_ORIGIN)}
+                    alt="Your check-in QR code"
+                    className="size-16"
+                  />
                 </div>
               </div>
               <div className="mt-4">

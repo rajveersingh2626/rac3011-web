@@ -186,7 +186,7 @@ export function ReportFormBuilderPage() {
           isDraft
             ? `Editing draft version ${schema.version}. Modify fields below or publish to make it active district-wide.`
             : isActive
-            ? `Version ${schema.version} is currently LIVE district-wide. Unpublish to edit, or branch into a new draft.`
+            ? `Version ${schema.version} is live. Currently active district-wide. Unpublish to edit, or branch into a new draft.`
             : `Version ${schema.version} is RETIRED. You can preview, branch into a new draft, or re-activate it.`
         }
       >
@@ -411,6 +411,7 @@ export function ReportFormBuilderPage() {
                 onClick={() => startDraftMutation.mutate(baseVersionChoice ?? schema.version)}
                 loading={startDraftMutation.isPending}
                 className="w-full mt-1"
+                aria-label="Start a new draft"
               >
                 + Draft v{latestSummaryVer + 1} from v{baseVersionChoice ?? schema.version}
               </Button>
