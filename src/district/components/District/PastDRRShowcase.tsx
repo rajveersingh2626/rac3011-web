@@ -1,4 +1,4 @@
-import { memo, useState, useMemo, useEffect, useCallback } from 'react';
+import { memo, useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { PAST_DRRS } from '../../data/districtData';
@@ -51,6 +51,16 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
   const collages = useMemo(() => getDrrCollages(drr.id), [drr.id]);
   const hasCollages = collages.length > 0;
 
+  // Eagerly preload all collages for instantaneous slide response
+  useEffect(() => {
+    if (collages.length > 0 && (isHovered || isFlipped || isLightboxOpen)) {
+      collages.forEach((url) => {
+        const img = new Image();
+        img.src = url;
+      });
+    }
+  }, [collages, isHovered, isFlipped, isLightboxOpen]);
+
   useEffect(() => {
     setCurrentSrc(drr.photo || null);
     setImgFailed(false);
@@ -87,17 +97,45 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
   };
 
   const nextImage = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
+    (e?: React.MouseEvent | React.TouchEvent) => {
+      if (e) e.stopPropagation();
       setActiveImageIndex((prev) => (prev < collages.length - 1 ? prev + 1 : 0));
     },
     [collages.length],
   );
 
   const prevImage = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
+    (e?: React.MouseEvent | React.TouchEvent) => {
+      if (e) e.stopPropagation();
       setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : collages.length - 1));
+    },
+    [collages.length],
+  );
+
+  const touchStartX = useRef<number | null>(null);
+  const hasSwiped = useRef(false);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    hasSwiped.current = false;
+  }, []);
+
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current === null || collages.length <= 1) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX;
+      if (Math.abs(diff) > 40) {
+        hasSwiped.current = true;
+        if (diff > 0) {
+          // Swiped left -> next slide
+          setActiveImageIndex((prev) => (prev < collages.length - 1 ? prev + 1 : 0));
+        } else {
+          // Swiped right -> prev slide
+          setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : collages.length - 1));
+        }
+      }
+      touchStartX.current = null;
     },
     [collages.length],
   );
@@ -109,7 +147,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
         style={{
           perspective: '1400px',
           width: '100%',
-          minHeight: isMobile ? '340px' : '480px',
+          minHeight: isMobile ? '450px' : '480px',
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -171,7 +209,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
               title={hasCollages ? 'Click to view glimpses from tenure' : undefined}
               style={{
                 width: '100%',
-                height: isMobile ? '185px' : '310px',
+                height: isMobile ? '260px' : '310px',
                 position: 'relative',
                 overflow: 'hidden',
                 backgroundColor: '#1E1E24',
@@ -329,7 +367,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
             {/* Card Information Body */}
             <div
               style={{
-                padding: isMobile ? '12px' : '18px 20px',
+                padding: isMobile ? '16px' : '18px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 flex: 1,
@@ -344,12 +382,12 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '4px',
+                      marginBottom: '6px',
                     }}
                   >
                     <span
                       style={{
-                        fontSize: '0.68rem',
+                        fontSize: '0.75rem',
                         fontWeight: 800,
                         color: isCurrentDRR ? '#D81B60' : eraConfig.pinColor,
                       }}
@@ -358,12 +396,12 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                     </span>
                     <span
                       style={{
-                        fontSize: '0.68rem',
+                        fontSize: '0.75rem',
                         fontWeight: 800,
                         color: '#71717A',
                         background: '#F4F4F5',
-                        padding: '1px 6px',
-                        borderRadius: '4px',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
                       }}
                     >
                       #{drr.srNo}
@@ -372,7 +410,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                 )}
                 <h3
                   style={{
-                    fontSize: isMobile ? '0.96rem' : '1.20rem',
+                    fontSize: isMobile ? '1.18rem' : '1.20rem',
                     fontWeight: 900,
                     color: '#18181B',
                     lineHeight: 1.25,
@@ -385,23 +423,23 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
 
                 <div
                   style={{
-                    fontSize: isMobile ? '0.72rem' : '0.82rem',
+                    fontSize: isMobile ? '0.80rem' : '0.82rem',
                     color: isCurrentDRR ? '#D81B60' : 'var(--rotaract-pink)',
                     fontWeight: 700,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    marginTop: '2px',
+                    marginTop: '3px',
                   }}
                 >
-                  <Shield size={isMobile ? 12 : 13} />
-                  {isMobile ? 'DRR' : 'District Rotaract Representative'}
+                  <Shield size={13} />
+                  {isMobile ? 'District Rotaract Representative' : 'District Rotaract Representative'}
                 </div>
 
                 {drr.homeClub && (
                   <div
                     style={{
-                      fontSize: isMobile ? '0.68rem' : '0.76rem',
+                      fontSize: isMobile ? '0.76rem' : '0.76rem',
                       color: '#64748B',
                       fontWeight: 600,
                       marginTop: '4px',
@@ -533,9 +571,9 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                 <div
                   style={{
                     color: '#FFFFFF',
-                    fontSize: '0.84rem',
+                    fontSize: isMobile ? '0.90rem' : '0.84rem',
                     fontWeight: 800,
-                    maxWidth: '140px',
+                    maxWidth: isMobile ? '240px' : '160px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -610,6 +648,8 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
 
             {/* Collage Display Area */}
             <div
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
               style={{
                 position: 'relative',
                 flex: 1,
@@ -620,8 +660,13 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                 justifyContent: 'center',
                 overflow: 'hidden',
                 cursor: hasCollages ? 'pointer' : 'default',
+                userSelect: 'none',
               }}
               onClick={() => {
+                if (hasSwiped.current) {
+                  hasSwiped.current = false;
+                  return;
+                }
                 if (hasCollages) setIsLightboxOpen(true);
               }}
             >
@@ -822,6 +867,8 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
 
             {/* Modal Image Stage */}
             <div
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
               style={{
                 position: 'relative',
                 flex: 1,
@@ -830,6 +877,7 @@ const DRRCard = memo(function DRRCard({ drr, eraConfig, isCurrentDRR, initials, 
                 justifyContent: 'center',
                 margin: '16px 0',
                 maxHeight: 'calc(100vh - 160px)',
+                userSelect: 'none',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1126,7 +1174,14 @@ export default function PastDRRShowcase() {
   };
 
   return (
-    <div style={{ marginTop: '10px', color: '#FFFFFF' }}>
+    <div 
+      style={{ 
+        marginTop: '10px', 
+        paddingTop: isMobile ? '64px' : '0px',
+        paddingBottom: isMobile ? '120px' : '40px',
+        color: '#FFFFFF' 
+      }}
+    >
       
       {/* Page Header */}
       <div style={{ textAlign: 'center', marginBottom: isMobile ? '20px' : '32px' }}>
@@ -1254,7 +1309,15 @@ export default function PastDRRShowcase() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: isMobile ? '12px' : '26px' }}>
+        <div 
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(280px, 1fr))', 
+            gap: isMobile ? '20px' : '26px',
+            maxWidth: isMobile ? '440px' : 'none',
+            margin: isMobile ? '0 auto' : '0'
+          }}
+        >
           {filteredDRRs.map((drr) => {
             const isCurrentDRR = drr.year === '2026-27' || drr.name.toLowerCase().includes('archit');
             const eraConfig = getEraBadgeConfig(drr.district);

@@ -5,6 +5,7 @@ export const PUBLIC_ROUTES: string[] = [
   '/heritage',
   '/leadership',
   '/initiatives',
+  '/gallery',
   '/resources',
   '/resources/documents',
   '/resources/guest-kit',

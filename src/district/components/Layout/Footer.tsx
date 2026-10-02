@@ -155,9 +155,6 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
                 <FooterLink href="/heritage" label="Council of DRRs" page="district" tab="heritage" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <FooterLink href="/governance" label="Governance & Demarcations" page="district" tab="leadership" onNavigatePage={onNavigatePage} isMobile={isMobile} />
-              </li>
-              <li>
                 <FooterLink href="/calendar" label="District Calendar" page="district" tab="calendar" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
             </ul>
@@ -169,7 +166,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
             </h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: isMobile ? '2px' : '4px' }}>
               <li>
-                <FooterLink href="/initiatives" label="Flagship Initiatives" page="district" tab="initiatives" onNavigatePage={onNavigatePage} isMobile={isMobile} />
+                <FooterLink href="/gallery" label="Event Gallery" page="district" tab="gallery" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
                 <FooterLink href="/showcase" label="Project Showcase" page="district" tab="initiatives" onNavigatePage={onNavigatePage} isMobile={isMobile} />
@@ -207,7 +204,7 @@ export default function Footer({ onNavigatePage, isFullScreen = false }: FooterP
                 <FooterLink href="/portal/login" label="Member Portal Login" page="portal" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
-                <FooterLink href="/portal/feedback" label="Grievances & Feedback" onNavigatePage={onNavigatePage} isMobile={isMobile} />
+                <FooterLink href="/contact" label="Grievances & Feedback" onNavigatePage={onNavigatePage} isMobile={isMobile} />
               </li>
               <li>
                 <FooterLink

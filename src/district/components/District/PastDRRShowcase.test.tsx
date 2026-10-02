@@ -26,8 +26,8 @@ describe('DRR Tenure Collages & Showcase', () => {
 
       expect(sarthakCollages.length).toBe(5);
       expect(yaaminiCollages.length).toBe(3);
-      expect(sarthakCollages[0]).toContain('sarthak');
-      expect(yaaminiCollages[0]).toContain('yaamini');
+      expect(sarthakCollages[0]).toContain('ufs.sh');
+      expect(yaaminiCollages[0]).toContain('ufs.sh');
 
       // 2022-23 Co-DRRs
       const rahulCollages = getDrrCollages('drr-40');

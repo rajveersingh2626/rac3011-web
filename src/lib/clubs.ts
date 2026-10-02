@@ -63,7 +63,10 @@ export async function fetchAdminClubs(params?: {
   pageSize?: number;
 }): Promise<{ items: Club[]; total: number }> {
   const qp = new URLSearchParams();
-  if (params?.zoneId) qp.set('zoneId', params.zoneId);
+  if (params?.zoneId) {
+    qp.set('filter[zoneId]', params.zoneId);
+    qp.set('zoneId', params.zoneId);
+  }
   if (params?.q) qp.set('q', params.q);
   if (params?.page) qp.set('page', String(params.page));
   if (params?.pageSize) qp.set('pageSize', String(params.pageSize));

@@ -83,7 +83,7 @@ export const portalAdminRouteObjects: RouteObject[] = [
   guarded('announcements:send', '/portal/admin/announcements/audience', <AnnouncementAudiencePage />),
   guarded('settings:manage', '/portal/admin/settings', <SettingsPage />),
   guarded('feedback:review', '/portal/admin/feedback', <AdminFeedbackPage />),
-  guarded('showcase:publish', '/portal/admin/showcase', <AdminShowcasePage />),
+  guarded('showcase:publish,content:publish,public_content:manage', '/portal/admin/showcase', <AdminShowcasePage />),
   guarded('roles:manage', '/portal/admin/users', <AdminUsersPage />),
   guarded('roles:manage', '/portal/admin/sessions', <ActiveSessionsPage />),
   guarded('events:manage', '/portal/admin/events', <PortalEventsPage />),

@@ -39,18 +39,33 @@ export function MyClubPage() {
             </Card>
             <Card>
               <p className="m-0 mb-3 text-[10.5px] font-bold tracking-[1px] text-fg-3">CURRENT OFFICERS</p>
-              {(clubQuery.data.board ?? []).length === 0 ? (
-                <p className="m-0 text-[12.5px] text-fg-3">No officers on file for this Rotary year yet.</p>
-              ) : (
-                <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                  {(clubQuery.data.board ?? []).map((b) => (
-                    <li key={b.id} className="flex items-center justify-between gap-3 border-b border-line pb-2 last:border-0">
-                      <span className="text-[12.5px] font-bold text-fg">{b.name}</span>
-                      <span className="text-[11.5px] text-fg-3">{b.position}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {(() => {
+                const rawBoard = clubQuery.data.board ?? [];
+                const officers =
+                  rawBoard.length > 0
+                    ? rawBoard
+                    : [
+                        ...(clubQuery.data.president
+                          ? [{ id: 'pres', name: clubQuery.data.president, position: 'President' }]
+                          : []),
+                        ...(clubQuery.data.secretary
+                          ? [{ id: 'sec', name: clubQuery.data.secretary, position: 'Secretary' }]
+                          : []),
+                      ];
+                if (officers.length === 0) {
+                  return <p className="m-0 text-[12.5px] text-fg-3">No officers on file for this Rotary year yet.</p>;
+                }
+                return (
+                  <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                    {officers.map((b) => (
+                      <li key={b.id} className="flex items-center justify-between gap-3 border-b border-line pb-2 last:border-0">
+                        <span className="text-[12.5px] font-bold text-fg">{b.name}</span>
+                        <span className="text-[11.5px] text-fg-3">{b.position}</span>
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
             </Card>
           </div>
         )}

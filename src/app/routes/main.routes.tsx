@@ -54,6 +54,7 @@ const districtSitePaths = [
   '/calendar',
   '/governance',
   '/leadership',
+  '/gallery',
 ];
 
 const routes: RouteObject[] = [

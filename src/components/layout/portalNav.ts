@@ -81,7 +81,7 @@ export const PORTAL_NAV_GROUPS: NavGroup[] = [
       { key: 'admin-form-builder', label: 'Form Builder', to: '/portal/admin/form-builder', perm: 'forms:manage,forms:responses:view,requests:manage,roles:manage' },
       { key: 'admin-report-builder', label: 'Report Builder', to: '/portal/admin/report-builder', perm: 'requests:manage' },
       { key: 'admin-requests', label: 'Requests', to: '/portal/admin/requests', perm: 'requests:manage' },
-      { key: 'admin-showcase', label: 'Showcase queue', to: '/portal/admin/showcase', perm: 'showcase:publish' },
+      { key: 'admin-showcase', label: 'Showcase queue', to: '/portal/admin/showcase', perm: 'showcase:publish,content:publish,public_content:manage' },
       { key: 'admin-members', label: 'Members', to: '/portal/members', perm: 'members:approve' },
       { key: 'admin-effort-log', label: 'Effort log', to: '/portal/admin/effort-log', perm: 'effort:approve' },
       { key: 'admin-events', label: 'Events', to: '/portal/admin/events', perm: 'events:manage' },

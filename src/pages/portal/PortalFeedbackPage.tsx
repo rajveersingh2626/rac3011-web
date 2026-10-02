@@ -158,7 +158,7 @@ export function PortalFeedbackPage() {
                 { value: 'general', label: 'General District Suggestion' },
                 { value: 'club', label: 'Club Support & Affairs' },
               ]}
-              className="bg-white/5 border-white/10 text-white rounded-xl"
+              selectClassName="bg-[#181B2A] text-white border-white/20 focus:bg-[#121420] focus:text-white rounded-xl"
             />
           </div>
 
@@ -171,7 +171,7 @@ export function PortalFeedbackPage() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Describe your suggestion, grievance, or question clearly..."
               rows={4}
-              className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
+              className="bg-[#181B2A] text-white border-white/20 placeholder:text-white/40 focus:bg-[#121420] focus:text-white rounded-xl"
             />
           </div>
 

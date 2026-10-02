@@ -106,7 +106,7 @@ export function AdminClubsPage() {
 
   const [activeTab, setActiveTab] = useState<string>('directory');
   const [month, setMonth] = useState<string>(() => currentReportMonth());
-  const [zoneId, setZoneId] = useState('');
+  const [zoneId, setZoneId] = useState(zonalOfficerZoneId);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [reportSearch, setReportSearch] = useState<string>('');
@@ -117,6 +117,8 @@ export function AdminClubsPage() {
       setZoneId(zonalOfficerZoneId);
     }
   }, [zonalOfficerZoneId]);
+
+  const effectiveZoneId = isZonalOfficer ? zonalOfficerZoneId : (zoneId || undefined);
 
   // Reports queries & privileged operations
   const [queryingId, setQueryingId] = useState<string | null>(null);
@@ -138,12 +140,13 @@ export function AdminClubsPage() {
   const monthsQuery = useQuery({ queryKey: ['reports', 'months'], queryFn: () => fetchReportingMonths() });
   const zonesQuery = useQuery({ queryKey: ['zones'], queryFn: fetchZones });
   const publicClubsQuery = useQuery({
-    queryKey: ['public-clubs', zoneId],
-    queryFn: () => fetchPublicClubs(zoneId || undefined),
+    queryKey: ['public-clubs', effectiveZoneId],
+    queryFn: () => fetchPublicClubs(effectiveZoneId),
   });
   const adminClubsQuery = useQuery({
-    queryKey: ['admin-clubs', zoneId, searchQuery],
-    queryFn: () => fetchAdminClubs({ zoneId: zoneId || undefined, q: searchQuery || undefined, pageSize: 200 }),
+    queryKey: ['admin-clubs', effectiveZoneId, searchQuery],
+    queryFn: () => fetchAdminClubs({ zoneId: effectiveZoneId, q: searchQuery || undefined, pageSize: 200 }),
+    placeholderData: (previousData) => previousData,
   });
   const reportsQuery = useQuery({
     queryKey: ['reports', 'admin-overview', month],
@@ -261,7 +264,11 @@ export function AdminClubsPage() {
 
   const filedByClub = useMemo(() => {
     const map = new Map<string, Report>();
-    for (const r of reportsQuery.data?.items ?? []) map.set(r.clubId, r);
+    for (const r of reportsQuery.data?.items ?? []) {
+      if (r.status !== 'draft') {
+        map.set(r.clubId, r);
+      }
+    }
     return map;
   }, [reportsQuery.data]);
 
@@ -269,12 +276,11 @@ export function AdminClubsPage() {
   const activeClubsCount = clubsList.filter((c) => c.isActive && c.id !== 'DISTRICT').length;
   const totalClubsCount = clubsList.filter((c) => c.id !== 'DISTRICT').length;
 
-  const clubsInZone = (publicClubsQuery.data ?? []).filter((c) => !zoneId || c.zoneId === zoneId);
-  const reportsList = (reportsQuery.data?.items ?? []).filter((r) => !zoneId || r.club?.zoneId === zoneId);
+  const clubsInZone = (publicClubsQuery.data ?? []).filter((c) => c.id !== 'DISTRICT' && (!effectiveZoneId || c.zoneId === effectiveZoneId));
+  const reportsList = (reportsQuery.data?.items ?? []).filter((r) => !effectiveZoneId || r.club?.zoneId === effectiveZoneId);
   const filedInZone = clubsInZone.filter((c) => filedByClub.has(c.id));
   const notFiled = clubsInZone.filter((c) => !filedByClub.has(c.id));
   const awaitingScore = reportsList.filter((r) => r.status === 'submitted').length;
-  const scored = reportsList.filter((r) => r.status === 'scored').length;
 
   const openAddClub = () => {
     setEditingClub(null);
@@ -528,7 +534,7 @@ export function AdminClubsPage() {
                 <div className="w-full sm:w-[180px]">
                   <Select
                     aria-label="Filter by zone"
-                    value={zoneId}
+                    value={effectiveZoneId ?? ''}
                     onChange={(e) => setZoneId(e.target.value)}
                     placeholder="All zones"
                     disabled={isZonalOfficer}
@@ -551,7 +557,7 @@ export function AdminClubsPage() {
             ) : (
               <Table
                 columns={directoryColumns}
-                rows={clubsList.filter((c) => c.id !== 'DISTRICT')}
+                rows={clubsList.filter((c) => c.id !== 'DISTRICT' && (!effectiveZoneId || c.zoneId === effectiveZoneId))}
                 rowKey={(c) => c.id}
                 empty="No clubs found matching criteria."
               />
@@ -563,10 +569,10 @@ export function AdminClubsPage() {
               Review reports, assign points, and track monthly compliance across all district clubs.
             </p>
             <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-              <Stat label="Awaiting a score" value={awaitingScore} />
+              <Stat label="Total Expected" value={clubsInZone.length} />
               <Stat label="Filed this month" value={filedInZone.length} />
               <Stat label="Yet to file" value={notFiled.length} />
-              <Stat label="Scored" value={scored} />
+              <Stat label="Awaiting a score" value={awaitingScore} />
             </div>
 
             {/* Filter toolbar */}

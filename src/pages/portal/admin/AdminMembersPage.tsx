@@ -22,11 +22,12 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Textarea';
+import { Alert } from '@/components/ui/Alert';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useToast } from '@/components/ui/Toast';
-import { KeyRound, ShieldAlert, Users, UserCheck, Clock } from 'lucide-react';
+import { KeyRound, ShieldAlert, Users, UserCheck, Clock, Upload } from 'lucide-react';
 
 const STATUS_TONE: Record<string, BadgeTone> = { pending: 'amber', approved: 'green', suspended: 'red' };
 
@@ -199,40 +200,86 @@ function RejectModal({
   );
 }
 
-function ImportModal({ clubId, open, onClose }: { clubId: string; open: boolean; onClose: () => void }) {
+function ImportModal({
+  clubId: initialClubId,
+  clubs = [],
+  open,
+  onClose,
+}: {
+  clubId: string;
+  clubs?: { id: string; name: string }[];
+  open: boolean;
+  onClose: () => void;
+}) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedClubId, setSelectedClubId] = useState(initialClubId || clubs[0]?.id || '');
   const [csv, setCsv] = useState('');
+  const [fileName, setFileName] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ id: string; rows: ImportPreviewRow[] } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const targetClubId = selectedClubId || initialClubId || clubs[0]?.id || '';
+
+  const prepareCsv = (raw: string): string => {
+    const trimmed = raw.trim();
+    if (!trimmed) return '';
+    const firstLine = trimmed.split(/\r\n|\r|\n/)[0].toLowerCase();
+    if (!firstLine.includes('email') && !firstLine.includes('mail')) {
+      return `fullName,email,phone,rotaryId\n${trimmed}`;
+    }
+    return trimmed;
+  };
 
   const previewMutation = useMutation({
-    mutationFn: () => previewMemberImport(clubId, csv),
-    onSuccess: (res) => setPreview({ id: res.id, rows: res.rows }),
+    mutationFn: () => {
+      setErrorMessage(null);
+      const payload = prepareCsv(csv);
+      if (!targetClubId) throw new Error('Please select a club to import into');
+      return previewMemberImport(targetClubId, payload);
+    },
+    onSuccess: (res) => {
+      setPreview({ id: res.id, rows: res.rows });
+      setErrorMessage(null);
+    },
+    onError: (err) => {
+      setErrorMessage(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to preview CSV');
+    },
   });
 
   const commitMutation = useMutation({
     mutationFn: () => {
+      setErrorMessage(null);
       const rows = (preview?.rows ?? []).filter((r) => r.outcome === 'new');
-      return commitMemberImport(preview!.id, clubId, rows);
+      return commitMemberImport(preview!.id, targetClubId, rows);
     },
     onSuccess: (res) => {
       toast({ title: `Imported ${res.committed} member(s)`, tone: 'success' });
       void qc.invalidateQueries({ queryKey: ['members'] });
       close();
     },
+    onError: (err) => {
+      setErrorMessage(err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Failed to import roster');
+    },
   });
 
   function close() {
     setCsv('');
+    setFileName(null);
     setPreview(null);
+    setErrorMessage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     onClose();
   }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setCsv(await file.text());
+    setFileName(file.name);
+    setErrorMessage(null);
+    const content = await file.text();
+    setCsv(content);
   }
 
   const newCount = (preview?.rows ?? []).filter((r) => r.outcome === 'new').length;
@@ -244,42 +291,147 @@ function ImportModal({ clubId, open, onClose }: { clubId: string; open: boolean;
       title="Import a roster"
       footer={
         preview ? (
-          <Button loading={commitMutation.isPending} disabled={newCount === 0} onClick={() => commitMutation.mutate()}>
-            Add {newCount} member{newCount === 1 ? '' : 's'}
-          </Button>
+          <div className="flex w-full items-center justify-between gap-3">
+            <Button variant="secondary" onClick={() => setPreview(null)}>
+              Back to edit
+            </Button>
+            <Button
+              loading={commitMutation.isPending}
+              disabled={newCount === 0}
+              onClick={() => commitMutation.mutate()}
+            >
+              Add {newCount} member{newCount === 1 ? '' : 's'}
+            </Button>
+          </div>
         ) : (
-          <Button loading={previewMutation.isPending} disabled={!csv.trim()} onClick={() => previewMutation.mutate()}>
-            Preview
+          <Button
+            loading={previewMutation.isPending}
+            disabled={!csv.trim() || !targetClubId}
+            onClick={() => previewMutation.mutate()}
+          >
+            Preview Roster
           </Button>
         )
       }
     >
+      {errorMessage && (
+        <div className="mb-4">
+          <Alert tone="error" title="Import Error">
+            {errorMessage}
+          </Alert>
+        </div>
+      )}
+
       {!preview ? (
-        <div className="flex flex-col gap-3">
-          <p className="m-0 text-[12.5px] text-fg-2">
-            A CSV with columns <code>fullName, email, phone, rotaryId</code>. Email is the dedup key &ndash; a row
-            matching an existing member is skipped, not duplicated.
-          </p>
-          <input ref={fileInputRef} type="file" accept=".csv,text/csv" onChange={(e) => void onFile(e)} />
-          <Textarea
-            rows={6}
-            aria-label="CSV contents"
-            placeholder="fullName,email,phone,rotaryId"
-            value={csv}
-            onChange={(e) => setCsv(e.target.value)}
-          />
+        <div className="flex flex-col gap-4">
+          {clubs.length > 1 && (
+            <div>
+              <label className="mb-1 block text-xs font-bold uppercase tracking-wider text-fg-muted">
+                Target Club
+              </label>
+              <Select
+                value={targetClubId}
+                onChange={(e) => setSelectedClubId(e.target.value)}
+                options={clubs.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            </div>
+          )}
+
+          <div>
+            <p className="m-0 text-[12.5px] text-fg-2">
+              Upload a <code>.csv</code> file or paste rows below. Email is the dedup key &ndash; existing members will be skipped.
+            </p>
+          </div>
+
+          {/* Styled File Upload Box */}
+          <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line-accent bg-surface-2/40 p-4 text-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(e) => void onFile(e)}
+            />
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="flex size-10 items-center justify-center rounded-full bg-accent/10 text-accent">
+                <Upload className="size-5" />
+              </div>
+              <p className="m-0 text-xs font-semibold text-fg">
+                {fileName ? `Selected file: ${fileName}` : 'Choose a CSV file from your computer'}
+              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {fileName ? 'Choose Different File' : 'Browse CSV File'}
+                </Button>
+                {fileName && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    type="button"
+                    onClick={() => {
+                      setFileName(null);
+                      setCsv('');
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-fg-muted">
+                Or Paste CSV Content
+              </label>
+              <button
+                type="button"
+                className="cursor-pointer border-0 bg-transparent p-0 text-[11px] text-accent hover:underline"
+                onClick={() =>
+                  setCsv('fullName,email,phone,rotaryId\nRtr. John Doe,john@example.com,+919876543210,123456\nRtr. Jane Smith,jane@example.com,+919876543211,123457')
+                }
+              >
+                Insert Sample Format
+              </button>
+            </div>
+            <Textarea
+              rows={5}
+              aria-label="CSV contents"
+              placeholder="fullName,email,phone,rotaryId&#10;John Doe,john@example.com,+919876543210,123456"
+              value={csv}
+              onChange={(e) => setCsv(e.target.value)}
+            />
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          <p className="m-0 text-[12.5px] text-fg-2">
-            {preview.rows.length} rows &middot; {newCount} new &middot;{' '}
-            {preview.rows.filter((r) => r.outcome === 'duplicate').length} duplicate &middot;{' '}
-            {preview.rows.filter((r) => r.outcome === 'invalid').length} invalid
-          </p>
-          <ul className="m-0 max-h-64 list-none overflow-y-auto p-0">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between rounded-lg bg-surface-2 p-2.5 text-[12.5px]">
+            <span className="font-semibold text-fg">{preview.rows.length} total row(s)</span>
+            <div className="flex items-center gap-2">
+              <Badge tone="green">{newCount} new</Badge>
+              <Badge tone="neutral">{preview.rows.filter((r) => r.outcome === 'duplicate').length} duplicate</Badge>
+              {preview.rows.some((r) => r.outcome === 'invalid') && (
+                <Badge tone="red">{preview.rows.filter((r) => r.outcome === 'invalid').length} invalid</Badge>
+              )}
+            </div>
+          </div>
+
+          <ul className="m-0 max-h-64 list-none divide-y divide-line overflow-y-auto p-0">
             {preview.rows.map((r) => (
-              <li key={r.lineNumber} className="flex items-center justify-between gap-2 border-b border-line py-1.5 text-[12px]">
-                <span className="truncate text-fg">{r.fullName || r.email}</span>
+              <li key={r.lineNumber} className="flex items-center justify-between gap-2 py-2 text-[12px]">
+                <div className="flex flex-col truncate">
+                  <span className="truncate font-medium text-fg">{r.fullName || r.email}</span>
+                  {r.errors?.length > 0 && (
+                    <span className="truncate text-[11px] text-danger">{r.errors.join(', ')}</span>
+                  )}
+                </div>
                 <Badge tone={r.outcome === 'new' ? 'green' : r.outcome === 'duplicate' ? 'neutral' : 'red'}>
                   {r.outcome}
                 </Badge>
@@ -507,7 +659,7 @@ export function AdminMembersPage() {
           void qc.invalidateQueries({ queryKey: ['members'] });
         }}
       />
-      <ImportModal clubId={effectiveClubId} open={importOpen} onClose={() => setImportOpen(false)} />
+      <ImportModal clubId={effectiveClubId} clubs={clubs} open={importOpen} onClose={() => setImportOpen(false)} />
       <MemberPasswordModal member={passwordMember} onClose={() => setPasswordMember(null)} />
     </Container>
   );

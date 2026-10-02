@@ -13,10 +13,11 @@ export interface SelectOption {
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options?: SelectOption[];
   placeholder?: string;
+  selectClassName?: string;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { className, options, placeholder, children, ...rest },
+  { className, selectClassName, options, placeholder, children, ...rest },
   ref,
 ) {
   const { invalid, ...linked } = useFieldControl(rest);
@@ -27,7 +28,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         {...rest}
         {...linked}
         data-invalid={invalid || undefined}
-        className={cn(controlClass, controlBorder(invalid), 'appearance-none pr-10')}
+        className={cn(controlClass, controlBorder(invalid), 'appearance-none pr-10', selectClassName)}
       >
         {placeholder !== undefined && (
           <option value="" disabled>

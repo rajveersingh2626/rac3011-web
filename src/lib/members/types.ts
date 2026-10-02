@@ -69,6 +69,10 @@ export const myClubSchema = z.object({
   meetingInfo: z.string().nullable(),
   logoUrl: z.string().nullable(),
   memberCount: z.number(),
+  president: z.string().nullable().optional(),
+  secretary: z.string().nullable().optional(),
+  secretaryEmail: z.string().nullable().optional(),
+  secretaryPhone: z.string().nullable().optional(),
   board: z
     .array(
       z.object({

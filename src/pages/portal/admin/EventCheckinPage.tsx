@@ -134,6 +134,7 @@ export function EventCheckinPage() {
   });
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
+  const isStartingRef = useRef(false);
   const lastScannedTokenRef = useRef<{ token: string; time: number } | null>(null);
 
   // Manual Check-in Form
@@ -277,12 +278,22 @@ export function EventCheckinPage() {
     checkinMutation.mutate({ qrToken: text });
   };
 
+  // Helper to safely stop scanner without throwing
+  const stopScannerSafely = async () => {
+    try {
+      const scanner = html5QrCodeRef.current;
+      if (scanner && scanner.isScanning && !isStartingRef.current) {
+        await scanner.stop();
+      }
+    } catch {
+      // Swallowed safely - html5-qrcode can throw if stopping during race condition
+    }
+  };
+
   // Start / Stop Html5Qrcode high-performance camera scanning with permission handling
   useEffect(() => {
     if (activeTab !== 'camera' || !eventId) {
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(() => {});
-      }
+      void stopScannerSafely();
       return;
     }
 
@@ -290,8 +301,14 @@ export function EventCheckinPage() {
     const scannerId = 'html5-qr-scanner-box';
 
     async function startScanner() {
+      if (isStartingRef.current) return;
+      isStartingRef.current = true;
       try {
         setCameraError(null);
+
+        // Ensure container exists in DOM before starting
+        const container = document.getElementById(scannerId);
+        if (!container) return;
 
         // 1. Explicitly prompt / check camera permission
         if (typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -334,12 +351,19 @@ export function EventCheckinPage() {
 
         // 3. Stop previous instance if active
         if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-          await html5QrCodeRef.current.stop();
+          try {
+            await html5QrCodeRef.current.stop();
+          } catch {}
         }
 
+        if (!isMounted) return;
+
         // 4. Initialize Html5Qrcode instance
-        const scanner = new Html5Qrcode(scannerId, false);
-        html5QrCodeRef.current = scanner;
+        let scanner = html5QrCodeRef.current;
+        if (!scanner) {
+          scanner = new Html5Qrcode(scannerId, false);
+          html5QrCodeRef.current = scanner;
+        }
 
         const cameraConfig = selectedDeviceId
           ? { deviceId: { exact: selectedDeviceId } }
@@ -362,6 +386,8 @@ export function EventCheckinPage() {
       } catch (err: any) {
         if (!isMounted) return;
         setCameraError(err?.message || 'Unable to start camera. Please verify device permissions.');
+      } finally {
+        isStartingRef.current = false;
       }
     }
 
@@ -372,11 +398,23 @@ export function EventCheckinPage() {
     return () => {
       isMounted = false;
       clearTimeout(timer);
-      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
-        html5QrCodeRef.current.stop().catch(() => {});
-      }
+      void stopScannerSafely();
     };
   }, [activeTab, selectedDeviceId, eventId]);
+
+  // Clean up scanner on unmount of page
+  useEffect(() => {
+    return () => {
+      if (html5QrCodeRef.current) {
+        try {
+          if (html5QrCodeRef.current.isScanning) {
+            html5QrCodeRef.current.stop().catch(() => {});
+          }
+          html5QrCodeRef.current.clear();
+        } catch {}
+      }
+    };
+  }, []);
 
   // CSV Export handler
   const [exportingCsv, setExportingCsv] = useState(false);
@@ -437,12 +475,12 @@ export function EventCheckinPage() {
         description="Scan cryptographic anti-replay tickets, record walk-ins, and inspect live attendance."
       >
         {/* Event Selector & Actions Bar */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-surface-2 p-4 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="text-xs font-bold uppercase tracking-wider text-fg-3">
+        <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-2xl border border-line bg-surface-2 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
+            <label className="text-xs font-bold uppercase tracking-wider text-fg-3 shrink-0">
               Event:
             </label>
-            <div className="relative min-w-[240px]">
+            <div className="relative w-full sm:min-w-[260px]">
               <select
                 value={activeEvent.id}
                 onChange={(e) => {
@@ -460,7 +498,7 @@ export function EventCheckinPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full md:w-auto">
             <Button
               variant="secondary"
               size="sm"
@@ -468,20 +506,20 @@ export function EventCheckinPage() {
                 setDispatchResult(null);
                 setShowDispatchModal(true);
               }}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto text-xs"
             >
-              <Send className="size-4" />
-              Dispatch Tickets
+              <Send className="size-3.5 sm:size-4" />
+              <span>Dispatch Tickets</span>
             </Button>
 
             <Button
               variant="secondary"
               size="sm"
               onClick={() => setShowAddAttendeeModal(true)}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto text-xs"
             >
-              <UserPlus className="size-4 text-emerald-600" />
-              Add Attendee
+              <UserPlus className="size-3.5 sm:size-4 text-emerald-600" />
+              <span>Add Attendee</span>
             </Button>
 
             <Button
@@ -489,20 +527,20 @@ export function EventCheckinPage() {
               size="sm"
               onClick={handleExportCsv}
               disabled={exportingCsv || items.length === 0}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto text-xs"
             >
-              <Download className="size-4" />
-              {exportingCsv ? 'Exporting…' : 'Export CSV'}
+              <Download className="size-3.5 sm:size-4" />
+              <span>{exportingCsv ? 'Exporting…' : 'Export CSV'}</span>
             </Button>
 
             <Button
               variant="secondary"
               size="sm"
               onClick={() => void refetchCheckins()}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center gap-1.5 w-full sm:w-auto text-xs"
             >
-              <RefreshCw className={cn('size-4', loadingCheckins && 'animate-spin')} />
-              Refresh
+              <RefreshCw className={cn('size-3.5 sm:size-4', loadingCheckins && 'animate-spin')} />
+              <span>Refresh</span>
             </Button>
           </div>
         </div>
@@ -574,9 +612,10 @@ export function EventCheckinPage() {
               </button>
             </div>
 
-            {activeTab === 'camera' ? (
+            {/* Camera Scanner View - Always mounted to prevent html5-qrcode DOM detached node crash */}
+            <div className={activeTab === 'camera' ? 'block' : 'hidden'}>
               <Card tone="plain" className="overflow-hidden p-0">
-                <div className="relative aspect-square w-full bg-black overflow-hidden flex items-center justify-center">
+                <div className="relative aspect-square w-full max-h-[380px] sm:max-h-none bg-black overflow-hidden flex items-center justify-center">
                   <div
                     id="html5-qr-scanner-box"
                     className="h-full w-full overflow-hidden flex items-center justify-center [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
@@ -584,7 +623,7 @@ export function EventCheckinPage() {
 
                   {/* Reticle Overlay */}
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-8">
-                    <div className="relative size-56 rounded-2xl border-2 border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]">
+                    <div className="relative size-52 sm:size-56 rounded-2xl border-2 border-white/60 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]">
                       {/* Corner Accents */}
                       <span className="absolute -left-1 -top-1 size-5 border-l-4 border-t-4 border-accent rounded-tl-md" />
                       <span className="absolute -right-1 -top-1 size-5 border-r-4 border-t-4 border-accent rounded-tr-md" />
@@ -647,8 +686,10 @@ export function EventCheckinPage() {
                   </div>
                 </div>
               </Card>
-            ) : (
-              /* Manual Walk-In Form */
+            </div>
+
+            {/* Manual Walk-In Form - Mounted alongside camera to avoid remount churn */}
+            <div className={activeTab === 'manual' ? 'block' : 'hidden'}>
               <Card tone="plain" className="p-5 flex flex-col gap-4">
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-fg m-0">Manual Attendee Registration</h4>
@@ -703,7 +744,7 @@ export function EventCheckinPage() {
                   Confirm Walk-In Check-In
                 </Button>
               </Card>
-            )}
+            </div>
 
             {/* Club Breakdown Card */}
             <Card tone="plain" className="p-4">

@@ -73,7 +73,12 @@ export function NewReportPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const qc = useQueryClient();
-  const clubId = me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  const clubId = useMemo(() => {
+    const reportGrants = me?.grants?.['reports:submit'] ?? [];
+    const clubGrant = reportGrants.find((g) => g.type === 'club');
+    if (clubGrant) return clubGrant.id;
+    return me?.profile?.clubId ?? me?.clubs[0]?.id ?? '';
+  }, [me]);
 
   const monthsQuery = useQuery({
     queryKey: ['reports', 'months'],
@@ -99,7 +104,7 @@ export function NewReportPage() {
   const schemaQuery = useQuery({ queryKey: ['report-schema', 'active'], queryFn: fetchActiveReportSchema });
   const reportQuery = useQuery({
     queryKey: ['reports', 'draft', clubId, month],
-    queryFn: () => ensureDraftReport(clubId, month),
+    queryFn: () => ensureDraftReport(clubId!, month),
     enabled: Boolean(clubId && month),
   });
   const clubsQuery = useQuery({ queryKey: ['public-clubs'], queryFn: () => fetchPublicClubs() });
